@@ -6,7 +6,7 @@ android {
 
     defaultConfig {
         applicationId "chrisfry.spotifydj"
-        minSdkVersion 22
+        minSdkVersion 21
         targetSdkVersion 24
         versionCode 1
         versionName "1.0"
@@ -19,8 +19,26 @@ android {
     }
 }
 
+repositories {
+    mavenCentral()
+    maven { url "https://jitpack.io" }
+    flatDir {
+        dirs 'libs'
+    }
+}
+
 dependencies {
-    compile fileTree(dir: 'libs', include: ['*.jar'])
+    compile fileTree(include: ['*.jar'], dir: 'libs')
     testCompile 'junit:junit:4.12'
-    compile 'com.android.support:appcompat-v7:24.1.0'
+    compile 'com.android.support:appcompat-v7:24.2.1'
+    // This library handles authentication and authorization
+    compile 'com.spotify.sdk:spotify-auth:1.0.0-beta13@aar'
+    // This library handles music playback
+    compile 'com.spotify.sdk:spotify-player:1.0.0-beta13@aar'
+    //Spotify WebAPI Android wrapper
+    compile 'com.github.kaaes:spotify-web-api-android:0.4.1'
+
+    //Android support libraries
+    compile 'com.android.support:appcompat-v7:24.2.1'
+    compile 'com.android.support:recyclerview-v7:24.2.1'
 }

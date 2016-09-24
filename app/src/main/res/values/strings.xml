@@ -1,3 +1,15 @@
 <resources>
-    <string name="app_name">SpotifyDJ</string>
+    <string name="app_name">SocialQ</string>
+    <!-- Activity Names -->
+    <string name="home_activity_name">Home</string>
+    <string name="search_activity_name">Search</string>
+
+    <string name="track_to_play_format">spotify:track:%1$s</string>
+    <string name="next_btn">Next</string>
+    <string name="play_btn">Play</string>
+    <string name="pause_btn">Pause</string>
+
+    <!-- Extra Keys -->
+    <string name="access_token_extra">ACCESS_TOKEN</string>
+
 </resources>
