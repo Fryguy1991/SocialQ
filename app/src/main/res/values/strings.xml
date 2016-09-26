@@ -4,7 +4,12 @@
     <string name="home_activity_name">Home</string>
     <string name="search_activity_name">Search</string>
 
+    <!-- Menu Action Strings -->
+    <string name="search_action">search_action</string>
+
     <string name="track_to_play_format">spotify:track:%1$s</string>
+
+    <!-- Home Screen Strings -->
     <string name="next_btn">Next</string>
     <string name="play_btn">Play</string>
     <string name="pause_btn">Pause</string>

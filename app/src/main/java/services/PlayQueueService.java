@@ -16,6 +16,7 @@ import com.spotify.sdk.android.player.PlayerStateCallback;
 import com.spotify.sdk.android.player.Spotify;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import chrisfry.spotifydj.R;
 import kaaes.spotify.webapi.android.models.Track;
@@ -24,7 +25,7 @@ import kaaes.spotify.webapi.android.models.Track;
  * Service for playing the social queue with Spotify
  */
 public class PlayQueueService extends Service implements PlayerNotificationCallback,
-        PlayerStateCallback, IPlayQueueService {
+        PlayerStateCallback {
 
     // Binder given to clients
     private final IBinder mPlayQueueBinder = new PlayQueueBinder();
@@ -33,11 +34,10 @@ public class PlayQueueService extends Service implements PlayerNotificationCallb
     private static final String CLIENT_ID = "0fab62a3895a4fa3aae14bc3e46bc59c";
 
     private ArrayList<Track> mSongQueue = new ArrayList<>();
+    private Track mCurrentTrack;
 
     private Player mSpotifyPlayer;
     private PlayerState mPlayerState;
-
-    private Boolean mIsPlaying;
 
     private String TRACK_TO_PLAY_FORMATTER;
 
@@ -48,7 +48,6 @@ public class PlayQueueService extends Service implements PlayerNotificationCallb
         }
     }
 
-    @Override
     public void play() {
         if (mPlayerState != null) {
             if (!mPlayerState.playing && mPlayerState.durationInMs != 0) {
@@ -61,26 +60,30 @@ public class PlayQueueService extends Service implements PlayerNotificationCallb
         }
     }
 
-    @Override
     public void pause() {
         mSpotifyPlayer.pause();
     }
 
-    @Override
     public void playNextInQueue() {
         if (mSongQueue.size() > 0) {
             // Load next song in queue into player, remove from queue
             mSpotifyPlayer.play(String.format(TRACK_TO_PLAY_FORMATTER, mSongQueue.get(0).id));
-            mSongQueue.remove(0);
+            mCurrentTrack = mSongQueue.remove(0);
         }
     }
 
-    @Override
+    public Track getCurrentTrack() {
+        return mCurrentTrack;
+    }
+
+    public List<Track> getQueue() {
+        return mSongQueue;
+    }
+
     public void addSongToQueue(Track track) {
         mSongQueue.add(track);
     }
 
-    @Override
     public boolean isPlaying() {
         if (!(mPlayerState == null)) {
             return mPlayerState.playing;
@@ -127,8 +130,10 @@ public class PlayQueueService extends Service implements PlayerNotificationCallb
     @Override
     public void onPlaybackEvent(EventType eventType, PlayerState playerState) {
         //Song has ended play next song
-        if (eventType == EventType.END_OF_CONTEXT) {
-            playNextInQueue();
+        switch(eventType) {
+            case END_OF_CONTEXT:
+                playNextInQueue();
+                break;
         }
         Log.d("PlayQueueService", "Playback event received: " + eventType.name());
     }

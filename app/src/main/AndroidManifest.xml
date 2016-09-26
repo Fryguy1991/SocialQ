@@ -11,9 +11,10 @@
     <!-- Application Activities -->
         <!-- Activity for Home Screen -->
         <activity
-            android:name="userinterface.activities.HomeScreen"
+            android:name="userinterface.activities.HomeActivity"
             android:label="@string/app_name"
-            android:screenOrientation="portrait">
+            android:screenOrientation="portrait"
+            android:launchMode="singleTop">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
@@ -23,7 +24,8 @@
         <activity
             android:name="userinterface.activities.SearchActivity"
             android:label="@string/search_activity_name"
-            android:screenOrientation="portrait"/>
+            android:screenOrientation="portrait"
+            android:parentActivityName="userinterface.activities.HomeActivity"/>
 
         <!-- Activity for Spotify login (created by Spotify) -->
         <activity
