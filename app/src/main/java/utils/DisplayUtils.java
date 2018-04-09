@@ -1,5 +1,7 @@
 package utils;
 
+import com.spotify.sdk.android.player.Metadata;
+
 import java.util.List;
 
 import kaaes.spotify.webapi.android.models.ArtistSimple;
@@ -27,5 +29,9 @@ public class DisplayUtils {
             }
         }
         return artistString;
+    }
+
+    public static String getTrackArtistString(Metadata.Track track) {
+        return track.artistName;
     }
 }

@@ -14,6 +14,20 @@
     <string name="play_btn">Play</string>
     <string name="pause_btn">Pause</string>
 
+    <!-- Search Screen Strings -->
+    <string name="search">Search</string>
+    <string name="artists">Artists</string>
+    <string name="songs">Songs</string>
+    <string name="albums">Albums</string>
+    <string name="number_of_albums">%1$d Albums</string>
+    <string name="number_of_artists">%1$d Artists</string>
+    <string name="number_of_songs">%1$d Songs</string>
+
+    <!-- Start Screen Strings -->
+    <string name="login">Log In</string>
+    <string name="start_queue">Start Queue</string>
+    <string name="join_queue">Join Queue</string>
+
     <!-- Extra Keys -->
     <string name="access_token_extra">ACCESS_TOKEN</string>
 

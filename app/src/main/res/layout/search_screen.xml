@@ -1,5 +1,95 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent" android:layout_height="match_parent">
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/search_main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="@dimen/standard_spacing"
+    android:focusable="true"
+    android:focusableInTouchMode="true"
+    android:animateLayoutChanges="true">
 
-</RelativeLayout>
+    <EditText
+        android:id="@+id/et_search_edit_text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:drawableStart="@drawable/search_icon"
+        android:inputType="text"
+        android:maxLines="1"
+        android:imeOptions="actionNext"/>
+
+    <Button
+        android:id="@+id/btn_search"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/search_activity_name"
+        android:layout_marginBottom="@dimen/standard_spacing"/>
+
+    <LinearLayout
+        android:id="@+id/ll_artist_search_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="@dimen/standard_spacing"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/tv_artists_search"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"/>
+
+        <ImageView
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:src="@drawable/up_arrow_head"
+            android:rotation="90"/>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/ll_song_search_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="@dimen/standard_spacing">
+
+        <TextView
+            android:id="@+id/tv_songs_search"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"/>
+
+        <ImageView
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:src="@drawable/up_arrow_head"
+            android:rotation="90"/>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/ll_album_search_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="@dimen/standard_spacing"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/tv_albums_search"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"/>
+
+        <ImageView
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:src="@drawable/up_arrow_head"
+            android:rotation="90"/>
+    </LinearLayout>
+
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/rv_search_results"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone"/>
+</LinearLayout>

@@ -4,45 +4,26 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
 
 import java.util.List;
 
 import chrisfry.spotifydj.R;
 import kaaes.spotify.webapi.android.models.Track;
+import userinterface.adapters.holders.TrackHolder;
 import utils.DisplayUtils;
 
 /**
  * Adapter for displaying queue tracks
  */
-public class QueueDisplayAdapter extends RecyclerView.Adapter {
+public class TrackListAdapter extends RecyclerView.Adapter implements TrackHolder.ItemSelectionListener {
     // Reference to queue track list
-    List<Track> mTrackList;
+    private List<Track> mTrackList;
 
-    public QueueDisplayAdapter(List<Track> trackList) {
+    private TrackSelectionListener mTrackSelectionListener;
+
+    public TrackListAdapter(List<Track> trackList) {
         mTrackList = trackList;
     }
-
-    public static class TrackHolder extends RecyclerView.ViewHolder {
-        // Get references to UI elements
-        private TextView mTrackNameView;
-        private TextView mArtistNameView;
-
-        public TrackHolder(View v) {
-            super(v);
-            mTrackNameView = (TextView) v.findViewById(R.id.tv_track_name);
-            mArtistNameView = (TextView) v.findViewById(R.id.tv_artist_name);
-        }
-
-        public void setArtistName(String artistName) {
-            mArtistNameView.setText(artistName);
-        }
-
-        public void setTrackName(String trackName) {
-            mTrackNameView.setText(trackName);
-        }
-    }
-
 
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
@@ -57,6 +38,8 @@ public class QueueDisplayAdapter extends RecyclerView.Adapter {
         Track track = mTrackList.get(position);
         trackHolder.setArtistName(DisplayUtils.getTrackArtistString(track));
         trackHolder.setTrackName(track.name);
+        trackHolder.setTrackUri(track.uri);
+        trackHolder.setItemSelectionListener(this);
     }
 
     @Override
@@ -67,5 +50,25 @@ public class QueueDisplayAdapter extends RecyclerView.Adapter {
     public void updateQueueList(List<Track> newQueue) {
         mTrackList = newQueue;
         notifyDataSetChanged();
+    }
+
+    @Override
+    public void onItemSelected(String uri) {
+        if (mTrackSelectionListener != null) {
+            for (Track track : mTrackList) {
+                if (track.uri.equals(uri)) {
+                    mTrackSelectionListener.onTrackSelection(track);
+                    break;
+                }
+            }
+        }
+    }
+
+    public interface TrackSelectionListener {
+        void onTrackSelection(Track track);
+    }
+
+    public void setTrackSelectionListener(TrackSelectionListener listener) {
+        mTrackSelectionListener = listener;
     }
 }

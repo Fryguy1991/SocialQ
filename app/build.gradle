@@ -2,7 +2,7 @@ apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion 24
-    buildToolsVersion "21.1.2"
+    buildToolsVersion '26.0.2'
 
     defaultConfig {
         applicationId "chrisfry.spotifydj"
@@ -30,13 +30,17 @@ repositories {
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
     testCompile 'junit:junit:4.12'
-    compile 'com.android.support:appcompat-v7:24.2.1'
+
     // This library handles authentication and authorization
     compile 'com.spotify.sdk:spotify-auth:1.0.0-beta13@aar'
     // This library handles music playback
-    compile 'com.spotify.sdk:spotify-player:1.0.0-beta13@aar'
+    compile 'com.spotify.sdk:spotify-player-24-noconnect-2.20b@aar'
     //Spotify WebAPI Android wrapper
     compile 'com.github.kaaes:spotify-web-api-android:0.4.1'
+
+    // Butterknife
+    compile 'com.jakewharton:butterknife:8.8.1'
+    annotationProcessor 'com.jakewharton:butterknife-compiler:8.8.1'
 
     //Android support libraries
     compile 'com.android.support:appcompat-v7:24.2.1'

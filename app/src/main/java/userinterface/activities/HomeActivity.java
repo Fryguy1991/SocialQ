@@ -1,6 +1,7 @@
 package userinterface.activities;
 
 import android.app.Activity;
+import android.bluetooth.BluetoothAdapter;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -22,7 +23,13 @@ import com.spotify.sdk.android.authentication.AuthenticationClient;
 import com.spotify.sdk.android.authentication.AuthenticationRequest;
 import com.spotify.sdk.android.authentication.AuthenticationResponse;
 import com.spotify.sdk.android.player.ConnectionStateCallback;
+import com.spotify.sdk.android.player.Error;
+import com.spotify.sdk.android.player.Metadata;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import business.AppConstants;
 import chrisfry.spotifydj.R;
 
 import kaaes.spotify.webapi.android.SpotifyApi;
@@ -30,34 +37,33 @@ import kaaes.spotify.webapi.android.SpotifyService;
 import kaaes.spotify.webapi.android.models.Track;
 import kaaes.spotify.webapi.android.models.TracksPager;
 import services.PlayQueueService;
-import userinterface.adapters.QueueDisplayAdapter;
+import userinterface.adapters.TrackListAdapter;
 import userinterface.widgets.QueueItemDecoration;
+import utils.ApplicationUtils;
 import utils.DisplayUtils;
 
-public class HomeActivity extends Activity implements ConnectionStateCallback {
-
-    // Client ID specific to this application
-    private static final String CLIENT_ID = "0fab62a3895a4fa3aae14bc3e46bc59c";
-    // Redirect URI
-    private static final String REDIRECT_URI = "fryredirect://callback";
+public class HomeActivity extends Activity implements ConnectionStateCallback,
+        PlayQueueService.TrackChangeListener, PlayQueueService.QueueChangeListener {
     // Request code that will be used to verify if the result comes from correct activity
     // Can be any integer
     private static final int SPOTIFY_LOGIN_REQUEST = 8675309;
     // Request code used for Spotify search
     private static final int SEARCH_REQUEST = 1337;
-    // Contains access token for Spotify
-    private String mAccessToken;
 
+    // UI element references
     private Button mNextButton;
+
     private Button mPlayPauseButton;
     private RecyclerView mQueueList;
-    private QueueDisplayAdapter mQueueDisplayAdapter;
+    private TrackListAdapter mQueueDisplayAdapter;
     private TextView mCurrentTrackName;
     private TextView mCurrentArtistName;
 
     private SpotifyApi mApi;
     private SpotifyService mSpotifyService;
     private PlayQueueService mPlayQueueService;
+
+    BluetoothAdapter mBTAdapter;
 
     // Object for connecting to/from play queue service
     private ServiceConnection mServiceConnection = new ServiceConnection() {
@@ -66,8 +72,12 @@ public class HomeActivity extends Activity implements ConnectionStateCallback {
             PlayQueueService.PlayQueueBinder binder = (PlayQueueService.PlayQueueBinder) iBinder;
             mPlayQueueService = binder.getService();
 
-            setupDemoQueue();
+            // Setup activity for callbacks
+            mPlayQueueService.addTrackChangedListener(HomeActivity.this);
+            mPlayQueueService.addQueueChangedListener(HomeActivity.this);
+
             setupQueueList();
+//            setupDemoQueue();
         }
 
         @Override
@@ -81,39 +91,41 @@ public class HomeActivity extends Activity implements ConnectionStateCallback {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.home_screen);
 
+
+
         // Allow network operation in main thread
         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder()
                 .permitAll().build();
         StrictMode.setThreadPolicy(policy);
 
+        // Building and sending login request through Spotify built activity
+        AuthenticationRequest.Builder builder = new AuthenticationRequest.Builder(
+                ApplicationUtils.getClientId(),
+                AuthenticationResponse.Type.TOKEN,
+                ApplicationUtils.getRedirectUri());
+        builder.setScopes(new String[]{"user-read-private", "streaming"});
+        AuthenticationRequest request = builder.build();
+
+        AuthenticationClient.openLoginActivity(this, SPOTIFY_LOGIN_REQUEST, request);
+
+        initUi();
+        addListeners();
+    }
+
+    private void initUi() {
         // Initialize UI elements
         mNextButton = (Button) findViewById(R.id.btn_next);
         mPlayPauseButton = (Button) findViewById(R.id.btn_play_pause);
         mQueueList = (RecyclerView) findViewById(R.id.rv_queue_list_view);
         mCurrentTrackName = (TextView) findViewById(R.id.tv_current_track_name);
         mCurrentArtistName = (TextView) findViewById(R.id.tv_current_artist_name);
-
-        // Building and sending login request through Spotify built activity
-        AuthenticationRequest.Builder builder = new AuthenticationRequest.Builder(CLIENT_ID,
-                AuthenticationResponse.Type.TOKEN,
-                REDIRECT_URI);
-        builder.setScopes(new String[]{"user-read-private", "streaming"});
-        AuthenticationRequest request = builder.build();
-
-        AuthenticationClient.openLoginActivity(this, SPOTIFY_LOGIN_REQUEST, request);
-
-        addListeners();
     }
 
     private void addListeners() {
         mNextButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                mPlayQueueService.playNextInQueue();
-                Track currentTrack = mPlayQueueService.getCurrentTrack();
-                mCurrentTrackName.setText(currentTrack.name);
-                mCurrentArtistName.setText(DisplayUtils.getTrackArtistString(currentTrack));
-                mQueueDisplayAdapter.updateQueueList(mPlayQueueService.getQueue());
+                mPlayQueueService.playNext();
             }
         });
 
@@ -136,17 +148,19 @@ public class HomeActivity extends Activity implements ConnectionStateCallback {
                 if (response.getType() == AuthenticationResponse.Type.TOKEN) {
                     Log.d("HomeActivity", "Access token granted");
                     // Start service that will play and control queue
-                    mAccessToken = response.getAccessToken();
+                    ApplicationUtils.setAccessToken(response.getAccessToken());
                     Intent startPlayQueueIntent = new Intent(this, PlayQueueService.class);
-                    Bundle extraBundle = new Bundle();
-                    extraBundle.putString(getString(R.string.access_token_extra), response.getAccessToken());
-                    startPlayQueueIntent.putExtras(extraBundle);
                     bindService(startPlayQueueIntent, mServiceConnection, Context.BIND_AUTO_CREATE);
                     initSpotifySearchElements(response.getAccessToken());
                 }
                 break;
             case SEARCH_REQUEST:
-                // TODO: handle search result here
+                if (resultCode == RESULT_OK) {
+                    String trackUri = intent.getStringExtra(AppConstants.SEARCH_RESULTS_KEY);
+                    if (trackUri != null && !trackUri.isEmpty()) {
+                        mPlayQueueService.addSongToQueue(mSpotifyService.getTrack(trackUri));
+                    }
+                }
                 break;
         }
     }
@@ -169,7 +183,7 @@ public class HomeActivity extends Activity implements ConnectionStateCallback {
     }
 
     @Override
-    public void onLoginFailed(Throwable error) {
+    public void onLoginFailed(Error error) {
         Log.d("HomeActivity", "Login failed");
     }
 
@@ -186,6 +200,8 @@ public class HomeActivity extends Activity implements ConnectionStateCallback {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        unbindService(mServiceConnection);
+        mPlayQueueService.onDestroy();
     }
 
     @Override
@@ -200,10 +216,7 @@ public class HomeActivity extends Activity implements ConnectionStateCallback {
         switch (item.getItemId()) {
             case R.id.search_action:
                 Intent searchIntent = new Intent(this, SearchActivity.class);
-                Bundle extrasBundle = new Bundle();
-                extrasBundle.putString(getString(R.string.access_token_extra), mAccessToken);
-                searchIntent.putExtras(extrasBundle);
-                searchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+//                searchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 startActivityForResult(searchIntent, SEARCH_REQUEST);
                 return true;
             default:
@@ -227,7 +240,7 @@ public class HomeActivity extends Activity implements ConnectionStateCallback {
     }
 
     private void setupQueueList() {
-        mQueueDisplayAdapter = new QueueDisplayAdapter(mPlayQueueService.getQueue());
+        mQueueDisplayAdapter = new TrackListAdapter(new ArrayList<Track>());
         mQueueList.setAdapter(mQueueDisplayAdapter);
         LinearLayoutManager layoutManager = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
         mQueueList.setLayoutManager(layoutManager);
@@ -242,5 +255,28 @@ public class HomeActivity extends Activity implements ConnectionStateCallback {
             mPlayPauseButton.setText(getString(R.string.pause_btn));
             mPlayQueueService.play();
         }
+    }
+
+    @Override
+    public void onTrackChanged(Metadata.Track track) {
+        if (track != null) {
+            mCurrentTrackName.setText(track.name);
+            mCurrentArtistName.setText(DisplayUtils.getTrackArtistString(track));
+        } else {
+            mCurrentTrackName.setText("");
+            mCurrentArtistName.setText("");
+        }
+    }
+
+    @Override
+    public void onQueueChanged(List<Track> trackQueue) {
+        mQueueDisplayAdapter.updateQueueList(trackQueue);
+    }
+
+    @Override
+    public void onQueueChanged(List<Track> trackQueue, String nextTrackUri) {
+        Track nextTrack = mSpotifyService.getTrack(nextTrackUri);
+        trackQueue.add(0, nextTrack);
+        mQueueDisplayAdapter.updateQueueList(trackQueue);
     }
 }

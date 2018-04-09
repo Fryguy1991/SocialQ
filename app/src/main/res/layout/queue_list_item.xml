@@ -4,7 +4,8 @@
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:paddingStart="20dp"
-    android:paddingEnd="20dp">
+    android:paddingEnd="20dp"
+    android:id="@+id/ll_track_holder">
 
     <TextView
         android:id="@+id/tv_track_name"

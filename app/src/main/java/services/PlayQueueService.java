@@ -1,45 +1,61 @@
 package services;
 
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Binder;
-import android.os.Bundle;
 import android.os.IBinder;
-import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.spotify.sdk.android.player.Config;
+import com.spotify.sdk.android.player.ConnectionStateCallback;
+import com.spotify.sdk.android.player.Connectivity;
+import com.spotify.sdk.android.player.Error;
+import com.spotify.sdk.android.player.Metadata;
 import com.spotify.sdk.android.player.Player;
-import com.spotify.sdk.android.player.PlayerNotificationCallback;
-import com.spotify.sdk.android.player.PlayerState;
-import com.spotify.sdk.android.player.PlayerStateCallback;
+import com.spotify.sdk.android.player.PlayerEvent;
 import com.spotify.sdk.android.player.Spotify;
+import com.spotify.sdk.android.player.SpotifyPlayer;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
-import chrisfry.spotifydj.R;
 import kaaes.spotify.webapi.android.models.Track;
+import utils.ApplicationUtils;
 
 /**
  * Service for playing the social queue with Spotify
  */
-public class PlayQueueService extends Service implements PlayerNotificationCallback,
-        PlayerStateCallback {
+public class PlayQueueService extends Service implements ConnectionStateCallback,
+        Player.NotificationCallback, Player.OperationCallback {
 
     // Binder given to clients
     private final IBinder mPlayQueueBinder = new PlayQueueBinder();
-
     // Client ID specific to this application
     private static final String CLIENT_ID = "0fab62a3895a4fa3aae14bc3e46bc59c";
-
+    // List containing the queue of songs (next to play always index 0)
     private ArrayList<Track> mSongQueue = new ArrayList<>();
-    private Track mCurrentTrack;
+    // Member player object used for playing audio
+    private SpotifyPlayer mSpotifyPlayer;
+    // List to contain objects listening for track changed events
+    private ArrayList<TrackChangeListener> mTrackChangeListeners = new ArrayList<>();
+    // List to contain objects listening for queue changed events
+    private ArrayList<QueueChangeListener> mQueueChangeListeners = new ArrayList<>();
 
-    private Player mSpotifyPlayer;
-    private PlayerState mPlayerState;
+    private final Player.OperationCallback mConnectivityCallback = new Player.OperationCallback() {
+        @Override
+        public void onSuccess() {
+            Log.d(this.getClass().getName(), "Success!");
+        }
 
-    private String TRACK_TO_PLAY_FORMATTER;
+        @Override
+        public void onError(Error error) {
+            Log.d(this.getClass().getName(), "ERROR: " + error);
+        }
+    };
 
     public class PlayQueueBinder extends Binder {
         public PlayQueueService getService() {
@@ -48,139 +64,262 @@ public class PlayQueueService extends Service implements PlayerNotificationCallb
         }
     }
 
-    public void play() {
-        if (mPlayerState != null) {
-            if (!mPlayerState.playing && mPlayerState.durationInMs != 0) {
-                // Player is paused and loaded with a track
-                mSpotifyPlayer.resume();
-            } else {
-                // Player not loaded with track
-                playNextInQueue();
-            }
-        }
-    }
-
-    public void pause() {
-        mSpotifyPlayer.pause();
-    }
-
-    public void playNextInQueue() {
-        if (mSongQueue.size() > 0) {
-            // Load next song in queue into player, remove from queue
-            mSpotifyPlayer.play(String.format(TRACK_TO_PLAY_FORMATTER, mSongQueue.get(0).id));
-            mCurrentTrack = mSongQueue.remove(0);
-        }
-    }
-
-    public Track getCurrentTrack() {
-        return mCurrentTrack;
-    }
-
-    public List<Track> getQueue() {
-        return mSongQueue;
-    }
-
-    public void addSongToQueue(Track track) {
-        mSongQueue.add(track);
-    }
-
-    public boolean isPlaying() {
-        if (!(mPlayerState == null)) {
-            return mPlayerState.playing;
-        }
-        return false;
-    }
-
     @Override
     public void onCreate() {
         super.onCreate();
-
-        TRACK_TO_PLAY_FORMATTER = getString(R.string.track_to_play_format);
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Bundle extras = intent.getExtras();
-        String accessToken = extras.getString(getString(R.string.access_token_extra));
-        Log.d("PlayQueueService", "Starting service");
+        String accessToken = ApplicationUtils.getAccessToken();
+        Log.d(this.getClass().getName(), "Starting service");
         if (accessToken == null) {
             stopSelf();
         } else {
-            Log.d("PlayQueueService", "Initializing player");
+            Log.d(this.getClass().getName(), "Initializing player");
             initPlayer(accessToken);
         }
         return START_STICKY;
     }
 
-    @Nullable
     @Override
     public IBinder onBind(Intent intent) {
-        Bundle extras = intent.getExtras();
-        String accessToken = extras.getString(getString(R.string.access_token_extra));
-        Log.d("PlayQueueService", "Starting service");
+        String accessToken = ApplicationUtils.getAccessToken();
+        Log.d(this.getClass().getName(), "Starting service");
         if (accessToken == null) {
             stopSelf();
         } else {
-            Log.d("PlayQueueService", "Initializing player");
+            Log.d(this.getClass().getName(), "Initializing player");
             initPlayer(accessToken);
         }
         return mPlayQueueBinder;
     }
 
     @Override
-    public void onPlaybackEvent(EventType eventType, PlayerState playerState) {
-        //Song has ended play next song
-        switch(eventType) {
-            case END_OF_CONTEXT:
-                playNextInQueue();
-                break;
+    public void onDestroy() {
+        Log.d(this.getClass().getName(), "Service is ending.  Shutting down player.");
+        mSpotifyPlayer.logout();
+        try {
+            Spotify.awaitDestroyPlayer(this, 10000, TimeUnit.MILLISECONDS);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            Spotify.destroyPlayer(this);
         }
-        Log.d("PlayQueueService", "Playback event received: " + eventType.name());
-    }
-
-    @Override
-    public void onPlaybackError(ErrorType errorType, String s) {
-
-    }
-
-    @Override
-    public void onPlayerState(PlayerState playerState) {
-        mPlayerState = playerState;
+        super.onDestroy();
     }
 
     private void initPlayer(String accessToken) {
         // Setup Spotify player
         Config playerConfig = new Config(this, accessToken, CLIENT_ID);
-        mSpotifyPlayer = Spotify.getPlayer(playerConfig, this, new Player.InitializationObserver() {
+        mSpotifyPlayer = Spotify.getPlayer(playerConfig, this, new SpotifyPlayer.InitializationObserver() {
             @Override
-            public void onInitialized(Player player) {
-                Log.e("PlayQueueService", "Player initialized");
-                mSpotifyPlayer = player;
-                mSpotifyPlayer.addPlayerNotificationCallback(PlayQueueService.this);
-                getPlayerStatus.start();
+            public void onInitialized(SpotifyPlayer player) {
+                Log.e(this.getClass().getName(), "Player initialized");
+                player.setConnectivityStatus(mConnectivityCallback,
+                        getNetworkConnectivity(PlayQueueService.this));
+                player.addConnectionStateCallback(PlayQueueService.this);
+                player.addNotificationCallback(PlayQueueService.this);
             }
 
             @Override
-            public void onError(Throwable throwable) {
-                Log.e("PlayQueueService", "Could not initialize player: " + throwable.getMessage());
+            public void onError(Throwable error) {
+                Log.e(this.getClass().getName(), "ERROR: Could not initialize player: " + error.getMessage());
             }
         });
     }
 
-    // Thread for requesting player status
-    // TODO: Most likely not safe, investigate
-    Thread getPlayerStatus = new Thread(new Runnable() {
-        @Override
-        public void run() {
-            while (1 > 0) {
-                if (mSpotifyPlayer != null) {
-                    mSpotifyPlayer.getPlayerState(PlayQueueService.this);
-                    try { Thread.sleep(1000); }
-                    catch (InterruptedException e) {
-
-                    }
-                }
+    public void play() {
+        Log.d(this.getClass().getName(), "PLAY");
+        Metadata metaData = mSpotifyPlayer.getMetadata();
+        if (mSpotifyPlayer.getPlaybackState() != null) {
+            if (metaData.currentTrack == null && mSongQueue.size() > 0) {
+                // If track is not loaded into the player, start the first one in the list
+                Log.d(this.getClass().getName(), "Starting Spotify Player?");
+                mSpotifyPlayer.playUri(this, mSongQueue.get(0).uri, 0, 1);
+                mSongQueue.remove(0);
+                notifyQueueChanged();
+            } else {
+                mSpotifyPlayer.resume(this);
             }
         }
-    });
+    }
+
+    public void pause() {
+        Log.d(this.getClass().getName(), "PAUSE");
+        mSpotifyPlayer.pause(this);
+    }
+
+    public void playNext() {
+        Log.d(this.getClass().getName(), "NEXT");
+        mSpotifyPlayer.skipToNext(this);
+    }
+
+    public void addSongToQueue(Track track) {
+        // If next track is null queue track to player, else add to list
+        Metadata metaData = mSpotifyPlayer.getMetadata();
+        if (metaData != null && metaData.currentTrack != null && metaData.nextTrack == null) {
+            mSpotifyPlayer.queue(this, track.uri);
+        } else {
+            mSongQueue.add(track);
+        }
+        notifyQueueChanged();
+    }
+
+    public boolean isPlaying() {
+        return mSpotifyPlayer.getPlaybackState().isPlaying;
+    }
+
+    @Override
+    public void onPlaybackEvent(PlayerEvent playerEvent) {
+        Log.d(this.getClass().getName(), "New playback event: " + playerEvent.name());
+
+        switch (playerEvent) {
+            case kSpPlaybackNotifyPlay:
+                break;
+            case kSpPlaybackNotifyContextChanged:
+                break;
+            case kSpPlaybackNotifyPause:
+                break;
+            case kSpPlaybackNotifyTrackChanged:
+                // Track has changed
+                // Queue next track (if available)
+                if (mSongQueue.size() > 0) {
+                    Log.d(this.getClass().getName(), "Queueing: " + mSongQueue.get(0).name);
+                    mSpotifyPlayer.queue(this, mSongQueue.remove(0).uri);
+                }
+                notifyTrackChanged();
+                break;
+            case kSpPlaybackNotifyMetadataChanged:
+                // Log current and next track
+                Log.d(this.getClass().getName(), "Current track: " + mSpotifyPlayer.getMetadata().currentTrack
+                        + "\n Next Track: " + mSpotifyPlayer.getMetadata().nextTrack);
+                notifyQueueChanged();
+                break;
+            case kSpPlaybackNotifyTrackDelivered:
+            case kSpPlaybackNotifyNext:
+                break;
+            case kSpPlaybackNotifyAudioDeliveryDone:
+                for (TrackChangeListener listener : mTrackChangeListeners) {
+                    listener.onTrackChanged(null);
+                }
+
+                break;
+            default:
+                // Do nothing or future implementation
+                break;
+        }
+    }
+
+    @Override
+    public void onPlaybackError(Error error) {
+        Log.d(this.getClass().getName(), "ERROR: New playback error: " + error.name());
+    }
+
+    @Override
+    public void onSuccess() {
+        Log.d(this.getClass().getName(), "Great Success!");
+    }
+
+    @Override
+    public void onError(Error error) {
+        Log.d(this.getClass().getName(), "ERROR: Playback error received : Error - " + error.name());
+    }
+
+    /**
+     * Registering for connectivity changes in Android does not actually deliver them to
+     * us in the delivered intent.
+     *
+     * @param context Android context
+     * @return Connectivity state to be passed to the SDK
+     */
+    private Connectivity getNetworkConnectivity(Context context) {
+        ConnectivityManager connectivityManager;
+        connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        if (connectivityManager != null) {
+            NetworkInfo activeNetwork = connectivityManager.getActiveNetworkInfo();
+            if (activeNetwork != null && activeNetwork.isConnected()) {
+                return Connectivity.fromNetworkType(activeNetwork.getType());
+            } else {
+                return Connectivity.OFFLINE;
+            }
+        }
+        return Connectivity.OFFLINE;
+    }
+
+    // START CONNECTION CALLBACK METHODS
+    @Override
+    public void onLoggedIn() {
+        Log.d(this.getClass().getName(), "Logged In!");
+    }
+
+    @Override
+    public void onLoggedOut() {
+        Log.d(this.getClass().getName(), "Logged Out!");
+    }
+
+    @Override
+    public void onLoginFailed(Error error) {
+        Log.d(this.getClass().getName(), "ERROR: Login Error: " + error.name());
+    }
+
+    @Override
+    public void onTemporaryError() {
+        Log.d(this.getClass().getName(), "ERROR: Temporary Error");
+    }
+
+    @Override
+    public void onConnectionMessage(String s) {
+        Log.d(this.getClass().getName(), "Connection Message: " + s);
+    }
+    // END CONNECTION CALLBACK METHODS
+
+    // Inner interface used to cast listeners for when the track is changed
+    public interface TrackChangeListener {
+
+        void onTrackChanged(Metadata.Track track);
+
+    }
+
+    public void addTrackChangedListener(TrackChangeListener listener) {
+        mTrackChangeListeners.add(listener);
+    }
+
+    public void remove(TrackChangeListener listener) {
+        mTrackChangeListeners.remove(listener);
+    }
+
+    private void notifyTrackChanged() {
+        for (TrackChangeListener listener : mTrackChangeListeners) {
+            listener.onTrackChanged(mSpotifyPlayer.getMetadata().currentTrack);
+        }
+    }
+
+    // Inner interface used to cast listeners for when the queue has changed
+    public interface QueueChangeListener {
+
+        void onQueueChanged(List<Track> trackQueue);
+
+        void onQueueChanged(List<Track> trackQueue, String nextTrackUri);
+
+    }
+
+    private void notifyQueueChanged() {
+        for (QueueChangeListener listener : mQueueChangeListeners) {
+            Metadata.Track queuedTrack = mSpotifyPlayer.getMetadata().nextTrack;
+            if (queuedTrack == null) {
+                listener.onQueueChanged(new ArrayList<>(mSongQueue));
+            } else {
+                listener.onQueueChanged(new ArrayList<>(mSongQueue),
+                        queuedTrack.uri.replace("spotify:track:", ""));
+            }
+        }
+    }
+
+    public void addQueueChangedListener(QueueChangeListener listener) {
+        mQueueChangeListeners.add(listener);
+    }
+
+    public void remove(QueueChangeListener listener) {
+        mQueueChangeListeners.remove(listener);
+    }
 }

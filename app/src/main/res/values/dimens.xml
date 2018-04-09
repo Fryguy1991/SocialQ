@@ -1,4 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <dimen name="queue_decorator_height">2dp</dimen>
+
+    <!-- Spacing Dimens -->
+    <dimen name="small_spacing">10dp</dimen>
+    <dimen name="standard_spacing">20dp</dimen>
+    <dimen name="large_spacing">30dp</dimen>
 </resources>
