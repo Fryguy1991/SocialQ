@@ -6,4 +6,9 @@
     <dimen name="small_spacing">10dp</dimen>
     <dimen name="standard_spacing">20dp</dimen>
     <dimen name="large_spacing">30dp</dimen>
+
+    <!-- Text Size Dimens -->
+    <dimen name="small_text">10sp</dimen>
+    <dimen name="medium_text">20sp</dimen>
+    <dimen name="large_text">30sp</dimen>
 </resources>
