@@ -28,7 +28,7 @@ public class TrackListAdapter extends RecyclerView.Adapter implements TrackHolde
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View trackView = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.queue_list_item, parent, false);
+                .inflate(R.layout.track_list_holder, parent, false);
         return new TrackHolder(trackView);
     }
 

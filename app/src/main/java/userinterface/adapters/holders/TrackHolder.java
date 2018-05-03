@@ -1,6 +1,5 @@
 package userinterface.adapters.holders;
 
-import android.content.ClipData;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.widget.TextView;
