@@ -3,7 +3,6 @@ package userinterface.activities;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
-import android.provider.SyncStateContract;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -194,7 +193,7 @@ public class SearchActivity extends Activity implements TrackListAdapter.TrackSe
     @Override
     public void onTrackSelection(Track track) {
         Intent resultIntent = new Intent();
-        resultIntent.putExtra(AppConstants.SEARCH_RESULTS_KEY,
+        resultIntent.putExtra(AppConstants.SEARCH_RESULTS_EXTRA_KEY,
                 track.uri.replace("spotify:track:", ""));
         setResult(RESULT_OK, resultIntent);
         finish();
