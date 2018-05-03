@@ -6,4 +6,5 @@
     <color name="Gray">#FF808080</color>
     <color name="White">#FFFFFFFF</color>
     <color name="MidBlue">#FF1E90FF</color>
+    <color name="Transparent">#00000000</color>
 </resources>
