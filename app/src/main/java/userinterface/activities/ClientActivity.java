@@ -23,12 +23,14 @@ import com.spotify.sdk.android.player.Error;
 import com.spotify.sdk.android.player.Metadata;
 
 import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
 import business.AppConstants;
 import business.listeners.BluetoothConnectionListener;
-import chrisfry.spotifydj.R;
+import chrisfry.socialq.R;
 import kaaes.spotify.webapi.android.SpotifyApi;
 import kaaes.spotify.webapi.android.SpotifyService;
 import kaaes.spotify.webapi.android.models.Track;
@@ -50,6 +52,7 @@ public class ClientActivity extends Activity implements ConnectionStateCallback,
     // Bluetooth elements
     private BluetoothAdapter mBluetoothAdapter;
     private BluetoothDevice mHostBTDevice;
+    private BluetoothSocket mQueueSocket;
     // Elements for queue display
     private RecyclerView mQueueList;
     private TrackListAdapter mQueueDisplayAdapter;
@@ -87,6 +90,12 @@ public class ClientActivity extends Activity implements ConnectionStateCallback,
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         mHostBTDevice = getIntent().getParcelableExtra(AppConstants.BT_DEVICE_EXTRA_KEY);
 
+        if (!mBluetoothAdapter.isEnabled()) {
+            Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            startActivityForResult(enableBtIntent, AppConstants.REQUEST_ENABLE_BT);
+        } else {
+            connectToHost();
+        }
 
         // Allow network operation in main thread
         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder()
@@ -132,14 +141,16 @@ public class ClientActivity extends Activity implements ConnectionStateCallback,
             case AppConstants.SEARCH_REQUEST:
                 if (resultCode == RESULT_OK) {
                     String trackUri = intent.getStringExtra(AppConstants.SEARCH_RESULTS_EXTRA_KEY);
-                    if (trackUri != null && !trackUri.isEmpty()) {
+                    if (trackUri != null && !trackUri.isEmpty() && mQueueSocket != null) {
                         // TODO: Send request to host of queue
+                        sendTrackToHost(trackUri);
                     }
                 }
                 break;
             case AppConstants.REQUEST_ENABLE_BT:
                 if (resultCode == RESULT_OK) {
-
+                    // Bluetooth is enabled.  Launch connection with host
+                    connectToHost();
                 } else {
                     // TODO: Bluetooth not enabled, need to handle here
                 }
@@ -237,17 +248,43 @@ public class ClientActivity extends Activity implements ConnectionStateCallback,
         mQueueDisplayAdapter.updateQueueList(trackQueue);
     }
 
+    // BEGIN BLUETOOTH METHODS
     @Override
     public void onConnectionEstablished(BluetoothSocket socket) {
         Log.d(TAG, "WE ARE CONNECTED!");
-        try {
-            socket.close();
-        } catch (IOException e) {
-            Log.e(TAG, "Could not close the client socket", e);
-        }
+        mQueueSocket = socket;
+//        try {
+//            socket.close();
+//            Log.e(TAG, "Successfully closed socket");
+//        } catch (IOException e) {
+//            Log.e(TAG, "Could not close the client socket", e);
+//        }
     }
 
+//    @Override
+//    public void onConnectionFailed() {
+//        Log.d(TAG, "Connection failed");
+//    }
+
     private void connectToHost() {
-        new BluetoothConnectThread(BluetoothAdapter.getDefaultAdapter(), mHostBTDevice, this);
+        if (mHostBTDevice != null) {
+            mHostBTDevice.setPairingConfirmation(false);
+        }
+        new BluetoothConnectThread(BluetoothAdapter.getDefaultAdapter(), mHostBTDevice, this).start();
     }
+
+    private void sendTrackToHost(String trackUri) {
+        try {
+            OutputStream outputStream = mQueueSocket.getOutputStream();
+//            outputStream.write(BluetoothMessage.START_MESSAGE.getMessageId());
+//            outputStream.write(BluetoothMessage.SEND_TRACK.getMessageId());
+            outputStream.write(trackUri.getBytes(StandardCharsets.UTF_8));
+//            outputStream.write(BluetoothMessage.END_MESSAGE.getMessageId());
+            Log.d(TAG, "Track sent to output stream");
+        } catch (IOException e) {
+            Log.d(TAG, "Sending track failed");
+            e.printStackTrace();
+        }
+    }
+    // END BLUETOOTH METHODS
 }

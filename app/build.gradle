@@ -2,11 +2,11 @@ apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion 24
-    buildToolsVersion '26.0.2'
+    buildToolsVersion '27.0.3'
 
     defaultConfig {
-        applicationId "chrisfry.spotifydj"
-        minSdkVersion 16
+        applicationId "chrisfry.socialq"
+        minSdkVersion 19
         targetSdkVersion 24
         versionCode 1
         versionName "1.0"
@@ -28,21 +28,21 @@ repositories {
 }
 
 dependencies {
-    compile fileTree(include: ['*.jar'], dir: 'libs')
-    testCompile 'junit:junit:4.12'
+    api fileTree(include: ['*.jar'], dir: 'libs')
+    testImplementation 'junit:junit:4.12'
 
     // This library handles authentication and authorization
-    compile 'com.spotify.sdk:spotify-auth:1.0.0-beta13@aar'
+    api 'com.spotify.sdk:spotify-auth:1.0.0-beta13@aar'
     // This library handles music playback
-    compile 'com.spotify.sdk:spotify-player-24-noconnect-2.20b@aar'
+    api 'com.spotify.sdk:spotify-player-24-noconnect-2.20b@aar'
     //Spotify WebAPI Android wrapper
-    compile 'com.github.kaaes:spotify-web-api-android:0.4.1'
+    api 'com.github.kaaes:spotify-web-api-android:0.4.1'
 
     // Butterknife
-    compile 'com.jakewharton:butterknife:8.8.1'
+    api 'com.jakewharton:butterknife:8.8.1'
     annotationProcessor 'com.jakewharton:butterknife-compiler:8.8.1'
 
     //Android support libraries
-    compile 'com.android.support:appcompat-v7:24.2.1'
-    compile 'com.android.support:recyclerview-v7:24.2.1'
+    api 'com.android.support:appcompat-v7:24.2.1'
+    api 'com.android.support:recyclerview-v7:24.2.1'
 }

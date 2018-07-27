@@ -17,7 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import business.AppConstants;
-import chrisfry.spotifydj.R;
+import chrisfry.socialq.R;
 import kaaes.spotify.webapi.android.SpotifyApi;
 import kaaes.spotify.webapi.android.SpotifyService;
 import kaaes.spotify.webapi.android.models.AlbumSimple;

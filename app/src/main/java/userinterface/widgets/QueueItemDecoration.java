@@ -8,7 +8,7 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 
-import chrisfry.spotifydj.R;
+import chrisfry.socialq.R;
 
 /**
  * Between item decoration for queue list view

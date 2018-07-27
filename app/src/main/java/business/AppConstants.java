@@ -19,5 +19,9 @@ public class AppConstants {
     // Result activity request codes
     public static final int SEARCH_REQUEST = 1337;
     public static final int SPOTIFY_LOGIN_REQUEST = 8675309;
+    public static final int REQUEST_ENABLE_BT = 12345;
+    public static final int REQUEST_DISCOVER_BT = 54321;
 
+    // Charset Name
+    public static final String UTF8_CHARSET_NAME = "UTF-8";
 }

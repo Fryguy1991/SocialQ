@@ -7,7 +7,7 @@ import android.view.ViewGroup;
 
 import java.util.List;
 
-import chrisfry.spotifydj.R;
+import chrisfry.socialq.R;
 import kaaes.spotify.webapi.android.models.Track;
 import userinterface.adapters.holders.TrackHolder;
 import utils.DisplayUtils;

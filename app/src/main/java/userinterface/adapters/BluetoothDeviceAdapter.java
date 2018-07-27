@@ -8,7 +8,7 @@ import android.view.ViewGroup;
 import java.util.ArrayList;
 import java.util.List;
 
-import chrisfry.spotifydj.R;
+import chrisfry.socialq.R;
 import userinterface.adapters.holders.BluetoothDeviceHolder;
 
 /**

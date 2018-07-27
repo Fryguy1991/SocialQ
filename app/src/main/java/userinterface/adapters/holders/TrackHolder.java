@@ -4,7 +4,7 @@ import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.widget.TextView;
 
-import chrisfry.spotifydj.R;
+import chrisfry.socialq.R;
 
 /**
  * Holder for displaying a track's name and artist

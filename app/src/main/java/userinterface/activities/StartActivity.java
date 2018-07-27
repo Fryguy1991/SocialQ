@@ -6,7 +6,7 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.view.View;
 
-import chrisfry.spotifydj.R;
+import chrisfry.socialq.R;
 
 /**
  * Start screen for the application
