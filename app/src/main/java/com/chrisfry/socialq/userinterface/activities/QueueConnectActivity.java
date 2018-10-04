@@ -1,0 +1,72 @@
+package com.chrisfry.socialq.userinterface.activities;
+
+import android.app.Activity;
+import android.os.Bundle;
+import android.support.annotation.Nullable;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
+import android.view.View;
+
+import com.chrisfry.socialq.R;
+import com.chrisfry.socialq.userinterface.widgets.QueueItemDecoration;
+
+/**
+ * Activity used to search for and connect to a SocialQ
+ */
+public abstract class QueueConnectActivity extends Activity implements View.OnClickListener{
+    private final String TAG = QueueConnectActivity.class.getName();
+
+    private RecyclerView mQueueRecyclerView;
+
+    protected View mQueueSearchButton;
+    protected View mQueueJoinButton;
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        mQueueJoinButton.setEnabled(false);
+    }
+
+    @Override
+    protected void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.queue_connect_screen);
+
+        mQueueSearchButton = findViewById(R.id.btn_queue_search);
+        mQueueSearchButton.setOnClickListener(this);
+
+        mQueueJoinButton = findViewById(R.id.btn_queue_join);
+        mQueueJoinButton.setOnClickListener(this);
+
+        mQueueRecyclerView = (RecyclerView) findViewById(R.id.rv_queue_list_view);
+        LinearLayoutManager layoutManager = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
+        mQueueRecyclerView.setLayoutManager(layoutManager);
+        mQueueRecyclerView.addItemDecoration(new QueueItemDecoration(getApplicationContext()));
+        setupAdapter(mQueueRecyclerView);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+    }
+
+    @Override
+    public void onClick(View view) {
+        switch (view.getId()) {
+            case R.id.btn_queue_search:
+                searchForQueues();
+                break;
+            case R.id.btn_queue_join:
+                connectToQueue();
+                break;
+        }
+    }
+
+    protected abstract void setupAdapter(RecyclerView recyclerView);
+
+    protected abstract void searchForQueues();
+
+    protected abstract void connectToQueue();
+}

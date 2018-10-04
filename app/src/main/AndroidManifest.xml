@@ -1,11 +1,12 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="chrisfry.socialq">
+    package="com.chrisfry.socialq">
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
     <uses-permission android:name="android.permission.BLUETOOTH"/>
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
-    <uses-permission android:name="android.permission.BLUETOOTH_PRIVILEGED"/>
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
+    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE"/>
 
     <application
         android:allowBackup="true"
@@ -15,23 +16,30 @@
         android:theme="@style/AppTheme">
 
     <!-- Application Activities -->
-        <!-- Activity for Host Screen -->
+        <!-- Activity for Host Screen (Bluetooth) -->
         <activity
-            android:name="userinterface.activities.HostActivity"
+            android:name="com.chrisfry.socialq.userinterface.activities.HostActivityBluetooth"
             android:label="@string/app_name"
             android:screenOrientation="portrait"
             android:launchMode="singleTop"/>
 
-        <!-- Activity for Client Screen -->
+        <!-- Activity for Host Screen (Nearby Devices) -->
         <activity
-            android:name="userinterface.activities.ClientActivity"
+            android:name="com.chrisfry.socialq.userinterface.activities.HostActivityNearbyDevices"
+            android:label="@string/app_name"
+            android:screenOrientation="portrait"
+            android:launchMode="singleTop"/>
+
+        <!-- Activity for Client Screen (Bluetooth) -->
+        <activity
+            android:name="com.chrisfry.socialq.userinterface.activities.ClientActivityBluetooth"
             android:label="@string/app_name"
             android:screenOrientation="portrait"
             android:launchMode="singleTop"/>
 
         <!-- Activity for Launch Screen -->
         <activity
-            android:name="userinterface.activities.StartActivity"
+            android:name="com.chrisfry.socialq.userinterface.activities.StartActivity"
             android:label="@string/app_name"
             android:screenOrientation="portrait">
         <intent-filter>
@@ -42,16 +50,16 @@
 
         <!-- Activity for Queue Connect Screen -->
         <activity
-            android:name="userinterface.activities.QueueConnectActivity"
+            android:name="com.chrisfry.socialq.userinterface.activities.QueueConnectActivityBluetooth"
             android:label="@string/app_name"
             android:screenOrientation="portrait"/>
 
         <!-- Activity for Search Screen -->
         <activity
-            android:name="userinterface.activities.SearchActivity"
+            android:name="com.chrisfry.socialq.userinterface.activities.SearchActivity"
             android:label="@string/search_activity_name"
             android:screenOrientation="portrait"
-            android:parentActivityName="userinterface.activities.HostActivity"/>
+            />
 
         <!-- Activity for Spotify login (created by Spotify) -->
         <activity
@@ -60,7 +68,7 @@
 
         <!-- Application Services -->
         <!-- Service for playing queue in background -->
-        <service android:name="services.PlayQueueService"/>
+        <service android:name="com.chrisfry.socialq.services.PlayQueueService"/>
 
     </application>
 
