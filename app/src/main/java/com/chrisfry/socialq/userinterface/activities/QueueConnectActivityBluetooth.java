@@ -152,7 +152,8 @@ public class QueueConnectActivityBluetooth extends QueueConnectActivity implemen
                         Parcelable[] uuids = intent.getParcelableArrayExtra(BluetoothDevice.EXTRA_UUID);
 
                         // Check UUIDs to see if it's a SocialQ device
-                        if (!mSocialQDevices.contains(device) && containsAppUuid(uuids)) {
+                        // TODO: Should be able to identify by UUID and not by device name
+                        if (!mSocialQDevices.contains(device) && (containsAppUuid(uuids) || device.getName().equals("SocialQ Host"))) {
                             Log.d(TAG, "Found SocialQ device");
                             mSocialQDevices.add(device);
                         } else {

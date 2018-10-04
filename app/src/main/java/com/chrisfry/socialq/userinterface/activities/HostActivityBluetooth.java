@@ -72,10 +72,7 @@ public class HostActivityBluetooth extends HostActivity implements BluetoothConn
             switch (inputMessage.what) {
                 case QUEUE_TRACK:
                     String trackUri = inputMessage.getData().getString(BUNDLE_TRACK_KEY);
-                    if (trackUri != null) {
-                        Track trackToQueue = mSpotifyService.getTrack(trackUri);
-                        mPlayQueueService.addSongToQueue(trackToQueue);
-                    }
+                    handleClientQueueRequest(trackUri);
                     break;
                 default:
                     // Do nothing
