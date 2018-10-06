@@ -15,7 +15,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
 
-    <!-- Application Activities -->
+    <!-- START APPLICATION ACTIVITIES -->
         <!-- Activity for Host Screen (Bluetooth) -->
         <activity
             android:name="com.chrisfry.socialq.userinterface.activities.HostActivityBluetooth"
@@ -24,6 +24,8 @@
             android:launchMode="singleTop"/>
 
         <!-- Activity for Host Screen (Nearby Devices) -->
+
+        <!-- Activity for Host Screen (Nearby Devices) KOTLIN -->
         <activity
             android:name="com.chrisfry.socialq.userinterface.activities.HostActivityNearbyDevices"
             android:label="@string/app_name"
@@ -33,6 +35,13 @@
         <!-- Activity for Client Screen (Bluetooth) -->
         <activity
             android:name="com.chrisfry.socialq.userinterface.activities.ClientActivityBluetooth"
+            android:label="@string/app_name"
+            android:screenOrientation="portrait"
+            android:launchMode="singleTop"/>
+
+        <!-- Activity for Client Screen (Nearby Devices) KOTLIN -->
+        <activity
+            android:name="com.chrisfry.socialq.userinterface.activities.ClientActivityNearbyDevices"
             android:label="@string/app_name"
             android:screenOrientation="portrait"
             android:launchMode="singleTop"/>
@@ -48,9 +57,15 @@
         </intent-filter>
         </activity>
 
-        <!-- Activity for Queue Connect Screen -->
+        <!-- Activity for Queue Connect Screen (Bluetooth) -->
         <activity
             android:name="com.chrisfry.socialq.userinterface.activities.QueueConnectActivityBluetooth"
+            android:label="@string/app_name"
+            android:screenOrientation="portrait"/>
+
+        <!-- Activity for Queue Connect Screen (Nearby Devices) KOTLIN -->
+        <activity
+            android:name="com.chrisfry.socialq.userinterface.activities.QueueConnectActivityNearbyDevices"
             android:label="@string/app_name"
             android:screenOrientation="portrait"/>
 
@@ -65,11 +80,12 @@
         <activity
             android:name="com.spotify.sdk.android.authentication.LoginActivity"
             android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+    <!-- END APPLICATION ACTIVITIES -->
 
-        <!-- Application Services -->
+    <!-- START APPLICATION SERVICES -->
         <!-- Service for playing queue in background -->
         <service android:name="com.chrisfry.socialq.services.PlayQueueService"/>
-
+    <!-- END APPLICATION SERVICES -->
     </application>
 
 </manifest>

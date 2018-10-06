@@ -28,10 +28,10 @@ public class StartActivity extends Activity {
         public void onClick(View view) {
             switch (view.getId()) {
                 case R.id.btn_host_queue:
-                    startActivity(new Intent(StartActivity.this, HostActivityBluetooth.class));
+                    startActivity(new Intent(StartActivity.this, HostActivityNearbyDevices.class));
                     break;
                 case R.id.btn_join_queue:
-                    startActivity(new Intent(StartActivity.this, QueueConnectActivityBluetooth.class));
+                    startActivity(new Intent(StartActivity.this, QueueConnectActivityNearbyDevices.class));
                     break;
             }
         }

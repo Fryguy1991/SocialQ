@@ -18,6 +18,7 @@ public class AppConstants {
     public static final String SEARCH_RESULTS_EXTRA_KEY = "search_results_key";
     public static final String BT_DEVICE_ADDRESS_EXTRA_KEY = "device_address_key";
     public static final String BT_DEVICE_EXTRA_KEY = "device_key";
+    public static final String ND_ENDPOINT_ID_EXTRA_KEY = "endpoint_id_key";
 
     // Result activity request codes
     public static final int SEARCH_REQUEST = 1337;

@@ -6,10 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Bundle;
-import android.os.Handler;
 import android.os.IBinder;
-import android.os.Looper;
-import android.os.Message;
 import android.os.StrictMode;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -55,10 +52,6 @@ public abstract class HostActivity extends Activity implements ConnectionStateCa
     // Can be any integer
     private static final int SPOTIFY_LOGIN_REQUEST = 8675309;
 
-    // Handler message values
-    private static final int QUEUE_TRACK = 0;
-    private static final String BUNDLE_TRACK_KEY = "bundle_track_key";
-
     // UI element references
     private Button mNextButton;
     private Button mPlayPauseButton;
@@ -70,7 +63,6 @@ public abstract class HostActivity extends Activity implements ConnectionStateCa
     private TrackListAdapter mQueueDisplayAdapter;
 
     // Spotify elements
-    private SpotifyApi mApi;
     private SpotifyService mSpotifyService;
     private PlayQueueService mPlayQueueService;
 

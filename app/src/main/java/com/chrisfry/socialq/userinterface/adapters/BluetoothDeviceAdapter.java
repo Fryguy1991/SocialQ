@@ -15,7 +15,7 @@ import com.chrisfry.socialq.userinterface.adapters.holders.BluetoothDeviceHolder
  * Adapter for Bluetooth device list
  */
 public class BluetoothDeviceAdapter extends RecyclerView.Adapter implements
-        BluetoothDeviceHolder.ItemSelectionListener {
+        BluetoothDeviceHolder.ItemSelectionListenerBluetooth {
     private List<BluetoothDevice> mBluetoothDevices = new ArrayList<>();
 
     private DeviceSelectionListener mBluetoothDeviceSelectionListener;

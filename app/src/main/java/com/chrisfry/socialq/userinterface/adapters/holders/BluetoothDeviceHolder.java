@@ -18,7 +18,7 @@ public class BluetoothDeviceHolder extends RecyclerView.ViewHolder implements Vi
     private TextView mDeviceName;
     private View mParentView;
 
-    private ItemSelectionListener mItemSelectionListener;
+    private ItemSelectionListenerBluetooth mItemSelectionListener;
 
     public BluetoothDeviceHolder(View itemView) {
         super(itemView);
@@ -55,11 +55,11 @@ public class BluetoothDeviceHolder extends RecyclerView.ViewHolder implements Vi
         }
     }
 
-    public interface ItemSelectionListener {
+    public interface ItemSelectionListenerBluetooth {
         void onItemSelected(BluetoothDevice device);
     }
 
-    public void setItemSelectionListener(ItemSelectionListener listener) {
+    public void setItemSelectionListener(ItemSelectionListenerBluetooth listener) {
         mItemSelectionListener = listener;
     }
 }
