@@ -1,18 +1,19 @@
 package com.chrisfry.socialq.userinterface.activities
 
-import android.app.AlertDialog
-import android.content.DialogInterface
 import android.util.Log
 import android.widget.Toast
 import com.chrisfry.socialq.business.AppConstants
+import com.chrisfry.socialq.utils.ApplicationUtils
 import com.google.android.gms.nearby.Nearby
 import com.google.android.gms.nearby.connection.*
 import com.google.android.gms.tasks.OnFailureListener
 import com.google.android.gms.tasks.OnSuccessListener
+import kaaes.spotify.webapi.android.models.Track
 import java.lang.Exception
 
 class HostActivityNearbyDevices : HostActivity() {
     private val TAG = HostActivityNearbyDevices::class.java.name
+    private var mClientEndpoints = ArrayList<String>()
 
     private val mConnectionLifecycleCallback = object : ConnectionLifecycleCallback() {
         override fun onConnectionInitiated(endpointId: String, connectionInfo: ConnectionInfo) {
@@ -42,6 +43,7 @@ class HostActivityNearbyDevices : HostActivity() {
                 ConnectionsStatusCodes.STATUS_OK -> {
                     Log.d(TAG, "Established connection with a client")
                     Toast.makeText(this@HostActivityNearbyDevices, "Client has joined!", Toast.LENGTH_SHORT).show()
+                    mClientEndpoints.add(endPoint)
                 }
                 ConnectionsStatusCodes.STATUS_CONNECTION_REJECTED -> Log.d(TAG, "Client connection rejected")
                 ConnectionsStatusCodes.STATUS_ERROR -> Log.d(TAG, "Error during client connection")
@@ -51,6 +53,7 @@ class HostActivityNearbyDevices : HostActivity() {
 
         override fun onDisconnected(endPoint: String) {
             Toast.makeText(this@HostActivityNearbyDevices, "Client has disconnected!", Toast.LENGTH_SHORT).show()
+            mClientEndpoints.remove(endPoint)
         }
     }
 
@@ -89,6 +92,12 @@ class HostActivityNearbyDevices : HostActivity() {
                         TODO("Handle advertising failure")
                     }
                 })
+    }
+
+    override fun sendQueueToClients(queueTracks: MutableList<Track>) {
+        for (endpointId: String in mClientEndpoints) {
+            Nearby.getConnectionsClient(this).sendPayload(endpointId, Payload.fromBytes(ApplicationUtils.convertTrackListToQueueString(queueTracks).toByteArray()))
+        }
     }
 
     override fun onDestroy() {

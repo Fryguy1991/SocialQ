@@ -26,6 +26,11 @@ public class AppConstants {
     public static final int REQUEST_ENABLE_BT = 12345;
     public static final int REQUEST_DISCOVER_BT = 54321;
 
+    // Nearby Devices Messages
+    public static final String ND_BEGIN_QUEUE_MESSAGE = "#BEG#";
+    public static final String ND_END_QUEUE_MESSAGE = "#END#";
+    public static final String ND_TRACK_SEPARATOR_MESSAGE = "#SEP#";
+
     // Charset Name
     public static final String UTF8_CHARSET_NAME = "UTF-8";
 }

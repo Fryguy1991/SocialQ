@@ -1,14 +1,14 @@
 package com.chrisfry.socialq.userinterface.activities
 
-import android.app.AlertDialog
-import android.content.DialogInterface
 import android.os.Bundle
 import android.util.Log
 import com.chrisfry.socialq.business.AppConstants
+import com.chrisfry.socialq.utils.ApplicationUtils
 import com.google.android.gms.nearby.Nearby
 import com.google.android.gms.nearby.connection.*
 import com.google.android.gms.tasks.OnFailureListener
 import com.google.android.gms.tasks.OnSuccessListener
+import kaaes.spotify.webapi.android.models.Track
 import java.lang.Exception
 
 class ClientActivityNearbyDevices : ClientActivity() {
@@ -55,7 +55,12 @@ class ClientActivityNearbyDevices : ClientActivity() {
 
     private val mPayloadCallback = object : PayloadCallback() {
         override fun onPayloadReceived(endpointId: String, payload: Payload) {
-            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+            val trackStringList = ApplicationUtils.convertQueueByteArrayToStringList(payload.asBytes())
+
+            // Retrieve tracks for the list of track URIs
+            // TODO INVESTIGATE.  THIS HAS BEEN CRASHING
+            var trackList = MutableList<Track>(trackStringList.size){index: Int -> mSpotifyService.getTrack(trackStringList.get(index))}
+            updateQueue(trackList)
         }
 
         override fun onPayloadTransferUpdate(endpointId: String, payloadTransferUpdate: PayloadTransferUpdate) {

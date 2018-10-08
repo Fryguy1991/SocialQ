@@ -210,6 +210,11 @@ public class HostActivityBluetooth extends HostActivity implements BluetoothConn
         }
     }
 
+    @Override
+    void sendQueueToClients(List<Track> queueTracks) {
+        // TODO: IMPLEMENT QUEUE SENDING FOR BLUETOOTH
+    }
+
     private class ReadThread extends Thread {
         BluetoothSocket mSocket;
         InputStream mInputStream;

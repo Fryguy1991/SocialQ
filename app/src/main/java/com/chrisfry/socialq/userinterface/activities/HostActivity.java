@@ -34,7 +34,6 @@ import java.util.List;
 import com.chrisfry.socialq.business.AppConstants;
 import com.chrisfry.socialq.R;
 
-import kaaes.spotify.webapi.android.SpotifyApi;
 import kaaes.spotify.webapi.android.SpotifyService;
 import kaaes.spotify.webapi.android.models.Track;
 import kaaes.spotify.webapi.android.models.TracksPager;
@@ -81,7 +80,7 @@ public abstract class HostActivity extends Activity implements ConnectionStateCa
             mPlayQueueService.addQueueChangedListener(HostActivity.this);
 
             setupQueueList();
-//            setupDemoQueue();
+            setupDemoQueue();
         }
 
         @Override
@@ -272,6 +271,8 @@ public abstract class HostActivity extends Activity implements ConnectionStateCa
     public void onQueueChanged(List<Track> trackQueue) {
         mQueueDisplayAdapter.updateQueueList(trackQueue);
 
+        sendQueueToClients(trackQueue);
+
         mCurrentTrackList = trackQueue;
     }
 
@@ -280,6 +281,9 @@ public abstract class HostActivity extends Activity implements ConnectionStateCa
         Track nextTrack = mSpotifyService.getTrack(nextTrackUri);
         trackQueue.add(0, nextTrack);
         mQueueDisplayAdapter.updateQueueList(trackQueue);
+
+
+        sendQueueToClients(trackQueue);
 
         mCurrentTrackList = trackQueue;
     }
@@ -299,6 +303,8 @@ public abstract class HostActivity extends Activity implements ConnectionStateCa
     }
 
     abstract void startHostConnection();
+
+    abstract void sendQueueToClients(List<Track> queueTracks);
 
     protected final void hasConnectionBeenEstablished(boolean isConnected) {
         if (isConnected) {

@@ -17,27 +17,22 @@ import com.chrisfry.socialq.business.AppConstants;
 import com.chrisfry.socialq.business.dagger.modules.SpotifyModule;
 import com.chrisfry.socialq.business.dagger.modules.components.DaggerSpotifyComponent;
 import com.chrisfry.socialq.business.dagger.modules.components.SpotifyComponent;
-import com.chrisfry.socialq.services.PlayQueueService;
 import com.chrisfry.socialq.userinterface.adapters.TrackListAdapter;
 import com.chrisfry.socialq.userinterface.widgets.QueueItemDecoration;
 import com.chrisfry.socialq.utils.ApplicationUtils;
-import com.chrisfry.socialq.utils.DisplayUtils;
 import com.spotify.sdk.android.authentication.AuthenticationClient;
 import com.spotify.sdk.android.authentication.AuthenticationRequest;
 import com.spotify.sdk.android.authentication.AuthenticationResponse;
 import com.spotify.sdk.android.player.ConnectionStateCallback;
 import com.spotify.sdk.android.player.Error;
-import com.spotify.sdk.android.player.Metadata;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import kaaes.spotify.webapi.android.SpotifyApi;
 import kaaes.spotify.webapi.android.SpotifyService;
 import kaaes.spotify.webapi.android.models.Track;
 
-public abstract class ClientActivity extends Activity implements ConnectionStateCallback, PlayQueueService.TrackChangeListener,
-        PlayQueueService.QueueChangeListener {
+public abstract class ClientActivity extends Activity implements ConnectionStateCallback {
     private final String TAG = ClientActivity.class.getName();
 
     // Elements for queue display
@@ -48,7 +43,7 @@ public abstract class ClientActivity extends Activity implements ConnectionState
     private TextView mCurrentArtistName;
 
     // Spotify API elements
-    private SpotifyApi mApi;
+    protected SpotifyService mSpotifyService;
 
     @Override
     protected void onNewIntent(Intent intent) {
@@ -56,8 +51,6 @@ public abstract class ClientActivity extends Activity implements ConnectionState
 
         setIntent(intent);
     }
-
-    private SpotifyService mSpotifyService;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -189,27 +182,10 @@ public abstract class ClientActivity extends Activity implements ConnectionState
         mQueueList.addItemDecoration(new QueueItemDecoration(getApplicationContext()));
     }
 
-    @Override
-    public void onTrackChanged(Metadata.Track track) {
-        if (track != null) {
-            mCurrentTrackName.setText(track.name);
-            mCurrentArtistName.setText(DisplayUtils.getTrackArtistString(track));
-        } else {
-            mCurrentTrackName.setText("");
-            mCurrentArtistName.setText("");
+    protected void updateQueue(List<Track> trackQueue) {
+        if (trackQueue != null) {
+            mQueueDisplayAdapter.updateQueueList(trackQueue);
         }
-    }
-
-    @Override
-    public void onQueueChanged(List<Track> trackQueue) {
-        mQueueDisplayAdapter.updateQueueList(trackQueue);
-    }
-
-    @Override
-    public void onQueueChanged(List<Track> trackQueue, String nextTrackUri) {
-        Track nextTrack = mSpotifyService.getTrack(nextTrackUri);
-        trackQueue.add(0, nextTrack);
-        mQueueDisplayAdapter.updateQueueList(trackQueue);
     }
 
     protected abstract void sendTrackToHost(String trackUri);
