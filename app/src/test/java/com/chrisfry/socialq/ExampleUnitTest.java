@@ -1,4 +1,4 @@
-package chrisfry.spotifydj;
+package com.chrisfry.socialq;
 
 import org.junit.Test;
 
