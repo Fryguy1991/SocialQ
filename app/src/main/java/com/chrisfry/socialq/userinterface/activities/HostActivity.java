@@ -81,7 +81,7 @@ public abstract class HostActivity extends Activity implements ConnectionStateCa
             mPlayQueueService.addQueueChangedListener(HostActivity.this);
 
             setupQueueList();
-            setupDemoQueue();
+//            setupDemoQueue();
         }
 
         @Override

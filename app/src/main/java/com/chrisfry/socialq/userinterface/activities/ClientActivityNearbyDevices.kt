@@ -13,25 +13,29 @@ import java.lang.Exception
 
 class ClientActivityNearbyDevices : ClientActivity() {
     private val TAG = ClientActivityNearbyDevices::class.java.name
+    private lateinit var mHostEndpointId : String
 
     private val mConnectionLifecycleCallback = object : ConnectionLifecycleCallback() {
         override fun onConnectionInitiated(endpointId: String, connectionInfo: ConnectionInfo) {
-            AlertDialog.Builder(this@ClientActivityNearbyDevices)
-                    .setTitle("Accept connection to " + connectionInfo.endpointName)
-                    .setMessage("Confirm the code " + connectionInfo.authenticationToken)
-                    .setPositiveButton("Accept", object : DialogInterface.OnClickListener {
-                        override fun onClick(dialog: DialogInterface?, which: Int) {
-                            // User confirmed, accept connection
-                            Nearby.getConnectionsClient(this@ClientActivityNearbyDevices).acceptConnection(endpointId, mPayloadCallback)
-                        }
-                    })
-                    .setNegativeButton("Reject", object : DialogInterface.OnClickListener {
-                        override fun onClick(dialog: DialogInterface?, which: Int) {
-                            // User rejected, reject connection
-                            Nearby.getConnectionsClient(this@ClientActivityNearbyDevices).rejectConnection(endpointId)
-                        }
-                    })
-                    .show()
+//            AlertDialog.Builder(this@ClientActivityNearbyDevices)
+//                    .setTitle("Accept connection to " + connectionInfo.endpointName)
+//                    .setMessage("Confirm the code " + connectionInfo.authenticationToken)
+//                    .setPositiveButton("Accept", object : DialogInterface.OnClickListener {
+//                        override fun onClick(dialog: DialogInterface?, which: Int) {
+//                            // User confirmed, accept connection
+//                            Nearby.getConnectionsClient(this@ClientActivityNearbyDevices).acceptConnection(endpointId, mPayloadCallback)
+//                        }
+//                    })
+//                    .setNegativeButton("Reject", object : DialogInterface.OnClickListener {
+//                        override fun onClick(dialog: DialogInterface?, which: Int) {
+//                            // User rejected, reject connection
+//                            Nearby.getConnectionsClient(this@ClientActivityNearbyDevices).rejectConnection(endpointId)
+//                        }
+//                    })
+//                    .show()
+
+            // Uncomment code above to force connection verification
+            Nearby.getConnectionsClient(this@ClientActivityNearbyDevices).acceptConnection(endpointId, mPayloadCallback)
         }
 
         override fun onConnectionResult(endPoint: String, connectionResolution: ConnectionResolution) {
@@ -55,7 +59,7 @@ class ClientActivityNearbyDevices : ClientActivity() {
         }
 
         override fun onPayloadTransferUpdate(endpointId: String, payloadTransferUpdate: PayloadTransferUpdate) {
-            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+            // Do we care about status?
         }
 
     }
@@ -68,6 +72,7 @@ class ClientActivityNearbyDevices : ClientActivity() {
             Log.d(TAG, "Have no endpoint ID for host connection, can't connect")
             finish()
         } else {
+            mHostEndpointId = endpointId
             Nearby.getConnectionsClient(this).requestConnection(
                     "SocialQ Client",
                     endpointId,
@@ -95,6 +100,8 @@ class ClientActivityNearbyDevices : ClientActivity() {
     }
 
     override fun sendTrackToHost(trackUri: String?) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        if (trackUri != null) {
+            Nearby.getConnectionsClient(this).sendPayload(mHostEndpointId, Payload.fromBytes(trackUri.toByteArray()))
+        }
     }
 }

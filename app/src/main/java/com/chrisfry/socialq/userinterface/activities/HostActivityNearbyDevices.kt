@@ -16,22 +16,25 @@ class HostActivityNearbyDevices : HostActivity() {
 
     private val mConnectionLifecycleCallback = object : ConnectionLifecycleCallback() {
         override fun onConnectionInitiated(endpointId: String, connectionInfo: ConnectionInfo) {
-            AlertDialog.Builder(this@HostActivityNearbyDevices)
-                    .setTitle("Accept connection to " + connectionInfo.endpointName)
-                    .setMessage("Confirm the code " + connectionInfo.authenticationToken)
-                    .setPositiveButton("Accept", object : DialogInterface.OnClickListener {
-                        override fun onClick(dialog: DialogInterface?, which: Int) {
-                            // User confirmed, accept connection
-                            Nearby.getConnectionsClient(this@HostActivityNearbyDevices).acceptConnection(endpointId, mPayloadCallback)
-                        }
-                    })
-                    .setNegativeButton("Reject", object : DialogInterface.OnClickListener {
-                        override fun onClick(dialog: DialogInterface?, which: Int) {
-                            // User rejected, reject connection
-                            Nearby.getConnectionsClient(this@HostActivityNearbyDevices).rejectConnection(endpointId)
-                        }
-                    })
-                    .show()
+//            AlertDialog.Builder(this@HostActivityNearbyDevices)
+//                    .setTitle("Accept connection to " + connectionInfo.endpointName)
+//                    .setMessage("Confirm the code " + connectionInfo.authenticationToken)
+//                    .setPositiveButton("Accept", object : DialogInterface.OnClickListener {
+//                        override fun onClick(dialog: DialogInterface?, which: Int) {
+//                            // User confirmed, accept connection
+//                            Nearby.getConnectionsClient(this@HostActivityNearbyDevices).acceptConnection(endpointId, mPayloadCallback)
+//                        }
+//                    })
+//                    .setNegativeButton("Reject", object : DialogInterface.OnClickListener {
+//                        override fun onClick(dialog: DialogInterface?, which: Int) {
+//                            // User rejected, reject connection
+//                            Nearby.getConnectionsClient(this@HostActivityNearbyDevices).rejectConnection(endpointId)
+//                        }
+//                    })
+//                    .show
+
+            // Uncomment code above to force connection verification
+            Nearby.getConnectionsClient(this@HostActivityNearbyDevices).acceptConnection(endpointId, mPayloadCallback)
         }
 
         override fun onConnectionResult(endPoint: String, connectionResolution: ConnectionResolution) {
@@ -53,11 +56,15 @@ class HostActivityNearbyDevices : HostActivity() {
 
     private val mPayloadCallback = object : PayloadCallback() {
         override fun onPayloadReceived(endpointId: String, payload: Payload) {
-            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+            when (payload.type) {
+                Payload.Type.BYTES -> handleClientQueueRequest(String(payload.asBytes()!!))
+                Payload.Type.FILE -> TODO("not implemented")
+                Payload.Type.STREAM -> TODO("not implemented")
+            }
         }
 
         override fun onPayloadTransferUpdate(endpointId: String, payloadTransferUpdate: PayloadTransferUpdate) {
-            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+            // Do we care about status?
         }
 
     }
