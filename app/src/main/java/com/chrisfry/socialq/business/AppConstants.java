@@ -13,6 +13,8 @@ public class AppConstants {
 
     // Service Name
     public static final String SERVICE_NAME = "chris.fry.socialq";
+    // Client ID specific to this application
+    public static final String CLIENT_ID = "0fab62a3895a4fa3aae14bc3e46bc59c";
 
     // Intent extra key strings
     public static final String SEARCH_RESULTS_EXTRA_KEY = "search_results_key";

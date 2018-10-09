@@ -9,6 +9,7 @@ import android.os.Binder;
 import android.os.IBinder;
 import android.util.Log;
 
+import com.chrisfry.socialq.business.AppConstants;
 import com.spotify.sdk.android.player.Config;
 import com.spotify.sdk.android.player.ConnectionStateCallback;
 import com.spotify.sdk.android.player.Connectivity;
@@ -34,8 +35,6 @@ public class PlayQueueService extends Service implements ConnectionStateCallback
 
     // Binder given to clients
     private final IBinder mPlayQueueBinder = new PlayQueueBinder();
-    // Client ID specific to this application
-    private static final String CLIENT_ID = "0fab62a3895a4fa3aae14bc3e46bc59c";
     // List containing the queue of songs (next to play always index 0)
     private ArrayList<Track> mSongQueue = new ArrayList<>();
     // Member player object used for playing audio
@@ -110,7 +109,7 @@ public class PlayQueueService extends Service implements ConnectionStateCallback
 
     private void initPlayer(String accessToken) {
         // Setup Spotify player
-        Config playerConfig = new Config(this, accessToken, CLIENT_ID);
+        Config playerConfig = new Config(this, accessToken, AppConstants.CLIENT_ID);
         mSpotifyPlayer = Spotify.getPlayer(playerConfig, this, new SpotifyPlayer.InitializationObserver() {
             @Override
             public void onInitialized(SpotifyPlayer player) {
