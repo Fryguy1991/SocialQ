@@ -72,13 +72,7 @@ public class QueueConnectActivityBluetooth extends QueueConnectActivity implemen
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        if (mBluetoothAdapter == null) {
-            // TODO: Throw some sort of error/exception?  Need bluetooth for main application usage
-        } else if (!mBluetoothAdapter.isEnabled()) {
-            Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-            startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
-        }
+        // Register to receive results of Bluetooth method calls
         IntentFilter foundFilter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
         IntentFilter startFilter = new IntentFilter(BluetoothAdapter.ACTION_DISCOVERY_STARTED);
         IntentFilter finishFilter = new IntentFilter(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
@@ -87,6 +81,16 @@ public class QueueConnectActivityBluetooth extends QueueConnectActivity implemen
         registerReceiver(mReceiver, startFilter);
         registerReceiver(mReceiver, finishFilter);
         registerReceiver(mReceiver, uuidFilter);
+
+        mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        if (mBluetoothAdapter == null) {
+            // TODO: Throw some sort of error/exception?  Need bluetooth for main application usage
+        } else if (!mBluetoothAdapter.isEnabled()) {
+            Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
+        } else {
+            searchForQueues();
+        }
     }
 
     @Override
@@ -97,7 +101,6 @@ public class QueueConnectActivityBluetooth extends QueueConnectActivity implemen
             case REQUEST_COURSE_LOCATION:
                 if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     Log.d(TAG, "Starting BT discovery? : " + mBluetoothAdapter.startDiscovery());
-                    mQueueSearchButton.setEnabled(false);
                 }
         }
     }
@@ -153,7 +156,7 @@ public class QueueConnectActivityBluetooth extends QueueConnectActivity implemen
 
                         // Check UUIDs to see if it's a SocialQ device
                         // TODO: Should be able to identify by UUID and not by device name
-                        if (!mSocialQDevices.contains(device) && (containsAppUuid(uuids) || device.getName().equals("SocialQ Host"))) {
+                        if (!mSocialQDevices.contains(device) && (containsAppUuid(uuids))) {
                             Log.d(TAG, "Found SocialQ device");
                             mSocialQDevices.add(device);
                         } else {
@@ -163,7 +166,6 @@ public class QueueConnectActivityBluetooth extends QueueConnectActivity implemen
 
                         if (mDiscoveredDevices.isEmpty()) {
                             displayBTDevices();
-                            mQueueSearchButton.setEnabled(true);
                         } else {
                             boolean result = mDiscoveredDevices.remove(0).fetchUuidsWithSdp();
                             if (!result) {
@@ -217,7 +219,6 @@ public class QueueConnectActivityBluetooth extends QueueConnectActivity implemen
         } else {
             // Start Bluetooth discovery
             Log.d(TAG, "Starting BT discovery? : " + mBluetoothAdapter.startDiscovery());
-            mQueueSearchButton.setEnabled(false);
         }
     }
 

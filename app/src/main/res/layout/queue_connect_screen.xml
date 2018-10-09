@@ -9,34 +9,16 @@
         android:id="@+id/rv_queue_list_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_above="@id/ll_button_container" />
-
-    <LinearLayout
-        android:id="@+id/ll_button_container"
-        android:orientation="horizontal"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="@dimen/standard_spacing">
-
-        <Button
-            android:id="@+id/btn_queue_search"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Search"
-            android:textAlignment="center" />
-
-        <android.support.v4.widget.Space
-            android:layout_width="@dimen/standard_spacing"
-            android:layout_height="0dp" />
+        android:layout_above="@id/btn_queue_join" />
 
         <Button
             android:id="@+id/btn_queue_join"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
             android:text="Join"
             android:textAlignment="center"
-            android:enabled="false"/>
-    </LinearLayout>
+            android:enabled="false"
+            android:layout_alignParentBottom="true"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="@dimen/standard_spacing"/>
 </RelativeLayout>

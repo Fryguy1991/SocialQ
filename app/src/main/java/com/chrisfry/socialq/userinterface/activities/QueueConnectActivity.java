@@ -18,7 +18,6 @@ public abstract class QueueConnectActivity extends Activity implements View.OnCl
 
     private RecyclerView mQueueRecyclerView;
 
-    protected View mQueueSearchButton;
     protected View mQueueJoinButton;
 
     @Override
@@ -32,9 +31,6 @@ public abstract class QueueConnectActivity extends Activity implements View.OnCl
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.queue_connect_screen);
-
-        mQueueSearchButton = findViewById(R.id.btn_queue_search);
-        mQueueSearchButton.setOnClickListener(this);
 
         mQueueJoinButton = findViewById(R.id.btn_queue_join);
         mQueueJoinButton.setOnClickListener(this);
@@ -55,9 +51,6 @@ public abstract class QueueConnectActivity extends Activity implements View.OnCl
     @Override
     public void onClick(View view) {
         switch (view.getId()) {
-            case R.id.btn_queue_search:
-                searchForQueues();
-                break;
             case R.id.btn_queue_join:
                 connectToQueue();
                 break;
