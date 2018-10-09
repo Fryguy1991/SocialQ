@@ -15,7 +15,9 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.chrisfry.socialq.business.AppConstants;
 import com.chrisfry.socialq.business.dagger.modules.SpotifyModule;
@@ -167,11 +169,14 @@ public class SearchActivity extends Activity implements TrackListAdapter.TrackSe
     private void searchByText(String searchText) {
         Log.d("SearchActivity", "Searching for: " + searchText);
 
+        // Create options to set limit for search results to 50 items
+        Map<String, Object> options = new HashMap<>();
+        options.put(SpotifyService.LIMIT, 50);
+
         // Get results from spotify
-        // TODO: Spotify service object only returns maximum of 20 items.  Change?
-        mResultArtistList = mSpotifyService.searchArtists(searchText).artists.items;
-        mResultAlbumList = mSpotifyService.searchAlbums(searchText).albums.items;
-        mResultTrackList = mSpotifyService.searchTracks(searchText).tracks.items;
+//        mResultArtistList = mSpotifyService.searchArtists(searchText, options).artists.items;
+//        mResultAlbumList = mSpotifyService.searchAlbums(searchText, options).albums.items;
+        mResultTrackList = mSpotifyService.searchTracks(searchText, options).tracks.items;
 
         updateUiAfterSearch();
     }

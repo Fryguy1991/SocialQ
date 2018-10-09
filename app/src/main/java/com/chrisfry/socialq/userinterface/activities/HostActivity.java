@@ -29,14 +29,20 @@ import com.spotify.sdk.android.player.Error;
 import com.spotify.sdk.android.player.Metadata;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.chrisfry.socialq.business.AppConstants;
 import com.chrisfry.socialq.R;
 
+import kaaes.spotify.webapi.android.SpotifyApi;
 import kaaes.spotify.webapi.android.SpotifyService;
+import kaaes.spotify.webapi.android.models.Playlist;
 import kaaes.spotify.webapi.android.models.Track;
 import kaaes.spotify.webapi.android.models.TracksPager;
+import kaaes.spotify.webapi.android.models.UserPrivate;
+
 import com.chrisfry.socialq.services.PlayQueueService;
 import com.chrisfry.socialq.userinterface.adapters.TrackListAdapter;
 import com.chrisfry.socialq.userinterface.widgets.QueueItemDecoration;
@@ -64,6 +70,9 @@ public abstract class HostActivity extends Activity implements ConnectionStateCa
     // Spotify elements
     private SpotifyService mSpotifyService;
     private PlayQueueService mPlayQueueService;
+    private boolean mIsServiceBound = false;
+    private Playlist mPlaylist;
+    private UserPrivate mCurrentUser;
 
     private List<Track> mCurrentTrackList = new ArrayList<>();
 
@@ -108,7 +117,7 @@ public abstract class HostActivity extends Activity implements ConnectionStateCa
                 ApplicationUtils.getClientId(),
                 AuthenticationResponse.Type.TOKEN,
                 ApplicationUtils.getRedirectUri());
-        builder.setScopes(new String[]{"user-read-private", "streaming"});
+        builder.setScopes(new String[]{"user-read-private", "streaming", "playlist-modify-private"});
         AuthenticationRequest request = builder.build();
         AuthenticationClient.openLoginActivity(this, SPOTIFY_LOGIN_REQUEST, request);
     }
@@ -148,11 +157,17 @@ public abstract class HostActivity extends Activity implements ConnectionStateCa
                 AuthenticationResponse response = AuthenticationClient.getResponse(resultCode, intent);
                 if (response.getType() == AuthenticationResponse.Type.TOKEN) {
                     Log.d(TAG, "Access token granted");
-                    // Start service that will play and control queue
+
+                    // Initialize spotify elements and create playlist for queue
                     ApplicationUtils.setAccessToken(response.getAccessToken());
+                    initSpotifyElements(response.getAccessToken());
+                    createPlaylistForQueue();
+
+                    // Start service that will play and control queue
                     Intent startPlayQueueIntent = new Intent(this, PlayQueueService.class);
-                    bindService(startPlayQueueIntent, mServiceConnection, Context.BIND_AUTO_CREATE);
-                    initSpotifySearchElements(response.getAccessToken());
+                    startPlayQueueIntent.putExtra(AppConstants.SOCIALQ_PLAYLIST_URI_KEY, mPlaylist);
+                    mIsServiceBound = bindService(startPlayQueueIntent, mServiceConnection, Context.BIND_AUTO_CREATE);
+
 
                     // All logged in and good to go.  Start host connection.
                     startHostConnection();
@@ -169,12 +184,27 @@ public abstract class HostActivity extends Activity implements ConnectionStateCa
         }
     }
 
-    private void initSpotifySearchElements(String accessToken) {
+    private void initSpotifyElements(String accessToken) {
         // Setup service for searching Spotify library
         SpotifyComponent componenet = DaggerSpotifyComponent.builder().spotifyModule(
                 new SpotifyModule(accessToken)).build();
 
         mSpotifyService = componenet.service();
+    }
+
+    private void createPlaylistForQueue() {
+        // Get current user
+        mCurrentUser = mSpotifyService.getMe();
+
+        // Create body parameters for new playlist
+        Map<String, Object> playlistParameters = new HashMap<>();
+        playlistParameters.put("name", "SocialQ Playlist");
+        playlistParameters.put("public", false);
+        playlistParameters.put("collaborative", false);
+        playlistParameters.put("description", "Playlist created by the SocialQ App.");
+
+        Log.d(TAG, "Creating playlist for the SocialQ");
+        mPlaylist = mSpotifyService.createPlaylist(mCurrentUser.id, playlistParameters);
     }
 
     @Override
@@ -205,8 +235,17 @@ public abstract class HostActivity extends Activity implements ConnectionStateCa
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        unbindService(mServiceConnection);
+        if (mIsServiceBound) {
+            unbindService(mServiceConnection);
+            mIsServiceBound = false;
+        }
         mPlayQueueService.onDestroy();
+
+        // Unfollow the playlist created for SocialQ
+        if (mCurrentUser != null && mPlaylist != null) {
+            Log.d(TAG, "Unfollowing playlist created for the SocialQ");
+            mSpotifyService.unfollowPlaylist(mCurrentUser.id, mPlaylist.id);
+        }
     }
 
     @Override
@@ -305,12 +344,4 @@ public abstract class HostActivity extends Activity implements ConnectionStateCa
     abstract void startHostConnection();
 
     abstract void sendQueueToClients(List<Track> queueTracks);
-
-    protected final void hasConnectionBeenEstablished(boolean isConnected) {
-        if (isConnected) {
-            // Host is active.  Should be accepting clients
-        } else {
-            // Issue while establishing host.
-        }
-    }
 }
