@@ -36,7 +36,6 @@ import java.util.Map;
 import com.chrisfry.socialq.business.AppConstants;
 import com.chrisfry.socialq.R;
 
-import kaaes.spotify.webapi.android.SpotifyApi;
 import kaaes.spotify.webapi.android.SpotifyService;
 import kaaes.spotify.webapi.android.models.Playlist;
 import kaaes.spotify.webapi.android.models.Track;
@@ -114,9 +113,9 @@ public abstract class HostActivity extends Activity implements ConnectionStateCa
 
         // Building and sending login request through Spotify built activity
         AuthenticationRequest.Builder builder = new AuthenticationRequest.Builder(
-                ApplicationUtils.getClientId(),
+                AppConstants.CLIENT_ID,
                 AuthenticationResponse.Type.TOKEN,
-                ApplicationUtils.getRedirectUri());
+                AppConstants.REDIRECT_URI);
         builder.setScopes(new String[]{"user-read-private", "streaming", "playlist-modify-private"});
         AuthenticationRequest request = builder.build();
         AuthenticationClient.openLoginActivity(this, SPOTIFY_LOGIN_REQUEST, request);

@@ -18,12 +18,4 @@ public class AccessModel {
     public static String getAccessToken() {
         return mAccessToken;
     }
-
-    public static String getClientId() {
-        return CLIENT_ID;
-    }
-
-    public static String getRedirectUri() {
-        return REDIRECT_URI;
-    }
 }

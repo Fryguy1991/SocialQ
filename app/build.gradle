@@ -61,4 +61,8 @@ dependencies {
 
     // Kotlin
     api "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+
+    // Latest Spotify remove SDK
+    api project(':spotify-app-remote')
+    api "com.google.code.gson:gson:2.8.2"
 }

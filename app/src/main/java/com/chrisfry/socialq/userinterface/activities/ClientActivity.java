@@ -64,9 +64,9 @@ public abstract class ClientActivity extends Activity implements ConnectionState
 
         // Building and sending login request through Spotify built activity
         AuthenticationRequest.Builder builder = new AuthenticationRequest.Builder(
-                ApplicationUtils.getClientId(),
+                AppConstants.CLIENT_ID,
                 AuthenticationResponse.Type.TOKEN,
-                ApplicationUtils.getRedirectUri());
+                AppConstants.REDIRECT_URI);
         builder.setScopes(new String[]{"user-read-private"});
         AuthenticationRequest request = builder.build();
 

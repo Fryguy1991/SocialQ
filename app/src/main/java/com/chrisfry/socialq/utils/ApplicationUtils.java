@@ -4,6 +4,7 @@ import android.util.Log;
 
 import com.chrisfry.socialq.business.AppConstants;
 import com.chrisfry.socialq.model.AccessModel;
+import com.spotify.android.appremote.api.ConnectionParams;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,12 +25,11 @@ public class ApplicationUtils {
         return AccessModel.getAccessToken();
     }
 
-    public static String getRedirectUri() {
-        return AccessModel.getRedirectUri();
-    }
-
-    public static String getClientId() {
-        return AccessModel.getClientId();
+    public static ConnectionParams getConnectionParams() {
+        return new ConnectionParams.Builder(AppConstants.CLIENT_ID)
+                .setRedirectUri(AppConstants.REDIRECT_URI)
+                .showAuthView(true)
+                .build();
     }
 
     public static List<String> convertQueueByteArrayToStringList(byte[] queueByteArray) {
