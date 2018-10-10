@@ -63,7 +63,17 @@ class ClientActivityNearbyDevices : ClientActivity() {
             // Retrieve tracks for the list of track URIs
             var trackList = mutableListOf<Track>()
             if (trackStringList.size > 0) {
-                trackList = MutableList<Track>(trackStringList.size) { index: Int -> mSpotifyService.getTrack(trackStringList.get(index)) }
+                var getTracksString = ""
+                for (trackString : String in trackStringList) {
+                    getTracksString = if (getTracksString == "") {
+                        trackString
+                    } else {
+                        "$getTracksString,$trackString"
+                    }
+                }
+                val tracks = mSpotifyService.getTracks(getTracksString)
+
+                trackList = MutableList<Track>(trackStringList.size) { index: Int -> tracks.tracks[index] }
             }
             updateQueue(trackList)
         }
