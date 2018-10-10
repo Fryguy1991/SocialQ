@@ -9,10 +9,15 @@
 
     <string name="track_to_play_format">spotify:track:%1$s</string>
 
-    <!-- Home Screen Strings -->
+    <!-- Host Screen Strings -->
     <string name="next_btn">Next</string>
     <string name="play_btn">Play</string>
     <string name="pause_btn">Pause</string>
+    <string name="toast_authentication_error_host">Authentication Error</string>
+
+    <!-- Client Screen Strings -->
+    <string name="toast_authentication_error_client">Authentication Error</string>
+    <string name="toast_host_disconnected">Queue Closed</string>
 
     <!-- Search Screen Strings -->
     <string name="search">Search</string>
@@ -28,7 +33,5 @@
     <string name="start_queue">Start Queue</string>
     <string name="join_queue">Join Queue</string>
 
-    <!-- Extra Keys -->
-    <string name="access_token_extra">ACCESS_TOKEN</string>
 
 </resources>

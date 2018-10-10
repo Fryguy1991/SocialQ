@@ -11,6 +11,7 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.chrisfry.socialq.R;
 import com.chrisfry.socialq.business.AppConstants;
@@ -96,6 +97,10 @@ public abstract class ClientActivity extends Activity implements ConnectionState
                     // Start service that will play and control queue
                     ApplicationUtils.setAccessToken(response.getAccessToken());
                     initSpotifySearchElements(response.getAccessToken());
+                } else {
+                    Log.d(TAG, "Authentication Response: " + response.getError());
+                    Toast.makeText(ClientActivity.this, getString(R.string.toast_authentication_error_client), Toast.LENGTH_SHORT).show();
+                    finish();
                 }
                 break;
             case AppConstants.SEARCH_REQUEST:
@@ -113,11 +118,7 @@ public abstract class ClientActivity extends Activity implements ConnectionState
     }
 
     private void initSpotifySearchElements(String accessToken) {
-        // Setup service for searching Spotify library
-//        mApi = new SpotifyApi();
-//        mApi.setAccessToken(accessToken);
-//        mSpotifyService = mApi.getService();
-
+        // Setup Spotify service
         SpotifyComponent componenet = DaggerSpotifyComponent.builder().spotifyModule(
                 new SpotifyModule(accessToken)).build();
 

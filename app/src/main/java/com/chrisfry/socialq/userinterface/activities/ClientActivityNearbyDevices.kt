@@ -2,6 +2,8 @@ package com.chrisfry.socialq.userinterface.activities
 
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
+import com.chrisfry.socialq.R
 import com.chrisfry.socialq.business.AppConstants
 import com.chrisfry.socialq.utils.ApplicationUtils
 import com.google.android.gms.nearby.Nearby
@@ -48,7 +50,8 @@ class ClientActivityNearbyDevices : ClientActivity() {
         }
 
         override fun onDisconnected(endPoint: String) {
-            Log.d(TAG, "Client disconnected from the host")
+            Log.d(TAG, "Host disconnected from the client")
+            Toast.makeText(this@ClientActivityNearbyDevices, getString(R.string.toast_host_disconnected), Toast.LENGTH_SHORT).show()
             finish()
         }
     }

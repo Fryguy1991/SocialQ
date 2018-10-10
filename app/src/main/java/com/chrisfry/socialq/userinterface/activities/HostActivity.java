@@ -17,6 +17,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.chrisfry.socialq.business.dagger.modules.SpotifyModule;
 import com.chrisfry.socialq.business.dagger.modules.components.DaggerSpotifyComponent;
@@ -158,6 +159,10 @@ public abstract class HostActivity extends Activity implements ConnectionStateCa
 
                     // All logged in and good to go.  Start host connection.
                     startHostConnection();
+                } else {
+                    Log.d(TAG, "Authentication Response: " + response.getError());
+                    Toast.makeText(HostActivity.this, getString(R.string.toast_authentication_error_host), Toast.LENGTH_SHORT).show();
+                    finish();
                 }
                 break;
             case AppConstants.SEARCH_REQUEST:
