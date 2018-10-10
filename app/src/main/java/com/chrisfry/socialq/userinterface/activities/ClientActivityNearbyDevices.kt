@@ -58,8 +58,10 @@ class ClientActivityNearbyDevices : ClientActivity() {
             val trackStringList = ApplicationUtils.convertQueueByteArrayToStringList(payload.asBytes())
 
             // Retrieve tracks for the list of track URIs
-            // TODO INVESTIGATE.  THIS HAS BEEN CRASHING
-            var trackList = MutableList<Track>(trackStringList.size){index: Int -> mSpotifyService.getTrack(trackStringList.get(index))}
+            var trackList = mutableListOf<Track>()
+            if (trackStringList.size > 0) {
+                trackList = MutableList<Track>(trackStringList.size) { index: Int -> mSpotifyService.getTrack(trackStringList.get(index)) }
+            }
             updateQueue(trackList)
         }
 
@@ -72,7 +74,7 @@ class ClientActivityNearbyDevices : ClientActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val endpointId = intent.extras.getString(AppConstants.ND_ENDPOINT_ID_EXTRA_KEY)
+        val endpointId = intent.getStringExtra(AppConstants.ND_ENDPOINT_ID_EXTRA_KEY)
         if (endpointId == null) {
             Log.d(TAG, "Have no endpoint ID for host connection, can't connect")
             finish()
@@ -98,10 +100,7 @@ class ClientActivityNearbyDevices : ClientActivity() {
     override fun onDestroy() {
         super.onDestroy()
 
-        val endpointId = intent.extras.getString(AppConstants.ND_ENDPOINT_ID_EXTRA_KEY)
-        if (endpointId.isNotEmpty()) {
-            Nearby.getConnectionsClient(this).disconnectFromEndpoint(endpointId)
-        }
+        Nearby.getConnectionsClient(this).stopAllEndpoints()
     }
 
     override fun sendTrackToHost(trackUri: String?) {

@@ -72,6 +72,7 @@ class QueueConnectActivityNearbyDevices : QueueConnectActivity(), NearbyDevicesA
             val clientIntent = Intent(this, ClientActivityNearbyDevices::class.java)
             clientIntent.putExtra(AppConstants.ND_ENDPOINT_ID_EXTRA_KEY, queueToJoinEndpointId)
             startActivity(clientIntent)
+            finish()
         }
     }
 

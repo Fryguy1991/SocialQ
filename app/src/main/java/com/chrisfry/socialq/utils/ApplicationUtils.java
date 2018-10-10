@@ -57,8 +57,11 @@ public class ApplicationUtils {
                 byteArrayAsString = byteArrayAsString.replaceFirst(AppConstants.ND_TRACK_SEPARATOR_MESSAGE, "");
             }
 
-            // Only last track URI and end message should remain in string
-            queueStringList.add(byteArrayAsString.replace(AppConstants.ND_END_QUEUE_MESSAGE, ""));
+            // This check guards against an empty string bookended by BEG and END (empty queue)
+            if (byteArrayAsString.indexOf(AppConstants.ND_END_QUEUE_MESSAGE) != 0) {
+                // Only last track URI and end message should remain in string
+                queueStringList.add(byteArrayAsString.replace(AppConstants.ND_END_QUEUE_MESSAGE, ""));
+            }
 
             Log.d(TAG, "STRING URI LIST");
             Log.d(TAG, queueStringList.toString());

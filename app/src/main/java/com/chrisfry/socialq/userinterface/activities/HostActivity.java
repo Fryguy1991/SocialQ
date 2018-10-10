@@ -26,21 +26,16 @@ import com.spotify.sdk.android.authentication.AuthenticationRequest;
 import com.spotify.sdk.android.authentication.AuthenticationResponse;
 import com.spotify.sdk.android.player.ConnectionStateCallback;
 import com.spotify.sdk.android.player.Error;
-import com.spotify.sdk.android.player.Metadata;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import com.chrisfry.socialq.business.AppConstants;
 import com.chrisfry.socialq.R;
 
 import kaaes.spotify.webapi.android.SpotifyService;
-import kaaes.spotify.webapi.android.models.Playlist;
 import kaaes.spotify.webapi.android.models.Track;
 import kaaes.spotify.webapi.android.models.TracksPager;
-import kaaes.spotify.webapi.android.models.UserPrivate;
 
 import com.chrisfry.socialq.services.PlayQueueService;
 import com.chrisfry.socialq.userinterface.adapters.TrackListAdapter;
@@ -49,7 +44,7 @@ import com.chrisfry.socialq.utils.ApplicationUtils;
 import com.chrisfry.socialq.utils.DisplayUtils;
 
 public abstract class HostActivity extends Activity implements ConnectionStateCallback,
-        PlayQueueService.TrackChangeListener, PlayQueueService.QueueChangeListener {
+        PlayQueueService.QueueChangeListener {
     private final String TAG = HostActivity.class.getName();
 
     // Request code that will be used to verify if the result comes from correct activity
@@ -70,10 +65,6 @@ public abstract class HostActivity extends Activity implements ConnectionStateCa
     private SpotifyService mSpotifyService;
     private PlayQueueService mPlayQueueService;
     private boolean mIsServiceBound = false;
-    private Playlist mPlaylist;
-    private UserPrivate mCurrentUser;
-
-    private List<Track> mCurrentTrackList = new ArrayList<>();
 
     // Object for connecting to/from play queue service
     private ServiceConnection mServiceConnection = new ServiceConnection() {
@@ -84,7 +75,6 @@ public abstract class HostActivity extends Activity implements ConnectionStateCa
             mPlayQueueService = binder.getService();
 
             // Setup activity for callbacks
-            mPlayQueueService.addTrackChangedListener(HostActivity.this);
             mPlayQueueService.addQueueChangedListener(HostActivity.this);
 
             setupQueueList();
@@ -116,7 +106,7 @@ public abstract class HostActivity extends Activity implements ConnectionStateCa
                 AppConstants.CLIENT_ID,
                 AuthenticationResponse.Type.TOKEN,
                 AppConstants.REDIRECT_URI);
-        builder.setScopes(new String[]{"user-read-private", "streaming", "playlist-modify-private"});
+        builder.setScopes(new String[]{"user-read-private", "streaming", "playlist-modify-private", "app-remote-control"});
         AuthenticationRequest request = builder.build();
         AuthenticationClient.openLoginActivity(this, SPOTIFY_LOGIN_REQUEST, request);
     }
@@ -160,11 +150,9 @@ public abstract class HostActivity extends Activity implements ConnectionStateCa
                     // Initialize spotify elements and create playlist for queue
                     ApplicationUtils.setAccessToken(response.getAccessToken());
                     initSpotifyElements(response.getAccessToken());
-                    createPlaylistForQueue();
 
                     // Start service that will play and control queue
                     Intent startPlayQueueIntent = new Intent(this, PlayQueueService.class);
-                    startPlayQueueIntent.putExtra(AppConstants.SOCIALQ_PLAYLIST_URI_KEY, mPlaylist);
                     mIsServiceBound = bindService(startPlayQueueIntent, mServiceConnection, Context.BIND_AUTO_CREATE);
 
 
@@ -189,21 +177,6 @@ public abstract class HostActivity extends Activity implements ConnectionStateCa
                 new SpotifyModule(accessToken)).build();
 
         mSpotifyService = componenet.service();
-    }
-
-    private void createPlaylistForQueue() {
-        // Get current user
-        mCurrentUser = mSpotifyService.getMe();
-
-        // Create body parameters for new playlist
-        Map<String, Object> playlistParameters = new HashMap<>();
-        playlistParameters.put("name", "SocialQ Playlist");
-        playlistParameters.put("public", false);
-        playlistParameters.put("collaborative", false);
-        playlistParameters.put("description", "Playlist created by the SocialQ App.");
-
-        Log.d(TAG, "Creating playlist for the SocialQ");
-        mPlaylist = mSpotifyService.createPlaylist(mCurrentUser.id, playlistParameters);
     }
 
     @Override
@@ -238,12 +211,10 @@ public abstract class HostActivity extends Activity implements ConnectionStateCa
             unbindService(mServiceConnection);
             mIsServiceBound = false;
         }
-        mPlayQueueService.onDestroy();
 
-        // Unfollow the playlist created for SocialQ
-        if (mCurrentUser != null && mPlaylist != null) {
-            Log.d(TAG, "Unfollowing playlist created for the SocialQ");
-            mSpotifyService.unfollowPlaylist(mCurrentUser.id, mPlaylist.id);
+        if (mPlayQueueService != null) {
+            mPlayQueueService.removeQueueChangeListener(this);
+            mPlayQueueService.onDestroy();
         }
     }
 
@@ -294,8 +265,7 @@ public abstract class HostActivity extends Activity implements ConnectionStateCa
         }
     }
 
-    @Override
-    public void onTrackChanged(Metadata.Track track) {
+    private void setPlayingTrack(Track track) {
         if (track != null) {
             mCurrentTrackName.setText(track.name);
             mCurrentArtistName.setText(DisplayUtils.getTrackArtistString(track));
@@ -307,23 +277,16 @@ public abstract class HostActivity extends Activity implements ConnectionStateCa
 
     @Override
     public void onQueueChanged(List<Track> trackQueue) {
-        mQueueDisplayAdapter.updateQueueList(trackQueue);
-
+        // Send entire queue to clients
         sendQueueToClients(trackQueue);
 
-        mCurrentTrackList = trackQueue;
-    }
-
-    @Override
-    public void onQueueChanged(List<Track> trackQueue, String nextTrackUri) {
-        Track nextTrack = mSpotifyService.getTrack(nextTrackUri);
-        trackQueue.add(0, nextTrack);
+        // Display all but first (current track updated separately)
+        if (trackQueue.size() == 0) {
+            setPlayingTrack(null);
+        } else {
+            setPlayingTrack(trackQueue.remove(0));
+        }
         mQueueDisplayAdapter.updateQueueList(trackQueue);
-
-
-        sendQueueToClients(trackQueue);
-
-        mCurrentTrackList = trackQueue;
     }
 
     private void setupDemoQueue() {
@@ -333,11 +296,8 @@ public abstract class HostActivity extends Activity implements ConnectionStateCa
         tracks = mSpotifyService.searchTracks("Audience of One");
         mPlayQueueService.addSongToQueue(tracks.tracks.items.get(0));
 
-        tracks = mSpotifyService.searchTracks("Love Yourself Somebody");
-        mPlayQueueService.addSongToQueue(tracks.tracks.items.get(0));
-
-        tracks = mSpotifyService.searchTracks("How I Could Just Kill A Man");
-        mPlayQueueService.addSongToQueue(tracks.tracks.items.get(0));
+//        tracks = mSpotifyService.searchTracks("Love Yourself Somebody");
+//        mPlayQueueService.addSongToQueue(tracks.tracks.items.get(0));
     }
 
     abstract void startHostConnection();

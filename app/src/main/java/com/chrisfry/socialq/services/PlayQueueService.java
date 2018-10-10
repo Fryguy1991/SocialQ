@@ -10,6 +10,9 @@ import android.os.IBinder;
 import android.util.Log;
 
 import com.chrisfry.socialq.business.AppConstants;
+import com.chrisfry.socialq.business.dagger.modules.SpotifyModule;
+import com.chrisfry.socialq.business.dagger.modules.components.DaggerSpotifyComponent;
+import com.chrisfry.socialq.business.dagger.modules.components.SpotifyComponent;
 import com.spotify.sdk.android.player.Config;
 import com.spotify.sdk.android.player.ConnectionStateCallback;
 import com.spotify.sdk.android.player.Connectivity;
@@ -21,10 +24,16 @@ import com.spotify.sdk.android.player.Spotify;
 import com.spotify.sdk.android.player.SpotifyPlayer;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import kaaes.spotify.webapi.android.SpotifyService;
+import kaaes.spotify.webapi.android.models.Playlist;
 import kaaes.spotify.webapi.android.models.Track;
+import kaaes.spotify.webapi.android.models.UserPrivate;
+
 import com.chrisfry.socialq.utils.ApplicationUtils;
 
 /**
@@ -32,6 +41,7 @@ import com.chrisfry.socialq.utils.ApplicationUtils;
  */
 public class PlayQueueService extends Service implements ConnectionStateCallback,
         Player.NotificationCallback, Player.OperationCallback {
+    private static final String TAG = PlayQueueService.class.getName();
 
     // Binder given to clients
     private final IBinder mPlayQueueBinder = new PlayQueueBinder();
@@ -39,20 +49,27 @@ public class PlayQueueService extends Service implements ConnectionStateCallback
     private ArrayList<Track> mSongQueue = new ArrayList<>();
     // Member player object used for playing audio
     private SpotifyPlayer mSpotifyPlayer;
+    // Service for adding songs to the queue
+    private SpotifyService mSpotifyService;
     // List to contain objects listening for track changed events
-    private ArrayList<TrackChangeListener> mTrackChangeListeners = new ArrayList<>();
+//    private ArrayList<TrackChangeListener> mTrackChangeListeners = new ArrayList<>();
     // List to contain objects listening for queue changed events
     private ArrayList<QueueChangeListener> mQueueChangeListeners = new ArrayList<>();
+    // Playlist object for the queue
+    private Playlist mPlaylist;
+    // Current user object
+    private UserPrivate mCurrentUser;
+    
 
     private final Player.OperationCallback mConnectivityCallback = new Player.OperationCallback() {
         @Override
         public void onSuccess() {
-            Log.d(this.getClass().getName(), "Success!");
+            Log.d(TAG, "Success!");
         }
 
         @Override
         public void onError(Error error) {
-            Log.d(this.getClass().getName(), "ERROR: " + error);
+            Log.d(TAG, "ERROR: " + error);
         }
     };
 
@@ -69,34 +86,22 @@ public class PlayQueueService extends Service implements ConnectionStateCallback
     }
 
     @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
-        String accessToken = ApplicationUtils.getAccessToken();
-        Log.d(this.getClass().getName(), "Starting service");
-        if (accessToken == null) {
-            stopSelf();
-        } else {
-            Log.d(this.getClass().getName(), "Initializing player");
-            initPlayer(accessToken);
-        }
-        return START_STICKY;
-    }
-
-    @Override
     public IBinder onBind(Intent intent) {
         String accessToken = ApplicationUtils.getAccessToken();
-        Log.d(this.getClass().getName(), "Starting service");
+        Log.d(TAG, "onBind: Starting service");
         if (accessToken == null) {
             stopSelf();
         } else {
-            Log.d(this.getClass().getName(), "Initializing player");
+            Log.d(TAG, "onBind: Initializing player");
             initPlayer(accessToken);
+            initSpotifyServiceElements(accessToken);
         }
         return mPlayQueueBinder;
     }
 
     @Override
     public void onDestroy() {
-        Log.d(this.getClass().getName(), "Service is ending.  Shutting down player.");
+        Log.d(TAG, "Service is ending.  Shutting down player.");
         mSpotifyPlayer.logout();
         try {
             Spotify.awaitDestroyPlayer(this, 10000, TimeUnit.MILLISECONDS);
@@ -104,6 +109,13 @@ public class PlayQueueService extends Service implements ConnectionStateCallback
             e.printStackTrace();
             Spotify.destroyPlayer(this);
         }
+
+        // Unfollow the playlist created for SocialQ
+        if (mCurrentUser != null && mPlaylist != null) {
+            Log.d(TAG, "Unfollowing playlist created for the SocialQ");
+            mSpotifyService.unfollowPlaylist(mCurrentUser.id, mPlaylist.id);
+        }
+
         super.onDestroy();
     }
 
@@ -113,7 +125,7 @@ public class PlayQueueService extends Service implements ConnectionStateCallback
         mSpotifyPlayer = Spotify.getPlayer(playerConfig, this, new SpotifyPlayer.InitializationObserver() {
             @Override
             public void onInitialized(SpotifyPlayer player) {
-                Log.e(this.getClass().getName(), "Player initialized");
+                Log.d(TAG, "Player initialized");
                 player.setConnectivityStatus(mConnectivityCallback,
                         getNetworkConnectivity(PlayQueueService.this));
                 player.addConnectionStateCallback(PlayQueueService.this);
@@ -122,20 +134,47 @@ public class PlayQueueService extends Service implements ConnectionStateCallback
 
             @Override
             public void onError(Throwable error) {
-                Log.e(this.getClass().getName(), "ERROR: Could not initialize player: " + error.getMessage());
+                Log.e(TAG, "ERROR: Could not initialize player: " + error.getMessage());
             }
         });
     }
 
+    private void initSpotifyServiceElements(String accessToken) {
+        Log.d(TAG, "Initializing Spotify elements");
+
+        // Setup service for searching Spotify library
+        SpotifyComponent componenet = DaggerSpotifyComponent.builder().spotifyModule(
+                new SpotifyModule(accessToken)).build();
+
+        mSpotifyService = componenet.service();
+        
+        mCurrentUser = mSpotifyService.getMe();
+        mPlaylist = createPlaylistForQueue();
+    }
+
+    private Playlist createPlaylistForQueue() {
+        // Get current user
+        mCurrentUser = mSpotifyService.getMe();
+
+        // Create body parameters for new playlist
+        Map<String, Object> playlistParameters = new HashMap<>();
+        playlistParameters.put("name", "SocialQ Playlist");
+        playlistParameters.put("public", false);
+        playlistParameters.put("collaborative", false);
+        playlistParameters.put("description", "Playlist created by the SocialQ App.");
+
+        Log.d(TAG, "Creating playlist for the SocialQ");
+        return mSpotifyService.createPlaylist(mCurrentUser.id, playlistParameters);
+    }
+
     public void play() {
-        Log.d(this.getClass().getName(), "PLAY");
+        Log.d(TAG, "PLAY");
         Metadata metaData = mSpotifyPlayer.getMetadata();
         if (mSpotifyPlayer.getPlaybackState() != null) {
             if (metaData.currentTrack == null && mSongQueue.size() > 0) {
-                // If track is not loaded into the player, start the first one in the list
-                Log.d(this.getClass().getName(), "Starting Spotify Player?");
-                mSpotifyPlayer.playUri(this, mSongQueue.get(0).uri, 0, 1);
-                mSongQueue.remove(0);
+                // If track is not loaded into the player, start the playlist
+                Log.d(TAG, "Starting Spotify Player?");
+                mSpotifyPlayer.playUri(this, mPlaylist.uri, 0, 1);
                 notifyQueueChanged();
             } else {
                 mSpotifyPlayer.resume(this);
@@ -144,24 +183,28 @@ public class PlayQueueService extends Service implements ConnectionStateCallback
     }
 
     public void pause() {
-        Log.d(this.getClass().getName(), "PAUSE");
+        Log.d(TAG, "PAUSE");
         mSpotifyPlayer.pause(this);
     }
 
     public void playNext() {
-        Log.d(this.getClass().getName(), "NEXT");
+        Log.d(TAG, "NEXT");
         mSpotifyPlayer.skipToNext(this);
     }
 
     public void addSongToQueue(Track track) {
-        // If next track is null queue track to player, else add to list
-        Metadata metaData = mSpotifyPlayer.getMetadata();
-        if (metaData != null && metaData.currentTrack != null && metaData.nextTrack == null) {
-            mSpotifyPlayer.queue(this, track.uri);
-        } else {
+        if (track != null) {
+            // Build parameters required for playlist add
+            Map<String, Object> queryParameters = new HashMap<>();
+            queryParameters.put("uris", track.uri);
+            Map<String, Object> bodyParameters = new HashMap<>();
+
+            // Queue song and add to local queue list
+            mSpotifyService.addTracksToPlaylist(mCurrentUser.id, mPlaylist.id, queryParameters, bodyParameters);
             mSongQueue.add(track);
+
+            notifyQueueChanged();
         }
-        notifyQueueChanged();
     }
 
     public boolean isPlaying() {
@@ -170,7 +213,7 @@ public class PlayQueueService extends Service implements ConnectionStateCallback
 
     @Override
     public void onPlaybackEvent(PlayerEvent playerEvent) {
-        Log.d(this.getClass().getName(), "New playback event: " + playerEvent.name());
+        Log.d(TAG, "New playback event: " + playerEvent.name());
 
         switch (playerEvent) {
             case kSpPlaybackNotifyPlay:
@@ -180,28 +223,21 @@ public class PlayQueueService extends Service implements ConnectionStateCallback
             case kSpPlaybackNotifyPause:
                 break;
             case kSpPlaybackNotifyTrackChanged:
-                // Track has changed
-                // Queue next track (if available)
-                if (mSongQueue.size() > 0) {
-                    Log.d(this.getClass().getName(), "Queueing: " + mSongQueue.get(0).name);
-                    mSpotifyPlayer.queue(this, mSongQueue.remove(0).uri);
-                }
-                notifyTrackChanged();
                 break;
             case kSpPlaybackNotifyMetadataChanged:
                 // Log current and next track
-                Log.d(this.getClass().getName(), "Current track: " + mSpotifyPlayer.getMetadata().currentTrack
+                Log.d(TAG, "Current track: " + mSpotifyPlayer.getMetadata().currentTrack
                         + "\n Next Track: " + mSpotifyPlayer.getMetadata().nextTrack);
-                notifyQueueChanged();
                 break;
             case kSpPlaybackNotifyTrackDelivered:
             case kSpPlaybackNotifyNext:
+                // Track has changed, remove top track from queue list
+                if (mSongQueue.size() > 0) {
+                    mSongQueue.remove(0);
+                }
+                notifyQueueChanged();
                 break;
             case kSpPlaybackNotifyAudioDeliveryDone:
-                for (TrackChangeListener listener : mTrackChangeListeners) {
-                    listener.onTrackChanged(null);
-                }
-
                 break;
             default:
                 // Do nothing or future implementation
@@ -211,17 +247,17 @@ public class PlayQueueService extends Service implements ConnectionStateCallback
 
     @Override
     public void onPlaybackError(Error error) {
-        Log.d(this.getClass().getName(), "ERROR: New playback error: " + error.name());
+        Log.d(TAG, "ERROR: New playback error: " + error.name());
     }
 
     @Override
     public void onSuccess() {
-        Log.d(this.getClass().getName(), "Great Success!");
+        Log.d(TAG, "Great Success!");
     }
 
     @Override
     public void onError(Error error) {
-        Log.d(this.getClass().getName(), "ERROR: Playback error received : Error - " + error.name());
+        Log.d(TAG, "ERROR: Playback error received : Error - " + error.name());
     }
 
     /**
@@ -248,69 +284,40 @@ public class PlayQueueService extends Service implements ConnectionStateCallback
     // START CONNECTION CALLBACK METHODS
     @Override
     public void onLoggedIn() {
-        Log.d(this.getClass().getName(), "Logged In!");
+        Log.d(TAG, "Logged In!");
     }
 
     @Override
     public void onLoggedOut() {
-        Log.d(this.getClass().getName(), "Logged Out!");
+        Log.d(TAG, "Logged Out!");
     }
 
     @Override
     public void onLoginFailed(Error error) {
-        Log.d(this.getClass().getName(), "ERROR: Login Error: " + error.name());
+        Log.d(TAG, "ERROR: Login Error: " + error.name());
     }
 
     @Override
     public void onTemporaryError() {
-        Log.d(this.getClass().getName(), "ERROR: Temporary Error");
+        Log.d(TAG, "ERROR: Temporary Error");
     }
 
     @Override
     public void onConnectionMessage(String s) {
-        Log.d(this.getClass().getName(), "Connection Message: " + s);
+        Log.d(TAG, "Connection Message: " + s);
     }
     // END CONNECTION CALLBACK METHODS
-
-    // Inner interface used to cast listeners for when the track is changed
-    public interface TrackChangeListener {
-
-        void onTrackChanged(Metadata.Track track);
-
-    }
-
-    public void addTrackChangedListener(TrackChangeListener listener) {
-        mTrackChangeListeners.add(listener);
-    }
-
-    public void remove(TrackChangeListener listener) {
-        mTrackChangeListeners.remove(listener);
-    }
-
-    private void notifyTrackChanged() {
-        for (TrackChangeListener listener : mTrackChangeListeners) {
-            listener.onTrackChanged(mSpotifyPlayer.getMetadata().currentTrack);
-        }
-    }
 
     // Inner interface used to cast listeners for when the queue has changed
     public interface QueueChangeListener {
 
         void onQueueChanged(List<Track> trackQueue);
 
-        void onQueueChanged(List<Track> trackQueue, String nextTrackUri);
-
     }
 
     private void notifyQueueChanged() {
         for (QueueChangeListener listener : mQueueChangeListeners) {
-            Metadata.Track queuedTrack = mSpotifyPlayer.getMetadata().nextTrack;
-            if (queuedTrack == null) {
-                listener.onQueueChanged(new ArrayList<>(mSongQueue));
-            } else {
-                listener.onQueueChanged(new ArrayList<>(mSongQueue),
-                        queuedTrack.uri.replace("spotify:track:", ""));
-            }
+            listener.onQueueChanged(new ArrayList<>(mSongQueue));
         }
     }
 
@@ -318,7 +325,7 @@ public class PlayQueueService extends Service implements ConnectionStateCallback
         mQueueChangeListeners.add(listener);
     }
 
-    public void remove(QueueChangeListener listener) {
+    public void removeQueueChangeListener(QueueChangeListener listener) {
         mQueueChangeListeners.remove(listener);
     }
 }
