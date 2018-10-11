@@ -15,6 +15,8 @@ import java.lang.Exception
 
 class ClientActivityNearbyDevices : ClientActivity() {
     private val TAG = ClientActivityNearbyDevices::class.java.name
+
+    // Variable to hold host endpoint
     private lateinit var mHostEndpointId : String
 
     private val mConnectionLifecycleCallback = object : ConnectionLifecycleCallback() {
@@ -43,8 +45,14 @@ class ClientActivityNearbyDevices : ClientActivity() {
         override fun onConnectionResult(endPoint: String, connectionResolution: ConnectionResolution) {
             when (connectionResolution.status.statusCode) {
                 ConnectionsStatusCodes.STATUS_OK -> Log.d(TAG, "Connection to host successful!")
-                ConnectionsStatusCodes.STATUS_CONNECTION_REJECTED -> Log.d(TAG, "Connection to host rejected")
-                ConnectionsStatusCodes.STATUS_ERROR -> Log.d(TAG, "Error connecting to host")
+                ConnectionsStatusCodes.STATUS_CONNECTION_REJECTED -> {
+                    Log.d(TAG, "Connection to host rejected")
+                    finish()
+                }
+                ConnectionsStatusCodes.STATUS_ERROR -> {
+                    Log.d(TAG, "Error connecting to host")
+                    finish()
+                }
                 else -> TODO("not implemented")
             }
         }
@@ -84,9 +92,19 @@ class ClientActivityNearbyDevices : ClientActivity() {
 
     }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
+    override fun onDestroy() {
+        super.onDestroy()
 
+        Nearby.getConnectionsClient(this).stopAllEndpoints()
+    }
+
+    override fun sendTrackToHost(trackUri: String?) {
+        if (trackUri != null) {
+            Nearby.getConnectionsClient(this).sendPayload(mHostEndpointId, Payload.fromBytes(trackUri.toByteArray()))
+        }
+    }
+
+    override fun connectToHost() {
         val endpointId = intent.getStringExtra(AppConstants.ND_ENDPOINT_ID_EXTRA_KEY)
         if (endpointId == null) {
             Log.d(TAG, "Have no endpoint ID for host connection, can't connect")
@@ -107,18 +125,6 @@ class ClientActivityNearbyDevices : ClientActivity() {
                             Log.d(TAG, "Failed to send a connection request, can't connect")
                         }
                     })
-        }
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-
-        Nearby.getConnectionsClient(this).stopAllEndpoints()
-    }
-
-    override fun sendTrackToHost(trackUri: String?) {
-        if (trackUri != null) {
-            Nearby.getConnectionsClient(this).sendPayload(mHostEndpointId, Payload.fromBytes(trackUri.toByteArray()))
         }
     }
 }

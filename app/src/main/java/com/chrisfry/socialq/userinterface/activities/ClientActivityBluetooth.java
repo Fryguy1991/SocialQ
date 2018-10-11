@@ -27,39 +27,6 @@ public class ClientActivityBluetooth extends ClientActivity implements Bluetooth
     private BluetoothSocket mQueueSocket;
 
     @Override
-    protected void onNewIntent(Intent intent) {
-        super.onNewIntent(intent);
-
-        setIntent(intent);
-        BluetoothDevice newDevice = intent.getParcelableExtra(AppConstants.BT_DEVICE_EXTRA_KEY);
-        if (!mHostBTDevice.equals(newDevice)) {
-            mHostBTDevice = null;
-            // TODO: Close BT socket since we have a new host
-            if (newDevice != null) {
-                // New host device.  Launch connection.
-                mHostBTDevice = newDevice;
-                // TODO: Open BT connection with new BT device
-            }
-        }
-    }
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-
-        mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        mHostBTDevice = getIntent().getParcelableExtra(AppConstants.BT_DEVICE_EXTRA_KEY);
-
-        if (!mBluetoothAdapter.isEnabled()) {
-            Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-            startActivityForResult(enableBtIntent, AppConstants.REQUEST_ENABLE_BT);
-        } else {
-            connectToHost();
-        }
-    }
-
-
-    @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
         super.onActivityResult(requestCode, resultCode, intent);
 
@@ -68,7 +35,7 @@ public class ClientActivityBluetooth extends ClientActivity implements Bluetooth
             case AppConstants.REQUEST_ENABLE_BT:
                 if (resultCode == RESULT_OK) {
                     // Bluetooth is enabled.  Launch connection with host
-                    connectToHost();
+                    connectToBluetoothHost();
                 } else {
                     // TODO: Bluetooth not enabled, need to handle here
                 }
@@ -96,7 +63,20 @@ public class ClientActivityBluetooth extends ClientActivity implements Bluetooth
 //        Log.d(TAG, "Connection failed");
 //    }
 
-    private void connectToHost() {
+    @Override
+    protected void connectToHost() {
+        mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        mHostBTDevice = getIntent().getParcelableExtra(AppConstants.BT_DEVICE_EXTRA_KEY);
+
+        if (!mBluetoothAdapter.isEnabled()) {
+            Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            startActivityForResult(enableBtIntent, AppConstants.REQUEST_ENABLE_BT);
+        } else {
+            connectToBluetoothHost();
+        }
+    }
+
+    private void connectToBluetoothHost() {
         if (mHostBTDevice != null) {
             mHostBTDevice.setPairingConfirmation(false);
         }

@@ -189,7 +189,7 @@ public class HostActivityBluetooth extends HostActivity implements BluetoothConn
 
 
     @Override
-    void startHostConnection() {
+    protected void startHostConnection() {
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         if (mBluetoothAdapter == null) {
             // TODO: Throw some sort of error/exception?  Need bluetooth for main application usage

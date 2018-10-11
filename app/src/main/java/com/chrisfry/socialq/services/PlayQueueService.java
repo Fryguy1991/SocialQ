@@ -71,7 +71,7 @@ public class PlayQueueService extends Service implements ConnectionStateCallback
 
         @Override
         public void onError(Error error) {
-            Log.d(TAG, "ERROR: " + error);
+            Log.e(TAG, "ERROR: " + error);
         }
     };
 
@@ -174,15 +174,15 @@ public class PlayQueueService extends Service implements ConnectionStateCallback
         return mSpotifyService.createPlaylist(mCurrentUser.id, playlistParameters);
     }
 
-    public void play() {
-        Log.d(TAG, "PLAY");
+    public void requestPlay() {
+        Log.d(TAG, "PLAY REQUEST");
         if (mSpotifyPlayer.getPlaybackState() != null) {
              if (mAudioDeliveryDoneFlag) {
                  if (mCurrentPlaylistIndex < mPlaylist.tracks.items.size()) {
                      // TODO: Not a good check above?
                      // If audio has previously been completed (or never started)
                      // start the playlist at the current index
-                     Log.d(TAG, "Starting Spotify Player?");
+                     Log.d(TAG, "Starting playlist from index: " + mCurrentPlaylistIndex);
                      mSpotifyPlayer.playUri(this, mPlaylist.uri, mCurrentPlaylistIndex, 1);
                      mAudioDeliveryDoneFlag = false;
 
@@ -190,6 +190,7 @@ public class PlayQueueService extends Service implements ConnectionStateCallback
                      notifyQueueChanged();
                  }
              } else {
+                 Log.d(TAG, "Resuming player");
                  if (!mSpotifyPlayer.getPlaybackState().isPlaying) {
                      mSpotifyPlayer.resume(this);
                  }
@@ -197,20 +198,39 @@ public class PlayQueueService extends Service implements ConnectionStateCallback
         }
     }
 
-    public void pause() {
-        Log.d(TAG, "PAUSE");
+    public void requestPause() {
+        Log.d(TAG, "PAUSE REQUEST");
         mSpotifyPlayer.pause(this);
     }
 
-    public void playNext() {
-        Log.d(TAG, "NEXT");
+    public void requestPlayNext() {
+        Log.d(TAG, "NEXT REQUEST");
         if (!mAudioDeliveryDoneFlag) {
             // Don't allow a skip when we're waiting on a new track to be queued
-            mSpotifyPlayer.skipToNext(this);
+            Metadata metaData = mSpotifyPlayer.getMetadata();
+            if (metaData != null) {
+                if (metaData.nextTrack == null
+                        && mCurrentPlaylistIndex + 1 < mPlaylist.tracks.items.size()
+                        && mSongQueue.size() > 1) {
+                    // MetaData hasn't updated but there is a new track in the playlist
+                    // play from the next index, and update the queue
+                    Log.d(TAG, "MetaData is null but there is a track to play");
+                    mCurrentPlaylistIndex++;
+                    mSongQueue.remove(0);
+                    Log.d(TAG, "Starting playlist from index: " + mCurrentPlaylistIndex);
+                    mSpotifyPlayer.playUri(this, mPlaylist.uri, mCurrentPlaylistIndex, 1);
+                    notifyQueueChanged();
+                } else {
+                    mSpotifyPlayer.skipToNext(this);
+                }
+            }
+        } else {
+            Log.d(TAG, "Can't go to next track");
         }
     }
 
-    public void addSongToQueue(Track track) {
+    public void requestAddSongToQueue(Track track) {
+        Log.d(TAG, "QUEUE REQUEST");
         if (track != null) {
             // Build parameters required for playlist add
             Map<String, Object> queryParameters = new HashMap<>();
@@ -224,11 +244,9 @@ public class PlayQueueService extends Service implements ConnectionStateCallback
             mPlaylist = mSpotifyService.getPlaylist(mCurrentUser.id, mPlaylist.id);
 
             notifyQueueChanged();
+        } else {
+            Log.d(TAG, "Invalid track to queue");
         }
-    }
-
-    public boolean isPlaying() {
-        return mSpotifyPlayer.getPlaybackState().isPlaying;
     }
 
     @Override
@@ -237,10 +255,14 @@ public class PlayQueueService extends Service implements ConnectionStateCallback
 
         switch (playerEvent) {
             case kSpPlaybackNotifyPlay:
+                Log.d(TAG, "Player has started playing");
+                notifyPlayStarted();
                 break;
             case kSpPlaybackNotifyContextChanged:
                 break;
             case kSpPlaybackNotifyPause:
+                Log.d(TAG, "Player has paused");
+                notifyPaused();
                 break;
             case kSpPlaybackNotifyTrackChanged:
                 break;
@@ -249,6 +271,7 @@ public class PlayQueueService extends Service implements ConnectionStateCallback
             case kSpPlaybackNotifyTrackDelivered:
             case kSpPlaybackNotifyNext:
                 // Track has changed, remove top track from queue list
+                Log.d(TAG, "Player has moved to next track (next/track complete)");
                 if (mSongQueue.size() > 0) {
                     mSongQueue.remove(0);
                 }
@@ -257,8 +280,8 @@ public class PlayQueueService extends Service implements ConnectionStateCallback
                 break;
             case kSpPlaybackNotifyAudioDeliveryDone:
                 // Current queue playlist has finished.
+                Log.d(TAG, "Player has finished playing audio");
                 mAudioDeliveryDoneFlag = true;
-                notifyOnPlaybackEnd();
                 break;
             default:
                 // Do nothing or future implementation
@@ -268,7 +291,7 @@ public class PlayQueueService extends Service implements ConnectionStateCallback
 
     @Override
     public void onPlaybackError(Error error) {
-        Log.d(TAG, "ERROR: New playback error: " + error.name());
+        Log.e(TAG, "ERROR: New playback error: " + error.name());
     }
 
     @Override
@@ -278,7 +301,7 @@ public class PlayQueueService extends Service implements ConnectionStateCallback
 
     @Override
     public void onError(Error error) {
-        Log.d(TAG, "ERROR: Playback error received : Error - " + error.name());
+        Log.e(TAG, "ERROR: Playback error received : Error - " + error.name());
     }
 
     /**
@@ -315,12 +338,12 @@ public class PlayQueueService extends Service implements ConnectionStateCallback
 
     @Override
     public void onLoginFailed(Error error) {
-        Log.d(TAG, "ERROR: Login Error: " + error.name());
+        Log.e(TAG, "ERROR: Login Error: " + error.name());
     }
 
     @Override
     public void onTemporaryError() {
-        Log.d(TAG, "ERROR: Temporary Error");
+        Log.e(TAG, "ERROR: Temporary Error");
     }
 
     @Override
@@ -334,8 +357,9 @@ public class PlayQueueService extends Service implements ConnectionStateCallback
 
         void onQueueChanged(List<Track> trackQueue);
 
-        void onPlaybackEnd();
+        void onQueuePause();
 
+        void onQueuePlay();
     }
 
     private void notifyQueueChanged() {
@@ -344,9 +368,15 @@ public class PlayQueueService extends Service implements ConnectionStateCallback
         }
     }
 
-    private void notifyOnPlaybackEnd() {
+    private void notifyPaused() {
         for (PlayQueueServiceListener listener : mListeners) {
-            listener.onPlaybackEnd();
+            listener.onQueuePause();
+        }
+    }
+
+    private void notifyPlayStarted() {
+        for (PlayQueueServiceListener listener : mListeners) {
+            listener.onQueuePlay();
         }
     }
 

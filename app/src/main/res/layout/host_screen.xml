@@ -20,7 +20,8 @@
         android:layout_height="wrap_content"
         android:layout_below="@id/tv_current_artist_name"
         android:text="@string/play_btn"
-        android:textAllCaps="true"/>
+        android:textAllCaps="true"
+        android:contentDescription="queue_paused"/>
 
     <Button
         android:id="@+id/btn_next"

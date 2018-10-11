@@ -89,7 +89,7 @@ class HostActivityNearbyDevices : HostActivity() {
                 .addOnFailureListener(object : OnFailureListener {
                     override fun onFailure(p0: Exception) {
                         Log.d(TAG, "Failed to start advertising the host")
-                        TODO("Handle advertising failure")
+                        finish()
                     }
                 })
     }

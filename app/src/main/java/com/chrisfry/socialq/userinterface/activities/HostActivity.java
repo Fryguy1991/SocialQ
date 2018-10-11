@@ -79,7 +79,7 @@ public abstract class HostActivity extends Activity implements ConnectionStateCa
             mPlayQueueService.addPlayQueueServiceListener(HostActivity.this);
 
             setupQueueList();
-            setupDemoQueue();
+//            setupDemoQueue();
         }
 
         @Override
@@ -125,14 +125,14 @@ public abstract class HostActivity extends Activity implements ConnectionStateCa
         mNextButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                mPlayQueueService.playNext();
+                mPlayQueueService.requestPlayNext();
             }
         });
 
         mPlayPauseButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                handlePlayPause(mPlayQueueService.isPlaying());
+                handlePlayPause(view.getContentDescription().equals("queue_playing"));
             }
         });
     }
@@ -169,7 +169,7 @@ public abstract class HostActivity extends Activity implements ConnectionStateCa
                 if (resultCode == RESULT_OK) {
                     String trackUri = intent.getStringExtra(AppConstants.SEARCH_RESULTS_EXTRA_KEY);
                     if (trackUri != null && !trackUri.isEmpty()) {
-                        mPlayQueueService.addSongToQueue(mSpotifyService.getTrack(trackUri));
+                        mPlayQueueService.requestAddSongToQueue(mSpotifyService.getTrack(trackUri));
                     }
                 }
                 break;
@@ -247,7 +247,7 @@ public abstract class HostActivity extends Activity implements ConnectionStateCa
         if (trackUri != null && mSpotifyService != null) {
             Track trackToQueue = mSpotifyService.getTrack(trackUri);
             if (trackToQueue != null) {
-                mPlayQueueService.addSongToQueue(trackToQueue);
+                mPlayQueueService.requestAddSongToQueue(trackToQueue);
             }
         }
     }
@@ -262,11 +262,9 @@ public abstract class HostActivity extends Activity implements ConnectionStateCa
 
     private void handlePlayPause(boolean isPlaying) {
         if (isPlaying) {
-            mPlayPauseButton.setText(getString(R.string.play_btn));
-            mPlayQueueService.pause();
+            mPlayQueueService.requestPause();
         } else {
-            mPlayPauseButton.setText(getString(R.string.pause_btn));
-            mPlayQueueService.play();
+            mPlayQueueService.requestPlay();
         }
     }
 
@@ -295,22 +293,30 @@ public abstract class HostActivity extends Activity implements ConnectionStateCa
     }
 
     @Override
-    public void onPlaybackEnd() {
+    public void onQueuePause() {
         mPlayPauseButton.setText(R.string.play_btn);
+        mPlayPauseButton.setContentDescription("queue_paused");
     }
+
+    @Override
+    public void onQueuePlay() {
+        mPlayPauseButton.setText(R.string.pause_btn);
+        mPlayPauseButton.setContentDescription("queue_playing");
+    }
+
 
     private void setupDemoQueue() {
         TracksPager tracks = mSpotifyService.searchTracks("Built This Pool");
-        mPlayQueueService.addSongToQueue(tracks.tracks.items.get(2));
+        mPlayQueueService.requestAddSongToQueue(tracks.tracks.items.get(2));
 
         tracks = mSpotifyService.searchTracks("Audience of One");
-        mPlayQueueService.addSongToQueue(tracks.tracks.items.get(0));
+        mPlayQueueService.requestAddSongToQueue(tracks.tracks.items.get(0));
 
         tracks = mSpotifyService.searchTracks("Love Yourself Somebody");
-        mPlayQueueService.addSongToQueue(tracks.tracks.items.get(0));
+        mPlayQueueService.requestAddSongToQueue(tracks.tracks.items.get(0));
     }
 
-    abstract void startHostConnection();
+    protected abstract void startHostConnection();
 
     abstract void sendQueueToClients(List<Track> queueTracks);
 }

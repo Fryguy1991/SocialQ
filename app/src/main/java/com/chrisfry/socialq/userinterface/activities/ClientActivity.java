@@ -97,6 +97,7 @@ public abstract class ClientActivity extends Activity implements ConnectionState
                     // Start service that will play and control queue
                     ApplicationUtils.setAccessToken(response.getAccessToken());
                     initSpotifySearchElements(response.getAccessToken());
+                    connectToHost();
                 } else {
                     Log.d(TAG, "Authentication Response: " + response.getError());
                     Toast.makeText(ClientActivity.this, getString(R.string.toast_authentication_error_client), Toast.LENGTH_SHORT).show();
@@ -191,4 +192,5 @@ public abstract class ClientActivity extends Activity implements ConnectionState
 
     protected abstract void sendTrackToHost(String trackUri);
 
+    protected abstract void connectToHost();
 }
