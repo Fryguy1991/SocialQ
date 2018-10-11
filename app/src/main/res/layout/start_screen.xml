@@ -22,7 +22,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:layout_marginTop="@dimen/standard_spacing">
+        android:layout_marginTop="@dimen/standard_spacing"
+        android:visibility="gone">
 
         <ToggleButton
             android:layout_width="200dp"
