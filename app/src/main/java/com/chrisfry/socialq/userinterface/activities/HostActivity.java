@@ -45,7 +45,7 @@ import com.chrisfry.socialq.utils.ApplicationUtils;
 import com.chrisfry.socialq.utils.DisplayUtils;
 
 public abstract class HostActivity extends Activity implements ConnectionStateCallback,
-        PlayQueueService.QueueChangeListener {
+        PlayQueueService.PlayQueueServiceListener {
     private final String TAG = HostActivity.class.getName();
 
     // Request code that will be used to verify if the result comes from correct activity
@@ -76,7 +76,7 @@ public abstract class HostActivity extends Activity implements ConnectionStateCa
             mPlayQueueService = binder.getService();
 
             // Setup activity for callbacks
-            mPlayQueueService.addQueueChangedListener(HostActivity.this);
+            mPlayQueueService.addPlayQueueServiceListener(HostActivity.this);
 
             setupQueueList();
             setupDemoQueue();
@@ -218,7 +218,7 @@ public abstract class HostActivity extends Activity implements ConnectionStateCa
         }
 
         if (mPlayQueueService != null) {
-            mPlayQueueService.removeQueueChangeListener(this);
+            mPlayQueueService.removePlayQueueServiceListener(this);
             mPlayQueueService.onDestroy();
         }
     }
@@ -294,6 +294,11 @@ public abstract class HostActivity extends Activity implements ConnectionStateCa
         mQueueDisplayAdapter.updateQueueList(trackQueue);
     }
 
+    @Override
+    public void onPlaybackEnd() {
+        mPlayPauseButton.setText(R.string.play_btn);
+    }
+
     private void setupDemoQueue() {
         TracksPager tracks = mSpotifyService.searchTracks("Built This Pool");
         mPlayQueueService.addSongToQueue(tracks.tracks.items.get(2));
@@ -301,8 +306,8 @@ public abstract class HostActivity extends Activity implements ConnectionStateCa
         tracks = mSpotifyService.searchTracks("Audience of One");
         mPlayQueueService.addSongToQueue(tracks.tracks.items.get(0));
 
-//        tracks = mSpotifyService.searchTracks("Love Yourself Somebody");
-//        mPlayQueueService.addSongToQueue(tracks.tracks.items.get(0));
+        tracks = mSpotifyService.searchTracks("Love Yourself Somebody");
+        mPlayQueueService.addSongToQueue(tracks.tracks.items.get(0));
     }
 
     abstract void startHostConnection();

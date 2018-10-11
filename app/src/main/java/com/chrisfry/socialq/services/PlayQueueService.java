@@ -51,14 +51,16 @@ public class PlayQueueService extends Service implements ConnectionStateCallback
     private SpotifyPlayer mSpotifyPlayer;
     // Service for adding songs to the queue
     private SpotifyService mSpotifyService;
-    // List to contain objects listening for track changed events
-//    private ArrayList<TrackChangeListener> mTrackChangeListeners = new ArrayList<>();
     // List to contain objects listening for queue changed events
-    private ArrayList<QueueChangeListener> mQueueChangeListeners = new ArrayList<>();
+    private ArrayList<PlayQueueServiceListener> mListeners = new ArrayList<>();
     // Playlist object for the queue
     private Playlist mPlaylist;
     // Current user object
     private UserPrivate mCurrentUser;
+    // Integer to keep track of song index in the queue
+    private int mCurrentPlaylistIndex = 0;
+    // Boolean flag to store when when delivery is done
+    private boolean mAudioDeliveryDoneFlag = true;
     
 
     private final Player.OperationCallback mConnectivityCallback = new Player.OperationCallback() {
@@ -110,13 +112,18 @@ public class PlayQueueService extends Service implements ConnectionStateCallback
             Spotify.destroyPlayer(this);
         }
 
+        unfollowQueuePlaylist();
+
+        super.onDestroy();
+    }
+
+    private void unfollowQueuePlaylist() {
         // Unfollow the playlist created for SocialQ
         if (mCurrentUser != null && mPlaylist != null) {
             Log.d(TAG, "Unfollowing playlist created for the SocialQ");
             mSpotifyService.unfollowPlaylist(mCurrentUser.id, mPlaylist.id);
+            mPlaylist = null;
         }
-
-        super.onDestroy();
     }
 
     private void initPlayer(String accessToken) {
@@ -169,15 +176,23 @@ public class PlayQueueService extends Service implements ConnectionStateCallback
 
     public void play() {
         Log.d(TAG, "PLAY");
-        Metadata metaData = mSpotifyPlayer.getMetadata();
         if (mSpotifyPlayer.getPlaybackState() != null) {
-            if (metaData.currentTrack == null && mSongQueue.size() > 0) {
-                // If track is not loaded into the player, start the playlist
-                Log.d(TAG, "Starting Spotify Player?");
-                mSpotifyPlayer.playUri(this, mPlaylist.uri, 0, 1);
-                notifyQueueChanged();
-            } else {
-                mSpotifyPlayer.resume(this);
+             if (mAudioDeliveryDoneFlag) {
+                 if (mCurrentPlaylistIndex < mPlaylist.tracks.items.size()) {
+                     // TODO: Not a good check above?
+                     // If audio has previously been completed (or never started)
+                     // start the playlist at the current index
+                     Log.d(TAG, "Starting Spotify Player?");
+                     mSpotifyPlayer.playUri(this, mPlaylist.uri, mCurrentPlaylistIndex, 1);
+                     mAudioDeliveryDoneFlag = false;
+
+                     // TODO: Remove call below once we're sending the queue to clients on connection
+                     notifyQueueChanged();
+                 }
+             } else {
+                 if (!mSpotifyPlayer.getPlaybackState().isPlaying) {
+                     mSpotifyPlayer.resume(this);
+                 }
             }
         }
     }
@@ -189,7 +204,10 @@ public class PlayQueueService extends Service implements ConnectionStateCallback
 
     public void playNext() {
         Log.d(TAG, "NEXT");
-        mSpotifyPlayer.skipToNext(this);
+        if (!mAudioDeliveryDoneFlag) {
+            // Don't allow a skip when we're waiting on a new track to be queued
+            mSpotifyPlayer.skipToNext(this);
+        }
     }
 
     public void addSongToQueue(Track track) {
@@ -202,6 +220,8 @@ public class PlayQueueService extends Service implements ConnectionStateCallback
             // Queue song and add to local queue list
             mSpotifyService.addTracksToPlaylist(mCurrentUser.id, mPlaylist.id, queryParameters, bodyParameters);
             mSongQueue.add(track);
+            // Update local copy of playlist object
+            mPlaylist = mSpotifyService.getPlaylist(mCurrentUser.id, mPlaylist.id);
 
             notifyQueueChanged();
         }
@@ -225,9 +245,6 @@ public class PlayQueueService extends Service implements ConnectionStateCallback
             case kSpPlaybackNotifyTrackChanged:
                 break;
             case kSpPlaybackNotifyMetadataChanged:
-                // Log current and next track
-                Log.d(TAG, "Current track: " + mSpotifyPlayer.getMetadata().currentTrack
-                        + "\n Next Track: " + mSpotifyPlayer.getMetadata().nextTrack);
                 break;
             case kSpPlaybackNotifyTrackDelivered:
             case kSpPlaybackNotifyNext:
@@ -235,9 +252,13 @@ public class PlayQueueService extends Service implements ConnectionStateCallback
                 if (mSongQueue.size() > 0) {
                     mSongQueue.remove(0);
                 }
+                mCurrentPlaylistIndex++;
                 notifyQueueChanged();
                 break;
             case kSpPlaybackNotifyAudioDeliveryDone:
+                // Current queue playlist has finished.
+                mAudioDeliveryDoneFlag = true;
+                notifyOnPlaybackEnd();
                 break;
             default:
                 // Do nothing or future implementation
@@ -308,24 +329,32 @@ public class PlayQueueService extends Service implements ConnectionStateCallback
     }
     // END CONNECTION CALLBACK METHODS
 
-    // Inner interface used to cast listeners for when the queue has changed
-    public interface QueueChangeListener {
+    // Inner interface used to cast listeners for service events
+    public interface PlayQueueServiceListener {
 
         void onQueueChanged(List<Track> trackQueue);
+
+        void onPlaybackEnd();
 
     }
 
     private void notifyQueueChanged() {
-        for (QueueChangeListener listener : mQueueChangeListeners) {
+        for (PlayQueueServiceListener listener : mListeners) {
             listener.onQueueChanged(new ArrayList<>(mSongQueue));
         }
     }
 
-    public void addQueueChangedListener(QueueChangeListener listener) {
-        mQueueChangeListeners.add(listener);
+    private void notifyOnPlaybackEnd() {
+        for (PlayQueueServiceListener listener : mListeners) {
+            listener.onPlaybackEnd();
+        }
     }
 
-    public void removeQueueChangeListener(QueueChangeListener listener) {
-        mQueueChangeListeners.remove(listener);
+    public void addPlayQueueServiceListener(PlayQueueServiceListener listener) {
+        mListeners.add(listener);
+    }
+
+    public void removePlayQueueServiceListener(PlayQueueServiceListener listener) {
+        mListeners.remove(listener);
     }
 }
