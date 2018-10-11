@@ -12,7 +12,7 @@ public class AppConstants {
     public static final UUID APPLICATION_UUID = UUID.fromString(UUID_STRING);
 
     // Service Name
-    public static final String SERVICE_NAME = "chris.fry.socialq";
+    public static final String SERVICE_NAME = "com.chrisfry.socialq";
     // Client ID specific to this application
     public static final String CLIENT_ID = "0fab62a3895a4fa3aae14bc3e46bc59c";
     // Redirect URI

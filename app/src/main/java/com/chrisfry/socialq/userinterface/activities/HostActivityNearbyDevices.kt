@@ -41,9 +41,10 @@ class HostActivityNearbyDevices : HostActivity() {
         override fun onConnectionResult(endPoint: String, connectionResolution: ConnectionResolution) {
             when (connectionResolution.status.statusCode) {
                 ConnectionsStatusCodes.STATUS_OK -> {
-                    Log.d(TAG, "Established connection with a client")
+                    Log.d(TAG, "Established connection with a client, send queue")
                     Toast.makeText(this@HostActivityNearbyDevices, "Client has joined!", Toast.LENGTH_SHORT).show()
                     mClientEndpoints.add(endPoint)
+                    requestQueueForOneClient(endPoint)
                 }
                 ConnectionsStatusCodes.STATUS_CONNECTION_REJECTED -> Log.d(TAG, "Client connection rejected")
                 ConnectionsStatusCodes.STATUS_ERROR -> Log.d(TAG, "Error during client connection")
@@ -97,6 +98,12 @@ class HostActivityNearbyDevices : HostActivity() {
     override fun sendQueueToClients(queueTracks: MutableList<Track>) {
         for (endpointId: String in mClientEndpoints) {
             Nearby.getConnectionsClient(this).sendPayload(endpointId, Payload.fromBytes(ApplicationUtils.convertTrackListToQueueString(queueTracks).toByteArray()))
+        }
+    }
+
+    override fun receiveQueueForClient(client: Any?, trackList: MutableList<Track>?) {
+        if(mClientEndpoints.contains(client.toString())) {
+            Nearby.getConnectionsClient(this).sendPayload(client.toString(), Payload.fromBytes(ApplicationUtils.convertTrackListToQueueString(trackList).toByteArray()))
         }
     }
 

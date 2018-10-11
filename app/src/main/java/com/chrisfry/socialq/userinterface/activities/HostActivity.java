@@ -292,6 +292,11 @@ public abstract class HostActivity extends Activity implements ConnectionStateCa
         mQueueDisplayAdapter.updateQueueList(trackQueue);
     }
 
+    protected void requestQueueForOneClient(Object client) {
+        mPlayQueueService.requestSendQueueToClient(client, this);
+    }
+
+
     @Override
     public void onQueuePause() {
         mPlayPauseButton.setText(R.string.play_btn);
@@ -316,7 +321,10 @@ public abstract class HostActivity extends Activity implements ConnectionStateCa
         mPlayQueueService.requestAddSongToQueue(tracks.tracks.items.get(0));
     }
 
+    @Override
+    public abstract void receiveQueueForClient(Object client, List<Track> songQueue);
+
     protected abstract void startHostConnection();
 
-    abstract void sendQueueToClients(List<Track> queueTracks);
+    protected abstract void sendQueueToClients(List<Track> queueTracks);
 }

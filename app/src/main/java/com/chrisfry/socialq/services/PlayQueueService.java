@@ -185,9 +185,6 @@ public class PlayQueueService extends Service implements ConnectionStateCallback
                      Log.d(TAG, "Starting playlist from index: " + mCurrentPlaylistIndex);
                      mSpotifyPlayer.playUri(this, mPlaylist.uri, mCurrentPlaylistIndex, 1);
                      mAudioDeliveryDoneFlag = false;
-
-                     // TODO: Remove call below once we're sending the queue to clients on connection
-                     notifyQueueChanged();
                  }
              } else {
                  Log.d(TAG, "Resuming player");
@@ -246,6 +243,13 @@ public class PlayQueueService extends Service implements ConnectionStateCallback
             notifyQueueChanged();
         } else {
             Log.d(TAG, "Invalid track to queue");
+        }
+    }
+
+    public void requestSendQueueToClient(Object client, PlayQueueServiceListener listener) {
+        Log.d(TAG, "REQUEST QUEUE FOR ONE CLIENT");
+        if (mSongQueue != null) {
+            listener.receiveQueueForClient(client, mSongQueue);
         }
     }
 
@@ -360,6 +364,8 @@ public class PlayQueueService extends Service implements ConnectionStateCallback
         void onQueuePause();
 
         void onQueuePlay();
+
+        void receiveQueueForClient(Object client, List<Track> songQueue);
     }
 
     private void notifyQueueChanged() {

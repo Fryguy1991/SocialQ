@@ -23,7 +23,6 @@ import java.util.List;
 
 import com.chrisfry.socialq.business.AppConstants;
 import com.chrisfry.socialq.business.listeners.BluetoothConnectionListener;
-import com.chrisfry.socialq.R;
 
 import kaaes.spotify.webapi.android.SpotifyApi;
 import kaaes.spotify.webapi.android.SpotifyService;
@@ -163,8 +162,9 @@ public class HostActivityBluetooth extends HostActivity implements BluetoothConn
 
     @Override
     public void onConnectionEstablished(BluetoothSocket socket) {
-        Log.d(TAG, "A Client has connected.");
+        Log.d(TAG, "A Client has connected.  Send Queue");
         mBluetoothClients.add(socket);
+        requestQueueForOneClient(socket);
         try {
             new ReadThread(socket).start();
         } catch (IOException e) {
@@ -211,7 +211,12 @@ public class HostActivityBluetooth extends HostActivity implements BluetoothConn
     }
 
     @Override
-    void sendQueueToClients(List<Track> queueTracks) {
+    public void receiveQueueForClient(Object client, List<Track> songQueue) {
+        // TODO: IMPLEMENT SENDING QUEUE TO NEW CLIENT FOR BLUETOOTH
+    }
+
+    @Override
+    protected void sendQueueToClients(List<Track> queueTracks) {
         // TODO: IMPLEMENT QUEUE SENDING FOR BLUETOOTH
     }
 
