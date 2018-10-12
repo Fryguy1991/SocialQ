@@ -9,6 +9,7 @@ import android.util.Log;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -45,9 +46,9 @@ public class SearchActivity extends Activity implements TrackListAdapter.TrackSe
     // UI references
     private View mMainLayout;
     private View mSearchButton;
-    private View mArtistLayout;
-    private View mSongLayout;
-    private View mAlbumLayout;
+    private ViewGroup mArtistLayout;
+    private ViewGroup mSongLayout;
+    private ViewGroup mAlbumLayout;
     private EditText mSearchText;
     private TextView mArtistText;
     private TextView mSongText;

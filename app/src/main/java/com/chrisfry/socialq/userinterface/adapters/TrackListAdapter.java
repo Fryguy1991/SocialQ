@@ -18,6 +18,8 @@ import com.chrisfry.socialq.utils.DisplayUtils;
 public class TrackListAdapter extends RecyclerView.Adapter implements TrackHolder.ItemSelectionListener {
     // Reference to queue track list
     private List<Track> mTrackList;
+    // String for uri of track with exposed add button
+    private String mExposedUri = "";
 
     private TrackSelectionListener mTrackSelectionListener;
 
@@ -40,6 +42,7 @@ public class TrackListAdapter extends RecyclerView.Adapter implements TrackHolde
         trackHolder.setTrackName(track.name);
         trackHolder.setTrackUri(track.uri);
         trackHolder.setItemSelectionListener(this);
+        trackHolder.setAddButtonStatus(mExposedUri.equals(track.uri));
     }
 
     @Override
@@ -53,7 +56,7 @@ public class TrackListAdapter extends RecyclerView.Adapter implements TrackHolde
     }
 
     @Override
-    public void onItemSelected(String uri) {
+    public void onTrackSelected(String uri) {
         if (mTrackSelectionListener != null) {
             for (Track track : mTrackList) {
                 if (track.uri.equals(uri)) {
@@ -62,6 +65,15 @@ public class TrackListAdapter extends RecyclerView.Adapter implements TrackHolde
                 }
             }
         }
+    }
+
+    @Override
+    public void onAddTrackExposed(String uri) {
+        mExposedUri = uri;
+
+        // TODO: Look for better way to do this.  Updating entire data
+        // set disables add button animation and is not very efficient.
+        notifyDataSetChanged();
     }
 
     public interface TrackSelectionListener {

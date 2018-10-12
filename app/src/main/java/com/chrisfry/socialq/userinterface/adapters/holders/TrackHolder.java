@@ -13,15 +13,19 @@ public class TrackHolder extends RecyclerView.ViewHolder implements View.OnClick
     // Get references to UI elements
     private TextView mTrackNameView;
     private TextView mArtistNameView;
+    private View mAddButton;
     private String mTrackUri;
 
     private ItemSelectionListener mItemSelectionListener;
 
     public TrackHolder(View v) {
         super(v);
-        mTrackNameView = (TextView) v.findViewById(R.id.tv_track_name);
-        mArtistNameView = (TextView) v.findViewById(R.id.tv_artist_name);
+        mTrackNameView = v.findViewById(R.id.tv_track_name);
+        mArtistNameView = v.findViewById(R.id.tv_artist_name);
+        mAddButton = v.findViewById(R.id.iv_add_button);
+
         v.setOnClickListener(this);
+        mAddButton.setOnClickListener(this);
     }
 
     public void setArtistName(String artistName) {
@@ -38,11 +42,29 @@ public class TrackHolder extends RecyclerView.ViewHolder implements View.OnClick
 
     @Override
     public void onClick(View view) {
-        mItemSelectionListener.onItemSelected(mTrackUri);
+        switch (view.getId()) {
+            case R.id.cl_track_holder:
+                boolean isAddCurrentlyActive = mAddButton.isEnabled();
+                setAddButtonStatus(!isAddCurrentlyActive);
+                mItemSelectionListener.onAddTrackExposed(isAddCurrentlyActive ? "" : mTrackUri);
+                break;
+            case R.id.iv_add_button:
+                mItemSelectionListener.onTrackSelected(mTrackUri);
+                break;
+            default:
+                // Do nothing
+        }
+    }
+
+    public void setAddButtonStatus(boolean shouldBeActive) {
+        mAddButton.setVisibility(shouldBeActive ? View.VISIBLE : View.INVISIBLE);
+        mAddButton.setEnabled(shouldBeActive);
     }
 
     public interface ItemSelectionListener {
-        void onItemSelected(String uri);
+        void onTrackSelected(String uri);
+
+        void onAddTrackExposed(String uri);
     }
 
     public void setItemSelectionListener(ItemSelectionListener listener) {

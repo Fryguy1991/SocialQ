@@ -3,7 +3,7 @@
 
     <item
         android:id="@+id/search_action"
-        android:icon="@drawable/search_icon"
+        android:icon="@mipmap/search_icon"
         android:title="@string/search_action"
         android:showAsAction="always"/>
 

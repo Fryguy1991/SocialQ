@@ -7,8 +7,6 @@
     <!-- Menu Action Strings -->
     <string name="search_action">search_action</string>
 
-    <string name="track_to_play_format">spotify:track:%1$s</string>
-
     <!-- Host Screen Strings -->
     <string name="next_btn">Next</string>
     <string name="play_btn">Play</string>
@@ -32,6 +30,9 @@
     <string name="login">Log In</string>
     <string name="start_queue">Start Queue</string>
     <string name="join_queue">Join Queue</string>
+
+    <!-- Queue Connect Screen Strings -->
+    <string name="join">Join</string>
 
 
 </resources>

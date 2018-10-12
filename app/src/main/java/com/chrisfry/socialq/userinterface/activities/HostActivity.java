@@ -5,6 +5,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.StrictMode;
@@ -15,8 +16,7 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.Button;
-import android.widget.TextView;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.chrisfry.socialq.business.dagger.modules.SpotifyModule;
@@ -42,7 +42,6 @@ import com.chrisfry.socialq.services.PlayQueueService;
 import com.chrisfry.socialq.userinterface.adapters.TrackListAdapter;
 import com.chrisfry.socialq.userinterface.widgets.QueueItemDecoration;
 import com.chrisfry.socialq.utils.ApplicationUtils;
-import com.chrisfry.socialq.utils.DisplayUtils;
 
 public abstract class HostActivity extends Activity implements ConnectionStateCallback,
         PlayQueueService.PlayQueueServiceListener {
@@ -53,10 +52,8 @@ public abstract class HostActivity extends Activity implements ConnectionStateCa
     private static final int SPOTIFY_LOGIN_REQUEST = 8675309;
 
     // UI element references
-    private Button mNextButton;
-    private Button mPlayPauseButton;
-    private TextView mCurrentTrackName;
-    private TextView mCurrentArtistName;
+    private View mNextButton;
+    private ImageView mPlayPauseButton;
 
     // Track list elements
     private RecyclerView mQueueList;
@@ -114,11 +111,9 @@ public abstract class HostActivity extends Activity implements ConnectionStateCa
 
     private void initUi() {
         // Initialize UI elements
-        mNextButton = (Button) findViewById(R.id.btn_next);
-        mPlayPauseButton = (Button) findViewById(R.id.btn_play_pause);
-        mQueueList = (RecyclerView) findViewById(R.id.rv_queue_list_view);
-        mCurrentTrackName = (TextView) findViewById(R.id.tv_current_track_name);
-        mCurrentArtistName = (TextView) findViewById(R.id.tv_current_artist_name);
+        mNextButton = findViewById(R.id.btn_next);
+        mPlayPauseButton = findViewById(R.id.btn_play_pause);
+        mQueueList = findViewById(R.id.rv_queue_list_view);
     }
 
     private void addListeners() {
@@ -268,27 +263,11 @@ public abstract class HostActivity extends Activity implements ConnectionStateCa
         }
     }
 
-    private void setPlayingTrack(Track track) {
-        if (track != null) {
-            mCurrentTrackName.setText(track.name);
-            mCurrentArtistName.setText(DisplayUtils.getTrackArtistString(track));
-        } else {
-            mCurrentTrackName.setText("");
-            mCurrentArtistName.setText("");
-        }
-    }
-
     @Override
     public void onQueueChanged(List<Track> trackQueue) {
         // Send entire queue to clients
         sendQueueToClients(trackQueue);
 
-        // Display all but first (current track updated separately)
-        if (trackQueue.size() == 0) {
-            setPlayingTrack(null);
-        } else {
-            setPlayingTrack(trackQueue.remove(0));
-        }
         mQueueDisplayAdapter.updateQueueList(trackQueue);
     }
 
@@ -299,13 +278,21 @@ public abstract class HostActivity extends Activity implements ConnectionStateCa
 
     @Override
     public void onQueuePause() {
-        mPlayPauseButton.setText(R.string.play_btn);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            mPlayPauseButton.setImageDrawable(getResources().getDrawable(R.drawable.play_button, this.getTheme()));
+        } else {
+            mPlayPauseButton.setImageDrawable(getResources().getDrawable(R.drawable.play_button));
+        }
         mPlayPauseButton.setContentDescription("queue_paused");
     }
 
     @Override
     public void onQueuePlay() {
-        mPlayPauseButton.setText(R.string.pause_btn);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            mPlayPauseButton.setImageDrawable(getResources().getDrawable(R.drawable.pause_button, this.getTheme()));
+        } else {
+            mPlayPauseButton.setImageDrawable(getResources().getDrawable(R.drawable.pause_button));
+        }
         mPlayPauseButton.setContentDescription("queue_playing");
     }
 

@@ -13,7 +13,7 @@
         android:id="@+id/et_search_edit_text"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:drawableStart="@drawable/search_icon"
+        android:drawableStart="@mipmap/search_icon"
         android:inputType="text"
         android:maxLines="1"
         android:imeOptions="actionNext"/>
@@ -40,6 +40,7 @@
             android:layout_weight="1"/>
 
         <ImageView
+            android:id="@+id/iv_artists_arrow"
             android:layout_width="30dp"
             android:layout_height="30dp"
             android:src="@drawable/up_arrow_head"
@@ -60,6 +61,7 @@
             android:layout_weight="1"/>
 
         <ImageView
+            android:id="@+id/iv_songs_arrow"
             android:layout_width="30dp"
             android:layout_height="30dp"
             android:src="@drawable/up_arrow_head"
@@ -81,6 +83,7 @@
             android:layout_weight="1"/>
 
         <ImageView
+            android:id="@+id/iv_albums_arrow"
             android:layout_width="30dp"
             android:layout_height="30dp"
             android:src="@drawable/up_arrow_head"

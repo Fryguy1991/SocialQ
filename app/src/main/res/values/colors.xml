@@ -3,8 +3,16 @@
     <color name="colorPrimary">#3F51B5</color>
     <color name="colorPrimaryDark">#303F9F</color>
     <color name="colorAccent">#FF4081</color>
+
+    <!-- Basic Colors -->
     <color name="Gray">#FF808080</color>
     <color name="White">#FFFFFFFF</color>
     <color name="MidBlue">#FF1E90FF</color>
     <color name="Transparent">#00000000</color>
+    <color name="Black">#000000</color>
+
+    <!-- Button Colors -->
+    <color name="Active_Button_Color">#212121</color>
+    <color name="Inactive_Button_Color">#BABABA</color>
+    <color name="Selected_Button_Color">#707070</color>
 </resources>
