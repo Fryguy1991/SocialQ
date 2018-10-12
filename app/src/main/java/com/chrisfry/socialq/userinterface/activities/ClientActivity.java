@@ -40,9 +40,6 @@ public abstract class ClientActivity extends Activity implements ConnectionState
     private RecyclerView mQueueList;
     private TrackListAdapter mQueueDisplayAdapter;
 
-    private TextView mCurrentTrackName;
-    private TextView mCurrentArtistName;
-
     // Spotify API elements
     protected SpotifyService mSpotifyService;
 
@@ -80,8 +77,6 @@ public abstract class ClientActivity extends Activity implements ConnectionState
     private void initUi() {
         // Initialize UI elements
         mQueueList = (RecyclerView) findViewById(R.id.rv_queue_list_view);
-        mCurrentTrackName = (TextView) findViewById(R.id.tv_current_track_name);
-        mCurrentArtistName = (TextView) findViewById(R.id.tv_current_artist_name);
     }
 
     @Override

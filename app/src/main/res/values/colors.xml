@@ -14,5 +14,5 @@
     <!-- Button Colors -->
     <color name="Active_Button_Color">#212121</color>
     <color name="Inactive_Button_Color">#BABABA</color>
-    <color name="Selected_Button_Color">#707070</color>
+    <color name="Pressed_Button_Color">#555555</color>
 </resources>

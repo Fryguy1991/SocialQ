@@ -4,7 +4,7 @@
     <item>
         <selector>
             <item
-                android:drawable="@drawable/selected_circle_background"
+                android:drawable="@drawable/pressed_circle_background"
                 android:state_pressed="true" />
             <item
                 android:drawable="@drawable/active_circle_background"

@@ -2,7 +2,7 @@
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="oval">
     <solid
-        android:color="@color/Selected_Button_Color"/>
+        android:color="@color/Pressed_Button_Color"/>
     <padding
         android:top="2dp"
         android:right="2dp"

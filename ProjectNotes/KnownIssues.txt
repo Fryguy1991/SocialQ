@@ -1,1 +1,5 @@
-BUG! New add button for searching tracks is appearing in queue display (host activity).  Will probably be displayed in client activity too.
+BUG: New add button for searching tracks is appearing in queue display (host activity).  Will probably be displayed in client activity too.
+
+Enhancement: Sure there is a better way to remove add icon (search tracks) than refreshing entire data set.
+
+BUG: Playlist will end if track finishes (organically) and MetaData has not been updated.

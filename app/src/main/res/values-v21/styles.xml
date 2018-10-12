@@ -9,7 +9,7 @@
     </style>
 
     <style name="DefaultButtonStyle">
-        <item name="android:background">@drawable/rectangle_background</item>
+        <item name="android:background">@drawable/rectangle_button</item>
         <item name="android:textColor">@color/White</item>
     </style>
 </resources>

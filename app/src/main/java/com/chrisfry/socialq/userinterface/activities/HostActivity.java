@@ -36,6 +36,7 @@ import com.chrisfry.socialq.R;
 
 import kaaes.spotify.webapi.android.SpotifyService;
 import kaaes.spotify.webapi.android.models.Track;
+import kaaes.spotify.webapi.android.models.Tracks;
 import kaaes.spotify.webapi.android.models.TracksPager;
 
 import com.chrisfry.socialq.services.PlayQueueService;
@@ -76,7 +77,8 @@ public abstract class HostActivity extends Activity implements ConnectionStateCa
             mPlayQueueService.addPlayQueueServiceListener(HostActivity.this);
 
             setupQueueList();
-//            setupDemoQueue();
+//            setupShortDemoQueue();
+//            setupLongDemoQueue();
         }
 
         @Override
@@ -297,7 +299,7 @@ public abstract class HostActivity extends Activity implements ConnectionStateCa
     }
 
 
-    private void setupDemoQueue() {
+    private void setupShortDemoQueue() {
         TracksPager tracks = mSpotifyService.searchTracks("Built This Pool");
         mPlayQueueService.requestAddSongToQueue(tracks.tracks.items.get(2));
 
@@ -306,6 +308,15 @@ public abstract class HostActivity extends Activity implements ConnectionStateCa
 
         tracks = mSpotifyService.searchTracks("Love Yourself Somebody");
         mPlayQueueService.requestAddSongToQueue(tracks.tracks.items.get(0));
+    }
+
+    private void setupLongDemoQueue() {
+        String longQueueString = "0p8fUOBfWtGcaKGiD9drgJ,6qtg4gz3DhqOHL5BHtSQw8,57bgtoPSgt236HzfBOd8kj,4VbDJMkAX3dWNBdn3KH6Wx,2jnvdMCTvtdVCci3YLqxGY,419qOkEdlmbXS1GRJEMntC,1jvqZQtbBGK5GJCGT615ao,6cG3kY60HMcFqiZN8frkXF,0dqrAmrvQ6fCGNf5T8If5A,0wHNrrefyaeVewm4NxjxrX,1hh4GY1zM7SUAyM3a2ziH5,5Cl9GDb0AyQnppRr6q7ldb,7D180Q77XAEP7atBLmMTgK,2uxL6E8Yq0Psc1V9uBtC4F,7lGh1Dy02c5C0j3tj9AVm3";
+        Tracks longQueueTracks = mSpotifyService.getTracks(longQueueString);
+
+        for (Track currentTrack : longQueueTracks.tracks) {
+            mPlayQueueService.requestAddSongToQueue(currentTrack);
+        }
     }
 
     @Override

@@ -108,9 +108,9 @@ class HostActivityNearbyDevices : HostActivity() {
     }
 
     override fun onDestroy() {
-        super.onDestroy()
-
         Nearby.getConnectionsClient(this).stopAdvertising()
         Nearby.getConnectionsClient(this).stopAllEndpoints()
+
+        super.onDestroy()
     }
 }
