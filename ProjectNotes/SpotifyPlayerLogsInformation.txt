@@ -1,0 +1,77 @@
+SPOTIFY PLAYBACK EVENT LOGS
+
+############################
+# Spotify start play logs: #
+############################
+
+D/com.chrisfry.socialq.services.PlayQueueService: PLAY
+D/com.chrisfry.socialq.services.PlayQueueService: Starting Spotify Player?
+D/com.chrisfry.socialq.services.PlayQueueService: New playback event: kSpPlaybackNotifyBecameActive
+D/com.chrisfry.socialq.services.PlayQueueService: New playback event: kSpPlaybackNotifyMetadataChanged
+D/com.chrisfry.socialq.services.PlayQueueService: New playback event: kSpPlaybackNotifyMetadataChanged
+D/com.chrisfry.socialq.services.PlayQueueService: New playback event: kSpPlaybackNotifyMetadataChanged
+D/com.chrisfry.socialq.services.PlayQueueService: New playback event: kSpPlaybackNotifyContextChanged
+D/com.chrisfry.socialq.services.PlayQueueService: New playback event: kSpPlaybackNotifyTrackChanged
+D/com.chrisfry.socialq.services.PlayQueueService: New playback event: kSpPlaybackEventAudioFlush
+D/com.chrisfry.socialq.services.PlayQueueService: New playback event: kSpPlaybackNotifyPlay
+D/com.chrisfry.socialq.services.PlayQueueService: New playback event: kSpPlaybackNotifyMetadataChanged
+
+kSpPlaybackNotifyBecameActive
+kSpPlaybackNotifyMetadataChanged x 3
+kSpPlaybackNotifyContextChanged
+kSpPlaybackNotifyTrackChanged
+kSpPlaybackEventAudioFlush
+kSpPlaybackNotifyPlay
+kSpPlaybackNotifyMetadataChanged
+
+#####################################################
+# Spotify next track logs for when next is pressed: #
+#####################################################
+
+D/com.chrisfry.socialq.services.PlayQueueService: PLAY
+D/com.chrisfry.socialq.services.PlayQueueService: Starting Spotify Player?
+D/com.chrisfry.socialq.services.PlayQueueService: New playback event: kSpPlaybackNotifyBecameActive
+D/com.chrisfry.socialq.services.PlayQueueService: New playback event: kSpPlaybackNotifyMetadataChanged
+D/com.chrisfry.socialq.services.PlayQueueService: New playback event: kSpPlaybackNotifyMetadataChanged
+D/com.chrisfry.socialq.services.PlayQueueService: New playback event: kSpPlaybackNotifyMetadataChanged
+D/com.chrisfry.socialq.services.PlayQueueService: New playback event: kSpPlaybackNotifyContextChanged
+D/com.chrisfry.socialq.services.PlayQueueService: New playback event: kSpPlaybackNotifyTrackChanged
+D/com.chrisfry.socialq.services.PlayQueueService: New playback event: kSpPlaybackEventAudioFlush
+D/com.chrisfry.socialq.services.PlayQueueService: New playback event: kSpPlaybackNotifyPlay
+D/com.chrisfry.socialq.services.PlayQueueService: New playback event: kSpPlaybackNotifyMetadataChanged
+D/com.chrisfry.socialq.services.PlayQueueService: NEXT
+D/com.chrisfry.socialq.services.PlayQueueService: New playback event: kSpPlaybackNotifyNext
+D/com.chrisfry.socialq.services.PlayQueueService: Queueing: Love Yourself Somebody
+D/com.chrisfry.socialq.services.PlayQueueService: Great Success!
+D/com.chrisfry.socialq.services.PlayQueueService: Great Success!
+D/com.chrisfry.socialq.services.PlayQueueService: New playback event: kSpPlaybackNotifyTrackChanged
+D/com.chrisfry.socialq.services.PlayQueueService: New playback event: kSpPlaybackEventAudioFlush
+D/com.chrisfry.socialq.services.PlayQueueService: New playback event: kSpPlaybackNotifyMetadataChanged
+D/com.chrisfry.socialq.services.PlayQueueService: New playback event: kSpPlaybackNotifyMetadataChanged
+D/com.chrisfry.socialq.services.PlayQueueService: PAUSE
+D/com.chrisfry.socialq.services.PlayQueueService: New playback event: kSpPlaybackNotifyPause
+D/com.chrisfry.socialq.services.PlayQueueService: Great Success!
+
+kSpPlaybackNotifyNext
+kSpPlaybackNotifyTrackChanged
+kSpPlaybackEventAudioFlush
+kSpPlaybackNotifyMetadataChanged x 2
+
+####################################################
+# Spotify next track logs for when track finishes: #
+####################################################
+
+kSpPlaybackNotifyBecameActive
+kSpPlaybackNotifyMetadataChanged x 3
+kSpPlaybackNotifyContextChanged
+kSpPlaybackNotifyTrackChanged
+kSpPlaybackEventAudioFlush
+kSpPlaybackNotifyPlay
+kSpPlaybackNotifyMetadataChanged
+
+
+kSpPlaybackNotifyTrackDelivered
+kSpPlaybackNotifyTrackChanged
+kSpPlaybackNotifyMetadataChanged x 2
+
+spotify:track:

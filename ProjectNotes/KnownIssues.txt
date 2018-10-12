@@ -1,0 +1,1 @@
+BUG! New add button for searching tracks is appearing in queue display (host activity).  Will probably be displayed in client activity too.

@@ -1,0 +1,19 @@
+Playback Event log for successful start then pause:
+-New playback event: kSpPlaybackNotifyBecameActive
+-New playback event: kSpPlaybackNotifyMetadataChanged
+-New playback event: kSpPlaybackNotifyMetadataChanged
+-New playback event: kSpPlaybackNotifyMetadataChanged
+-New playback event: kSpPlaybackNotifyContextChanged
+-New playback event: kSpPlaybackNotifyTrackChanged
+-New playback event: kSpPlaybackEventAudioFlush
+-New playback event: kSpPlaybackNotifyPlay
+-New playback event: kSpPlaybackNotifyPause
+
+Playback event log for unsuccessful start:
+New playback event: kSpPlaybackNotifyBecameActive
+New playback event: kSpPlaybackNotifyMetadataChanged
+New playback event: kSpPlaybackNotifyMetadataChanged
+New playback event: kSpPlaybackNotifyMetadataChanged
+New playback event: kSpPlaybackNotifyContextChanged
+
+Issue seems to be starting uri from positionMs 0.  More reliable when starting from 1.
