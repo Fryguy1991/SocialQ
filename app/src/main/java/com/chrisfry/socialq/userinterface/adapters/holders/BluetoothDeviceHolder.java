@@ -43,13 +43,13 @@ public class BluetoothDeviceHolder extends RecyclerView.ViewHolder implements Vi
         if (mItemSelectionListener != null) {
             if (mParentView.getContentDescription().equals("not_selected")) {
                 mParentView.setContentDescription("selected");
-                mParentView.setBackgroundColor(mParentView.getResources().getColor(R.color.White));
-                mDeviceName.setTextColor(mParentView.getResources().getColor(R.color.Gray));
+                mParentView.setBackgroundColor(mParentView.getResources().getColor(R.color.Active_Button_Color));
+                mDeviceName.setTextColor(mParentView.getResources().getColor(R.color.White));
                 mItemSelectionListener.onItemSelected(mDevice);
             } else {
                 mParentView.setContentDescription("not_selected");
-                mParentView.setBackgroundColor(mParentView.getResources().getColor(R.color.Transparent));
-                mDeviceName.setTextColor(mParentView.getResources().getColor(R.color.White));
+                mParentView.setBackgroundColor(mParentView.getResources().getColor(R.color.White));
+                mDeviceName.setTextColor(mParentView.getResources().getColor(R.color.Gray));
                 mItemSelectionListener.onItemSelected(null);
             }
         }

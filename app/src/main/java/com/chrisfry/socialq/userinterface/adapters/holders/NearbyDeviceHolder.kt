@@ -14,13 +14,13 @@ class NearbyDeviceHolder(itemView: View) : RecyclerView.ViewHolder(itemView), Vi
         if (view != null) {
             if (view.contentDescription == "not_selected") {
                 view.contentDescription = "selected"
-                view.setBackgroundColor(view.resources.getColor(R.color.White))
-                nameTextView.setTextColor(view.resources.getColor(R.color.Gray))
+                view.setBackgroundColor(view.resources.getColor(R.color.Active_Button_Color))
+                nameTextView.setTextColor(view.resources.getColor(R.color.White))
                 listener.onItemSelected(endpointId)
             } else {
                 view.contentDescription = "not_selected"
-                view.setBackgroundColor(view.resources.getColor(R.color.Gray))
-                nameTextView.setTextColor(view.resources.getColor(R.color.White))
+                view.setBackgroundColor(view.resources.getColor(R.color.White))
+                nameTextView.setTextColor(view.resources.getColor(R.color.Gray))
                 listener.onItemSelected("")
             }
         }
