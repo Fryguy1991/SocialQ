@@ -3,6 +3,8 @@ package com.chrisfry.socialq.userinterface.activities;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.constraint.ConstraintLayout;
+import android.support.constraint.ConstraintSet;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -25,11 +27,14 @@ import com.chrisfry.socialq.business.dagger.modules.SpotifyModule;
 import com.chrisfry.socialq.business.dagger.modules.components.DaggerSpotifyComponent;
 import com.chrisfry.socialq.business.dagger.modules.components.SpotifyComponent;
 import com.chrisfry.socialq.R;
-import kaaes.spotify.webapi.android.SpotifyApi;
+
+import butterknife.BindViews;
+import butterknife.ButterKnife;
 import kaaes.spotify.webapi.android.SpotifyService;
 import kaaes.spotify.webapi.android.models.AlbumSimple;
 import kaaes.spotify.webapi.android.models.Artist;
 import kaaes.spotify.webapi.android.models.Track;
+
 import com.chrisfry.socialq.userinterface.adapters.TrackListAdapter;
 import com.chrisfry.socialq.userinterface.widgets.QueueItemDecoration;
 import com.chrisfry.socialq.utils.ApplicationUtils;
@@ -38,13 +43,13 @@ import com.chrisfry.socialq.utils.ApplicationUtils;
  * Activity for searching Spotify tracks
  */
 public class SearchActivity extends Activity implements TrackListAdapter.TrackSelectionListener {
+    private final String TAG = SearchActivity.class.getName();
 
     // Spotify search references
-    private SpotifyApi mApi;
     private SpotifyService mSpotifyService;
 
     // UI references
-    private View mMainLayout;
+    private ConstraintLayout mMainLayout;
     private View mSearchButton;
     private ViewGroup mArtistLayout;
     private ViewGroup mSongLayout;
@@ -53,23 +58,30 @@ public class SearchActivity extends Activity implements TrackListAdapter.TrackSe
     private TextView mArtistText;
     private TextView mSongText;
     private TextView mAlbumText;
-    private RecyclerView mSearchResults;
+    private RecyclerView mSongResults;
+
+    @BindViews({R.id.cv_song_result_layout, R.id.cv_artist_result_layout, R.id.cv_album_result_layout})
+    List<View> mResultsBaseViews;
 
     // Search result containers
-    private List<Track> mResultTrackList;
-    private List<Artist> mResultArtistList;
-    private List<AlbumSimple> mResultAlbumList;
+    private List<Track> mResultTrackList = new ArrayList<>();
+    private List<Artist> mResultArtistList = new ArrayList<>();
+    private List<AlbumSimple> mResultAlbumList = new ArrayList<>();
 
-    private TrackListAdapter mSearchResultsAdapter;
+    // Recycler view adapters
+    private TrackListAdapter mSongResultsAdapter;
+    // TODO: Artist adapter
+    // TODO: Album adapter
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.search_screen);
+        ButterKnife.bind(this);
 
         String accessToken = ApplicationUtils.getAccessToken();
-        if(accessToken == null) {
-            Log.d("SearchActivity", "Invalid Access Token");
+        if (accessToken == null) {
+            Log.d(TAG, "Invalid Access Token");
             Toast.makeText(this, "Invalid Access Token", Toast.LENGTH_LONG).show();
             finish();
         } else {
@@ -110,20 +122,20 @@ public class SearchActivity extends Activity implements TrackListAdapter.TrackSe
         // Initialize UI elements
         mMainLayout = findViewById(R.id.search_main);
         mSearchButton = findViewById(R.id.btn_search);
-        mArtistLayout = findViewById(R.id.ll_artist_search_layout);
-        mSongLayout = findViewById(R.id.ll_song_search_layout);
-        mAlbumLayout = findViewById(R.id.ll_album_search_layout);
-        mSearchText = (EditText) findViewById(R.id.et_search_edit_text);
-        mArtistText = (TextView) findViewById(R.id.tv_artists_search);
-        mSongText = (TextView) findViewById(R.id.tv_songs_search);
-        mAlbumText = (TextView) findViewById(R.id.tv_albums_search);
+        mArtistLayout = findViewById(R.id.cv_artist_result_layout);
+        mSongLayout = findViewById(R.id.cv_song_result_layout);
+        mAlbumLayout = findViewById(R.id.cv_album_result_layout);
+        mSearchText = findViewById(R.id.et_search_edit_text);
+        mArtistText = mArtistLayout.findViewById(R.id.tv_result_text);
+        mSongText = mSongLayout.findViewById(R.id.tv_result_text);
+        mAlbumText = mAlbumLayout.findViewById(R.id.tv_result_text);
 
-        mSearchResults = (RecyclerView) findViewById(R.id.rv_search_results);
-        mSearchResultsAdapter = new TrackListAdapter(new ArrayList<Track>());
-        mSearchResults.setAdapter(mSearchResultsAdapter);
+        mSongResults = mSongLayout.findViewById(R.id.rv_result_recycler_view);
+        mSongResultsAdapter = new TrackListAdapter(new ArrayList<Track>());
+        mSongResults.setAdapter(mSongResultsAdapter);
         LinearLayoutManager layoutManager = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
-        mSearchResults.setLayoutManager(layoutManager);
-        mSearchResults.addItemDecoration(new QueueItemDecoration(getApplicationContext()));
+        mSongResults.setLayoutManager(layoutManager);
+        mSongResults.addItemDecoration(new QueueItemDecoration(getApplicationContext()));
     }
 
     private void addListeners() {
@@ -140,35 +152,70 @@ public class SearchActivity extends Activity implements TrackListAdapter.TrackSe
             @Override
             public void onClick(View view) {
                 // Don't search if search text is empty
-                if(!mSearchText.getText().toString().isEmpty()) {
+                if (!mSearchText.getText().toString().isEmpty()) {
                     mSearchText.clearFocus();
                     hideKeyboard();
                     searchByText(mSearchText.getText().toString());
-                    mSearchResults.setVisibility(View.GONE);
+                    mSongResults.setVisibility(View.GONE);
                 }
             }
         });
         View.OnClickListener showResultsClickListener = new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                mSearchResults.setVisibility(
-                        mSearchResults.getVisibility() == View.VISIBLE ? View.GONE : View.VISIBLE);
+                View resultsView = view.findViewById(R.id.rv_result_recycler_view);
+                boolean isCurrentlyVisible = resultsView.getVisibility() == View.VISIBLE;
+
+                // Hide recycler view and rotate arrow
+                resultsView.setVisibility(isCurrentlyVisible ? View.GONE : View.VISIBLE);
+                view.findViewById(R.id.iv_result_arrow).setRotation(isCurrentlyVisible ? 0 : 180);
+
+                ConstraintSet constraintSet = new ConstraintSet();
+                constraintSet.clone(mMainLayout);
+                if (isCurrentlyVisible) {
+                    // If closing category show hidden categories (with results)
+                    updateVisibilityBasedOnResults();
+                    Log.d(TAG, "Showing all result layouts");
+
+                    // Bottom of view should no longer be constrained
+                    // Height should return to wrap content
+                    constraintSet.clear(view.getId(), ConstraintSet.BOTTOM);
+                    constraintSet.constrainHeight(view.getId(), ConstraintSet.WRAP_CONTENT);
+                } else {
+                    // If clicking on a category hide other categories
+                    Log.d(TAG, "Hiding all but touched layout");
+                    for (View baseView : mResultsBaseViews) {
+                        if (!baseView.equals(view)) {
+                            baseView.setVisibility(View.GONE);
+                        }
+                    }
+
+                    // Bottom of view should be constrained to bottom of parent
+                    // Height should match constraint
+                    constraintSet.connect(view.getId(), ConstraintSet.BOTTOM, mMainLayout.getId(), ConstraintSet.BOTTOM, 8);
+                    constraintSet.constrainHeight(view.getId(), ConstraintSet.MATCH_CONSTRAINT);
+                }
+                constraintSet.applyTo(mMainLayout);
             }
         };
-        mSongLayout.setOnClickListener(showResultsClickListener);
 
-        mSearchResultsAdapter.setTrackSelectionListener(this);
+        // Add above listener to all base layouts
+        for (View baseView : mResultsBaseViews) {
+            baseView.setOnClickListener(showResultsClickListener);
+        }
+
+        mSongResultsAdapter.setTrackSelectionListener(this);
     }
 
     private void hideKeyboard() {
-        InputMethodManager inputManager = ((InputMethodManager)getSystemService(INPUT_METHOD_SERVICE));
+        InputMethodManager inputManager = ((InputMethodManager) getSystemService(INPUT_METHOD_SERVICE));
         if (inputManager != null && getCurrentFocus() != null) {
             inputManager.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(), 0);
         }
     }
 
     private void searchByText(String searchText) {
-        Log.d("SearchActivity", "Searching for: " + searchText);
+        Log.d(TAG, "Searching for: " + searchText);
 
         // Create options to set limit for search results to 50 items
         Map<String, Object> options = new HashMap<>();
@@ -179,40 +226,43 @@ public class SearchActivity extends Activity implements TrackListAdapter.TrackSe
 //        mResultAlbumList = mSpotifyService.searchAlbums(searchText, options).albums.items;
         mResultTrackList = mSpotifyService.searchTracks(searchText, options).tracks.items;
 
-        updateUiAfterSearch();
+        // Update result views
+        closeAnyRecyclerViews();
+        updateVisibilityBasedOnResults();
+        updateBaseLayoutResultCount();
+        updateAdapters();
     }
 
-    private void updateUiAfterSearch() {
-        //Hide layouts if no results. If results are found display number of each type of item
-        // TODO: Re-show album and artist results and handle selection
-//        if(mResultArtistList.size() > 0) {
-//            mArtistLayout.setVisibility(View.VISIBLE);
-//            mArtistText.setText(
-//                    String.format(getString(R.string.number_of_artists), mResultArtistList.size()));
-//        } else {
-//            mArtistLayout.setVisibility(View.GONE);
-//        }
-//
-//        if(mResultAlbumList.size() > 0) {
-//            mAlbumLayout.setVisibility(View.VISIBLE);
-//            mAlbumText.setText(
-//                    String.format(getString(R.string.number_of_albums), mResultAlbumList.size()));
-//        } else {
-//            mAlbumLayout.setVisibility(View.GONE);
-//        }
+    private void updateVisibilityBasedOnResults() {
+        // Hide expandable views based on results
+        mAlbumLayout.setVisibility(mResultAlbumList.size() == 0 ? View.GONE : View.VISIBLE);
+        mArtistLayout.setVisibility(mResultArtistList.size() == 0 ? View.GONE : View.VISIBLE);
+        mSongLayout.setVisibility(mResultTrackList.size() == 0 ? View.GONE : View.VISIBLE);
+    }
 
-        if(mResultTrackList.size() > 0) {
-            mSongLayout.setVisibility(View.VISIBLE);
-            mSongText.setText(
-                    String.format(getString(R.string.number_of_songs), mResultTrackList.size()));
-            mSearchResultsAdapter.updateQueueList(mResultTrackList);
-            mSearchResults.setVisibility(View.VISIBLE);
-        } else {
-            mSongLayout.setVisibility(View.GONE);
-            mSearchResults.setVisibility(View.GONE);
+    private void updateBaseLayoutResultCount() {
+        //Update count display on base layouts
+        mSongText.setText(String.format(getString(R.string.number_of_songs), mResultTrackList.size()));
+        mArtistText.setText(String.format(getString(R.string.number_of_artists), mResultArtistList.size()));
+        mAlbumText.setText(String.format(getString(R.string.number_of_albums), mResultAlbumList.size()));
+    }
+
+    private void updateAdapters() {
+        mSongResultsAdapter.updateQueueList(mResultTrackList);
+        // TODO: Update artist and album adapters once we have them
+    }
+
+    private void closeAnyRecyclerViews() {
+        for(View currentBaseView : mResultsBaseViews) {
+            // Bottom of view should be constrained to bottom of parent
+            // Height should match constraint
+            ConstraintSet constraintSet = new ConstraintSet();
+            constraintSet.clone(mMainLayout);
+            constraintSet.clear(currentBaseView.getId(), ConstraintSet.BOTTOM);
+            constraintSet.constrainHeight(currentBaseView.getId(), ConstraintSet.WRAP_CONTENT);
+            constraintSet.applyTo(mMainLayout);
         }
     }
-
     private void clearSearchResults() {
         mResultAlbumList.clear();
         mResultArtistList.clear();

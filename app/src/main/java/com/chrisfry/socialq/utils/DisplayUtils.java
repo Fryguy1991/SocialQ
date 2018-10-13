@@ -1,9 +1,12 @@
 package com.chrisfry.socialq.utils;
 
+import android.view.View;
+
 import com.spotify.sdk.android.player.Metadata;
 
 import java.util.List;
 
+import butterknife.ButterKnife;
 import kaaes.spotify.webapi.android.models.ArtistSimple;
 import kaaes.spotify.webapi.android.models.Track;
 
@@ -33,5 +36,14 @@ public class DisplayUtils {
 
     public static String getTrackArtistString(Metadata.Track track) {
         return track.artistName;
+    }
+
+    public static ButterKnife.Setter<View, Integer> getVisibilitySetter() {
+        return  new ButterKnife.Setter<View, Integer>() {
+            @Override
+            public void set(View view, Integer value, int index) {
+                view.setVisibility(value);
+            }
+        };
     }
 }
