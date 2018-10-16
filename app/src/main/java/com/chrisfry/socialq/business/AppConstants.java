@@ -34,7 +34,7 @@ public class AppConstants {
     // Message Strings
     public static final String PLAYLIST_ID_MESSAGE = "#PLAYLIST_ID#";
     public static final String UPDATE_QUEUE_MESSAGE = "#QUEUE_UPDATED#";
-    public static final String SONG_ADDED_MESSAGE = "#SONG_ADDED#";
+    public static final String SONG_REQUEST_MESSAGE = "#SONG_REQUEST#";
     public static final String HOST_USER_ID_MESSAGE = "#HOST_USER_ID#";
 
     // Charset Name

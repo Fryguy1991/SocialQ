@@ -110,7 +110,7 @@ public abstract class HostActivity extends Activity implements ConnectionStateCa
                 AppConstants.CLIENT_ID,
                 AuthenticationResponse.Type.TOKEN,
                 AppConstants.REDIRECT_URI);
-        builder.setScopes(new String[]{"user-read-private", "streaming", "playlist-modify-private", "playlist-modify-public", "app-remote-control", "playlist-read-collaborative"});
+        builder.setScopes(new String[]{"user-read-private", "streaming", "playlist-modify-private", "app-remote-control"});
         AuthenticationRequest request = builder.build();
         AuthenticationClient.openLoginActivity(this, AppConstants.SPOTIFY_LOGIN_REQUEST, request);
     }
@@ -171,9 +171,7 @@ public abstract class HostActivity extends Activity implements ConnectionStateCa
             case AppConstants.SEARCH_REQUEST:
                 if (resultCode == RESULT_OK) {
                     String trackUri = intent.getStringExtra(AppConstants.SEARCH_RESULTS_EXTRA_KEY);
-                    if (trackUri != null && !trackUri.isEmpty()) {
-                        addSongToQueue(mSpotifyService.getTrack(trackUri));
-                    }
+                    addSongToQueue(trackUri);
                 }
                 break;
         }
@@ -195,30 +193,25 @@ public abstract class HostActivity extends Activity implements ConnectionStateCa
         Map<String, Object> playlistParameters = new HashMap<>();
         playlistParameters.put("name", "SocialQ Playlist");
         playlistParameters.put("public", false);
-        playlistParameters.put("collaborative", true);
+        playlistParameters.put("collaborative", false);
         playlistParameters.put("description", "Playlist created by the SocialQ App.");
 
         Log.d(TAG, "Creating playlist for the SocialQ");
         return mSpotifyService.createPlaylist(mCurrentUser.id, playlistParameters);
     }
 
-    private void addSongToQueue(Track track) {
-        Map<String, Object> queryParameters = new HashMap<>();
-        queryParameters.put("uris", track.uri);
-        Map<String, Object> bodyParameters = new HashMap<>();
+    protected void addSongToQueue(String trackUri) {
+        if (trackUri != null && !trackUri.isEmpty()) {
+            Map<String, Object> queryParameters = new HashMap<>();
+            queryParameters.put("uris", trackUri);
+            Map<String, Object> bodyParameters = new HashMap<>();
 
-        // Add song to queue playlist
-        mSpotifyService.addTracksToPlaylist(mCurrentUser.id, mPlaylist.id, queryParameters, bodyParameters);
+            // Add song to queue playlist
+            mSpotifyService.addTracksToPlaylist(mCurrentUser.id, mPlaylist.id, queryParameters, bodyParameters);
 
-        manageQueue();
-        mPlayQueueService.notifyServiceQueueHasChanged();
-    }
-
-    protected void notifyClientAddedSong() {
-        manageQueue();
-
-        // Notify service that queue has changed
-        mPlayQueueService.notifyServiceQueueHasChanged();
+            manageQueue();
+            mPlayQueueService.notifyServiceQueueHasChanged();
+        }
     }
 
     private void manageQueue() {
@@ -362,20 +355,20 @@ public abstract class HostActivity extends Activity implements ConnectionStateCa
     private void setupLongDemoQueue() {
         String longQueueString =
                 "spotify:track:0p8fUOBfWtGcaKGiD9drgJ," +
-                "spotify:track:6qtg4gz3DhqOHL5BHtSQw8," +
-                "spotify:track:57bgtoPSgt236HzfBOd8kj," +
-                "spotify:track:4VbDJMkAX3dWNBdn3KH6Wx," +
-                "spotify:track:2jnvdMCTvtdVCci3YLqxGY," +
-                "spotify:track:419qOkEdlmbXS1GRJEMntC," +
-                "spotify:track:1jvqZQtbBGK5GJCGT615ao," +
-                "spotify:track:6cG3kY60HMcFqiZN8frkXF," +
-                "spotify:track:0dqrAmrvQ6fCGNf5T8If5A," +
-                "spotify:track:0wHNrrefyaeVewm4NxjxrX," +
-                "spotify:track:1hh4GY1zM7SUAyM3a2ziH5," +
-                "spotify:track:5Cl9GDb0AyQnppRr6q7ldb," +
-                "spotify:track:7D180Q77XAEP7atBLmMTgK," +
-                "spotify:track:2uxL6E8Yq0Psc1V9uBtC4F," +
-                "spotify:track:7lGh1Dy02c5C0j3tj9AVm3";
+                        "spotify:track:6qtg4gz3DhqOHL5BHtSQw8," +
+                        "spotify:track:57bgtoPSgt236HzfBOd8kj," +
+                        "spotify:track:4VbDJMkAX3dWNBdn3KH6Wx," +
+                        "spotify:track:2jnvdMCTvtdVCci3YLqxGY," +
+                        "spotify:track:419qOkEdlmbXS1GRJEMntC," +
+                        "spotify:track:1jvqZQtbBGK5GJCGT615ao," +
+                        "spotify:track:6cG3kY60HMcFqiZN8frkXF," +
+                        "spotify:track:0dqrAmrvQ6fCGNf5T8If5A," +
+                        "spotify:track:0wHNrrefyaeVewm4NxjxrX," +
+                        "spotify:track:1hh4GY1zM7SUAyM3a2ziH5," +
+                        "spotify:track:5Cl9GDb0AyQnppRr6q7ldb," +
+                        "spotify:track:7D180Q77XAEP7atBLmMTgK," +
+                        "spotify:track:2uxL6E8Yq0Psc1V9uBtC4F," +
+                        "spotify:track:7lGh1Dy02c5C0j3tj9AVm3";
 
         Map<String, Object> queryParameters = new HashMap<>();
         queryParameters.put("uris", longQueueString);

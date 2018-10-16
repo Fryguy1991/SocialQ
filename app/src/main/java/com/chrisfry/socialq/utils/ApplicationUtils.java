@@ -63,8 +63,8 @@ public class ApplicationUtils {
         if (payload.startsWith(NearbyDevicesMessage.QUEUE_UPDATE.getPayloadPrefix())) {
             return NearbyDevicesMessage.QUEUE_UPDATE;
         }
-        if (payload.startsWith(NearbyDevicesMessage.SONG_ADDED.getPayloadPrefix())) {
-            return NearbyDevicesMessage.SONG_ADDED;
+        if (payload.startsWith(NearbyDevicesMessage.SONG_REQUEST.getPayloadPrefix())) {
+            return NearbyDevicesMessage.SONG_REQUEST;
         }
         if (payload.startsWith(NearbyDevicesMessage.RECEIVE_HOST_USER_ID.getPayloadPrefix())) {
             return NearbyDevicesMessage.RECEIVE_HOST_USER_ID;

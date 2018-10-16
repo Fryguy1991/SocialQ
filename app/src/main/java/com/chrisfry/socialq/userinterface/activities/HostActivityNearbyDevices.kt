@@ -13,7 +13,10 @@ import java.lang.Exception
 
 class HostActivityNearbyDevices : HostActivity() {
     private val TAG = HostActivityNearbyDevices::class.java.name
+
+    // List of the client enpoints that are currently connected to the host service
     private var mClientEndpoints = ArrayList<String>()
+    // Flag indicating success of advertising (used during activity destruction)
     private var mSuccessfulAdvertisingFlag = false
 
     private val mConnectionLifecycleCallback = object : ConnectionLifecycleCallback() {
@@ -73,8 +76,8 @@ class HostActivityNearbyDevices : HostActivity() {
                 val payloadType = ApplicationUtils.getMessageTypeFromPayload(payloadString)
 
                 when (payloadType) {
-                    NearbyDevicesMessage.SONG_ADDED -> {
-                        notifyClientAddedSong()
+                    NearbyDevicesMessage.SONG_REQUEST -> {
+                        addSongToQueue(ApplicationUtils.getBasicPayloadDataFromPayloadString(payloadType.payloadPrefix, payloadString))
                     }
                     NearbyDevicesMessage.RECEIVE_PLAYLIST_ID, NearbyDevicesMessage.QUEUE_UPDATE,
                     NearbyDevicesMessage.RECEIVE_HOST_USER_ID -> {
@@ -121,7 +124,7 @@ class HostActivityNearbyDevices : HostActivity() {
     }
 
     override fun notifyClientsQueueUpdated(currentPlayingIndex: Int) {
-        if (currentPlayingIndex > 0) {
+        if (currentPlayingIndex >= 0) {
             for (endpointId: String in mClientEndpoints) {
                 Nearby.getConnectionsClient(this).sendPayload(endpointId,
                         Payload.fromBytes(ApplicationUtils.buildBasicPayload(

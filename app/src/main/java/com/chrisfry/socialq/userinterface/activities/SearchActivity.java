@@ -272,8 +272,7 @@ public class SearchActivity extends Activity implements TrackListAdapter.TrackSe
     @Override
     public void onTrackSelection(Track track) {
         Intent resultIntent = new Intent();
-        resultIntent.putExtra(AppConstants.SEARCH_RESULTS_EXTRA_KEY,
-                track.uri.replace("spotify:track:", ""));
+        resultIntent.putExtra(AppConstants.SEARCH_RESULTS_EXTRA_KEY, track.uri);
         setResult(RESULT_OK, resultIntent);
         finish();
     }

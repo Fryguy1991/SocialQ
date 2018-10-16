@@ -18,6 +18,8 @@ class ClientActivityNearbyDevices : ClientActivity() {
 
     // Variable to hold host endpoint
     private lateinit var mHostEndpointId: String
+    // Flag indicating success of connection to host (used during activity destruction)
+    private var mSuccessfulConnectionFlag = false
 
     private val mConnectionLifecycleCallback = object : ConnectionLifecycleCallback() {
         override fun onConnectionInitiated(endpointId: String, connectionInfo: ConnectionInfo) {
@@ -44,7 +46,10 @@ class ClientActivityNearbyDevices : ClientActivity() {
 
         override fun onConnectionResult(endPoint: String, connectionResolution: ConnectionResolution) {
             when (connectionResolution.status.statusCode) {
-                ConnectionsStatusCodes.STATUS_OK -> Log.d(TAG, "Connection to host successful!")
+                ConnectionsStatusCodes.STATUS_OK -> {
+                    Log.d(TAG, "Connection to host successful!")
+                    mSuccessfulConnectionFlag = true
+                }
                 ConnectionsStatusCodes.STATUS_CONNECTION_REJECTED -> {
                     Log.d(TAG, "Connection to host rejected")
                     finish()
@@ -97,9 +102,9 @@ class ClientActivityNearbyDevices : ClientActivity() {
                             Log.e(TAG, "Invalid index was sent")
                         }
                     }
-                    NearbyDevicesMessage.SONG_ADDED -> {
+                    NearbyDevicesMessage.SONG_REQUEST -> {
                         // Should not receive this case as the client
-                        Log.e(TAG, "Clients should not receive song added messages")
+                        Log.e(TAG, "Clients should not receive song request messages")
                     }
                     NearbyDevicesMessage.INVALID -> {
                         // TODO currently not handling this case
@@ -120,11 +125,17 @@ class ClientActivityNearbyDevices : ClientActivity() {
     override fun onDestroy() {
         super.onDestroy()
 
-        Nearby.getConnectionsClient(this).stopAllEndpoints()
+        if (mSuccessfulConnectionFlag) {
+            Nearby.getConnectionsClient(this).stopAllEndpoints()
+        }
     }
 
-    override fun notifyHostTrackAdded() {
-        Nearby.getConnectionsClient(this).sendPayload(mHostEndpointId, Payload.fromBytes(NearbyDevicesMessage.SONG_ADDED.payloadPrefix.toByteArray()))
+    override fun sendTrackToHost(trackUri: String?) {
+        if (trackUri != null) {
+            Log.d(TAG, "Sending track request to the host")
+            Nearby.getConnectionsClient(this).sendPayload(mHostEndpointId, Payload.fromBytes(
+                    ApplicationUtils.buildBasicPayload(NearbyDevicesMessage.SONG_REQUEST.payloadPrefix, trackUri).toByteArray()))
+        }
     }
 
     override fun connectToHost() {
