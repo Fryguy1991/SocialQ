@@ -1,15 +1,9 @@
 package com.chrisfry.socialq.utils;
 
-import android.util.Log;
-
 import com.chrisfry.socialq.business.AppConstants;
+import com.chrisfry.socialq.enums.NearbyDevicesMessage;
 import com.chrisfry.socialq.model.AccessModel;
 import com.spotify.android.appremote.api.ConnectionParams;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import kaaes.spotify.webapi.android.models.Track;
 
 /**
  * Utils required for information required across the application
@@ -32,71 +26,49 @@ public class ApplicationUtils {
                 .build();
     }
 
-    public static List<String> convertQueueByteArrayToStringList(byte[] queueByteArray) {
-        Log.d(TAG, "CONVERTING FROM BYTE ARRAY TO STRING URIs");
-        Log.d(TAG, queueByteArray.toString());
-
-        String byteArrayAsString = new String(queueByteArray);
-        ArrayList<String> queueStringList = new ArrayList<>();
-
-        if (byteArrayAsString.startsWith(AppConstants.ND_BEGIN_QUEUE_MESSAGE) &&
-                byteArrayAsString.endsWith(AppConstants.ND_END_QUEUE_MESSAGE)) {
-            // Correct start and end of string, we should have the entire queue
-
-            byteArrayAsString = byteArrayAsString.replaceFirst(AppConstants.ND_BEGIN_QUEUE_MESSAGE, "");
-            while (byteArrayAsString.contains(AppConstants.ND_TRACK_SEPARATOR_MESSAGE)) {
-                int indexOfNextTrackSeparator = byteArrayAsString.indexOf(AppConstants.ND_TRACK_SEPARATOR_MESSAGE);
-
-                // Get next track URI in string
-                String trackUri = byteArrayAsString.substring(0, indexOfNextTrackSeparator);
-                queueStringList.add(trackUri);
-
-                // Cut out the retrieved track URI
-                byteArrayAsString = byteArrayAsString.substring(trackUri.length());
-                // Cut out the track separator
-                byteArrayAsString = byteArrayAsString.replaceFirst(AppConstants.ND_TRACK_SEPARATOR_MESSAGE, "");
-            }
-
-            // This check guards against an empty string bookended by BEG and END (empty queue)
-            if (byteArrayAsString.indexOf(AppConstants.ND_END_QUEUE_MESSAGE) != 0) {
-                // Only last track URI and end message should remain in string
-                queueStringList.add(byteArrayAsString.replace(AppConstants.ND_END_QUEUE_MESSAGE, ""));
-            }
-
-            Log.d(TAG, "STRING URI LIST");
-            Log.d(TAG, queueStringList.toString());
-            return queueStringList;
-
-        } else {
-            Log.d(TAG, "BYTE ARRAY IS NOT TAGGED CORRECTLY (BEG/END)");
-            return queueStringList;
-        }
+    /**
+     * Builds a basic payload string for nearby devices.  Basic payload is designed as:
+     * <Payload Prefix> + <Payload Content> (both strings)
+     *
+     * @param payloadPrefix - Prefix for the payload string see NearbyDevicesMessage enum
+     * @param payloadContent - Content of the payload string
+     * @return Basic payload string
+     */
+    public static String buildBasicPayload(String payloadPrefix, String payloadContent) {
+        return payloadPrefix.concat(payloadContent);
     }
 
-    public static String convertTrackListToQueueString(List<Track> tracks) {
-        Log.d(TAG, "CONVERTING FROM TRACK LIST TO QUEUE PAYLOAD STRING");
-        Log.d(TAG, tracks.toString());
+    /**
+     * Retrieves content of a basic payload.  Basic payload is designed as:
+     * <Payload Prefix> + <Payload Content> (both strings)
+     *
+     * @param payloadPrefix - Prefix for the payload string see NearbyDevicesMessage enum
+     * @param payloadString - Basic payload string to retrieve data from
+     * @return Content in the basic payload string
+     */
+    public static String getBasicPayloadDataFromPayloadString(String payloadPrefix, String payloadString) {
+        return payloadString.replace(payloadPrefix, "");
+    }
 
-        // Start queue string with begin message
-        String queueString = AppConstants.ND_BEGIN_QUEUE_MESSAGE;
-
-        int trackIndex = 0;
-        while (trackIndex < tracks.size()) {
-            // Add track uri to queue string
-            queueString = queueString.concat(tracks.get(trackIndex).uri.replace("spotify:track:", ""));
-
-            if (trackIndex + 1 < tracks.size()) {
-                // Add track separator if not the last track
-                queueString = queueString.concat(AppConstants.ND_TRACK_SEPARATOR_MESSAGE);
-            }
-            trackIndex++;
+    /**
+     * Determines the payload type from the given payload string
+     *
+     * @param payload - String of the payload who's type we are determining
+     * @return Enum type of the payload (see NearbyDevicesMessage)
+     */
+    public static NearbyDevicesMessage getMessageTypeFromPayload(String payload) {
+        if (payload.startsWith(NearbyDevicesMessage.RECEIVE_PLAYLIST_ID.getPayloadPrefix())) {
+            return NearbyDevicesMessage.RECEIVE_PLAYLIST_ID;
         }
-
-        // End queue string with end message
-        queueString = queueString.concat(AppConstants.ND_END_QUEUE_MESSAGE);
-
-        Log.d(TAG, "PAYLOAD STRING");
-        Log.d(TAG, queueString);
-        return queueString;
+        if (payload.startsWith(NearbyDevicesMessage.QUEUE_UPDATE.getPayloadPrefix())) {
+            return NearbyDevicesMessage.QUEUE_UPDATE;
+        }
+        if (payload.startsWith(NearbyDevicesMessage.SONG_ADDED.getPayloadPrefix())) {
+            return NearbyDevicesMessage.SONG_ADDED;
+        }
+        if (payload.startsWith(NearbyDevicesMessage.RECEIVE_HOST_USER_ID.getPayloadPrefix())) {
+            return NearbyDevicesMessage.RECEIVE_HOST_USER_ID;
+        }
+        return NearbyDevicesMessage.INVALID;
     }
 }

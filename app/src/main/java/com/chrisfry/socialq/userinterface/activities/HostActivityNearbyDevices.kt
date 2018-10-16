@@ -3,17 +3,18 @@ package com.chrisfry.socialq.userinterface.activities
 import android.util.Log
 import android.widget.Toast
 import com.chrisfry.socialq.business.AppConstants
+import com.chrisfry.socialq.enums.NearbyDevicesMessage
 import com.chrisfry.socialq.utils.ApplicationUtils
 import com.google.android.gms.nearby.Nearby
 import com.google.android.gms.nearby.connection.*
 import com.google.android.gms.tasks.OnFailureListener
 import com.google.android.gms.tasks.OnSuccessListener
-import kaaes.spotify.webapi.android.models.Track
 import java.lang.Exception
 
 class HostActivityNearbyDevices : HostActivity() {
     private val TAG = HostActivityNearbyDevices::class.java.name
     private var mClientEndpoints = ArrayList<String>()
+    private var mSuccessfulAdvertisingFlag = false
 
     private val mConnectionLifecycleCallback = object : ConnectionLifecycleCallback() {
         override fun onConnectionInitiated(endpointId: String, connectionInfo: ConnectionInfo) {
@@ -44,7 +45,7 @@ class HostActivityNearbyDevices : HostActivity() {
                     Log.d(TAG, "Established connection with a client, send queue")
                     Toast.makeText(this@HostActivityNearbyDevices, "Client has joined!", Toast.LENGTH_SHORT).show()
                     mClientEndpoints.add(endPoint)
-                    requestQueueForOneClient(endPoint)
+                    initiateNewClient(endPoint)
                 }
                 ConnectionsStatusCodes.STATUS_CONNECTION_REJECTED -> Log.d(TAG, "Client connection rejected")
                 ConnectionsStatusCodes.STATUS_ERROR -> Log.d(TAG, "Error during client connection")
@@ -61,9 +62,32 @@ class HostActivityNearbyDevices : HostActivity() {
     private val mPayloadCallback = object : PayloadCallback() {
         override fun onPayloadReceived(endpointId: String, payload: Payload) {
             when (payload.type) {
-                Payload.Type.BYTES -> handleClientQueueRequest(String(payload.asBytes()!!))
-                Payload.Type.FILE -> TODO("not implemented")
-                Payload.Type.STREAM -> TODO("not implemented")
+                Payload.Type.BYTES -> handleClientPayload(payload)
+                Payload.Type.FILE, Payload.Type.STREAM  -> TODO("not implemented")
+            }
+        }
+
+        private fun handleClientPayload(payload: Payload) {
+            if (payload.asBytes() != null) {
+                val payloadString = String(payload.asBytes()!!)
+                val payloadType = ApplicationUtils.getMessageTypeFromPayload(payloadString)
+
+                when (payloadType) {
+                    NearbyDevicesMessage.SONG_ADDED -> {
+                        notifyClientAddedSong()
+                    }
+                    NearbyDevicesMessage.RECEIVE_PLAYLIST_ID, NearbyDevicesMessage.QUEUE_UPDATE,
+                    NearbyDevicesMessage.RECEIVE_HOST_USER_ID -> {
+                        // Should not receive these messages as the host
+                        Log.e(TAG, "Hosts should not receive playlist ID, host ID or queue update messages")
+                    }
+                    NearbyDevicesMessage.INVALID -> {
+                        // TODO currently not handling this case
+                    }
+                    else -> {
+                        // TODO currently not handling null case
+                    }
+                }
             }
         }
 
@@ -85,6 +109,7 @@ class HostActivityNearbyDevices : HostActivity() {
                 .addOnSuccessListener(object : OnSuccessListener<Void> {
                     override fun onSuccess(unusedResult: Void?) {
                         Log.d(TAG, "Successfully advertising the host")
+                        mSuccessfulAdvertisingFlag = true
                     }
                 })
                 .addOnFailureListener(object : OnFailureListener {
@@ -95,21 +120,36 @@ class HostActivityNearbyDevices : HostActivity() {
                 })
     }
 
-    override fun sendQueueToClients(queueTracks: MutableList<Track>) {
-        for (endpointId: String in mClientEndpoints) {
-            Nearby.getConnectionsClient(this).sendPayload(endpointId, Payload.fromBytes(ApplicationUtils.convertTrackListToQueueString(queueTracks).toByteArray()))
+    override fun notifyClientsQueueUpdated(currentPlayingIndex: Int) {
+        if (currentPlayingIndex > 0) {
+            for (endpointId: String in mClientEndpoints) {
+                Nearby.getConnectionsClient(this).sendPayload(endpointId,
+                        Payload.fromBytes(ApplicationUtils.buildBasicPayload(
+                                NearbyDevicesMessage.QUEUE_UPDATE.payloadPrefix, currentPlayingIndex.toString()).toByteArray()))
+            }
         }
     }
 
-    override fun receiveQueueForClient(client: Any?, trackList: MutableList<Track>?) {
-        if(mClientEndpoints.contains(client.toString())) {
-            Nearby.getConnectionsClient(this).sendPayload(client.toString(), Payload.fromBytes(ApplicationUtils.convertTrackListToQueueString(trackList).toByteArray()))
+    override fun initiateNewClient(client: Any) {
+        if(mClientEndpoints.contains(client.toString()) && mPlaylist != null && mPlaylist.id != null && mCurrentUser != null && mCurrentUser.id != null) {
+            Log.d(TAG, "Sending host ID to new client")
+            Nearby.getConnectionsClient(this).sendPayload(client.toString(), Payload.fromBytes(
+                    ApplicationUtils.buildBasicPayload(NearbyDevicesMessage.RECEIVE_HOST_USER_ID.payloadPrefix, mCurrentUser.id).toByteArray()))
+            Log.d(TAG, "Sending playlist ID to new client")
+            Nearby.getConnectionsClient(this).sendPayload(client.toString(), Payload.fromBytes(
+                    ApplicationUtils.buildBasicPayload(NearbyDevicesMessage.RECEIVE_PLAYLIST_ID.payloadPrefix, mPlaylist.id).toByteArray()))
+            Log.d(TAG, "Updating queue of new client (current playing index)")
+            Nearby.getConnectionsClient(this).sendPayload(client.toString(),
+                    Payload.fromBytes(ApplicationUtils.buildBasicPayload(
+                            NearbyDevicesMessage.QUEUE_UPDATE.payloadPrefix, mCachedPlayingIndex.toString()).toByteArray()))
         }
     }
 
     override fun onDestroy() {
-        Nearby.getConnectionsClient(this).stopAdvertising()
-        Nearby.getConnectionsClient(this).stopAllEndpoints()
+        if (mSuccessfulAdvertisingFlag) {
+            Nearby.getConnectionsClient(this).stopAdvertising()
+            Nearby.getConnectionsClient(this).stopAllEndpoints()
+        }
 
         super.onDestroy()
     }

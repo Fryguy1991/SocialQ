@@ -8,6 +8,7 @@ import java.util.List;
 
 import butterknife.ButterKnife;
 import kaaes.spotify.webapi.android.models.ArtistSimple;
+import kaaes.spotify.webapi.android.models.PlaylistTrack;
 import kaaes.spotify.webapi.android.models.Track;
 
 /**
@@ -32,6 +33,10 @@ public class DisplayUtils {
             }
         }
         return artistString;
+    }
+
+    public static String getTrackArtistString(PlaylistTrack track) {
+        return getTrackArtistString(track.track);
     }
 
     public static String getTrackArtistString(Metadata.Track track) {

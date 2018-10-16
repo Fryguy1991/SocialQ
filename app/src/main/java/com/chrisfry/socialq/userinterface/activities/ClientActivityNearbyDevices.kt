@@ -1,23 +1,23 @@
 package com.chrisfry.socialq.userinterface.activities
 
-import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
 import com.chrisfry.socialq.R
 import com.chrisfry.socialq.business.AppConstants
+import com.chrisfry.socialq.enums.NearbyDevicesMessage
 import com.chrisfry.socialq.utils.ApplicationUtils
 import com.google.android.gms.nearby.Nearby
 import com.google.android.gms.nearby.connection.*
 import com.google.android.gms.tasks.OnFailureListener
 import com.google.android.gms.tasks.OnSuccessListener
-import kaaes.spotify.webapi.android.models.Track
 import java.lang.Exception
+import java.lang.NumberFormatException
 
 class ClientActivityNearbyDevices : ClientActivity() {
     private val TAG = ClientActivityNearbyDevices::class.java.name
 
     // Variable to hold host endpoint
-    private lateinit var mHostEndpointId : String
+    private lateinit var mHostEndpointId: String
 
     private val mConnectionLifecycleCallback = object : ConnectionLifecycleCallback() {
         override fun onConnectionInitiated(endpointId: String, connectionInfo: ConnectionInfo) {
@@ -66,24 +66,49 @@ class ClientActivityNearbyDevices : ClientActivity() {
 
     private val mPayloadCallback = object : PayloadCallback() {
         override fun onPayloadReceived(endpointId: String, payload: Payload) {
-            val trackStringList = ApplicationUtils.convertQueueByteArrayToStringList(payload.asBytes())
+            when (payload.type) {
+                Payload.Type.BYTES -> handleHostPayload(payload)
+                Payload.Type.STREAM, Payload.Type.FILE -> TODO("not implemented")
+            }
+        }
 
-            // Retrieve tracks for the list of track URIs
-            var trackList = mutableListOf<Track>()
-            if (trackStringList.size > 0) {
-                var getTracksString = ""
-                for (trackString : String in trackStringList) {
-                    getTracksString = if (getTracksString == "") {
-                        trackString
-                    } else {
-                        "$getTracksString,$trackString"
+        private fun handleHostPayload(payload: Payload) {
+            if (payload.asBytes() != null) {
+                val payloadString = String(payload.asBytes()!!)
+                val payloadType = ApplicationUtils.getMessageTypeFromPayload(payloadString)
+
+                Log.d(TAG, payloadType.toString() + " payload received from host")
+
+                when (payloadType) {
+                    NearbyDevicesMessage.RECEIVE_HOST_USER_ID -> {
+                        // Host is giving us the playlist owner ID
+                        mHostUserId = ApplicationUtils.getBasicPayloadDataFromPayloadString(payloadType.payloadPrefix, payloadString)
+                    }
+                    NearbyDevicesMessage.RECEIVE_PLAYLIST_ID -> {
+                        // Host is giving us the playlist ID
+                        setupQueuePlaylistOnConnection(ApplicationUtils.getBasicPayloadDataFromPayloadString(payloadType.payloadPrefix, payloadString))
+                    }
+                    NearbyDevicesMessage.QUEUE_UPDATE -> {
+                        // Host is notifying us that the queue has been updated
+                        val currentPlayingIndex = ApplicationUtils.getBasicPayloadDataFromPayloadString(payloadType.payloadPrefix, payloadString)
+                        try {
+                            updateQueue(Integer.parseInt(currentPlayingIndex))
+                        } catch (exception: NumberFormatException) {
+                            Log.e(TAG, "Invalid index was sent")
+                        }
+                    }
+                    NearbyDevicesMessage.SONG_ADDED -> {
+                        // Should not receive this case as the client
+                        Log.e(TAG, "Clients should not receive song added messages")
+                    }
+                    NearbyDevicesMessage.INVALID -> {
+                        // TODO currently not handling this case
+                    }
+                    else -> {
+                        // TODO currently not handling null case
                     }
                 }
-                val tracks = mSpotifyService.getTracks(getTracksString)
-
-                trackList = MutableList<Track>(trackStringList.size) { index: Int -> tracks.tracks[index] }
             }
-            updateQueue(trackList)
         }
 
         override fun onPayloadTransferUpdate(endpointId: String, payloadTransferUpdate: PayloadTransferUpdate) {
@@ -98,10 +123,8 @@ class ClientActivityNearbyDevices : ClientActivity() {
         Nearby.getConnectionsClient(this).stopAllEndpoints()
     }
 
-    override fun sendTrackToHost(trackUri: String?) {
-        if (trackUri != null) {
-            Nearby.getConnectionsClient(this).sendPayload(mHostEndpointId, Payload.fromBytes(trackUri.toByteArray()))
-        }
+    override fun notifyHostTrackAdded() {
+        Nearby.getConnectionsClient(this).sendPayload(mHostEndpointId, Payload.fromBytes(NearbyDevicesMessage.SONG_ADDED.payloadPrefix.toByteArray()))
     }
 
     override fun connectToHost() {

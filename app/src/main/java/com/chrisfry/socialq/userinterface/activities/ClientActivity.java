@@ -10,7 +10,6 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.chrisfry.socialq.R;
@@ -18,7 +17,7 @@ import com.chrisfry.socialq.business.AppConstants;
 import com.chrisfry.socialq.business.dagger.modules.SpotifyModule;
 import com.chrisfry.socialq.business.dagger.modules.components.DaggerSpotifyComponent;
 import com.chrisfry.socialq.business.dagger.modules.components.SpotifyComponent;
-import com.chrisfry.socialq.userinterface.adapters.TrackListAdapter;
+import com.chrisfry.socialq.userinterface.adapters.PlaylistTrackListAdapter;
 import com.chrisfry.socialq.userinterface.widgets.QueueItemDecoration;
 import com.chrisfry.socialq.utils.ApplicationUtils;
 import com.spotify.sdk.android.authentication.AuthenticationClient;
@@ -28,9 +27,12 @@ import com.spotify.sdk.android.player.ConnectionStateCallback;
 import com.spotify.sdk.android.player.Error;
 
 import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 import kaaes.spotify.webapi.android.SpotifyService;
+import kaaes.spotify.webapi.android.models.Playlist;
+import kaaes.spotify.webapi.android.models.PlaylistTrack;
 import kaaes.spotify.webapi.android.models.Track;
 
 public abstract class ClientActivity extends Activity implements ConnectionStateCallback {
@@ -38,10 +40,12 @@ public abstract class ClientActivity extends Activity implements ConnectionState
 
     // Elements for queue display
     private RecyclerView mQueueList;
-    private TrackListAdapter mQueueDisplayAdapter;
+    private PlaylistTrackListAdapter mQueueDisplayAdapter;
 
     // Spotify API elements
-    protected SpotifyService mSpotifyService;
+    private SpotifyService mSpotifyService;
+    private Playlist mPlaylist;
+    protected String mHostUserId;
 
     @Override
     protected void onNewIntent(Intent intent) {
@@ -65,7 +69,7 @@ public abstract class ClientActivity extends Activity implements ConnectionState
                 AppConstants.CLIENT_ID,
                 AuthenticationResponse.Type.TOKEN,
                 AppConstants.REDIRECT_URI);
-        builder.setScopes(new String[]{"user-read-private"});
+        builder.setScopes(new String[]{"user-read-private", "playlist-modify-private", "playlist-modify-public", "playlist-read-collaborative"});
         AuthenticationRequest request = builder.build();
 
         AuthenticationClient.openLoginActivity(this, AppConstants.SPOTIFY_LOGIN_REQUEST, request);
@@ -103,8 +107,9 @@ public abstract class ClientActivity extends Activity implements ConnectionState
                 if (resultCode == RESULT_OK) {
                     String trackUri = intent.getStringExtra(AppConstants.SEARCH_RESULTS_EXTRA_KEY);
                     if (trackUri != null && !trackUri.isEmpty()) {
-                        // TODO: Send request to host of queue
-                        sendTrackToHost(trackUri);
+                        Log.d(TAG, "Client adding track to queue playlist");
+                        addSongToQueue(mSpotifyService.getTrack(trackUri));
+                        notifyHostTrackAdded();
                     }
                 }
                 break;
@@ -148,6 +153,8 @@ public abstract class ClientActivity extends Activity implements ConnectionState
 
     @Override
     protected void onDestroy() {
+        unfollowQueuePlaylist();
+
         super.onDestroy();
     }
 
@@ -172,20 +179,48 @@ public abstract class ClientActivity extends Activity implements ConnectionState
     }
 
     private void setupQueueList() {
-        mQueueDisplayAdapter = new TrackListAdapter(new ArrayList<Track>());
+        mQueueDisplayAdapter = new PlaylistTrackListAdapter(new ArrayList<PlaylistTrack>());
         mQueueList.setAdapter(mQueueDisplayAdapter);
         LinearLayoutManager layoutManager = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
         mQueueList.setLayoutManager(layoutManager);
         mQueueList.addItemDecoration(new QueueItemDecoration(getApplicationContext()));
     }
 
-    protected void updateQueue(List<Track> trackQueue) {
-        if (trackQueue != null) {
-            mQueueDisplayAdapter.updateQueueList(trackQueue);
+    protected void updateQueue(int currentPlayingIndex) {
+        if (currentPlayingIndex > 0) {
+            refreshPlaylist();
+            mQueueDisplayAdapter.updateQueueList(mPlaylist.tracks.items.subList(currentPlayingIndex, mPlaylist.tracks.items.size()));
         }
     }
 
-    protected abstract void sendTrackToHost(String trackUri);
+    protected void setupQueuePlaylistOnConnection(String playlistId) {
+        mSpotifyService.followPlaylist(mHostUserId, playlistId);
+        mPlaylist = mSpotifyService.getPlaylist(mHostUserId, playlistId);
+    }
+
+    private void refreshPlaylist() {
+        mPlaylist = mSpotifyService.getPlaylist(mHostUserId, mPlaylist.id);
+    }
+
+    private void unfollowQueuePlaylist() {
+        // Unfollow the playlist created for SocialQ
+        if (mHostUserId != null && mPlaylist != null) {
+            Log.d(TAG, "Unfollowing playlist created for the SocialQ");
+            mSpotifyService.unfollowPlaylist(mHostUserId, mPlaylist.id);
+            mPlaylist = null;
+        }
+    }
+
+    private void addSongToQueue(Track track) {
+        Map<String, Object> queryParameters = new HashMap<>();
+        queryParameters.put("uris", track.uri);
+        Map<String, Object> bodyParameters = new HashMap<>();
+
+        // Add song to queue playlist
+        mSpotifyService.addTracksToPlaylist(mHostUserId, mPlaylist.id, queryParameters, bodyParameters);
+    }
+
+    protected abstract void notifyHostTrackAdded();
 
     protected abstract void connectToHost();
 }

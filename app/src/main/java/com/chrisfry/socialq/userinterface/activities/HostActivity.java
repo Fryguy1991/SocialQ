@@ -22,6 +22,7 @@ import android.widget.Toast;
 import com.chrisfry.socialq.business.dagger.modules.SpotifyModule;
 import com.chrisfry.socialq.business.dagger.modules.components.DaggerSpotifyComponent;
 import com.chrisfry.socialq.business.dagger.modules.components.SpotifyComponent;
+import com.chrisfry.socialq.userinterface.adapters.PlaylistTrackListAdapter;
 import com.spotify.sdk.android.authentication.AuthenticationClient;
 import com.spotify.sdk.android.authentication.AuthenticationRequest;
 import com.spotify.sdk.android.authentication.AuthenticationResponse;
@@ -29,18 +30,19 @@ import com.spotify.sdk.android.player.ConnectionStateCallback;
 import com.spotify.sdk.android.player.Error;
 
 import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 import com.chrisfry.socialq.business.AppConstants;
 import com.chrisfry.socialq.R;
 
 import kaaes.spotify.webapi.android.SpotifyService;
+import kaaes.spotify.webapi.android.models.Playlist;
+import kaaes.spotify.webapi.android.models.PlaylistTrack;
 import kaaes.spotify.webapi.android.models.Track;
-import kaaes.spotify.webapi.android.models.Tracks;
-import kaaes.spotify.webapi.android.models.TracksPager;
+import kaaes.spotify.webapi.android.models.UserPrivate;
 
 import com.chrisfry.socialq.services.PlayQueueService;
-import com.chrisfry.socialq.userinterface.adapters.TrackListAdapter;
 import com.chrisfry.socialq.userinterface.widgets.QueueItemDecoration;
 import com.chrisfry.socialq.utils.ApplicationUtils;
 
@@ -48,22 +50,24 @@ public abstract class HostActivity extends Activity implements ConnectionStateCa
         PlayQueueService.PlayQueueServiceListener {
     private final String TAG = HostActivity.class.getName();
 
-    // Request code that will be used to verify if the result comes from correct activity
-    // Can be any integer
-    private static final int SPOTIFY_LOGIN_REQUEST = 8675309;
-
     // UI element references
     private View mNextButton;
     private ImageView mPlayPauseButton;
 
     // Track list elements
     private RecyclerView mQueueList;
-    private TrackListAdapter mQueueDisplayAdapter;
+    private PlaylistTrackListAdapter mQueueDisplayAdapter;
 
     // Spotify elements
     private SpotifyService mSpotifyService;
     private PlayQueueService mPlayQueueService;
+    protected UserPrivate mCurrentUser;
+    protected Playlist mPlaylist;
+
+    // Flag to determine if the service is bound or not
     private boolean mIsServiceBound = false;
+    // Cached value for playing index (used to inform new clients)
+    protected int mCachedPlayingIndex = -1;
 
     // Object for connecting to/from play queue service
     private ServiceConnection mServiceConnection = new ServiceConnection() {
@@ -106,9 +110,9 @@ public abstract class HostActivity extends Activity implements ConnectionStateCa
                 AppConstants.CLIENT_ID,
                 AuthenticationResponse.Type.TOKEN,
                 AppConstants.REDIRECT_URI);
-        builder.setScopes(new String[]{"user-read-private", "streaming", "playlist-modify-private", "app-remote-control"});
+        builder.setScopes(new String[]{"user-read-private", "streaming", "playlist-modify-private", "playlist-modify-public", "app-remote-control", "playlist-read-collaborative"});
         AuthenticationRequest request = builder.build();
-        AuthenticationClient.openLoginActivity(this, SPOTIFY_LOGIN_REQUEST, request);
+        AuthenticationClient.openLoginActivity(this, AppConstants.SPOTIFY_LOGIN_REQUEST, request);
     }
 
     private void initUi() {
@@ -140,7 +144,7 @@ public abstract class HostActivity extends Activity implements ConnectionStateCa
 
         // Check if result comes from the correct activity
         switch (requestCode) {
-            case SPOTIFY_LOGIN_REQUEST:
+            case AppConstants.SPOTIFY_LOGIN_REQUEST:
                 AuthenticationResponse response = AuthenticationClient.getResponse(resultCode, intent);
                 if (response.getType() == AuthenticationResponse.Type.TOKEN) {
                     Log.d(TAG, "Access token granted");
@@ -151,6 +155,8 @@ public abstract class HostActivity extends Activity implements ConnectionStateCa
 
                     // Start service that will play and control queue
                     Intent startPlayQueueIntent = new Intent(this, PlayQueueService.class);
+                    startPlayQueueIntent.putExtra(AppConstants.SERVICE_PLAYLIST_ID_KEY, mPlaylist.id);
+
                     mIsServiceBound = bindService(startPlayQueueIntent, mServiceConnection, Context.BIND_AUTO_CREATE);
 
 
@@ -166,7 +172,7 @@ public abstract class HostActivity extends Activity implements ConnectionStateCa
                 if (resultCode == RESULT_OK) {
                     String trackUri = intent.getStringExtra(AppConstants.SEARCH_RESULTS_EXTRA_KEY);
                     if (trackUri != null && !trackUri.isEmpty()) {
-                        mPlayQueueService.requestAddSongToQueue(mSpotifyService.getTrack(trackUri));
+                        addSongToQueue(mSpotifyService.getTrack(trackUri));
                     }
                 }
                 break;
@@ -179,6 +185,57 @@ public abstract class HostActivity extends Activity implements ConnectionStateCa
                 new SpotifyModule(accessToken)).build();
 
         mSpotifyService = componenet.service();
+
+        mCurrentUser = mSpotifyService.getMe();
+        mPlaylist = createPlaylistForQueue();
+    }
+
+    private Playlist createPlaylistForQueue() {
+        // Create body parameters for new playlist
+        Map<String, Object> playlistParameters = new HashMap<>();
+        playlistParameters.put("name", "SocialQ Playlist");
+        playlistParameters.put("public", false);
+        playlistParameters.put("collaborative", true);
+        playlistParameters.put("description", "Playlist created by the SocialQ App.");
+
+        Log.d(TAG, "Creating playlist for the SocialQ");
+        return mSpotifyService.createPlaylist(mCurrentUser.id, playlistParameters);
+    }
+
+    private void addSongToQueue(Track track) {
+        Map<String, Object> queryParameters = new HashMap<>();
+        queryParameters.put("uris", track.uri);
+        Map<String, Object> bodyParameters = new HashMap<>();
+
+        // Add song to queue playlist
+        mSpotifyService.addTracksToPlaylist(mCurrentUser.id, mPlaylist.id, queryParameters, bodyParameters);
+
+        manageQueue();
+        mPlayQueueService.notifyServiceQueueHasChanged();
+    }
+
+    protected void notifyClientAddedSong() {
+        manageQueue();
+
+        // Notify service that queue has changed
+        mPlayQueueService.notifyServiceQueueHasChanged();
+    }
+
+    private void manageQueue() {
+        // TODO: Manage playlist here (sorting)
+    }
+
+    private void refreshPlaylist() {
+        mPlaylist = mSpotifyService.getPlaylist(mCurrentUser.id, mPlaylist.id);
+    }
+
+    private void unfollowQueuePlaylist() {
+        // Unfollow the playlist created for SocialQ
+        if (mCurrentUser != null && mPlaylist != null) {
+            Log.d(TAG, "Unfollowing playlist created for the SocialQ");
+            mSpotifyService.unfollowPlaylist(mCurrentUser.id, mPlaylist.id);
+            mPlaylist = null;
+        }
     }
 
     @Override
@@ -208,7 +265,6 @@ public abstract class HostActivity extends Activity implements ConnectionStateCa
 
     @Override
     protected void onDestroy() {
-        super.onDestroy();
         if (mIsServiceBound) {
             unbindService(mServiceConnection);
             mIsServiceBound = false;
@@ -218,6 +274,9 @@ public abstract class HostActivity extends Activity implements ConnectionStateCa
             mPlayQueueService.removePlayQueueServiceListener(this);
             mPlayQueueService.onDestroy();
         }
+
+        unfollowQueuePlaylist();
+        super.onDestroy();
     }
 
     @Override
@@ -240,17 +299,8 @@ public abstract class HostActivity extends Activity implements ConnectionStateCa
         }
     }
 
-    protected void handleClientQueueRequest(String trackUri) {
-        if (trackUri != null && mSpotifyService != null) {
-            Track trackToQueue = mSpotifyService.getTrack(trackUri);
-            if (trackToQueue != null) {
-                mPlayQueueService.requestAddSongToQueue(trackToQueue);
-            }
-        }
-    }
-
     private void setupQueueList() {
-        mQueueDisplayAdapter = new TrackListAdapter(new ArrayList<Track>());
+        mQueueDisplayAdapter = new PlaylistTrackListAdapter(new ArrayList<PlaylistTrack>());
         mQueueList.setAdapter(mQueueDisplayAdapter);
         LinearLayoutManager layoutManager = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
         mQueueList.setLayoutManager(layoutManager);
@@ -266,17 +316,16 @@ public abstract class HostActivity extends Activity implements ConnectionStateCa
     }
 
     @Override
-    public void onQueueChanged(List<Track> trackQueue) {
-        // Send entire queue to clients
-        sendQueueToClients(trackQueue);
+    public void onQueueChanged(int currentPlayingIndex) {
+        mCachedPlayingIndex = currentPlayingIndex;
 
-        mQueueDisplayAdapter.updateQueueList(trackQueue);
+        // Refresh playlist and update UI
+        refreshPlaylist();
+        mQueueDisplayAdapter.updateQueueList(mPlaylist.tracks.items.subList(currentPlayingIndex, mPlaylist.tracks.items.size()));
+
+        // Notify clients queue has been updated
+        notifyClientsQueueUpdated(currentPlayingIndex);
     }
-
-    protected void requestQueueForOneClient(Object client) {
-        mPlayQueueService.requestSendQueueToClient(client, this);
-    }
-
 
     @Override
     public void onQueuePause() {
@@ -298,31 +347,47 @@ public abstract class HostActivity extends Activity implements ConnectionStateCa
         mPlayPauseButton.setContentDescription("queue_playing");
     }
 
-
-    private void setupShortDemoQueue() {
-        TracksPager tracks = mSpotifyService.searchTracks("Built This Pool");
-        mPlayQueueService.requestAddSongToQueue(tracks.tracks.items.get(2));
-
-        tracks = mSpotifyService.searchTracks("Audience of One");
-        mPlayQueueService.requestAddSongToQueue(tracks.tracks.items.get(0));
-
-        tracks = mSpotifyService.searchTracks("Love Yourself Somebody");
-        mPlayQueueService.requestAddSongToQueue(tracks.tracks.items.get(0));
-    }
+// TODO: Get uri of these track and fix this method
+//    private void setupShortDemoQueue() {
+//        TracksPager tracks = mSpotifyService.searchTracks("Built This Pool");
+//        mPlayQueueService.requestAddSongToQueue(tracks.tracks.items.get(2));
+//
+//        tracks = mSpotifyService.searchTracks("Audience of One");
+//        mPlayQueueService.requestAddSongToQueue(tracks.tracks.items.get(0));
+//
+//        tracks = mSpotifyService.searchTracks("Love Yourself Somebody");
+//        mPlayQueueService.requestAddSongToQueue(tracks.tracks.items.get(0));
+//    }
 
     private void setupLongDemoQueue() {
-        String longQueueString = "0p8fUOBfWtGcaKGiD9drgJ,6qtg4gz3DhqOHL5BHtSQw8,57bgtoPSgt236HzfBOd8kj,4VbDJMkAX3dWNBdn3KH6Wx,2jnvdMCTvtdVCci3YLqxGY,419qOkEdlmbXS1GRJEMntC,1jvqZQtbBGK5GJCGT615ao,6cG3kY60HMcFqiZN8frkXF,0dqrAmrvQ6fCGNf5T8If5A,0wHNrrefyaeVewm4NxjxrX,1hh4GY1zM7SUAyM3a2ziH5,5Cl9GDb0AyQnppRr6q7ldb,7D180Q77XAEP7atBLmMTgK,2uxL6E8Yq0Psc1V9uBtC4F,7lGh1Dy02c5C0j3tj9AVm3";
-        Tracks longQueueTracks = mSpotifyService.getTracks(longQueueString);
+        String longQueueString =
+                "spotify:track:0p8fUOBfWtGcaKGiD9drgJ," +
+                "spotify:track:6qtg4gz3DhqOHL5BHtSQw8," +
+                "spotify:track:57bgtoPSgt236HzfBOd8kj," +
+                "spotify:track:4VbDJMkAX3dWNBdn3KH6Wx," +
+                "spotify:track:2jnvdMCTvtdVCci3YLqxGY," +
+                "spotify:track:419qOkEdlmbXS1GRJEMntC," +
+                "spotify:track:1jvqZQtbBGK5GJCGT615ao," +
+                "spotify:track:6cG3kY60HMcFqiZN8frkXF," +
+                "spotify:track:0dqrAmrvQ6fCGNf5T8If5A," +
+                "spotify:track:0wHNrrefyaeVewm4NxjxrX," +
+                "spotify:track:1hh4GY1zM7SUAyM3a2ziH5," +
+                "spotify:track:5Cl9GDb0AyQnppRr6q7ldb," +
+                "spotify:track:7D180Q77XAEP7atBLmMTgK," +
+                "spotify:track:2uxL6E8Yq0Psc1V9uBtC4F," +
+                "spotify:track:7lGh1Dy02c5C0j3tj9AVm3";
 
-        for (Track currentTrack : longQueueTracks.tracks) {
-            mPlayQueueService.requestAddSongToQueue(currentTrack);
-        }
+        Map<String, Object> queryParameters = new HashMap<>();
+        queryParameters.put("uris", longQueueString);
+        Map<String, Object> bodyParameters = new HashMap<>();
+
+        mSpotifyService.addTracksToPlaylist(mCurrentUser.id, mPlaylist.id, queryParameters, bodyParameters);
+        mPlayQueueService.notifyServiceQueueHasChanged();
     }
 
-    @Override
-    public abstract void receiveQueueForClient(Object client, List<Track> songQueue);
+    public abstract void initiateNewClient(Object client);
 
     protected abstract void startHostConnection();
 
-    protected abstract void sendQueueToClients(List<Track> queueTracks);
+    protected abstract void notifyClientsQueueUpdated(int currentPlayingIndex);
 }

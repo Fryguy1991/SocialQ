@@ -23,6 +23,7 @@ public class AppConstants {
     public static final String BT_DEVICE_ADDRESS_EXTRA_KEY = "device_address_key";
     public static final String BT_DEVICE_EXTRA_KEY = "device_key";
     public static final String ND_ENDPOINT_ID_EXTRA_KEY = "endpoint_id_key";
+    public static final String SERVICE_PLAYLIST_ID_KEY = "playlist_key";
 
     // Result activity request codes
     public static final int SEARCH_REQUEST = 1337;
@@ -30,11 +31,15 @@ public class AppConstants {
     public static final int REQUEST_ENABLE_BT = 12345;
     public static final int REQUEST_DISCOVER_BT = 54321;
 
-    // Nearby Devices Messages
-    public static final String ND_BEGIN_QUEUE_MESSAGE = "#BEG#";
-    public static final String ND_END_QUEUE_MESSAGE = "#END#";
-    public static final String ND_TRACK_SEPARATOR_MESSAGE = "#SEP#";
+    // Message Strings
+    public static final String PLAYLIST_ID_MESSAGE = "#PLAYLIST_ID#";
+    public static final String UPDATE_QUEUE_MESSAGE = "#QUEUE_UPDATED#";
+    public static final String SONG_ADDED_MESSAGE = "#SONG_ADDED#";
+    public static final String HOST_USER_ID_MESSAGE = "#HOST_USER_ID#";
 
     // Charset Name
     public static final String UTF8_CHARSET_NAME = "UTF-8";
+
+    // Common Strings
+    public static final String INVALID = "INVALID";
 }

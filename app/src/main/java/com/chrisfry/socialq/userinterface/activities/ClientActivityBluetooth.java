@@ -4,7 +4,6 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 import android.content.Intent;
-import android.os.Bundle;
 import android.util.Log;
 
 import java.io.IOException;
@@ -84,13 +83,10 @@ public class ClientActivityBluetooth extends ClientActivity implements Bluetooth
     }
 
     @Override
-    protected void sendTrackToHost(String trackUri) {
+    protected void notifyHostTrackAdded() {
         try {
             OutputStream outputStream = mQueueSocket.getOutputStream();
-//            outputStream.write(BluetoothMessage.START_MESSAGE.getMessageId());
-//            outputStream.write(BluetoothMessage.SEND_TRACK.getMessageId());
-            outputStream.write(trackUri.getBytes(StandardCharsets.UTF_8));
-//            outputStream.write(BluetoothMessage.END_MESSAGE.getMessageId());
+            outputStream.write(AppConstants.SONG_ADDED_MESSAGE.getBytes(StandardCharsets.UTF_8));
             Log.d(TAG, "Track sent to output stream");
         } catch (IOException e) {
             Log.d(TAG, "Sending track failed");

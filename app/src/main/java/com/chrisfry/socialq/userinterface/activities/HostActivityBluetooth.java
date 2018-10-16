@@ -71,7 +71,7 @@ public class HostActivityBluetooth extends HostActivity implements BluetoothConn
             switch (inputMessage.what) {
                 case QUEUE_TRACK:
                     String trackUri = inputMessage.getData().getString(BUNDLE_TRACK_KEY);
-                    handleClientQueueRequest(trackUri);
+                    // TODO: Refactor for client directly adding items to playlist
                     break;
                 default:
                     // Do nothing
@@ -164,7 +164,7 @@ public class HostActivityBluetooth extends HostActivity implements BluetoothConn
     public void onConnectionEstablished(BluetoothSocket socket) {
         Log.d(TAG, "A Client has connected.  Send Queue");
         mBluetoothClients.add(socket);
-        requestQueueForOneClient(socket);
+        initiateNewClient(socket);
         try {
             new ReadThread(socket).start();
         } catch (IOException e) {
@@ -211,12 +211,12 @@ public class HostActivityBluetooth extends HostActivity implements BluetoothConn
     }
 
     @Override
-    public void receiveQueueForClient(Object client, List<Track> songQueue) {
+    public void initiateNewClient(Object client) {
         // TODO: IMPLEMENT SENDING QUEUE TO NEW CLIENT FOR BLUETOOTH
     }
 
     @Override
-    protected void sendQueueToClients(List<Track> queueTracks) {
+    protected void notifyClientsQueueUpdated(int currentPlayingIndex) {
         // TODO: IMPLEMENT QUEUE SENDING FOR BLUETOOTH
     }
 

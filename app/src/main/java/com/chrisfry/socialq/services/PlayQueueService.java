@@ -24,9 +24,6 @@ import com.spotify.sdk.android.player.Spotify;
 import com.spotify.sdk.android.player.SpotifyPlayer;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import kaaes.spotify.webapi.android.SpotifyService;
@@ -90,13 +87,15 @@ public class PlayQueueService extends Service implements ConnectionStateCallback
     @Override
     public IBinder onBind(Intent intent) {
         String accessToken = ApplicationUtils.getAccessToken();
+        String playlistId = intent.getStringExtra(AppConstants.SERVICE_PLAYLIST_ID_KEY);
+
         Log.d(TAG, "onBind: Starting service");
-        if (accessToken == null) {
+        if (accessToken == null || playlistId == null) {
             stopSelf();
         } else {
             Log.d(TAG, "onBind: Initializing player");
             initPlayer(accessToken);
-            initSpotifyServiceElements(accessToken);
+            initSpotifyServiceElements(accessToken, playlistId);
         }
         return mPlayQueueBinder;
     }
@@ -112,18 +111,7 @@ public class PlayQueueService extends Service implements ConnectionStateCallback
             Spotify.destroyPlayer(this);
         }
 
-        unfollowQueuePlaylist();
-
         super.onDestroy();
-    }
-
-    private void unfollowQueuePlaylist() {
-        // Unfollow the playlist created for SocialQ
-        if (mCurrentUser != null && mPlaylist != null) {
-            Log.d(TAG, "Unfollowing playlist created for the SocialQ");
-            mSpotifyService.unfollowPlaylist(mCurrentUser.id, mPlaylist.id);
-            mPlaylist = null;
-        }
     }
 
     private void initPlayer(String accessToken) {
@@ -146,7 +134,7 @@ public class PlayQueueService extends Service implements ConnectionStateCallback
         });
     }
 
-    private void initSpotifyServiceElements(String accessToken) {
+    private void initSpotifyServiceElements(String accessToken, String playlistId) {
         Log.d(TAG, "Initializing Spotify elements");
 
         // Setup service for searching Spotify library
@@ -156,22 +144,7 @@ public class PlayQueueService extends Service implements ConnectionStateCallback
         mSpotifyService = componenet.service();
         
         mCurrentUser = mSpotifyService.getMe();
-        mPlaylist = createPlaylistForQueue();
-    }
-
-    private Playlist createPlaylistForQueue() {
-        // Get current user
-        mCurrentUser = mSpotifyService.getMe();
-
-        // Create body parameters for new playlist
-        Map<String, Object> playlistParameters = new HashMap<>();
-        playlistParameters.put("name", "SocialQ Playlist");
-        playlistParameters.put("public", false);
-        playlistParameters.put("collaborative", false);
-        playlistParameters.put("description", "Playlist created by the SocialQ App.");
-
-        Log.d(TAG, "Creating playlist for the SocialQ");
-        return mSpotifyService.createPlaylist(mCurrentUser.id, playlistParameters);
+        mPlaylist = mSpotifyService.getPlaylist(mCurrentUser.id, playlistId);
     }
 
     public void requestPlay() {
@@ -226,31 +199,9 @@ public class PlayQueueService extends Service implements ConnectionStateCallback
         }
     }
 
-    public void requestAddSongToQueue(Track track) {
-        Log.d(TAG, "QUEUE REQUEST");
-        if (track != null) {
-            // Build parameters required for playlist add
-            Map<String, Object> queryParameters = new HashMap<>();
-            queryParameters.put("uris", track.uri);
-            Map<String, Object> bodyParameters = new HashMap<>();
-
-            // Queue song and add to local queue list
-            mSpotifyService.addTracksToPlaylist(mCurrentUser.id, mPlaylist.id, queryParameters, bodyParameters);
-            mSongQueue.add(track);
-            // Update local copy of playlist object
-            mPlaylist = mSpotifyService.getPlaylist(mCurrentUser.id, mPlaylist.id);
-
-            notifyQueueChanged();
-        } else {
-            Log.d(TAG, "Invalid track to queue");
-        }
-    }
-
-    public void requestSendQueueToClient(Object client, PlayQueueServiceListener listener) {
-        Log.d(TAG, "REQUEST QUEUE FOR ONE CLIENT");
-        if (mSongQueue != null) {
-            listener.receiveQueueForClient(client, mSongQueue);
-        }
+    public void notifyServiceQueueHasChanged() {
+        refreshPlaylist();
+        notifyQueueChanged();
     }
 
     @Override
@@ -359,18 +310,16 @@ public class PlayQueueService extends Service implements ConnectionStateCallback
     // Inner interface used to cast listeners for service events
     public interface PlayQueueServiceListener {
 
-        void onQueueChanged(List<Track> trackQueue);
+        void onQueueChanged(int mCurrentPlayingIndex);
 
         void onQueuePause();
 
         void onQueuePlay();
-
-        void receiveQueueForClient(Object client, List<Track> songQueue);
     }
 
     private void notifyQueueChanged() {
         for (PlayQueueServiceListener listener : mListeners) {
-            listener.onQueueChanged(new ArrayList<>(mSongQueue));
+            listener.onQueueChanged(mCurrentPlaylistIndex);
         }
     }
 
@@ -392,5 +341,9 @@ public class PlayQueueService extends Service implements ConnectionStateCallback
 
     public void removePlayQueueServiceListener(PlayQueueServiceListener listener) {
         mListeners.remove(listener);
+    }
+
+    private void refreshPlaylist() {
+        mPlaylist = mSpotifyService.getPlaylist(mCurrentUser.id, mPlaylist.id);
     }
 }
