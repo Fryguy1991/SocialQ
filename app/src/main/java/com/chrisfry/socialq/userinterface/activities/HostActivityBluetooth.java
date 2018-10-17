@@ -13,8 +13,6 @@ import android.util.Log;
 import android.widget.Button;
 import android.widget.TextView;
 
-import com.spotify.sdk.android.player.Error;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -118,31 +116,6 @@ public class HostActivityBluetooth extends HostActivity implements BluetoothConn
                 }
                 break;
         }
-    }
-
-    @Override
-    public void onLoggedIn() {
-        Log.d(TAG, "User logged in");
-    }
-
-    @Override
-    public void onLoggedOut() {
-        Log.d(TAG, "User logged out");
-    }
-
-    @Override
-    public void onLoginFailed(Error error) {
-        Log.d(TAG, "Login failed");
-    }
-
-    @Override
-    public void onTemporaryError() {
-        Log.d(TAG, "Temporary error occurred");
-    }
-
-    @Override
-    public void onConnectionMessage(String message) {
-        Log.d(TAG, "Received connection message: " + message);
     }
 
     @Override

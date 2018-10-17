@@ -23,8 +23,6 @@ import com.chrisfry.socialq.utils.ApplicationUtils;
 import com.spotify.sdk.android.authentication.AuthenticationClient;
 import com.spotify.sdk.android.authentication.AuthenticationRequest;
 import com.spotify.sdk.android.authentication.AuthenticationResponse;
-import com.spotify.sdk.android.player.ConnectionStateCallback;
-import com.spotify.sdk.android.player.Error;
 
 import java.util.ArrayList;
 
@@ -32,7 +30,7 @@ import kaaes.spotify.webapi.android.SpotifyService;
 import kaaes.spotify.webapi.android.models.Playlist;
 import kaaes.spotify.webapi.android.models.PlaylistTrack;
 
-public abstract class ClientActivity extends Activity implements ConnectionStateCallback {
+public abstract class ClientActivity extends Activity {
     private final String TAG = ClientActivity.class.getName();
 
     // Elements for queue display
@@ -120,31 +118,6 @@ public abstract class ClientActivity extends Activity implements ConnectionState
                 new SpotifyModule(accessToken)).build();
 
         mSpotifyService = componenet.service();
-    }
-
-    @Override
-    public void onLoggedIn() {
-        Log.d(TAG, "User logged in");
-    }
-
-    @Override
-    public void onLoggedOut() {
-        Log.d(TAG, "User logged out");
-    }
-
-    @Override
-    public void onLoginFailed(Error error) {
-        Log.d(TAG, "Login failed");
-    }
-
-    @Override
-    public void onTemporaryError() {
-        Log.d(TAG, "Temporary error occurred");
-    }
-
-    @Override
-    public void onConnectionMessage(String message) {
-        Log.d(TAG, "Received connection message: " + message);
     }
 
     @Override

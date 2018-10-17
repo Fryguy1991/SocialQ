@@ -26,8 +26,6 @@ import com.chrisfry.socialq.userinterface.adapters.PlaylistTrackListAdapter;
 import com.spotify.sdk.android.authentication.AuthenticationClient;
 import com.spotify.sdk.android.authentication.AuthenticationRequest;
 import com.spotify.sdk.android.authentication.AuthenticationResponse;
-import com.spotify.sdk.android.player.ConnectionStateCallback;
-import com.spotify.sdk.android.player.Error;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -39,15 +37,13 @@ import com.chrisfry.socialq.R;
 import kaaes.spotify.webapi.android.SpotifyService;
 import kaaes.spotify.webapi.android.models.Playlist;
 import kaaes.spotify.webapi.android.models.PlaylistTrack;
-import kaaes.spotify.webapi.android.models.Track;
 import kaaes.spotify.webapi.android.models.UserPrivate;
 
 import com.chrisfry.socialq.services.PlayQueueService;
 import com.chrisfry.socialq.userinterface.widgets.QueueItemDecoration;
 import com.chrisfry.socialq.utils.ApplicationUtils;
 
-public abstract class HostActivity extends Activity implements ConnectionStateCallback,
-        PlayQueueService.PlayQueueServiceListener {
+public abstract class HostActivity extends Activity implements PlayQueueService.PlayQueueServiceListener {
     private final String TAG = HostActivity.class.getName();
 
     // UI element references
@@ -68,6 +64,8 @@ public abstract class HostActivity extends Activity implements ConnectionStateCa
     private boolean mIsServiceBound = false;
     // Cached value for playing index (used to inform new clients)
     protected int mCachedPlayingIndex = -1;
+    // Flag for initial play call to service
+    private boolean mInitalPlay = true;
 
     // Object for connecting to/from play queue service
     private ServiceConnection mServiceConnection = new ServiceConnection() {
@@ -126,7 +124,7 @@ public abstract class HostActivity extends Activity implements ConnectionStateCa
         mNextButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                mPlayQueueService.requestPlayNext();
+                mPlayQueueService.requestNext();
             }
         });
 
@@ -232,31 +230,6 @@ public abstract class HostActivity extends Activity implements ConnectionStateCa
     }
 
     @Override
-    public void onLoggedIn() {
-        Log.d(TAG, "User logged in");
-    }
-
-    @Override
-    public void onLoggedOut() {
-        Log.d(TAG, "User logged out");
-    }
-
-    @Override
-    public void onLoginFailed(Error error) {
-        Log.d(TAG, "Login failed");
-    }
-
-    @Override
-    public void onTemporaryError() {
-        Log.d(TAG, "Temporary error occurred");
-    }
-
-    @Override
-    public void onConnectionMessage(String message) {
-        Log.d(TAG, "Received connection message: " + message);
-    }
-
-    @Override
     protected void onDestroy() {
         if (mIsServiceBound) {
             unbindService(mServiceConnection);
@@ -304,7 +277,14 @@ public abstract class HostActivity extends Activity implements ConnectionStateCa
         if (isPlaying) {
             mPlayQueueService.requestPause();
         } else {
-            mPlayQueueService.requestPlay();
+            if (mInitalPlay) {
+                // Call method to clear cached player state and start play from beginning of playlist
+                mPlayQueueService.requestPlay();
+                mInitalPlay = false;
+            } else {
+                // Call method to resume playlist
+                mPlayQueueService.requestResume();
+            }
         }
     }
 
@@ -354,21 +334,22 @@ public abstract class HostActivity extends Activity implements ConnectionStateCa
 
     private void setupLongDemoQueue() {
         String longQueueString =
+                "spotify:track:1XqZuOCIjzz8CX9lZT1aft," +
                 "spotify:track:0p8fUOBfWtGcaKGiD9drgJ," +
-                        "spotify:track:6qtg4gz3DhqOHL5BHtSQw8," +
-                        "spotify:track:57bgtoPSgt236HzfBOd8kj," +
-                        "spotify:track:4VbDJMkAX3dWNBdn3KH6Wx," +
-                        "spotify:track:2jnvdMCTvtdVCci3YLqxGY," +
-                        "spotify:track:419qOkEdlmbXS1GRJEMntC," +
-                        "spotify:track:1jvqZQtbBGK5GJCGT615ao," +
-                        "spotify:track:6cG3kY60HMcFqiZN8frkXF," +
-                        "spotify:track:0dqrAmrvQ6fCGNf5T8If5A," +
-                        "spotify:track:0wHNrrefyaeVewm4NxjxrX," +
-                        "spotify:track:1hh4GY1zM7SUAyM3a2ziH5," +
-                        "spotify:track:5Cl9GDb0AyQnppRr6q7ldb," +
-                        "spotify:track:7D180Q77XAEP7atBLmMTgK," +
-                        "spotify:track:2uxL6E8Yq0Psc1V9uBtC4F," +
-                        "spotify:track:7lGh1Dy02c5C0j3tj9AVm3";
+                "spotify:track:6qtg4gz3DhqOHL5BHtSQw8," +
+                "spotify:track:57bgtoPSgt236HzfBOd8kj," +
+                "spotify:track:4VbDJMkAX3dWNBdn3KH6Wx," +
+                "spotify:track:2jnvdMCTvtdVCci3YLqxGY," +
+                "spotify:track:419qOkEdlmbXS1GRJEMntC," +
+                "spotify:track:1jvqZQtbBGK5GJCGT615ao," +
+                "spotify:track:6cG3kY60HMcFqiZN8frkXF," +
+                "spotify:track:0dqrAmrvQ6fCGNf5T8If5A," +
+                "spotify:track:0wHNrrefyaeVewm4NxjxrX," +
+                "spotify:track:1hh4GY1zM7SUAyM3a2ziH5," +
+                "spotify:track:5Cl9GDb0AyQnppRr6q7ldb," +
+                "spotify:track:7D180Q77XAEP7atBLmMTgK," +
+                "spotify:track:2uxL6E8Yq0Psc1V9uBtC4F," +
+                "spotify:track:7lGh1Dy02c5C0j3tj9AVm3";
 
         Map<String, Object> queryParameters = new HashMap<>();
         queryParameters.put("uris", longQueueString);
