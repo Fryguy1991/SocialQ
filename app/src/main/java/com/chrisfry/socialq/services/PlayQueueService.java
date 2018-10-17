@@ -90,14 +90,14 @@ public class PlayQueueService extends Service {
         }
 
         if (mAppRemote != null) {
-            SpotifyAppRemote.CONNECTOR.disconnect(mAppRemote);
+            SpotifyAppRemote.disconnect(mAppRemote);
         }
 
         super.onDestroy();
     }
 
     private void initSpotifyAppRemote() {
-        SpotifyAppRemote.CONNECTOR.connect(this, ApplicationUtils.getConnectionParams(), new Connector.ConnectionListener() {
+        SpotifyAppRemote.connect(this, ApplicationUtils.getConnectionParams(), new Connector.ConnectionListener() {
             @Override
             public void onConnected(SpotifyAppRemote spotifyAppRemote) {
                 Log.d(TAG, "App remote successfully connected");
@@ -125,7 +125,8 @@ public class PlayQueueService extends Service {
                         if (mCachedPlayerState != null) {
                             Track cachedTrack = mCachedPlayerState.track;
                             Track currentTrack = playerState.track;
-                            if (cachedTrack != null && cachedTrack.equals(currentTrack)) {
+                            if (mCachedPlayerState.playbackPosition > playerState.playbackPosition) {
+                                // TODO: Need better check than above.  Can receive player state with unexpected playback positions
                                 // Player has changed track, signal to host
                                 Log.d(TAG, "Player changed track");
                                 mCurrentPlaylistIndex++;

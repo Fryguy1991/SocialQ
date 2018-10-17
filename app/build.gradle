@@ -67,6 +67,6 @@ dependencies {
     api "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
 
     // Spotify remote SDK
-    api project(':spotify-app-remote')
-    api "com.google.code.gson:gson:2.8.2"
+    implementation project(':spotify-app-remote-release-0.5.0')
+    api "com.google.code.gson:gson:2.8.5"
 }
