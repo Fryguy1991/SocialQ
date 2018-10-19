@@ -3,7 +3,7 @@
     <dimen name="queue_decorator_height">2dp</dimen>
 
     <!-- Spacing Dimens -->
-    <dimen name="small_spacing">10dp</dimen>
+    <dimen name="default_margin">8dp</dimen>
     <dimen name="standard_spacing">20dp</dimen>
     <dimen name="large_spacing">30dp</dimen>
 
@@ -13,5 +13,7 @@
     <dimen name="large_text">30sp</dimen>
 
     <!-- Elevation Dimens -->
-    <dimen name="standard_elevation">10dp</dimen>
+    <dimen name="standard_elevation">5dp</dimen>
+
+    <dimen name="queue_dialog_side_margin">25dp</dimen>
 </resources>

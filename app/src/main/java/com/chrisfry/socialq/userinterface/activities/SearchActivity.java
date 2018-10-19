@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.constraint.ConstraintLayout;
 import android.support.constraint.ConstraintSet;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -42,7 +43,7 @@ import com.chrisfry.socialq.utils.ApplicationUtils;
 /**
  * Activity for searching Spotify tracks
  */
-public class SearchActivity extends Activity implements TrackListAdapter.TrackSelectionListener {
+public class SearchActivity extends AppCompatActivity implements TrackListAdapter.TrackSelectionListener {
     private final String TAG = SearchActivity.class.getName();
 
     // Spotify search references
@@ -89,7 +90,9 @@ public class SearchActivity extends Activity implements TrackListAdapter.TrackSe
         }
 
         // Show up nav icon
-        getActionBar().setDisplayHomeAsUpEnabled(true);
+        if (getActionBar() != null) {
+            getActionBar().setDisplayHomeAsUpEnabled(true);
+        }
 
         initUi();
         addListeners();

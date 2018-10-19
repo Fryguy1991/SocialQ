@@ -24,10 +24,12 @@ public class AppConstants {
     public static final String BT_DEVICE_EXTRA_KEY = "device_key";
     public static final String ND_ENDPOINT_ID_EXTRA_KEY = "endpoint_id_key";
     public static final String SERVICE_PLAYLIST_ID_KEY = "playlist_key";
+    public static final String QUEUE_TITLE_KEY = "queue_title_key";
+    public static final String FAIR_PLAY_KEY = "fair_play_key";
 
     // Result activity request codes
     public static final int SEARCH_REQUEST = 1337;
-    public static final int SPOTIFY_LOGIN_REQUEST = 8675309;
+    public static final int SPOTIFY_LOGIN_REQUEST = 5309;
     public static final int REQUEST_ENABLE_BT = 12345;
     public static final int REQUEST_DISCOVER_BT = 54321;
 

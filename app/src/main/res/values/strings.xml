@@ -31,6 +31,14 @@
     <string name="start_queue">Start Queue</string>
     <string name="join_queue">Join Queue</string>
 
+    <!-- Queue Options Dialog Strings -->
+    <string name="queue_options">Queue Options</string>
+    <string name="queue_title">Queue Title</string>
+    <string name="queue_title_default_value">SocialQ Host</string>
+    <string name="fair_play">Fair Play </string>
+    <string name="start">Start</string>
+    <string name="cancel">Cancel</string>
+
     <!-- Queue Connect Screen Strings -->
     <string name="join">Join</string>
 

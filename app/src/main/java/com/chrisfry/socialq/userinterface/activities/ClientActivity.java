@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.StrictMode;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -32,7 +33,7 @@ import kaaes.spotify.webapi.android.SpotifyService;
 import kaaes.spotify.webapi.android.models.Playlist;
 import kaaes.spotify.webapi.android.models.PlaylistTrack;
 
-public abstract class ClientActivity extends Activity implements ConnectionStateCallback {
+public abstract class ClientActivity extends AppCompatActivity implements ConnectionStateCallback {
     private final String TAG = ClientActivity.class.getName();
 
     // Elements for queue display

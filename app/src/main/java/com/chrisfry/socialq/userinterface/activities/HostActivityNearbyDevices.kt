@@ -21,6 +21,7 @@ class HostActivityNearbyDevices : HostActivity() {
 
     private val mConnectionLifecycleCallback = object : ConnectionLifecycleCallback() {
         override fun onConnectionInitiated(endpointId: String, connectionInfo: ConnectionInfo) {
+            // TODO: Consider removing code below.  This is a dialog for authenticating client connection.
 //            AlertDialog.Builder(this@HostActivityNearbyDevices)
 //                    .setTitle("Accept connection to " + connectionInfo.endpointName)
 //                    .setMessage("Confirm the code " + connectionInfo.authenticationToken)
@@ -100,12 +101,12 @@ class HostActivityNearbyDevices : HostActivity() {
 
     }
 
-    override fun startHostConnection() {
+    override fun startHostConnection(queueTitle: String) {
         // Create advertising options (strategy)
         val options = AdvertisingOptions.Builder().setStrategy(Strategy.P2P_STAR).build()
 
         Nearby.getConnectionsClient(this).startAdvertising(
-                "SocialQ Host",
+                queueTitle,
                 AppConstants.SERVICE_NAME,
                 mConnectionLifecycleCallback,
                 options)

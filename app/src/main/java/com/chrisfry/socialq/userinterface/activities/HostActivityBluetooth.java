@@ -189,12 +189,12 @@ public class HostActivityBluetooth extends HostActivity implements BluetoothConn
 
 
     @Override
-    protected void startHostConnection() {
+    protected void startHostConnection(String queueTitle) {
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         if (mBluetoothAdapter == null) {
             // TODO: Throw some sort of error/exception?  Need bluetooth for main application usage
         } else {
-            mBluetoothAdapter.setName("SocialQ Host");
+            mBluetoothAdapter.setName(queueTitle);
             if (!mBluetoothAdapter.isEnabled()) {
                 Log.d(TAG, "Attempting to enable Bluetooth");
                 // If bluetooth is not enabled request

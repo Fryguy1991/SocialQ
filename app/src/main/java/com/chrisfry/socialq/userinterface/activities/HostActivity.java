@@ -1,6 +1,5 @@
 package com.chrisfry.socialq.userinterface.activities;
 
-import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -9,6 +8,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.StrictMode;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -39,14 +39,13 @@ import com.chrisfry.socialq.R;
 import kaaes.spotify.webapi.android.SpotifyService;
 import kaaes.spotify.webapi.android.models.Playlist;
 import kaaes.spotify.webapi.android.models.PlaylistTrack;
-import kaaes.spotify.webapi.android.models.Track;
 import kaaes.spotify.webapi.android.models.UserPrivate;
 
 import com.chrisfry.socialq.services.PlayQueueService;
 import com.chrisfry.socialq.userinterface.widgets.QueueItemDecoration;
 import com.chrisfry.socialq.utils.ApplicationUtils;
 
-public abstract class HostActivity extends Activity implements ConnectionStateCallback,
+public abstract class HostActivity extends AppCompatActivity implements ConnectionStateCallback,
         PlayQueueService.PlayQueueServiceListener {
     private final String TAG = HostActivity.class.getName();
 
@@ -68,6 +67,8 @@ public abstract class HostActivity extends Activity implements ConnectionStateCa
     private boolean mIsServiceBound = false;
     // Cached value for playing index (used to inform new clients)
     protected int mCachedPlayingIndex = -1;
+    // Boolean flag to store if queue should be "fair play"
+    private boolean mIsQueueFairPlay;
 
     // Object for connecting to/from play queue service
     private ServiceConnection mServiceConnection = new ServiceConnection() {
@@ -96,6 +97,9 @@ public abstract class HostActivity extends Activity implements ConnectionStateCa
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.host_screen);
+
+        // Set fair play flag from intent (or default to app boolean default)
+        mIsQueueFairPlay = getIntent().getBooleanExtra(AppConstants.FAIR_PLAY_KEY, getResources().getBoolean(R.bool.fair_play_default));
 
         initUi();
         addListeners();
@@ -161,7 +165,7 @@ public abstract class HostActivity extends Activity implements ConnectionStateCa
 
 
                     // All logged in and good to go.  Start host connection.
-                    startHostConnection();
+                    startHostConnection(getIntent().getStringExtra(AppConstants.QUEUE_TITLE_KEY));
                 } else {
                     Log.d(TAG, "Authentication Response: " + response.getError());
                     Toast.makeText(HostActivity.this, getString(R.string.toast_authentication_error_host), Toast.LENGTH_SHORT).show();
@@ -380,7 +384,7 @@ public abstract class HostActivity extends Activity implements ConnectionStateCa
 
     public abstract void initiateNewClient(Object client);
 
-    protected abstract void startHostConnection();
+    protected abstract void startHostConnection(String queueTitle);
 
     protected abstract void notifyClientsQueueUpdated(int currentPlayingIndex);
 }
