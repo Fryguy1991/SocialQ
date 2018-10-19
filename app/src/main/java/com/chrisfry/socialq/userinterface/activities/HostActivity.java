@@ -352,17 +352,20 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
         mPlayPauseButton.setContentDescription("queue_playing");
     }
 
-// TODO: Get uri of these track and fix this method
-//    private void setupShortDemoQueue() {
-//        TracksPager tracks = mSpotifyService.searchTracks("Built This Pool");
-//        mPlayQueueService.requestAddSongToQueue(tracks.tracks.items.get(2));
-//
-//        tracks = mSpotifyService.searchTracks("Audience of One");
-//        mPlayQueueService.requestAddSongToQueue(tracks.tracks.items.get(0));
-//
-//        tracks = mSpotifyService.searchTracks("Love Yourself Somebody");
-//        mPlayQueueService.requestAddSongToQueue(tracks.tracks.items.get(0));
-//    }
+    private void setupShortDemoQueue() {
+        String longQueueString =
+                "spotify:track:0p8fUOBfWtGcaKGiD9drgJ," +
+                        "spotify:track:6qtg4gz3DhqOHL5BHtSQw8," +
+                        "spotify:track:57bgtoPSgt236HzfBOd8kj," +
+                        "spotify:track:7lGh1Dy02c5C0j3tj9AVm3";
+
+        Map<String, Object> queryParameters = new HashMap<>();
+        queryParameters.put("uris", longQueueString);
+        Map<String, Object> bodyParameters = new HashMap<>();
+
+        mSpotifyService.addTracksToPlaylist(mCurrentUser.id, mPlaylist.id, queryParameters, bodyParameters);
+        mPlayQueueService.notifyServiceQueueHasChanged();
+    }
 
     private void setupLongDemoQueue() {
         String longQueueString =
