@@ -4,12 +4,14 @@ import android.util.Log
 import android.widget.Toast
 import com.chrisfry.socialq.business.AppConstants
 import com.chrisfry.socialq.enums.NearbyDevicesMessage
+import com.chrisfry.socialq.model.SongRequestData
 import com.chrisfry.socialq.utils.ApplicationUtils
 import com.google.android.gms.nearby.Nearby
 import com.google.android.gms.nearby.connection.*
 import com.google.android.gms.tasks.OnFailureListener
 import com.google.android.gms.tasks.OnSuccessListener
 import java.lang.Exception
+import java.util.regex.Pattern
 
 class HostActivityNearbyDevices : HostActivity() {
     private val TAG = HostActivityNearbyDevices::class.java.name
@@ -78,7 +80,8 @@ class HostActivityNearbyDevices : HostActivity() {
 
                 when (payloadType) {
                     NearbyDevicesMessage.SONG_REQUEST -> {
-                        addSongToQueue(ApplicationUtils.getBasicPayloadDataFromPayloadString(payloadType.payloadPrefix, payloadString))
+                        val songRequest = getSongRequestFromPayload(payloadString)
+                        handleSongRequest(songRequest)
                     }
                     NearbyDevicesMessage.RECEIVE_PLAYLIST_ID, NearbyDevicesMessage.QUEUE_UPDATE,
                     NearbyDevicesMessage.RECEIVE_HOST_USER_ID -> {
@@ -99,6 +102,29 @@ class HostActivityNearbyDevices : HostActivity() {
             // Do we care about status?
         }
 
+    }
+
+    fun getSongRequestFromPayload(payloadString: String): SongRequestData {
+        var pattern = Pattern.compile(AppConstants.FULL_SONG_REQUEST_REGEX)
+        var matcher = pattern.matcher(payloadString)
+        // Ensure a proper format has been sent for the track request
+        if (matcher.matches()) {
+            // Extract track URI
+            pattern = Pattern.compile(AppConstants.SONG_REQUEST_MESSAGE)
+            matcher = pattern.matcher(payloadString)
+            var songUri = matcher.replaceFirst("")
+            pattern = Pattern.compile(AppConstants.EXTRACT_SONG_ID_REGEX)
+            matcher = pattern.matcher(songUri)
+            songUri = matcher.replaceFirst("")
+
+            // Extract user ID
+            pattern = Pattern.compile(AppConstants.EXTRACT_CLIENT_ID_REGEX)
+            matcher = pattern.matcher(payloadString)
+            val clientId = matcher.replaceFirst("")
+
+            return SongRequestData(songUri, clientId)
+        }
+        return SongRequestData("", "")
     }
 
     override fun startHostConnection(queueTitle: String) {

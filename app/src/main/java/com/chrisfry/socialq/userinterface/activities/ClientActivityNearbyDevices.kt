@@ -130,11 +130,10 @@ class ClientActivityNearbyDevices : ClientActivity() {
         }
     }
 
-    override fun sendTrackToHost(trackUri: String?) {
-        if (trackUri != null) {
-            Log.d(TAG, "Sending track request to the host")
-            Nearby.getConnectionsClient(this).sendPayload(mHostEndpointId, Payload.fromBytes(
-                    ApplicationUtils.buildBasicPayload(NearbyDevicesMessage.SONG_REQUEST.payloadPrefix, trackUri).toByteArray()))
+    override fun sendTrackToHost(requestMessage: String) {
+        if (requestMessage != null) {
+            Log.d(TAG, "Sending track request message to host: $requestMessage")
+            Nearby.getConnectionsClient(this).sendPayload(mHostEndpointId, Payload.fromBytes(requestMessage.toByteArray()))
         }
     }
 

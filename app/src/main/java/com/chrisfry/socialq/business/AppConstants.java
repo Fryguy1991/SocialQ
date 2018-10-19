@@ -38,6 +38,14 @@ public class AppConstants {
     public static final String UPDATE_QUEUE_MESSAGE = "#QUEUE_UPDATED#";
     public static final String SONG_REQUEST_MESSAGE = "#SONG_REQUEST#";
     public static final String HOST_USER_ID_MESSAGE = "#HOST_USER_ID#";
+    public static final String CLIENT_USER_ID_MESSAGE = "#CLIENT_USER_ID#";
+    public static final String SONG_REQUEST_MESSAGE_FORMAT = SONG_REQUEST_MESSAGE + "%1$s" + CLIENT_USER_ID_MESSAGE + "%2$s";
+
+    // Regular expressions
+    // Regex for track request messages (Example: #SONG_REQUEST#spotify:track:6qtg4gz3DhqOHL5BHtSQw8#CLIENT_USER_ID#fry_dev_1
+    public static final String FULL_SONG_REQUEST_REGEX = SONG_REQUEST_MESSAGE + "spotify:track:\\S{22}" + CLIENT_USER_ID_MESSAGE + "\\S+";
+    public static final String EXTRACT_CLIENT_ID_REGEX= SONG_REQUEST_MESSAGE + "spotify:track:\\S{22}" + CLIENT_USER_ID_MESSAGE;
+    public static final String EXTRACT_SONG_ID_REGEX = CLIENT_USER_ID_MESSAGE + "\\S+";
 
     // Charset Name
     public static final String UTF8_CHARSET_NAME = "UTF-8";

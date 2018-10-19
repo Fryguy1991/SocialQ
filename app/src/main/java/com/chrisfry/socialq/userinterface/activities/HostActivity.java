@@ -22,6 +22,7 @@ import android.widget.Toast;
 import com.chrisfry.socialq.business.dagger.modules.SpotifyModule;
 import com.chrisfry.socialq.business.dagger.modules.components.DaggerSpotifyComponent;
 import com.chrisfry.socialq.business.dagger.modules.components.SpotifyComponent;
+import com.chrisfry.socialq.model.SongRequestData;
 import com.chrisfry.socialq.userinterface.adapters.PlaylistTrackListAdapter;
 import com.spotify.sdk.android.authentication.AuthenticationClient;
 import com.spotify.sdk.android.authentication.AuthenticationRequest;
@@ -31,6 +32,7 @@ import com.spotify.sdk.android.player.Error;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import com.chrisfry.socialq.business.AppConstants;
@@ -69,6 +71,8 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
     protected int mCachedPlayingIndex = -1;
     // Boolean flag to store if queue should be "fair play"
     private boolean mIsQueueFairPlay;
+    // List containing client song requests
+    private List<SongRequestData> mSongRequests = new ArrayList<>();
 
     // Object for connecting to/from play queue service
     private ServiceConnection mServiceConnection = new ServiceConnection() {
@@ -175,7 +179,7 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
             case AppConstants.SEARCH_REQUEST:
                 if (resultCode == RESULT_OK) {
                     String trackUri = intent.getStringExtra(AppConstants.SEARCH_RESULTS_EXTRA_KEY);
-                    addSongToQueue(trackUri);
+                    handleSongRequest(new SongRequestData(trackUri, mCurrentUser.id));
                 }
                 break;
         }
@@ -204,14 +208,18 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
         return mSpotifyService.createPlaylist(mCurrentUser.id, playlistParameters);
     }
 
-    protected void addSongToQueue(String trackUri) {
-        if (trackUri != null && !trackUri.isEmpty()) {
+    protected void handleSongRequest(SongRequestData songRequest) {
+        if (songRequest != null && !songRequest.getUri().isEmpty()) {
+            Log.d(TAG, "Received request for URI: " + songRequest.getUri() + ", from User ID: " + songRequest.getUserId());
+
             Map<String, Object> queryParameters = new HashMap<>();
-            queryParameters.put("uris", trackUri);
+            queryParameters.put("uris", songRequest.getUri());
             Map<String, Object> bodyParameters = new HashMap<>();
 
             // Add song to queue playlist
             mSpotifyService.addTracksToPlaylist(mCurrentUser.id, mPlaylist.id, queryParameters, bodyParameters);
+            // Add track to request list
+            mSongRequests.add(songRequest);
 
             manageQueue();
             mPlayQueueService.notifyServiceQueueHasChanged();

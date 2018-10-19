@@ -1,6 +1,5 @@
 package com.chrisfry.socialq.userinterface.activities;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.StrictMode;
@@ -44,6 +43,7 @@ public abstract class ClientActivity extends AppCompatActivity implements Connec
     private SpotifyService mSpotifyService;
     private Playlist mPlaylist;
     protected String mHostUserId;
+    private String mCurrentUserId;
 
     @Override
     protected void onNewIntent(Intent intent) {
@@ -104,9 +104,9 @@ public abstract class ClientActivity extends AppCompatActivity implements Connec
             case AppConstants.SEARCH_REQUEST:
                 if (resultCode == RESULT_OK) {
                     String trackUri = intent.getStringExtra(AppConstants.SEARCH_RESULTS_EXTRA_KEY);
-                    if (trackUri != null && !trackUri.isEmpty()) {
+                    if (trackUri != null && !trackUri.isEmpty() && mCurrentUserId != null && !mCurrentUserId.isEmpty()) {
                         Log.d(TAG, "Client adding track to queue playlist");
-                        sendTrackToHost(trackUri);
+                        sendTrackToHost(buildSongRequestMessage(trackUri, mCurrentUserId));
                     }
                 }
                 break;
@@ -121,6 +121,7 @@ public abstract class ClientActivity extends AppCompatActivity implements Connec
                 new SpotifyModule(accessToken)).build();
 
         mSpotifyService = componenet.service();
+        mCurrentUserId = mSpotifyService.getMe().id;
     }
 
     @Override
@@ -196,7 +197,15 @@ public abstract class ClientActivity extends AppCompatActivity implements Connec
         mPlaylist = mSpotifyService.getPlaylist(mHostUserId, mPlaylist.id);
     }
 
-    protected abstract void sendTrackToHost(String trackUri);
+    protected abstract void sendTrackToHost(String requestMessage);
 
     protected abstract void connectToHost();
+
+    private String buildSongRequestMessage(String trackUri, String userId) {
+        if (trackUri != null && userId != null && !trackUri.isEmpty() && !userId.isEmpty()) {
+            return String.format(AppConstants.SONG_REQUEST_MESSAGE_FORMAT, trackUri, userId);
+        }
+        Log.d(TAG, "Can't build track request for URI: " + trackUri + ", user ID: " + userId);
+        return null;
+    }
 }

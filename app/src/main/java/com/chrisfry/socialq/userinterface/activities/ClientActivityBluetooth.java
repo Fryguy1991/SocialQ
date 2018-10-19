@@ -83,10 +83,10 @@ public class ClientActivityBluetooth extends ClientActivity implements Bluetooth
     }
 
     @Override
-    protected void sendTrackToHost(String trackUri) {
+    protected void sendTrackToHost(String requestMessage) {
         try {
             OutputStream outputStream = mQueueSocket.getOutputStream();
-            outputStream.write(trackUri.getBytes(StandardCharsets.UTF_8));
+            outputStream.write(requestMessage.getBytes(StandardCharsets.UTF_8));
             Log.d(TAG, "Track sent to output stream");
         } catch (IOException e) {
             Log.d(TAG, "Sending track failed");
