@@ -68,7 +68,7 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
     // Flag to determine if the service is bound or not
     private boolean mIsServiceBound = false;
     // Cached value for playing index (used to inform new clients)
-    protected int mCachedPlayingIndex = -1;
+    protected int mCachedPlayingIndex = 0;
     // Boolean flag to store if queue should be "fair play"
     private boolean mIsQueueFairPlay;
     // List containing client song requests
@@ -221,13 +221,61 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
             // Add track to request list
             mSongRequests.add(songRequest);
 
-            manageQueue();
+            // Don't need to worry about managing the queue if fairplay is off or we have less than 2 songs
+            if (mIsQueueFairPlay && mSongRequests.size() > 2) {
+                refreshPlaylist();
+                manageQueue(songRequest.getUserId());
+            }
             mPlayQueueService.notifyServiceQueueHasChanged();
         }
     }
 
-    private void manageQueue() {
-        // TODO: Manage playlist here (sorting)
+    private void manageQueue(String addClient) {
+        // Position of new track needs to go before first repeat that doesn't have a song of the requestee inside
+        // EX (Requestee = 3): 1 -> 2 -> 3 -> 1 -> 2 -> 1  New 3 track goes before 3rd track by 1
+
+        HashMap<String, Integer> songCountHash = new HashMap<>();
+        songCountHash.put(addClient, 0);
+        int newTrackPosition;
+
+        // Start inspecting each index and counting occurrences of tracks by users
+        for (newTrackPosition = 0; newTrackPosition < mSongRequests.size(); newTrackPosition++) {
+            String currentRequestUserId = mSongRequests.get(newTrackPosition).getUserId();
+
+            // If user already exists in hash add 1 to the count and check for found insertion index criteria
+            if (songCountHash.containsKey(currentRequestUserId)) {
+                songCountHash.put(currentRequestUserId, songCountHash.get(currentRequestUserId) + 1);
+
+                if (songCountHash.get(currentRequestUserId) >= songCountHash.get(addClient) + 2) {
+                    // If one user has 2 tracks more than the requested user we have found our repeat
+                    // and therefore our index for insertion
+                    break;
+                }
+            } else {
+                songCountHash.put(currentRequestUserId, 1);
+            }
+        }
+
+
+        if (newTrackPosition == mSongRequests.size()) {
+            // If new track position is at the end of the list, don't have to move the track
+            Log.d(TAG, "Track already at end, don't have to move");
+        } else if (newTrackPosition > mSongRequests.size()) {
+            Log.e(TAG, "INVALID NEW TRACK POSITION INDEX");
+        } else {
+            // If new track position is not equal or greater than song request size we need to move it
+            // Inject song request data to new position
+            mSongRequests.add(newTrackPosition, mSongRequests.remove(mSongRequests.size() - 1));
+
+            // Create body parameters for new playlist
+            Map<String, Object> bodyParameters = new HashMap<>();
+            bodyParameters.put("range_start", mPlaylist.tracks.total - 1);
+            // Add number of tracks that have already played for correct Spotify playlist index
+            bodyParameters.put("insert_before", newTrackPosition + mCachedPlayingIndex);
+
+            Log.d(TAG, "Inserting new track at playlist index: " + (newTrackPosition + mCachedPlayingIndex));
+            mSpotifyService.reorderPlaylistTracks(mCurrentUser.id, mPlaylist.id, bodyParameters);
+        }
     }
 
     private void refreshPlaylist() {
@@ -321,7 +369,9 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
     }
 
     @Override
-    public void onQueueChanged(int currentPlayingIndex) {
+    public void onQueueNext(int currentPlayingIndex) {
+        mSongRequests.remove(0);
+
         mCachedPlayingIndex = currentPlayingIndex;
 
         // Refresh playlist and update UI
@@ -352,19 +402,38 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
         mPlayPauseButton.setContentDescription("queue_playing");
     }
 
+    @Override
+    public void onQueueUpdated() {
+        // Refresh playlist and update UI
+        refreshPlaylist();
+        mQueueDisplayAdapter.updateQueueList(mPlaylist.tracks.items.subList(mCachedPlayingIndex, mPlaylist.tracks.items.size()));
+
+        notifyClientsQueueUpdated(mCachedPlayingIndex);
+    }
+
     private void setupShortDemoQueue() {
-        String longQueueString =
+        String shortQueueString =
                 "spotify:track:0p8fUOBfWtGcaKGiD9drgJ," +
                         "spotify:track:6qtg4gz3DhqOHL5BHtSQw8," +
                         "spotify:track:57bgtoPSgt236HzfBOd8kj," +
                         "spotify:track:7lGh1Dy02c5C0j3tj9AVm3";
 
+
         Map<String, Object> queryParameters = new HashMap<>();
-        queryParameters.put("uris", longQueueString);
+        queryParameters.put("uris", shortQueueString);
         Map<String, Object> bodyParameters = new HashMap<>();
 
         mSpotifyService.addTracksToPlaylist(mCurrentUser.id, mPlaylist.id, queryParameters, bodyParameters);
         mPlayQueueService.notifyServiceQueueHasChanged();
+
+        // String for testing fair play (simulate a user name)
+        String userId = "fake_user";
+//        String userId = mCurrentUser.id;
+
+        mSongRequests.add(new SongRequestData("spotify:track:0p8fUOBfWtGcaKGiD9drgJ", userId));
+        mSongRequests.add(new SongRequestData("spotify:track:6qtg4gz3DhqOHL5BHtSQw8", userId));
+        mSongRequests.add(new SongRequestData("spotify:track:57bgtoPSgt236HzfBOd8kj", userId));
+        mSongRequests.add(new SongRequestData("spotify:track:7lGh1Dy02c5C0j3tj9AVm3", userId));
     }
 
     private void setupLongDemoQueue() {
@@ -391,6 +460,26 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
 
         mSpotifyService.addTracksToPlaylist(mCurrentUser.id, mPlaylist.id, queryParameters, bodyParameters);
         mPlayQueueService.notifyServiceQueueHasChanged();
+
+        // String for testing fair play (simulate a user name)
+        String userId = "fake_user";
+//        String userId = mCurrentUser.id;
+
+        mSongRequests.add(new SongRequestData("spotify:track:0p8fUOBfWtGcaKGiD9drgJ", userId));
+        mSongRequests.add(new SongRequestData("spotify:track:6qtg4gz3DhqOHL5BHtSQw8", userId));
+        mSongRequests.add(new SongRequestData("spotify:track:57bgtoPSgt236HzfBOd8kj", userId));
+        mSongRequests.add(new SongRequestData("spotify:track:4VbDJMkAX3dWNBdn3KH6Wx", userId));
+        mSongRequests.add(new SongRequestData("spotify:track:2jnvdMCTvtdVCci3YLqxGY", userId));
+        mSongRequests.add(new SongRequestData("spotify:track:419qOkEdlmbXS1GRJEMntC", userId));
+        mSongRequests.add(new SongRequestData("spotify:track:1jvqZQtbBGK5GJCGT615ao", userId));
+        mSongRequests.add(new SongRequestData("spotify:track:6cG3kY60HMcFqiZN8frkXF", userId));
+        mSongRequests.add(new SongRequestData("spotify:track:0dqrAmrvQ6fCGNf5T8If5A", userId));
+        mSongRequests.add(new SongRequestData("spotify:track:0wHNrrefyaeVewm4NxjxrX", userId));
+        mSongRequests.add(new SongRequestData("spotify:track:1hh4GY1zM7SUAyM3a2ziH5", userId));
+        mSongRequests.add(new SongRequestData("spotify:track:5Cl9GDb0AyQnppRr6q7ldb", userId));
+        mSongRequests.add(new SongRequestData("spotify:track:7D180Q77XAEP7atBLmMTgK", userId));
+        mSongRequests.add(new SongRequestData("spotify:track:2uxL6E8Yq0Psc1V9uBtC4F", userId));
+        mSongRequests.add(new SongRequestData("spotify:track:7lGh1Dy02c5C0j3tj9AVm3", userId));
     }
 
     public abstract void initiateNewClient(Object client);

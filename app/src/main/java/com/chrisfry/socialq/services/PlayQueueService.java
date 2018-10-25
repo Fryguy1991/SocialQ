@@ -41,8 +41,6 @@ public class PlayQueueService extends Service implements ConnectionStateCallback
 
     // Binder given to clients
     private final IBinder mPlayQueueBinder = new PlayQueueBinder();
-    // List containing the queue of songs (next to play always index 0)
-    private ArrayList<Track> mSongQueue = new ArrayList<>();
     // Member player object used for playing audio
     private SpotifyPlayer mSpotifyPlayer;
     // Service for adding songs to the queue
@@ -179,16 +177,14 @@ public class PlayQueueService extends Service implements ConnectionStateCallback
             Metadata metaData = mSpotifyPlayer.getMetadata();
             if (metaData != null) {
                 if (metaData.nextTrack == null
-                        && mCurrentPlaylistIndex + 1 < mPlaylist.tracks.items.size()
-                        && mSongQueue.size() > 1) {
+                        && mCurrentPlaylistIndex + 1 < mPlaylist.tracks.items.size()) {
                     // MetaData hasn't updated but there is a new track in the playlist
                     // play from the next index, and update the queue
                     Log.d(TAG, "MetaData is null but there is a track to play");
                     mCurrentPlaylistIndex++;
-                    mSongQueue.remove(0);
                     Log.d(TAG, "Starting playlist from index: " + mCurrentPlaylistIndex);
                     mSpotifyPlayer.playUri(this, mPlaylist.uri, mCurrentPlaylistIndex, 1);
-                    notifyQueueChanged();
+                    notifyNext();
                 } else {
                     mSpotifyPlayer.skipToNext(this);
                 }
@@ -226,11 +222,8 @@ public class PlayQueueService extends Service implements ConnectionStateCallback
             case kSpPlaybackNotifyNext:
                 // Track has changed, remove top track from queue list
                 Log.d(TAG, "Player has moved to next track (next/track complete)");
-                if (mSongQueue.size() > 0) {
-                    mSongQueue.remove(0);
-                }
                 mCurrentPlaylistIndex++;
-                notifyQueueChanged();
+                notifyNext();
                 break;
             case kSpPlaybackNotifyAudioDeliveryDone:
                 // Current queue playlist has finished.
@@ -309,16 +302,24 @@ public class PlayQueueService extends Service implements ConnectionStateCallback
     // Inner interface used to cast listeners for service events
     public interface PlayQueueServiceListener {
 
-        void onQueueChanged(int mCurrentPlayingIndex);
+        void onQueueNext(int mCurrentPlayingIndex);
 
         void onQueuePause();
 
         void onQueuePlay();
+
+        void onQueueUpdated();
     }
 
     private void notifyQueueChanged() {
         for (PlayQueueServiceListener listener : mListeners) {
-            listener.onQueueChanged(mCurrentPlaylistIndex);
+            listener.onQueueUpdated();
+        }
+    }
+
+    private void notifyNext() {
+        for (PlayQueueServiceListener listener : mListeners) {
+            listener.onQueueNext(mCurrentPlaylistIndex);
         }
     }
 
