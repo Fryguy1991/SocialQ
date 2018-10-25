@@ -212,69 +212,114 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
         if (songRequest != null && !songRequest.getUri().isEmpty()) {
             Log.d(TAG, "Received request for URI: " + songRequest.getUri() + ", from User ID: " + songRequest.getUserId());
 
-            Map<String, Object> queryParameters = new HashMap<>();
-            queryParameters.put("uris", songRequest.getUri());
-            Map<String, Object> bodyParameters = new HashMap<>();
-
-            // Add song to queue playlist
-            mSpotifyService.addTracksToPlaylist(mCurrentUser.id, mPlaylist.id, queryParameters, bodyParameters);
             // Add track to request list
             mSongRequests.add(songRequest);
 
-            // Don't need to worry about managing the queue if fairplay is off or we have less than 2 songs
-            if (mIsQueueFairPlay && mSongRequests.size() > 2) {
-                refreshPlaylist();
-                manageQueue(songRequest.getUserId());
+            // Don't need to worry about managing the queue if fairplay is off
+            if (mIsQueueFairPlay) {
+                injectNewTrack(songRequest);
+            } else {
+                addTrackToPlaylist(songRequest.getUri());
             }
             mPlayQueueService.notifyServiceQueueHasChanged();
         }
     }
 
-    private void manageQueue(String addClient) {
+    /**
+     * Adds a song to end of the referenced playlist
+     *
+     * @param uri - uri of the track to be added
+     */
+    private void addTrackToPlaylist(String uri) {
+        addTrackToPlaylistPosition(uri, -1);
+    }
+
+    /**
+     * Adds a song to the referenced playlist at the given position (or end if not specified)
+     *
+     * @param uri - uri of the track to be added
+     * @param position - position of the track to be added (if less than 0, track placed at end of playlist)
+     */
+    private void addTrackToPlaylistPosition(String uri, int position) {
+        Map<String, Object> queryParameters = new HashMap<>();
+        queryParameters.put("uris", uri);
+        if (position >= 0) {
+            queryParameters.put("position", position);
+        }
+        Map<String, Object> bodyParameters = new HashMap<>();
+
+        // Add song to queue playlist
+        mSpotifyService.addTracksToPlaylist(mCurrentUser.id, mPlaylist.id, queryParameters, bodyParameters);
+    }
+
+    /**
+     * Injects most recently added track to fairplay position
+     *
+     * @param songRequest - Song request containing requestee and track info
+     * @return - Boolean flag for if the track was added at the next position
+     */
+    private boolean injectNewTrack(SongRequestData songRequest) {
         // Position of new track needs to go before first repeat that doesn't have a song of the requestee inside
         // EX (Requestee = 3): 1 -> 2 -> 3 -> 1 -> 2 -> 1  New 3 track goes before 3rd track by 1
-
-        HashMap<String, Integer> songCountHash = new HashMap<>();
-        songCountHash.put(addClient, 0);
+        // PLAYLIST RESULT   : 1 -> 2 -> 3 -> 1 -> 2 -> 3 -> 1
         int newTrackPosition;
 
-        // Start inspecting each index and counting occurrences of tracks by users
-        for (newTrackPosition = 0; newTrackPosition < mSongRequests.size(); newTrackPosition++) {
-            String currentRequestUserId = mSongRequests.get(newTrackPosition).getUserId();
+        // Only run check for song injection if there are 3 or more requests tracked
+        if (mSongRequests.size() > 2) {
+            HashMap<String, Boolean> clientRepeatHash = new HashMap<>();
 
-            // If user already exists in hash add 1 to the count and check for found insertion index criteria
-            if (songCountHash.containsKey(currentRequestUserId)) {
-                songCountHash.put(currentRequestUserId, songCountHash.get(currentRequestUserId) + 1);
+            // Start inspecting song requests
+            for (newTrackPosition = 0; newTrackPosition < mSongRequests.size(); newTrackPosition++) {
+                String currentRequestUserId = mSongRequests.get(newTrackPosition).getUserId();
 
-                if (songCountHash.get(currentRequestUserId) >= songCountHash.get(addClient) + 2) {
-                    // If one user has 2 tracks more than the requested user we have found our repeat
-                    // and therefore our index for insertion
-                    break;
+                if (currentRequestUserId.equals(songRequest.getUserId())) {
+                    // If we found a requestee track set open repeats to true (found requestee track)
+                    for (Map.Entry<String, Boolean> mapEntry : clientRepeatHash.entrySet()) {
+                        mapEntry.setValue(true);
+                    }
+                } else {
+                    // Found a request NOT from the requestee client
+                    if (clientRepeatHash.containsKey(currentRequestUserId)) {
+                        // Client already contained in hash (repeat)
+                        if (clientRepeatHash.get(currentRequestUserId)) {
+                            // If repeat contained requestee track (true flag) reset to false
+                            clientRepeatHash.put(currentRequestUserId, false);
+                        } else {
+                            // Client already contained in hash (repeat) and does not have a requestee track
+                            // We have a repeat with no requestee song in between
+                            break;
+                        }
+                    } else {
+                        // Add new client to the hash
+                        clientRepeatHash.put(currentRequestUserId, false);
+                    }
                 }
-            } else {
-                songCountHash.put(currentRequestUserId, 1);
             }
+        } else {
+            // If not enough requests set new track position so new track will be placed at the end of the list
+            newTrackPosition = mSongRequests.size();
         }
 
-
         if (newTrackPosition == mSongRequests.size()) {
-            // If new track position is at the end of the list, don't have to move the track
-            Log.d(TAG, "Track already at end, don't have to move");
+            // No repeat found (or list too small) add track to end of playlist
+            Log.d(TAG, "Adding track to end of playlist");
+            addTrackToPlaylist(songRequest.getUri());
+            // Return true if the song being added is next (request size of 2)
+            return mSongRequests.size() == 2;
         } else if (newTrackPosition > mSongRequests.size()) {
+            // Should not be possible
             Log.e(TAG, "INVALID NEW TRACK POSITION INDEX");
+            return false;
         } else {
             // If new track position is not equal or greater than song request size we need to move it
             // Inject song request data to new position
             mSongRequests.add(newTrackPosition, mSongRequests.remove(mSongRequests.size() - 1));
 
-            // Create body parameters for new playlist
-            Map<String, Object> bodyParameters = new HashMap<>();
-            bodyParameters.put("range_start", mPlaylist.tracks.total - 1);
-            // Add number of tracks that have already played for correct Spotify playlist index
-            bodyParameters.put("insert_before", newTrackPosition + mCachedPlayingIndex);
+            Log.d(TAG, "Adding new track at playlist index: " + (newTrackPosition + mCachedPlayingIndex));
+            addTrackToPlaylistPosition(songRequest.getUri(), newTrackPosition + mCachedPlayingIndex);
 
-            Log.d(TAG, "Inserting new track at playlist index: " + (newTrackPosition + mCachedPlayingIndex));
-            mSpotifyService.reorderPlaylistTracks(mCurrentUser.id, mPlaylist.id, bodyParameters);
+            // Return true if we're moving the added track to the "next" position
+            return newTrackPosition == 1;
         }
     }
 
@@ -286,6 +331,7 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
         // Unfollow the playlist created for SocialQ
         if (mCurrentUser != null && mPlaylist != null) {
             Log.d(TAG, "Unfollowing playlist created for the SocialQ");
+
             mSpotifyService.unfollowPlaylist(mCurrentUser.id, mPlaylist.id);
             mPlaylist = null;
         }
