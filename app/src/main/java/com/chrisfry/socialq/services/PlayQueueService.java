@@ -18,7 +18,6 @@ import com.spotify.sdk.android.player.Config;
 import com.spotify.sdk.android.player.ConnectionStateCallback;
 import com.spotify.sdk.android.player.Connectivity;
 import com.spotify.sdk.android.player.Error;
-import com.spotify.sdk.android.player.Metadata;
 import com.spotify.sdk.android.player.Player;
 import com.spotify.sdk.android.player.PlayerEvent;
 import com.spotify.sdk.android.player.Spotify;
@@ -29,7 +28,6 @@ import java.util.concurrent.TimeUnit;
 
 import kaaes.spotify.webapi.android.SpotifyService;
 import kaaes.spotify.webapi.android.models.Playlist;
-import kaaes.spotify.webapi.android.models.Track;
 import kaaes.spotify.webapi.android.models.UserPrivate;
 
 /**
@@ -55,7 +53,10 @@ public class PlayQueueService extends Service implements ConnectionStateCallback
     private int mCurrentPlaylistIndex = 0;
     // Boolean flag to store when when delivery is done
     private boolean mAudioDeliveryDoneFlag = true;
-    
+    // Boolean flag to store if MetaData is incorrect
+    private boolean mIncorrectQueueMetaDataFlag = false;
+    // Boolean flag to store when a track has been fully delivered
+    private boolean mTrackDelivered = false;
 
     private final Player.OperationCallback mConnectivityCallback = new Player.OperationCallback() {
         @Override
@@ -149,12 +150,13 @@ public class PlayQueueService extends Service implements ConnectionStateCallback
         if (mSpotifyPlayer.getPlaybackState() != null) {
              if (mAudioDeliveryDoneFlag) {
                  if (mCurrentPlaylistIndex < mPlaylist.tracks.items.size()) {
-                     // TODO: Not a good check above?
                      // If audio has previously been completed (or never started)
                      // start the playlist at the current index
-                     Log.d(TAG, "Starting playlist from index: " + mCurrentPlaylistIndex);
+                     Log.d(TAG, "Audio previously finished.\nStarting playlist from index: " + mCurrentPlaylistIndex);
                      mSpotifyPlayer.playUri(this, mPlaylist.uri, mCurrentPlaylistIndex, 1);
                      mAudioDeliveryDoneFlag = false;
+                 } else {
+                     Log.d(TAG, "Nothing to play");
                  }
              } else {
                  Log.d(TAG, "Resuming player");
@@ -174,20 +176,16 @@ public class PlayQueueService extends Service implements ConnectionStateCallback
         Log.d(TAG, "NEXT REQUEST");
         if (!mAudioDeliveryDoneFlag) {
             // Don't allow a skip when we're waiting on a new track to be queued
-            Metadata metaData = mSpotifyPlayer.getMetadata();
-            if (metaData != null) {
-                if (metaData.nextTrack == null
-                        && mCurrentPlaylistIndex + 1 < mPlaylist.tracks.items.size()) {
-                    // MetaData hasn't updated but there is a new track in the playlist
-                    // play from the next index, and update the queue
-                    Log.d(TAG, "MetaData is null but there is a track to play");
-                    mCurrentPlaylistIndex++;
-                    Log.d(TAG, "Starting playlist from index: " + mCurrentPlaylistIndex);
-                    mSpotifyPlayer.playUri(this, mPlaylist.uri, mCurrentPlaylistIndex, 1);
-                    notifyNext();
-                } else {
-                    mSpotifyPlayer.skipToNext(this);
-                }
+            if (mIncorrectQueueMetaDataFlag) {
+                // Meta data is not correct.  Start playlist from next index
+                Log.d(TAG, "MetaData not correct on NEXT request");
+                mCurrentPlaylistIndex++;
+                mIncorrectQueueMetaDataFlag = false;
+                Log.d(TAG, "Starting playlist from index: " + mCurrentPlaylistIndex);
+                mSpotifyPlayer.playUri(this, mPlaylist.uri, mCurrentPlaylistIndex, 1);
+                notifyNext();
+            } else {
+                mSpotifyPlayer.skipToNext(this);
             }
         } else {
             Log.d(TAG, "Can't go to next track");
@@ -196,6 +194,16 @@ public class PlayQueueService extends Service implements ConnectionStateCallback
 
     public void notifyServiceQueueHasChanged() {
         refreshPlaylist();
+        notifyQueueChanged();
+    }
+
+    public void notifyServiceMetaDataIsStale() {
+        // If a track is queued to the next position, SpotifyPlayer MetaData will not be updated. This causes the
+        // player to either not play a track (if one didn't previously exist) or to play the previously queued track.
+        // Flag is used in requestPlayNext method and when track delivery is finished to manually start the playlist
+        // at the next song index.
+        refreshPlaylist();
+        mIncorrectQueueMetaDataFlag = true;
         notifyQueueChanged();
     }
 
@@ -212,13 +220,24 @@ public class PlayQueueService extends Service implements ConnectionStateCallback
                 break;
             case kSpPlaybackNotifyPause:
                 Log.d(TAG, "Player has paused");
-                notifyPaused();
+                if (!mIncorrectQueueMetaDataFlag) {
+                    // If meta data is incorrect we won't actually pause
+                    notifyPaused();
+                }
                 break;
             case kSpPlaybackNotifyTrackChanged:
                 break;
             case kSpPlaybackNotifyMetadataChanged:
+                if (mTrackDelivered && mIncorrectQueueMetaDataFlag) {
+                    Log.d(TAG, "Incorrect MetaData, playlist not actually done.\nPlaying playlist from index: " + mCurrentPlaylistIndex);
+                    mAudioDeliveryDoneFlag = false;
+                    mTrackDelivered = false;
+                    mIncorrectQueueMetaDataFlag = false;
+                    mSpotifyPlayer.playUri(this, mPlaylist.uri, mCurrentPlaylistIndex, 1);
+                }
                 break;
             case kSpPlaybackNotifyTrackDelivered:
+                mTrackDelivered = true;
             case kSpPlaybackNotifyNext:
                 // Track has changed, remove top track from queue list
                 Log.d(TAG, "Player has moved to next track (next/track complete)");

@@ -1,6 +1,9 @@
-- BUG: New add button for searching tracks is appearing in queue display (host activity).  Will probably be displayed in client activity too.
+- BUG: New add button for searching tracks is appearing in queue display (host activity).  Will probably be displayed in client activity too.  Should use different holder with less functionality.
 
 - Enhancement: Sure there is a better way to remove add icon (search tracks) than refreshing entire data set.
 
 - BUG: Playlist will end if track finishes (organically) and MetaData has not been updated.
 - SIMILAR: If a song is already queued and the next track is modified in the playlist it will play the queued song
+-- SOLUTION?: Flag the service if we change the next (MetaData.queued) track.  If flagged on track delivered or next request start playlist from next index manually.
+
+-- BUG: Paused application for about an hour.  Returned and next Retrofit command failed due to being unauthorized.  Why is my authorization token no good?

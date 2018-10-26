@@ -217,11 +217,19 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
 
             // Don't need to worry about managing the queue if fairplay is off
             if (mIsQueueFairPlay) {
-                injectNewTrack(songRequest);
+                if (injectNewTrack(songRequest)) {
+                    // If we changed the next track notify service meta data is out of sync
+                    mPlayQueueService.notifyServiceMetaDataIsStale();
+                }
             } else {
                 addTrackToPlaylist(songRequest.getUri());
+                if (mSongRequests.size() == 2) {
+                    // If we changed the next track notify service meta data is out of sync
+                    mPlayQueueService.notifyServiceMetaDataIsStale();
+                } else {
+                    mPlayQueueService.notifyServiceQueueHasChanged();
+                }
             }
-            mPlayQueueService.notifyServiceQueueHasChanged();
         }
     }
 
@@ -416,13 +424,19 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
 
     @Override
     public void onQueueNext(int currentPlayingIndex) {
-        mSongRequests.remove(0);
+        if (mSongRequests.size() > 0) {
+            mSongRequests.remove(0);
+        }
 
         mCachedPlayingIndex = currentPlayingIndex;
 
         // Refresh playlist and update UI
         refreshPlaylist();
-        mQueueDisplayAdapter.updateQueueList(mPlaylist.tracks.items.subList(currentPlayingIndex, mPlaylist.tracks.items.size()));
+        if (currentPlayingIndex >= mPlaylist.tracks.items.size()) {
+            mQueueDisplayAdapter.updateQueueList(new ArrayList<PlaylistTrack>());
+        } else {
+            mQueueDisplayAdapter.updateQueueList(mPlaylist.tracks.items.subList(currentPlayingIndex, mPlaylist.tracks.items.size()));
+        }
 
         // Notify clients queue has been updated
         notifyClientsQueueUpdated(currentPlayingIndex);
