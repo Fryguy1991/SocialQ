@@ -6,4 +6,5 @@
 - SIMILAR: If a song is already queued and the next track is modified in the playlist it will play the queued song
 -- SOLUTION?: Flag the service if we change the next (MetaData.queued) track.  If flagged on track delivered or next request start playlist from next index manually.
 
--- BUG: Paused application for about an hour.  Returned and next Retrofit command failed due to being unauthorized.  Why is my authorization token no good?
+- BUG: Paused application for about an hour.  Returned and next Retrofit command failed due to being unauthorized.  Why is my authorization token no good?
+-- INFO: I need to refresh my authorization code.
