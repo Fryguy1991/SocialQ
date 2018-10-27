@@ -313,7 +313,7 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
             Log.d(TAG, "Adding track to end of playlist");
             addTrackToPlaylist(songRequest.getUri());
             // Return true if the song being added is next (request size of 2)
-            return mSongRequests.size() == 2;
+            return mSongRequests.size() == 1 || mSongRequests.size() == 2;
         } else if (newTrackPosition > mSongRequests.size()) {
             // Should not be possible
             Log.e(TAG, "INVALID NEW TRACK POSITION INDEX");

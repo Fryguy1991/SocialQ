@@ -155,6 +155,7 @@ public class PlayQueueService extends Service implements ConnectionStateCallback
                      Log.d(TAG, "Audio previously finished.\nStarting playlist from index: " + mCurrentPlaylistIndex);
                      mSpotifyPlayer.playUri(this, mPlaylist.uri, mCurrentPlaylistIndex, 1);
                      mAudioDeliveryDoneFlag = false;
+                     mIncorrectQueueMetaDataFlag = false;
                  } else {
                      Log.d(TAG, "Nothing to play");
                  }
