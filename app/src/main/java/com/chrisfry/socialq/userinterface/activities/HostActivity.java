@@ -19,9 +19,15 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import com.chrisfry.socialq.business.SpotifyWebApi.FrySpotifyAuthorizationService;
+import com.chrisfry.socialq.business.dagger.modules.SpotifyAuthModule;
 import com.chrisfry.socialq.business.dagger.modules.SpotifyModule;
+import com.chrisfry.socialq.business.dagger.modules.components.DaggerSpotifyAuthComponent;
 import com.chrisfry.socialq.business.dagger.modules.components.DaggerSpotifyComponent;
+import com.chrisfry.socialq.business.dagger.modules.components.SpotifyAuthComponent;
 import com.chrisfry.socialq.business.dagger.modules.components.SpotifyComponent;
+import com.chrisfry.socialq.model.AuthorizationRefreshResponse;
+import com.chrisfry.socialq.model.AuthorizationResponse;
 import com.chrisfry.socialq.model.SongRequestData;
 import com.chrisfry.socialq.userinterface.adapters.PlaylistTrackListAdapter;
 import com.spotify.sdk.android.authentication.AuthenticationClient;
@@ -30,6 +36,7 @@ import com.spotify.sdk.android.authentication.AuthenticationResponse;
 import com.spotify.sdk.android.player.ConnectionStateCallback;
 import com.spotify.sdk.android.player.Error;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -42,6 +49,8 @@ import kaaes.spotify.webapi.android.SpotifyService;
 import kaaes.spotify.webapi.android.models.Playlist;
 import kaaes.spotify.webapi.android.models.PlaylistTrack;
 import kaaes.spotify.webapi.android.models.UserPrivate;
+import retrofit2.Call;
+import retrofit2.Response;
 
 import com.chrisfry.socialq.services.PlayQueueService;
 import com.chrisfry.socialq.userinterface.widgets.QueueItemDecoration;
@@ -61,6 +70,7 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
 
     // Spotify elements
     private SpotifyService mSpotifyService;
+    private FrySpotifyAuthorizationService mAuthService;
     private PlayQueueService mPlayQueueService;
     protected UserPrivate mCurrentUser;
     protected Playlist mPlaylist;
@@ -73,6 +83,8 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
     private boolean mIsQueueFairPlay;
     // List containing client song requests
     private List<SongRequestData> mSongRequests = new ArrayList<>();
+    // Authorization code required for spotify authorization and access token refresh
+    private String mAuthorizationCode = null;
 
     // Object for connecting to/from play queue service
     private ServiceConnection mServiceConnection = new ServiceConnection() {
@@ -113,14 +125,47 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
                 .permitAll().build();
         StrictMode.setThreadPolicy(policy);
 
-        // Building and sending login request through Spotify built activity
+        // Setup auth refresh service
+        SpotifyAuthComponent authComponent =
+                DaggerSpotifyAuthComponent.builder().spotifyAuthModule(new SpotifyAuthModule()).build();
+
+        // Get services for web api and authorization
+        mAuthService = authComponent.getService();
+
+        // Create query parameters for new playlist
+            Map<String, String> queryParameters = new HashMap<>();
+            queryParameters.put("client_id", AppConstants.CLIENT_ID);
+            queryParameters.put("response_type", "code");
+            queryParameters.put("redirect_uri", AppConstants.REDIRECT_URI);
+            queryParameters.put("scope", "user-read-private streaming playlist-modify-private app-remote-control");
+
+            Call<String> authRequest = mAuthService.getAuthorizationToken(queryParameters);
+            Response<String> authResponse = null;
+        try {
+            authResponse = authRequest.execute();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void sendSpotifyAuthRequest(AuthenticationResponse.Type responseType) {
+        // Building and sending authorization request through Spotify built activity
         AuthenticationRequest.Builder builder = new AuthenticationRequest.Builder(
                 AppConstants.CLIENT_ID,
-                AuthenticationResponse.Type.TOKEN,
+                responseType,
                 AppConstants.REDIRECT_URI);
         builder.setScopes(new String[]{"user-read-private", "streaming", "playlist-modify-private", "app-remote-control"});
         AuthenticationRequest request = builder.build();
-        AuthenticationClient.openLoginActivity(this, AppConstants.SPOTIFY_LOGIN_REQUEST, request);
+        AuthenticationClient.openLoginActivity(this, AppConstants.SPOTIFY_AUTH_CODE_REQUEST, request);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        // TODO: Remove when done messing with auth stuff
+        unfollowQueuePlaylist();
+
     }
 
     private void initUi() {
@@ -152,6 +197,42 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
 
         // Check if result comes from the correct activity
         switch (requestCode) {
+            case AppConstants.SPOTIFY_AUTH_CODE_REQUEST:
+                AuthenticationResponse authResponse = AuthenticationClient.getResponse(resultCode, intent);
+                if (authResponse.getType() == AuthenticationResponse.Type.CODE) {
+                    Log.d(TAG, "Authentication code granted");
+
+                    // We're authorized, request access and refresh tokens
+                    ApplicationUtils.setAuthorizationCode(authResponse.getCode());
+//                    sendSpotifyAuthRequest(AuthenticationResponse.Type.TOKEN);
+                    // Create body parameters for new playlist
+                    Map<String, String> bodyParameters = new HashMap<>();
+                    bodyParameters.put("grant_type", "authorization_code");
+                    bodyParameters.put("code", ApplicationUtils.getAuthorizationCode());
+                    bodyParameters.put("redirect_uri", AppConstants.REDIRECT_URI);
+                    bodyParameters.put("client_id", AppConstants.CLIENT_ID);
+                    bodyParameters.put("client_secret", "0b22caf9a4674adea18c4b977d85a209");
+
+                    Call<AuthorizationRefreshResponse> refreshResponse = mAuthService.getRefreshedToken(bodyParameters);
+                    Response<AuthorizationRefreshResponse> tokenResponse = null;
+                    try {
+                        tokenResponse = refreshResponse.execute();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
+                     if (tokenResponse != null) {
+                        AuthorizationRefreshResponse tokens = tokenResponse.body();
+                        if (tokens != null) {
+                            tokens.getAccess_token();
+                        }
+                     }
+                } else {
+                    Log.d(TAG, "Authentication Code Response: " + authResponse.getError());
+                    Toast.makeText(HostActivity.this, getString(R.string.toast_authentication_error_host), Toast.LENGTH_SHORT).show();
+                    finish();
+                }
+                break;
             case AppConstants.SPOTIFY_LOGIN_REQUEST:
                 AuthenticationResponse response = AuthenticationClient.getResponse(resultCode, intent);
                 if (response.getType() == AuthenticationResponse.Type.TOKEN) {
@@ -171,7 +252,7 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
                     // All logged in and good to go.  Start host connection.
                     startHostConnection(getIntent().getStringExtra(AppConstants.QUEUE_TITLE_KEY));
                 } else {
-                    Log.d(TAG, "Authentication Response: " + response.getError());
+                    Log.d(TAG, "Access Token Response: " + response.getError());
                     Toast.makeText(HostActivity.this, getString(R.string.toast_authentication_error_host), Toast.LENGTH_SHORT).show();
                     finish();
                 }
@@ -190,7 +271,13 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
         SpotifyComponent componenet = DaggerSpotifyComponent.builder().spotifyModule(
                 new SpotifyModule(accessToken)).build();
 
+        // Setup auth refresh service
+        SpotifyAuthComponent authComponent =
+                DaggerSpotifyAuthComponent.builder().spotifyAuthModule(new SpotifyAuthModule()).build();
+
+        // Get services for web api and authorization
         mSpotifyService = componenet.service();
+        mAuthService = authComponent.getService();
 
         mCurrentUser = mSpotifyService.getMe();
         mPlaylist = createPlaylistForQueue();

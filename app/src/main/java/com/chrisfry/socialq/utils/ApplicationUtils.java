@@ -11,19 +11,23 @@ import com.spotify.android.appremote.api.ConnectionParams;
 public class ApplicationUtils {
     private final static  String TAG = ApplicationUtils.class.getName();
 
+    private static String mAuthorizationCode = "";
+    private static String mAccessToken = "";
+
+    public static void setAuthorizationCode(String code) {
+        mAuthorizationCode = code;
+    }
+
+    public static String getAuthorizationCode() {
+        return mAuthorizationCode;
+    }
+
     public static void setAccessToken(String token) {
-        AccessModel.setAccessToken(token);
+        mAccessToken = token;
     }
 
     public static String getAccessToken() {
-        return AccessModel.getAccessToken();
-    }
-
-    public static ConnectionParams getConnectionParams() {
-        return new ConnectionParams.Builder(AppConstants.CLIENT_ID)
-                .setRedirectUri(AppConstants.REDIRECT_URI)
-                .showAuthView(true)
-                .build();
+        return mAccessToken;
     }
 
     /**
