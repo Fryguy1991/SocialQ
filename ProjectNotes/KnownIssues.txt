@@ -8,3 +8,4 @@
 
 - BUG: Paused application for about an hour.  Returned and next Retrofit command failed due to being unauthorized.  Why is my authorization token no good?
 -- INFO: I need to refresh my authorization code.
+-- SOLUTION?: Request a new access token using Spotify login activity when access token is no longer valid

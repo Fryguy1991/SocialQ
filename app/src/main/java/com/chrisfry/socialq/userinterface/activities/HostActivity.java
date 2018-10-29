@@ -94,7 +94,7 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
 
             setupQueueList();
 //            setupShortDemoQueue();
-//            setupLongDemoQueue();
+            setupLongDemoQueue();
         }
 
         @Override
