@@ -1,15 +1,11 @@
-package com.chrisfry.socialq.business.SpotifyWebApi
+package com.chrisfry.socialq.business.spotifyauthapi
 
-import android.util.Base64
-import com.chrisfry.socialq.business.AppConstants
 import com.google.gson.GsonBuilder
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit.RequestInterceptor
-import retrofit.RestAdapter
 import retrofit.android.MainThreadExecutor
-import retrofit.converter.GsonConverter
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.converter.scalars.ScalarsConverterFactory

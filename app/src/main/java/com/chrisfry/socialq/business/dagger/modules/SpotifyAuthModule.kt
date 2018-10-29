@@ -1,7 +1,7 @@
 package com.chrisfry.socialq.business.dagger.modules
 
-import com.chrisfry.socialq.business.SpotifyWebApi.FrySpotifyAuthorizationService
-import com.chrisfry.socialq.business.SpotifyWebApi.FrySpotifyWebApi
+import com.chrisfry.socialq.business.spotifyauthapi.FrySpotifyAuthorizationService
+import com.chrisfry.socialq.business.spotifyauthapi.FrySpotifyWebApi
 import dagger.Module
 import dagger.Provides
 import javax.inject.Singleton

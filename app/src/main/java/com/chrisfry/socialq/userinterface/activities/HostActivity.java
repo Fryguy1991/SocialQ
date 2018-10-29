@@ -19,7 +19,7 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.Toast;
 
-import com.chrisfry.socialq.business.SpotifyWebApi.FrySpotifyAuthorizationService;
+import com.chrisfry.socialq.business.spotifyauthapi.FrySpotifyAuthorizationService;
 import com.chrisfry.socialq.business.dagger.modules.SpotifyAuthModule;
 import com.chrisfry.socialq.business.dagger.modules.SpotifyModule;
 import com.chrisfry.socialq.business.dagger.modules.components.DaggerSpotifyAuthComponent;
@@ -27,7 +27,6 @@ import com.chrisfry.socialq.business.dagger.modules.components.DaggerSpotifyComp
 import com.chrisfry.socialq.business.dagger.modules.components.SpotifyAuthComponent;
 import com.chrisfry.socialq.business.dagger.modules.components.SpotifyComponent;
 import com.chrisfry.socialq.model.AuthorizationRefreshResponse;
-import com.chrisfry.socialq.model.AuthorizationResponse;
 import com.chrisfry.socialq.model.SongRequestData;
 import com.chrisfry.socialq.userinterface.adapters.PlaylistTrackListAdapter;
 import com.spotify.sdk.android.authentication.AuthenticationClient;

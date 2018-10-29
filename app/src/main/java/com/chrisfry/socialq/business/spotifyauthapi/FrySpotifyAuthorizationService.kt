@@ -1,9 +1,6 @@
-package com.chrisfry.socialq.business.SpotifyWebApi
+package com.chrisfry.socialq.business.spotifyauthapi
 
 import com.chrisfry.socialq.model.AuthorizationRefreshResponse
-import com.chrisfry.socialq.model.AuthorizationResponse
-import com.google.gson.JsonObject
-import org.json.JSONObject
 import retrofit2.Call
 import retrofit2.http.*
 
