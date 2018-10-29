@@ -70,7 +70,7 @@ public abstract class ClientActivity extends AppCompatActivity implements Connec
         builder.setScopes(new String[]{"user-read-private"});
         AuthenticationRequest request = builder.build();
 
-        AuthenticationClient.openLoginActivity(this, AppConstants.SPOTIFY_LOGIN_REQUEST, request);
+        AuthenticationClient.openLoginActivity(this, AppConstants.SPOTIFY_AUTHENTICATION_REQUEST, request);
 
         initUi();
         setupQueueList();
@@ -87,7 +87,7 @@ public abstract class ClientActivity extends AppCompatActivity implements Connec
 
         // Check if result comes from the correct activity
         switch (requestCode) {
-            case AppConstants.SPOTIFY_LOGIN_REQUEST:
+            case AppConstants.SPOTIFY_AUTHENTICATION_REQUEST:
                 AuthenticationResponse response = AuthenticationClient.getResponse(resultCode, intent);
                 if (response.getType() == AuthenticationResponse.Type.TOKEN) {
                     Log.d(TAG, "Access token granted");

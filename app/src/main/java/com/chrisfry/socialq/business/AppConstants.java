@@ -29,7 +29,7 @@ public class AppConstants {
 
     // Result activity request codes
     public static final int SEARCH_REQUEST = 1337;
-    public static final int SPOTIFY_LOGIN_REQUEST = 5309;
+    public static final int SPOTIFY_AUTHENTICATION_REQUEST = 5309;
     public static final int REQUEST_ENABLE_BT = 12345;
     public static final int REQUEST_DISCOVER_BT = 54321;
 
@@ -52,4 +52,7 @@ public class AppConstants {
 
     // Common Strings
     public static final String INVALID = "INVALID";
+
+    // Handler Message Types
+    public static final int ACCESS_TOKEN_REFRESH = 1;
 }

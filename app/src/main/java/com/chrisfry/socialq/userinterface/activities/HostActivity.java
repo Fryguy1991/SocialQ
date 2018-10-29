@@ -6,7 +6,10 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
+import android.os.Message;
 import android.os.StrictMode;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
@@ -38,6 +41,7 @@ import java.util.Map;
 import com.chrisfry.socialq.business.AppConstants;
 import com.chrisfry.socialq.R;
 
+import kaaes.spotify.webapi.android.SpotifyApi;
 import kaaes.spotify.webapi.android.SpotifyService;
 import kaaes.spotify.webapi.android.models.Playlist;
 import kaaes.spotify.webapi.android.models.PlaylistTrack;
@@ -60,6 +64,7 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
     private PlaylistTrackListAdapter mQueueDisplayAdapter;
 
     // Spotify elements
+    private SpotifyApi mSpotifyApi;
     private SpotifyService mSpotifyService;
     private PlayQueueService mPlayQueueService;
     protected UserPrivate mCurrentUser;
@@ -73,6 +78,8 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
     private boolean mIsQueueFairPlay;
     // List containing client song requests
     private List<SongRequestData> mSongRequests = new ArrayList<>();
+    // Time for when access token expires
+    private long mSystemAccessExpireTime = -1;
 
     // Object for connecting to/from play queue service
     private ServiceConnection mServiceConnection = new ServiceConnection() {
@@ -96,6 +103,22 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
         }
     };
 
+    // Handler for sending messages to the UI thread
+    private Handler mHandler = new Handler(Looper.getMainLooper()) {
+        @Override
+        public void handleMessage(Message msg) {
+            switch (msg.what) {
+                case AppConstants.ACCESS_TOKEN_REFRESH:
+                    // Don't request access tokens if activity is being shut down
+                    if (!isFinishing()) {
+                        Log.d(TAG, "Requesting new access token on UI thread");
+                        requestNewAccessToken();
+                    }
+                    break;
+            }
+        }
+    };
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -113,14 +136,22 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
                 .permitAll().build();
         StrictMode.setThreadPolicy(policy);
 
-        // Building and sending login request through Spotify built activity
+        // Request access token from Spotify
+        requestNewAccessToken();
+    }
+
+
+    /**
+     * Use Spotify login activity to retrieve an access token
+     */
+    private void requestNewAccessToken() {
         AuthenticationRequest.Builder builder = new AuthenticationRequest.Builder(
                 AppConstants.CLIENT_ID,
                 AuthenticationResponse.Type.TOKEN,
                 AppConstants.REDIRECT_URI);
         builder.setScopes(new String[]{"user-read-private", "streaming", "playlist-modify-private", "app-remote-control"});
         AuthenticationRequest request = builder.build();
-        AuthenticationClient.openLoginActivity(this, AppConstants.SPOTIFY_LOGIN_REQUEST, request);
+        AuthenticationClient.openLoginActivity(this, AppConstants.SPOTIFY_AUTHENTICATION_REQUEST, request);
     }
 
     private void initUi() {
@@ -152,24 +183,37 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
 
         // Check if result comes from the correct activity
         switch (requestCode) {
-            case AppConstants.SPOTIFY_LOGIN_REQUEST:
+            case AppConstants.SPOTIFY_AUTHENTICATION_REQUEST:
                 AuthenticationResponse response = AuthenticationClient.getResponse(resultCode, intent);
                 if (response.getType() == AuthenticationResponse.Type.TOKEN) {
                     Log.d(TAG, "Access token granted");
 
-                    // Initialize spotify elements and create playlist for queue
+                    // Store when access token expires (response "ExpiresIn" is in seconds, subtract a minute to worry less about timing)
+                    mSystemAccessExpireTime = System.currentTimeMillis() + (response.getExpiresIn() - 60) * 1000;
+
                     ApplicationUtils.setAccessToken(response.getAccessToken());
-                    initSpotifyElements(response.getAccessToken());
 
-                    // Start service that will play and control queue
-                    Intent startPlayQueueIntent = new Intent(this, PlayQueueService.class);
-                    startPlayQueueIntent.putExtra(AppConstants.SERVICE_PLAYLIST_ID_KEY, mPlaylist.id);
+                    // Start thread responsible for notifying UI thread when new access token is needed
+                    new AccessRefreshThread().start();
 
-                    mIsServiceBound = bindService(startPlayQueueIntent, mServiceConnection, Context.BIND_AUTO_CREATE);
+                    if (mPlayQueueService == null) {
+                        Log.d(TAG, "First access token granted.  Init Spotify elements, play queue service, and start host connection");
+                        // Initialize spotify elements and create playlist for queue
+                        initSpotifyElements(response.getAccessToken());
 
+                        // Start service that will play and control queue
+                        Intent startPlayQueueIntent = new Intent(this, PlayQueueService.class);
+                        startPlayQueueIntent.putExtra(AppConstants.SERVICE_PLAYLIST_ID_KEY, mPlaylist.id);
 
-                    // All logged in and good to go.  Start host connection.
-                    startHostConnection(getIntent().getStringExtra(AppConstants.QUEUE_TITLE_KEY));
+                        mIsServiceBound = bindService(startPlayQueueIntent, mServiceConnection, Context.BIND_AUTO_CREATE);
+
+                        // All logged in and good to go.  Start host connection.
+                        startHostConnection(getIntent().getStringExtra(AppConstants.QUEUE_TITLE_KEY));
+                    } else {
+                        Log.d(TAG, "New access token granted.  Update Spotify Api and service");
+                        mSpotifyApi.setAccessToken(response.getAccessToken());
+                        mSpotifyService = mSpotifyApi.getService();
+                    }
                 } else {
                     Log.d(TAG, "Authentication Response: " + response.getError());
                     Toast.makeText(HostActivity.this, getString(R.string.toast_authentication_error_host), Toast.LENGTH_SHORT).show();
@@ -190,6 +234,7 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
         SpotifyComponent componenet = DaggerSpotifyComponent.builder().spotifyModule(
                 new SpotifyModule(accessToken)).build();
 
+        mSpotifyApi = componenet.api();
         mSpotifyService = componenet.service();
 
         mCurrentUser = mSpotifyService.getMe();
@@ -383,6 +428,9 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
         }
 
         unfollowQueuePlaylist();
+
+        // This should trigger access request thread to end if it is running
+        mSystemAccessExpireTime = -1;
         super.onDestroy();
     }
 
@@ -469,6 +517,29 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
         mQueueDisplayAdapter.updateQueueList(mPlaylist.tracks.items.subList(mCachedPlayingIndex, mPlaylist.tracks.items.size()));
 
         notifyClientsQueueUpdated(mCachedPlayingIndex);
+    }
+
+
+    /**
+     * Inner thread class used to detect when a new access code is needed and send message to handler to request a new one.
+     */
+    private class AccessRefreshThread extends Thread {
+        AccessRefreshThread() {
+            super(new Runnable() {
+                @Override
+                public void run() {
+                    while (true) {
+                        if (System.currentTimeMillis() >= mSystemAccessExpireTime) {
+                            Log.d(TAG, "Detected that we need a new access token");
+                            Message message = new Message();
+                            message.what = AppConstants.ACCESS_TOKEN_REFRESH;
+                            mHandler.dispatchMessage(message);
+                            break;
+                        }
+                    }
+                }
+            });
+        }
     }
 
     private void setupShortDemoQueue() {
