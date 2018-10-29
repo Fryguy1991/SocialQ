@@ -61,7 +61,8 @@ class QueueConnectActivityNearbyDevices : QueueConnectActivity(), NearbyDevicesA
                 })
                 .addOnFailureListener(object: OnFailureListener {
                     override fun onFailure(p0: Exception) {
-                        Log.d(TAG, "Failed to start device discovery for SocialQ Hosts")
+                        Log.e(TAG, "Failed to start device discovery for SocialQ Hosts")
+                        Log.e(TAG, p0.message)
                     }
                 })
     }
