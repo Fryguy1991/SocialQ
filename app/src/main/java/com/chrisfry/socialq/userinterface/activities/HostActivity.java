@@ -26,7 +26,7 @@ import com.chrisfry.socialq.business.dagger.modules.SpotifyModule;
 import com.chrisfry.socialq.business.dagger.modules.components.DaggerSpotifyComponent;
 import com.chrisfry.socialq.business.dagger.modules.components.SpotifyComponent;
 import com.chrisfry.socialq.model.SongRequestData;
-import com.chrisfry.socialq.userinterface.adapters.PlaylistTrackListAdapter;
+import com.chrisfry.socialq.userinterface.adapters.HostTrackListAdapter;
 import com.spotify.sdk.android.authentication.AuthenticationClient;
 import com.spotify.sdk.android.authentication.AuthenticationRequest;
 import com.spotify.sdk.android.authentication.AuthenticationResponse;
@@ -61,7 +61,7 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
 
     // Track list elements
     private RecyclerView mQueueList;
-    private PlaylistTrackListAdapter mQueueDisplayAdapter;
+    private HostTrackListAdapter mTrackDisplayAdapter;
 
     // Spotify elements
     private SpotifyApi mSpotifyApi;
@@ -137,6 +137,7 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
         StrictMode.setThreadPolicy(policy);
 
         // Request access token from Spotify
+        Log.d(TAG, "Requesting access token from Spotify");
         requestNewAccessToken();
     }
 
@@ -455,8 +456,8 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
     }
 
     private void setupQueueList() {
-        mQueueDisplayAdapter = new PlaylistTrackListAdapter(new ArrayList<PlaylistTrack>());
-        mQueueList.setAdapter(mQueueDisplayAdapter);
+        mTrackDisplayAdapter = new HostTrackListAdapter(getApplicationContext());
+        mQueueList.setAdapter(mTrackDisplayAdapter);
         LinearLayoutManager layoutManager = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
         mQueueList.setLayoutManager(layoutManager);
         mQueueList.addItemDecoration(new QueueItemDecoration(getApplicationContext()));
@@ -481,9 +482,9 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
         // Refresh playlist and update UI
         refreshPlaylist();
         if (currentPlayingIndex >= mPlaylist.tracks.items.size()) {
-            mQueueDisplayAdapter.updateQueueList(new ArrayList<PlaylistTrack>());
+            mTrackDisplayAdapter.updateAdapter(new ArrayList<PlaylistTrack>());
         } else {
-            mQueueDisplayAdapter.updateQueueList(mPlaylist.tracks.items.subList(currentPlayingIndex, mPlaylist.tracks.items.size()));
+            mTrackDisplayAdapter.updateAdapter(mPlaylist.tracks.items.subList(currentPlayingIndex, mPlaylist.tracks.items.size()));
         }
 
         // Notify clients queue has been updated
@@ -514,7 +515,7 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
     public void onQueueUpdated() {
         // Refresh playlist and update UI
         refreshPlaylist();
-        mQueueDisplayAdapter.updateQueueList(mPlaylist.tracks.items.subList(mCachedPlayingIndex, mPlaylist.tracks.items.size()));
+        mTrackDisplayAdapter.updateAdapter(mPlaylist.tracks.items.subList(mCachedPlayingIndex, mPlaylist.tracks.items.size()));
 
         notifyClientsQueueUpdated(mCachedPlayingIndex);
     }

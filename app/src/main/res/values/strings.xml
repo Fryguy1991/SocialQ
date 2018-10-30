@@ -12,6 +12,7 @@
     <string name="play_btn">Play</string>
     <string name="pause_btn">Pause</string>
     <string name="toast_authentication_error_host">Authentication Error</string>
+    <string name="added_by_client_formatter">Added By: %1$s</string>
 
     <!-- Client Screen Strings -->
     <string name="toast_authentication_error_client">Authentication Error</string>

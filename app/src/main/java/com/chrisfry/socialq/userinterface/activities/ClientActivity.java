@@ -17,7 +17,7 @@ import com.chrisfry.socialq.business.AppConstants;
 import com.chrisfry.socialq.business.dagger.modules.SpotifyModule;
 import com.chrisfry.socialq.business.dagger.modules.components.DaggerSpotifyComponent;
 import com.chrisfry.socialq.business.dagger.modules.components.SpotifyComponent;
-import com.chrisfry.socialq.userinterface.adapters.PlaylistTrackListAdapter;
+import com.chrisfry.socialq.userinterface.adapters.BasicTrackListAdapter;
 import com.chrisfry.socialq.userinterface.widgets.QueueItemDecoration;
 import com.chrisfry.socialq.utils.ApplicationUtils;
 import com.spotify.sdk.android.authentication.AuthenticationClient;
@@ -26,18 +26,15 @@ import com.spotify.sdk.android.authentication.AuthenticationResponse;
 import com.spotify.sdk.android.player.ConnectionStateCallback;
 import com.spotify.sdk.android.player.Error;
 
-import java.util.ArrayList;
-
 import kaaes.spotify.webapi.android.SpotifyService;
 import kaaes.spotify.webapi.android.models.Playlist;
-import kaaes.spotify.webapi.android.models.PlaylistTrack;
 
 public abstract class ClientActivity extends AppCompatActivity implements ConnectionStateCallback {
     private final String TAG = ClientActivity.class.getName();
 
     // Elements for queue display
     private RecyclerView mQueueList;
-    private PlaylistTrackListAdapter mQueueDisplayAdapter;
+    private BasicTrackListAdapter mTrackDisplayAdapter;
 
     // Spotify API elements
     private SpotifyService mSpotifyService;
@@ -70,6 +67,7 @@ public abstract class ClientActivity extends AppCompatActivity implements Connec
         builder.setScopes(new String[]{"user-read-private"});
         AuthenticationRequest request = builder.build();
 
+        Log.d(TAG, "Requesting access token from Spotify");
         AuthenticationClient.openLoginActivity(this, AppConstants.SPOTIFY_AUTHENTICATION_REQUEST, request);
 
         initUi();
@@ -175,8 +173,8 @@ public abstract class ClientActivity extends AppCompatActivity implements Connec
     }
 
     private void setupQueueList() {
-        mQueueDisplayAdapter = new PlaylistTrackListAdapter(new ArrayList<PlaylistTrack>());
-        mQueueList.setAdapter(mQueueDisplayAdapter);
+        mTrackDisplayAdapter = new BasicTrackListAdapter();
+        mQueueList.setAdapter(mTrackDisplayAdapter);
         LinearLayoutManager layoutManager = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
         mQueueList.setLayoutManager(layoutManager);
         mQueueList.addItemDecoration(new QueueItemDecoration(getApplicationContext()));
@@ -185,7 +183,7 @@ public abstract class ClientActivity extends AppCompatActivity implements Connec
     protected void updateQueue(int currentPlayingIndex) {
         if (currentPlayingIndex >= 0) {
             refreshPlaylist();
-            mQueueDisplayAdapter.updateQueueList(mPlaylist.tracks.items.subList(currentPlayingIndex, mPlaylist.tracks.items.size()));
+            mTrackDisplayAdapter.updateAdapter(mPlaylist.tracks.items.subList(currentPlayingIndex, mPlaylist.tracks.items.size()));
         }
     }
 
