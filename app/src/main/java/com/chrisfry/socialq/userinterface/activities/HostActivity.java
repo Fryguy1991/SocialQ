@@ -214,6 +214,9 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
                         Log.d(TAG, "New access token granted.  Update Spotify Api and service");
                         mSpotifyApi.setAccessToken(response.getAccessToken());
                         mSpotifyService = mSpotifyApi.getService();
+
+                        // Update service with new access token
+                        mPlayQueueService.notifyServiceAccessTokenChanged(response.getAccessToken());
                     }
                 } else {
                     Log.d(TAG, "Authentication Response: " + response.getError());

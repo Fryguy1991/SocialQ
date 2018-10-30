@@ -26,6 +26,7 @@ import com.spotify.sdk.android.player.SpotifyPlayer;
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 
+import kaaes.spotify.webapi.android.SpotifyApi;
 import kaaes.spotify.webapi.android.SpotifyService;
 import kaaes.spotify.webapi.android.models.Playlist;
 import kaaes.spotify.webapi.android.models.UserPrivate;
@@ -41,6 +42,8 @@ public class PlayQueueService extends Service implements ConnectionStateCallback
     private final IBinder mPlayQueueBinder = new PlayQueueBinder();
     // Member player object used for playing audio
     private SpotifyPlayer mSpotifyPlayer;
+    // API for retrieve SpotifyService object
+    private SpotifyApi mSpotifyApi;
     // Service for adding songs to the queue
     private SpotifyService mSpotifyService;
     // List to contain objects listening for queue changed events
@@ -139,6 +142,7 @@ public class PlayQueueService extends Service implements ConnectionStateCallback
         SpotifyComponent componenet = DaggerSpotifyComponent.builder().spotifyModule(
                 new SpotifyModule(accessToken)).build();
 
+        mSpotifyApi = componenet.api();
         mSpotifyService = componenet.service();
         
         mCurrentUser = mSpotifyService.getMe();
@@ -206,6 +210,12 @@ public class PlayQueueService extends Service implements ConnectionStateCallback
         refreshPlaylist();
         mIncorrectQueueMetaDataFlag = true;
         notifyQueueChanged();
+    }
+
+    public void notifyServiceAccessTokenChanged(String accessToken) {
+        Log.d(TAG, "Updating Spotify API and service with new access token");
+        mSpotifyApi.setAccessToken(accessToken);
+        mSpotifyService = mSpotifyApi.getService();
     }
 
     @Override
