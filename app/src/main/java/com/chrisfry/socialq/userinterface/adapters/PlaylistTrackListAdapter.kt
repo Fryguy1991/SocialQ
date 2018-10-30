@@ -17,7 +17,7 @@ class PlaylistTrackListAdapter() : RecyclerView.Adapter<BaseTrackHolder>() {
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseTrackHolder {
-        return BaseTrackHolder(LayoutInflater.from(parent.context).inflate(R.layout.track_list_holder, parent, false))
+        return BaseTrackHolder(LayoutInflater.from(parent.context).inflate(R.layout.base_track_holder, parent, false))
     }
 
     override fun getItemCount(): Int {
