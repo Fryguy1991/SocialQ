@@ -104,7 +104,7 @@ class HostActivityNearbyDevices : HostActivity() {
 
     }
 
-    fun getSongRequestFromPayload(payloadString: String): SongRequestData {
+    private fun getSongRequestFromPayload(payloadString: String): SongRequestData {
         var pattern = Pattern.compile(AppConstants.FULL_SONG_REQUEST_REGEX)
         var matcher = pattern.matcher(payloadString)
         // Ensure a proper format has been sent for the track request

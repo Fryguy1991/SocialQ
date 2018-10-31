@@ -37,13 +37,16 @@ import kaaes.spotify.webapi.android.models.Track;
 
 import com.chrisfry.socialq.userinterface.adapters.BasicArtistListAdapter;
 import com.chrisfry.socialq.userinterface.adapters.SearchTrackListAdapter;
+import com.chrisfry.socialq.userinterface.adapters.SelectableArtistListAdapter;
 import com.chrisfry.socialq.userinterface.widgets.QueueItemDecoration;
 import com.chrisfry.socialq.utils.ApplicationUtils;
+
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Activity for searching Spotify tracks
  */
-public class SearchActivity extends AppCompatActivity implements SearchTrackListAdapter.TrackSelectionListener {
+public class SearchActivity extends AppCompatActivity implements SearchTrackListAdapter.TrackSelectionListener, SelectableArtistListAdapter.ArtistSelectListener {
     private final String TAG = SearchActivity.class.getName();
 
     // Spotify search references
@@ -72,7 +75,7 @@ public class SearchActivity extends AppCompatActivity implements SearchTrackList
 
     // Recycler view adapters
     private SearchTrackListAdapter mSongResultsAdapter;
-    private BasicArtistListAdapter mArtistResultsAdapter = new BasicArtistListAdapter(this);
+    private BasicArtistListAdapter mArtistResultsAdapter = new SelectableArtistListAdapter(this);
     // TODO: Album adapter
 
     @Override
@@ -288,5 +291,10 @@ public class SearchActivity extends AppCompatActivity implements SearchTrackList
         resultIntent.putExtra(AppConstants.SEARCH_RESULTS_EXTRA_KEY, track.uri);
         setResult(RESULT_OK, resultIntent);
         finish();
+    }
+
+    @Override
+    public void onArtistSelected(@NotNull String artistId) {
+        Log.d(TAG, "Selected artist with ID: " + artistId);
     }
 }
