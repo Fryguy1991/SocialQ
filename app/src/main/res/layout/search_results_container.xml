@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@color/Inactive_Button_Color"
+    android:background="@color/Active_Button_Color"
     android:animateLayoutChanges="true">
 
     <TextView
@@ -20,7 +20,8 @@
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintHorizontal_chainStyle="spread_inside"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        android:textColor="@color/White"/>
 
     <ImageView
         android:id="@+id/iv_result_arrow"

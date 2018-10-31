@@ -4,7 +4,6 @@ import android.content.Context
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import com.chrisfry.socialq.R
-import com.chrisfry.socialq.userinterface.adapters.holders.BaseRecyclerViewAdapter
 import com.chrisfry.socialq.userinterface.adapters.holders.HostTrackHolder
 import com.chrisfry.socialq.utils.DisplayUtils
 import kaaes.spotify.webapi.android.models.PlaylistTrack

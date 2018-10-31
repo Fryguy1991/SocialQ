@@ -15,7 +15,7 @@ import com.chrisfry.socialq.utils.DisplayUtils;
 /**
  * Adapter for displaying queue tracks
  */
-public class TrackListAdapter extends RecyclerView.Adapter implements TrackHolder.ItemSelectionListener {
+public class SearchTrackListAdapter extends RecyclerView.Adapter implements TrackHolder.ItemSelectionListener {
     // Reference to queue track list
     private List<Track> mTrackList;
     // String for uri of track with exposed add button
@@ -23,7 +23,7 @@ public class TrackListAdapter extends RecyclerView.Adapter implements TrackHolde
 
     private TrackSelectionListener mTrackSelectionListener;
 
-    public TrackListAdapter(List<Track> trackList) {
+    public SearchTrackListAdapter(List<Track> trackList) {
         mTrackList = trackList;
     }
 

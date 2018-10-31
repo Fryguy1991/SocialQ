@@ -13,6 +13,7 @@ import android.util.Log;
 import android.widget.Button;
 import android.widget.TextView;
 
+import com.chrisfry.socialq.userinterface.adapters.HostTrackListAdapter;
 import com.spotify.sdk.android.player.Error;
 
 import java.io.IOException;
@@ -29,7 +30,6 @@ import kaaes.spotify.webapi.android.SpotifyService;
 import kaaes.spotify.webapi.android.models.Track;
 import com.chrisfry.socialq.services.BluetoothAcceptThread;
 import com.chrisfry.socialq.services.PlayQueueService;
-import com.chrisfry.socialq.userinterface.adapters.TrackListAdapter;
 
 public class HostActivityBluetooth extends HostActivity implements BluetoothConnectionListener{
     private final String TAG = HostActivityBluetooth.class.getName();
@@ -50,7 +50,7 @@ public class HostActivityBluetooth extends HostActivity implements BluetoothConn
 
     // Track list elements
     private RecyclerView mQueueList;
-    private TrackListAdapter mQueueDisplayAdapter;
+    private HostTrackListAdapter mQueueDisplayAdapter;
 
     // Spotify elements
     private SpotifyApi mApi;

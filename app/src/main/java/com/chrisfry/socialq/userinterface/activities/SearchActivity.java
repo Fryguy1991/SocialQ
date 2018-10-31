@@ -1,6 +1,5 @@
 package com.chrisfry.socialq.userinterface.activities;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.constraint.ConstraintLayout;
@@ -36,14 +35,15 @@ import kaaes.spotify.webapi.android.models.AlbumSimple;
 import kaaes.spotify.webapi.android.models.Artist;
 import kaaes.spotify.webapi.android.models.Track;
 
-import com.chrisfry.socialq.userinterface.adapters.TrackListAdapter;
+import com.chrisfry.socialq.userinterface.adapters.BasicArtistListAdapter;
+import com.chrisfry.socialq.userinterface.adapters.SearchTrackListAdapter;
 import com.chrisfry.socialq.userinterface.widgets.QueueItemDecoration;
 import com.chrisfry.socialq.utils.ApplicationUtils;
 
 /**
  * Activity for searching Spotify tracks
  */
-public class SearchActivity extends AppCompatActivity implements TrackListAdapter.TrackSelectionListener {
+public class SearchActivity extends AppCompatActivity implements SearchTrackListAdapter.TrackSelectionListener {
     private final String TAG = SearchActivity.class.getName();
 
     // Spotify search references
@@ -60,6 +60,7 @@ public class SearchActivity extends AppCompatActivity implements TrackListAdapte
     private TextView mSongText;
     private TextView mAlbumText;
     private RecyclerView mSongResults;
+    private RecyclerView mArtistResults;
 
     @BindViews({R.id.cv_song_result_layout, R.id.cv_artist_result_layout, R.id.cv_album_result_layout})
     List<View> mResultsBaseViews;
@@ -70,8 +71,8 @@ public class SearchActivity extends AppCompatActivity implements TrackListAdapte
     private List<AlbumSimple> mResultAlbumList = new ArrayList<>();
 
     // Recycler view adapters
-    private TrackListAdapter mSongResultsAdapter;
-    // TODO: Artist adapter
+    private SearchTrackListAdapter mSongResultsAdapter;
+    private BasicArtistListAdapter mArtistResultsAdapter = new BasicArtistListAdapter(this);
     // TODO: Album adapter
 
     @Override
@@ -134,11 +135,17 @@ public class SearchActivity extends AppCompatActivity implements TrackListAdapte
         mAlbumText = mAlbumLayout.findViewById(R.id.tv_result_text);
 
         mSongResults = mSongLayout.findViewById(R.id.rv_result_recycler_view);
-        mSongResultsAdapter = new TrackListAdapter(new ArrayList<Track>());
+        mSongResultsAdapter = new SearchTrackListAdapter(new ArrayList<Track>());
         mSongResults.setAdapter(mSongResultsAdapter);
-        LinearLayoutManager layoutManager = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
-        mSongResults.setLayoutManager(layoutManager);
+        LinearLayoutManager songsLayoutManager = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
+        mSongResults.setLayoutManager(songsLayoutManager);
         mSongResults.addItemDecoration(new QueueItemDecoration(getApplicationContext()));
+
+        mArtistResults = mArtistLayout.findViewById(R.id.rv_result_recycler_view);
+        mArtistResults.setAdapter(mArtistResultsAdapter);
+        LinearLayoutManager artistsLayoutManager = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
+        mArtistResults.setLayoutManager(artistsLayoutManager);
+        mArtistResults.addItemDecoration(new QueueItemDecoration(getApplicationContext()));
     }
 
     private void addListeners() {
@@ -174,7 +181,6 @@ public class SearchActivity extends AppCompatActivity implements TrackListAdapte
                 view.findViewById(R.id.iv_result_arrow).setRotation(isCurrentlyVisible ? 0 : 180);
 
                 ConstraintSet constraintSet = new ConstraintSet();
-                constraintSet.clone(mMainLayout);
                 if (isCurrentlyVisible) {
                     // If closing category show hidden categories (with results)
                     updateVisibilityBasedOnResults();
@@ -182,19 +188,21 @@ public class SearchActivity extends AppCompatActivity implements TrackListAdapte
 
                     // Bottom of view should no longer be constrained
                     // Height should return to wrap content
+                    constraintSet.clone(mMainLayout);
                     constraintSet.clear(view.getId(), ConstraintSet.BOTTOM);
                     constraintSet.constrainHeight(view.getId(), ConstraintSet.WRAP_CONTENT);
                 } else {
                     // If clicking on a category hide other categories
                     Log.d(TAG, "Hiding all but touched layout");
                     for (View baseView : mResultsBaseViews) {
-                        if (!baseView.equals(view)) {
+                        if (!(baseView.getId() == view.getId())) {
                             baseView.setVisibility(View.GONE);
                         }
                     }
 
                     // Bottom of view should be constrained to bottom of parent
                     // Height should match constraint
+                    constraintSet.clone(mMainLayout);
                     constraintSet.connect(view.getId(), ConstraintSet.BOTTOM, mMainLayout.getId(), ConstraintSet.BOTTOM, 8);
                     constraintSet.constrainHeight(view.getId(), ConstraintSet.MATCH_CONSTRAINT);
                 }
@@ -225,7 +233,7 @@ public class SearchActivity extends AppCompatActivity implements TrackListAdapte
         options.put(SpotifyService.LIMIT, 50);
 
         // Get results from spotify
-//        mResultArtistList = mSpotifyService.searchArtists(searchText, options).artists.items;
+        mResultArtistList = mSpotifyService.searchArtists(searchText, options).artists.items;
 //        mResultAlbumList = mSpotifyService.searchAlbums(searchText, options).albums.items;
         mResultTrackList = mSpotifyService.searchTracks(searchText, options).tracks.items;
 
@@ -252,6 +260,8 @@ public class SearchActivity extends AppCompatActivity implements TrackListAdapte
 
     private void updateAdapters() {
         mSongResultsAdapter.updateQueueList(mResultTrackList);
+        mArtistResultsAdapter.updateAdapter(mResultArtistList);
+
         // TODO: Update artist and album adapters once we have them
     }
 

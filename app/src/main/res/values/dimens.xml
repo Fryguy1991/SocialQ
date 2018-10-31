@@ -15,5 +15,9 @@
     <!-- Elevation Dimens -->
     <dimen name="standard_elevation">5dp</dimen>
 
+    <!-- Host Dialog Options Dimens -->
     <dimen name="queue_dialog_side_margin">25dp</dimen>
+
+    <!-- Search Dimens -->
+    <dimen name="artist_picture_size">50dp</dimen>
 </resources>
