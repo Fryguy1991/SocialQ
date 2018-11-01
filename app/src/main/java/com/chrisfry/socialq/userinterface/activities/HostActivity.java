@@ -269,6 +269,8 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
                 if (injectNewTrack(songRequest)) {
                     // If we changed the next track notify service meta data is out of sync
                     mPlayQueueService.notifyServiceMetaDataIsStale();
+                } else {
+                    mPlayQueueService.notifyServiceQueueHasChanged();
                 }
             } else {
                 addTrackToPlaylist(songRequest.getUri());
