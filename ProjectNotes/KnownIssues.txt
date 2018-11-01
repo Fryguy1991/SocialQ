@@ -1,4 +1,5 @@
 - BUG: New add button for searching tracks is appearing in queue display (host activity).  Will probably be displayed in client activity too.  Should use different holder with less functionality.
+-- SOLUTION: Using a new holder/adapter in host/client that doesn't have this functionality.
 
 - Enhancement: Sure there is a better way to remove add icon (search tracks) than refreshing entire data set.
 
@@ -11,3 +12,5 @@
 -- SOLUTION?: Request a new access token using Spotify login activity when access token is no longer valid
 
 - BUG: Location permission sometimes gets turned off.  Re-request this?
+
+DON'T UPDATE THIS ANYMORE.  USE YOUR ASANA PROJECT YOU IDIOT.
