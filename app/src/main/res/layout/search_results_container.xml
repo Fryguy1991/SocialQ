@@ -30,7 +30,7 @@
         android:layout_marginTop="8dp"
         android:layout_marginEnd="8dp"
         android:layout_marginBottom="8dp"
-        android:src="@mipmap/up_arrow_head"
+        android:src="@mipmap/up_arrow_head_white"
         app:layout_constraintTop_toTopOf="@id/tv_result_text"
         app:layout_constraintBottom_toBottomOf="@id/tv_result_text"
         app:layout_constraintEnd_toEndOf="parent"/>

@@ -37,7 +37,7 @@
         android:layout_height="30dp"
         android:paddingStart="8dp"
         android:scaleType="centerInside"
-        android:src="@mipmap/icons8_add_icon"
+        android:src="@mipmap/icons8_add_icon_white"
         android:visibility="invisible"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintDimensionRatio="h,1:1"
