@@ -9,7 +9,7 @@ import java.util.List;
 import butterknife.ButterKnife;
 import kaaes.spotify.webapi.android.models.ArtistSimple;
 import kaaes.spotify.webapi.android.models.PlaylistTrack;
-import kaaes.spotify.webapi.android.models.Track;
+import kaaes.spotify.webapi.android.models.TrackSimple;
 
 /**
  * Utils class for shared display methods
@@ -22,7 +22,7 @@ public class DisplayUtils {
      * @param track - track to get artist string from
      * @return - string containing artists in above format
      */
-    public static String getTrackArtistString(Track track) {
+    public static String getTrackArtistString(TrackSimple track) {
         List<ArtistSimple> trackArtists = track.artists;
         String artistString = "";
         for(ArtistSimple artist : trackArtists) {

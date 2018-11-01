@@ -16,7 +16,7 @@ abstract class BaseRecyclerViewAdapter<T : RecyclerView.ViewHolder, E> : Recycle
         return itemList.size
     }
 
-    fun updateAdapter(newItemList : MutableList<E>) {
+    fun updateAdapter(newItemList : List<E>) {
         itemList = newItemList
         notifyDataSetChanged()
     }

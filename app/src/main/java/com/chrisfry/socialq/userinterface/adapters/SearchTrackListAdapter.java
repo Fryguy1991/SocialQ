@@ -8,7 +8,8 @@ import android.view.ViewGroup;
 import java.util.List;
 
 import com.chrisfry.socialq.R;
-import kaaes.spotify.webapi.android.models.Track;
+import kaaes.spotify.webapi.android.models.TrackSimple;
+
 import com.chrisfry.socialq.userinterface.adapters.holders.TrackHolder;
 import com.chrisfry.socialq.utils.DisplayUtils;
 
@@ -17,13 +18,13 @@ import com.chrisfry.socialq.utils.DisplayUtils;
  */
 public class SearchTrackListAdapter extends RecyclerView.Adapter implements TrackHolder.ItemSelectionListener {
     // Reference to queue track list
-    private List<Track> mTrackList;
+    protected List<TrackSimple> mTrackList;
     // String for uri of track with exposed add button
-    private String mExposedUri = "";
+    protected String mExposedUri = "";
 
     private TrackSelectionListener mTrackSelectionListener;
 
-    public SearchTrackListAdapter(List<Track> trackList) {
+    public SearchTrackListAdapter(List<TrackSimple> trackList) {
         mTrackList = trackList;
     }
 
@@ -37,7 +38,7 @@ public class SearchTrackListAdapter extends RecyclerView.Adapter implements Trac
     @Override
     public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
         TrackHolder trackHolder = (TrackHolder) holder;
-        Track track = mTrackList.get(position);
+        TrackSimple track = mTrackList.get(position);
         trackHolder.setArtistName(DisplayUtils.getTrackArtistString(track));
         trackHolder.setTrackName(track.name);
         trackHolder.setTrackUri(track.uri);
@@ -50,15 +51,15 @@ public class SearchTrackListAdapter extends RecyclerView.Adapter implements Trac
         return mTrackList.size();
     }
 
-    public void updateQueueList(List<Track> newQueue) {
-        mTrackList = newQueue;
+    public void updateQueueList(List<? extends TrackSimple> newQueue) {
+        mTrackList = (List<TrackSimple>) newQueue;
         notifyDataSetChanged();
     }
 
     @Override
     public void onTrackSelected(String uri) {
         if (mTrackSelectionListener != null) {
-            for (Track track : mTrackList) {
+            for (TrackSimple track : mTrackList) {
                 if (track.uri.equals(uri)) {
                     mTrackSelectionListener.onTrackSelection(track);
                     break;
@@ -77,7 +78,7 @@ public class SearchTrackListAdapter extends RecyclerView.Adapter implements Trac
     }
 
     public interface TrackSelectionListener {
-        void onTrackSelection(Track track);
+        void onTrackSelection(TrackSimple track);
     }
 
     public void setTrackSelectionListener(TrackSelectionListener listener) {

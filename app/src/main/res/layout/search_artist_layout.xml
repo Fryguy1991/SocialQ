@@ -1,107 +1,105 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:background="@color/Active_Button_Color"
-    android:animateLayoutChanges="true">
+    android:background="@color/Active_Button_Color">
 
+    <!-- Artist Result/Album Header -->
     <android.support.constraint.ConstraintLayout
         android:id="@+id/cl_artist_header_view"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:animateLayoutChanges="true">
 
-    <ImageView
-        android:id="@+id/iv_left_arrow"
-        android:layout_width="30dp"
-        android:layout_height="30dp"
-        android:src="@mipmap/left_arrow_white"
-        android:scaleType="centerInside"
-        android:scaleX=".6"
-        android:scaleY=".6"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@id/tv_result_text"
-        app:layout_constraintBottom_toBottomOf="@id/tv_result_text"
-        android:layout_marginTop="@dimen/default_margin"
-        android:layout_marginStart="@dimen/default_margin"
-        android:layout_marginBottom="@dimen/default_margin"
-        android:layout_marginEnd="@dimen/default_margin"
-        android:visibility="gone"/>
-    
-    <TextView
-        android:id="@+id/tv_result_text"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
-        android:layout_marginEnd="8dp"
-        android:layout_marginBottom="8dp"
-        android:textColor="@color/White"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toEndOf="@id/iv_left_arrow"
-        app:layout_constraintEnd_toStartOf="@+id/iv_result_arrow"
-        app:layout_constraintTop_toTopOf="parent"/>
+        <ImageView
+            android:id="@+id/iv_left_arrow"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_marginStart="@dimen/default_margin"
+            android:layout_marginTop="@dimen/default_margin"
+            android:layout_marginEnd="@dimen/default_margin"
+            android:layout_marginBottom="@dimen/default_margin"
+            android:scaleType="centerInside"
+            android:scaleX=".6"
+            android:scaleY=".6"
+            android:src="@mipmap/left_arrow_white"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
-    <ImageView
-        android:id="@+id/iv_result_arrow"
-        android:layout_width="30dp"
-        android:layout_height="30dp"
-        android:layout_marginTop="8dp"
-        android:layout_marginEnd="8dp"
-        android:layout_marginBottom="8dp"
-        android:src="@mipmap/up_arrow_head_white"
-        app:layout_constraintBottom_toBottomOf="@id/tv_result_text"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@id/tv_result_text" />
+        <TextView
+            android:id="@+id/tv_result_text"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginBottom="8dp"
+            android:textColor="@color/White"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/iv_result_arrow"
+            app:layout_constraintStart_toEndOf="@id/iv_left_arrow"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <ImageView
+            android:id="@+id/iv_result_arrow"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginBottom="8dp"
+            android:src="@mipmap/up_arrow_head_white"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
     </android.support.constraint.ConstraintLayout>
-    
 
 
+    <!-- Top Track Header -->
     <android.support.constraint.ConstraintLayout
         android:id="@+id/cl_top_track_header"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:layout_constraintTop_toBottomOf="@id/cl_artist_header_view"
-        app:layout_constraintStart_toStartOf="parent"
+        android:visibility="gone"
         app:layout_constraintEnd_toEndOf="parent"
-        android:visibility="gone">
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/cl_artist_header_view">
 
         <View
             android:id="@+id/header_divider"
             android:layout_width="match_parent"
             android:layout_height="1dp"
             android:background="@color/Pressed_Button_Color"
-            app:layout_constraintTop_toTopOf="parent"
-            android:visibility="gone"/>
+            android:visibility="gone"
+            app:layout_constraintTop_toTopOf="parent" />
 
-    <TextView
-        android:id="@+id/tv_top_track_text"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="46dp"
-        android:layout_marginTop="8dp"
-        android:layout_marginEnd="8dp"
-        android:layout_marginBottom="8dp"
-        android:textColor="@color/White"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toStartOf="@id/iv_top_track_result_arrow"
-        app:layout_constraintTop_toBottomOf="@id/header_divider"
-        android:text="Top Tracks"/>
+        <TextView
+            android:id="@+id/tv_top_track_text"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="46dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginBottom="8dp"
+            android:text="Top Tracks"
+            android:textColor="@color/White"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/iv_top_track_result_arrow"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/header_divider" />
 
-    <ImageView
-        android:id="@+id/iv_top_track_result_arrow"
-        android:layout_width="30dp"
-        android:layout_height="30dp"
-        android:layout_marginTop="8dp"
-        android:layout_marginEnd="8dp"
-        android:layout_marginBottom="8dp"
-        android:src="@mipmap/up_arrow_head_white"
-        app:layout_constraintStart_toEndOf="@id/tv_top_track_text"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/header_divider" />
+        <ImageView
+            android:id="@+id/iv_top_track_result_arrow"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginBottom="8dp"
+            android:src="@mipmap/up_arrow_head_white"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/tv_top_track_text"
+            app:layout_constraintTop_toBottomOf="@id/header_divider" />
     </android.support.constraint.ConstraintLayout>
 
     <View
@@ -109,8 +107,8 @@
         android:layout_width="match_parent"
         android:layout_height="1dp"
         android:background="@color/Pressed_Button_Color"
-        app:layout_constraintTop_toBottomOf="@id/cl_top_track_header"
-        android:visibility="gone"/>
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@id/cl_top_track_header" />
 
     <android.support.v7.widget.RecyclerView
         android:id="@+id/rv_result_recycler_view"
@@ -126,4 +124,4 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/results_divider" />
 
-</android.support.constraint.ConstraintLayout>
+</merge>

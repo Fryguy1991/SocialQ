@@ -31,14 +31,17 @@ import com.chrisfry.socialq.R;
 import butterknife.BindViews;
 import butterknife.ButterKnife;
 import kaaes.spotify.webapi.android.SpotifyService;
+import kaaes.spotify.webapi.android.models.Album;
 import kaaes.spotify.webapi.android.models.AlbumSimple;
 import kaaes.spotify.webapi.android.models.Artist;
+import kaaes.spotify.webapi.android.models.Pager;
 import kaaes.spotify.webapi.android.models.Track;
+import kaaes.spotify.webapi.android.models.TrackSimple;
+import kaaes.spotify.webapi.android.models.Tracks;
 
-import com.chrisfry.socialq.userinterface.adapters.BasicArtistListAdapter;
 import com.chrisfry.socialq.userinterface.adapters.SearchTrackListAdapter;
-import com.chrisfry.socialq.userinterface.adapters.SelectableArtistListAdapter;
 import com.chrisfry.socialq.userinterface.widgets.QueueItemDecoration;
+import com.chrisfry.socialq.userinterface.widgets.SearchArtistView;
 import com.chrisfry.socialq.utils.ApplicationUtils;
 
 import org.jetbrains.annotations.NotNull;
@@ -46,7 +49,7 @@ import org.jetbrains.annotations.NotNull;
 /**
  * Activity for searching Spotify tracks
  */
-public class SearchActivity extends AppCompatActivity implements SearchTrackListAdapter.TrackSelectionListener, SelectableArtistListAdapter.ArtistSelectListener {
+public class SearchActivity extends AppCompatActivity implements SearchTrackListAdapter.TrackSelectionListener, SearchArtistView.SearchArtistViewPresenter {
     private final String TAG = SearchActivity.class.getName();
 
     // Spotify search references
@@ -55,17 +58,15 @@ public class SearchActivity extends AppCompatActivity implements SearchTrackList
     // UI references
     private ConstraintLayout mMainLayout;
     private View mSearchButton;
-    private ViewGroup mArtistLayout;
+    private SearchArtistView mSearchArtistView;
     private ViewGroup mSongLayout;
     private ViewGroup mAlbumLayout;
     private EditText mSearchText;
-    private TextView mArtistText;
     private TextView mSongText;
     private TextView mAlbumText;
     private RecyclerView mSongResults;
-    private RecyclerView mArtistResults;
 
-    @BindViews({R.id.cv_song_result_layout, R.id.cv_artist_result_layout, R.id.cv_album_result_layout})
+    @BindViews({R.id.cv_song_result_layout, R.id.cv_album_result_layout})
     List<View> mResultsBaseViews;
 
     // Search result containers
@@ -75,7 +76,6 @@ public class SearchActivity extends AppCompatActivity implements SearchTrackList
 
     // Recycler view adapters
     private SearchTrackListAdapter mSongResultsAdapter;
-    private BasicArtistListAdapter mArtistResultsAdapter = new SelectableArtistListAdapter(this);
     // TODO: Album adapter
 
     @Override
@@ -129,26 +129,21 @@ public class SearchActivity extends AppCompatActivity implements SearchTrackList
         // Initialize UI elements
         mMainLayout = findViewById(R.id.search_main);
         mSearchButton = findViewById(R.id.btn_search);
-        mArtistLayout = findViewById(R.id.cv_artist_result_layout);
         mSongLayout = findViewById(R.id.cv_song_result_layout);
         mAlbumLayout = findViewById(R.id.cv_album_result_layout);
         mSearchText = findViewById(R.id.et_search_edit_text);
-        mArtistText = mArtistLayout.findViewById(R.id.tv_result_text);
         mSongText = mSongLayout.findViewById(R.id.tv_result_text);
         mAlbumText = mAlbumLayout.findViewById(R.id.tv_result_text);
 
         mSongResults = mSongLayout.findViewById(R.id.rv_result_recycler_view);
-        mSongResultsAdapter = new SearchTrackListAdapter(new ArrayList<Track>());
+        mSongResultsAdapter = new SearchTrackListAdapter(new ArrayList<TrackSimple>());
         mSongResults.setAdapter(mSongResultsAdapter);
         LinearLayoutManager songsLayoutManager = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
         mSongResults.setLayoutManager(songsLayoutManager);
         mSongResults.addItemDecoration(new QueueItemDecoration(getApplicationContext()));
 
-        mArtistResults = mArtistLayout.findViewById(R.id.rv_result_recycler_view);
-        mArtistResults.setAdapter(mArtistResultsAdapter);
-        LinearLayoutManager artistsLayoutManager = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
-        mArtistResults.setLayoutManager(artistsLayoutManager);
-        mArtistResults.addItemDecoration(new QueueItemDecoration(getApplicationContext()));
+        mSearchArtistView = findViewById(R.id.cv_artist_result_layout);
+        mSearchArtistView.setPresenter(this);
     }
 
     private void addListeners() {
@@ -183,33 +178,13 @@ public class SearchActivity extends AppCompatActivity implements SearchTrackList
                 resultsView.setVisibility(isCurrentlyVisible ? View.GONE : View.VISIBLE);
                 view.findViewById(R.id.iv_result_arrow).setRotation(isCurrentlyVisible ? 0 : 180);
 
-                ConstraintSet constraintSet = new ConstraintSet();
                 if (isCurrentlyVisible) {
                     // If closing category show hidden categories (with results)
-                    updateVisibilityBasedOnResults();
-                    Log.d(TAG, "Showing all result layouts");
-
-                    // Bottom of view should no longer be constrained
-                    // Height should return to wrap content
-                    constraintSet.clone(mMainLayout);
-                    constraintSet.clear(view.getId(), ConstraintSet.BOTTOM);
-                    constraintSet.constrainHeight(view.getId(), ConstraintSet.WRAP_CONTENT);
+                    closeResultLayout(view);
                 } else {
                     // If clicking on a category hide other categories
-                    Log.d(TAG, "Hiding all but touched layout");
-                    for (View baseView : mResultsBaseViews) {
-                        if (!(baseView.getId() == view.getId())) {
-                            baseView.setVisibility(View.GONE);
-                        }
-                    }
-
-                    // Bottom of view should be constrained to bottom of parent
-                    // Height should match constraint
-                    constraintSet.clone(mMainLayout);
-                    constraintSet.connect(view.getId(), ConstraintSet.BOTTOM, mMainLayout.getId(), ConstraintSet.BOTTOM, 8);
-                    constraintSet.constrainHeight(view.getId(), ConstraintSet.MATCH_CONSTRAINT);
+                    expandResultsView(view);
                 }
-                constraintSet.applyTo(mMainLayout);
             }
         };
 
@@ -219,6 +194,37 @@ public class SearchActivity extends AppCompatActivity implements SearchTrackList
         }
 
         mSongResultsAdapter.setTrackSelectionListener(this);
+    }
+
+    private void expandResultsView(View view) {
+        ConstraintSet constraintSet = new ConstraintSet();
+        Log.d(TAG, "Hiding all but touched layout");
+        for (View baseView : mResultsBaseViews) {
+            if (!(baseView.getId() == view.getId())) {
+                baseView.setVisibility(View.GONE);
+            }
+        }
+
+        // Bottom of view should be constrained to bottom of parent
+        // Height should match constraint
+        constraintSet.clone(mMainLayout);
+        // TODO: Pretty sure the 8 below needs to be converted from pixels to DP
+        constraintSet.connect(view.getId(), ConstraintSet.BOTTOM, mMainLayout.getId(), ConstraintSet.BOTTOM, 8);
+        constraintSet.constrainHeight(view.getId(), ConstraintSet.MATCH_CONSTRAINT);
+        constraintSet.applyTo(mMainLayout);
+    }
+
+    private void closeResultLayout(View view) {
+        ConstraintSet constraintSet = new ConstraintSet();
+        updateVisibilityBasedOnResults();
+        Log.d(TAG, "Showing all result layouts");
+
+        // Bottom of view should no longer be constrained
+        // Height should return to wrap content
+        constraintSet.clone(mMainLayout);
+        constraintSet.clear(view.getId(), ConstraintSet.BOTTOM);
+        constraintSet.constrainHeight(view.getId(), ConstraintSet.WRAP_CONTENT);
+        constraintSet.applyTo(mMainLayout);
     }
 
     private void hideKeyboard() {
@@ -242,30 +248,35 @@ public class SearchActivity extends AppCompatActivity implements SearchTrackList
 
         // Update result views
         closeAnyRecyclerViews();
+        mSearchArtistView.resetSearchArtistView();
+        closeResultLayout(mSearchArtistView);
+
         updateVisibilityBasedOnResults();
+
         updateBaseLayoutResultCount();
         updateAdapters();
+
+        // Load custom artist search view with results
+        mSearchArtistView.loadArtistSearchResults(mResultArtistList);
     }
 
     private void updateVisibilityBasedOnResults() {
         // Hide expandable views based on results
         mAlbumLayout.setVisibility(mResultAlbumList.size() == 0 ? View.GONE : View.VISIBLE);
-        mArtistLayout.setVisibility(mResultArtistList.size() == 0 ? View.GONE : View.VISIBLE);
+        mSearchArtistView.setVisibility(mResultArtistList.size() == 0 ? View.GONE : View.VISIBLE);
         mSongLayout.setVisibility(mResultTrackList.size() == 0 ? View.GONE : View.VISIBLE);
     }
 
     private void updateBaseLayoutResultCount() {
         //Update count display on base layouts
         mSongText.setText(String.format(getString(R.string.number_of_songs), mResultTrackList.size()));
-        mArtistText.setText(String.format(getString(R.string.number_of_artists), mResultArtistList.size()));
         mAlbumText.setText(String.format(getString(R.string.number_of_albums), mResultAlbumList.size()));
     }
 
     private void updateAdapters() {
         mSongResultsAdapter.updateQueueList(mResultTrackList);
-        mArtistResultsAdapter.updateAdapter(mResultArtistList);
 
-        // TODO: Update artist and album adapters once we have them
+        // TODO: Update album adapter once we have them
     }
 
     private void closeAnyRecyclerViews() {
@@ -286,7 +297,7 @@ public class SearchActivity extends AppCompatActivity implements SearchTrackList
     }
 
     @Override
-    public void onTrackSelection(Track track) {
+    public void onTrackSelection(TrackSimple track) {
         Intent resultIntent = new Intent();
         resultIntent.putExtra(AppConstants.SEARCH_RESULTS_EXTRA_KEY, track.uri);
         setResult(RESULT_OK, resultIntent);
@@ -294,7 +305,40 @@ public class SearchActivity extends AppCompatActivity implements SearchTrackList
     }
 
     @Override
-    public void onArtistSelected(@NotNull String artistId) {
-        Log.d(TAG, "Selected artist with ID: " + artistId);
+    public void requestArtistResultsExpansion() {
+        expandResultsView(mSearchArtistView);
+    }
+
+    @Override
+    public void requestArtistResultsClosure() {
+        closeResultLayout(mSearchArtistView);
+    }
+
+    @Override
+    public void notifyArtistSelected(@NotNull String artistId) {
+        String artistName = mSpotifyService.getArtist(artistId).name;
+        Pager<Album> albums = mSpotifyService.getArtistAlbums(artistId);
+        mSearchArtistView.showArtistAlbums(artistName, albums.items);
+    }
+
+    @Override
+    public void notifyAlbumSelected(@NotNull String albumId) {
+        Album albumToShow = mSpotifyService.getAlbum(albumId);
+        mSearchArtistView.showAlbumTracks("not_implemented", albumToShow.name, albumToShow.tracks.items);
+    }
+
+    @Override
+    public void notifyTopTracksSelected(@NotNull String artistId) {
+        Artist artistToSHow = mSpotifyService.getArtist(artistId);
+        Tracks artistTopTracks = mSpotifyService.getArtistTopTrack(artistId, "US");
+        mSearchArtistView.showArtistTopTracks(artistToSHow.name, artistTopTracks.tracks);
+    }
+
+    @Override
+    public void notifyTrackSelected(@NotNull String uri) {
+        Intent resultIntent = new Intent();
+        resultIntent.putExtra(AppConstants.SEARCH_RESULTS_EXTRA_KEY, uri);
+        setResult(RESULT_OK, resultIntent);
+        finish();
     }
 }

@@ -26,6 +26,7 @@
     <string name="number_of_albums">%1$d Albums</string>
     <string name="number_of_artists">%1$d Artists</string>
     <string name="number_of_songs">%1$d Songs</string>
+    <string name="artist_top_tracks">%1$s Top Tracks</string>
 
     <!-- Start Screen Strings -->
     <string name="login">Log In</string>

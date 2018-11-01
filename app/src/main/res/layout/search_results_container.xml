@@ -31,8 +31,8 @@
         android:layout_marginEnd="8dp"
         android:layout_marginBottom="8dp"
         android:src="@mipmap/up_arrow_head_white"
-        app:layout_constraintTop_toTopOf="@id/tv_result_text"
-        app:layout_constraintBottom_toBottomOf="@id/tv_result_text"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/header_barrier"
         app:layout_constraintEnd_toEndOf="parent"/>
 
     <android.support.v7.widget.RecyclerView

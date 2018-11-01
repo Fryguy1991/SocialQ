@@ -6,7 +6,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:focusable="true"
-    android:focusableInTouchMode="true">
+    android:focusableInTouchMode="true"
+    android:animateLayoutChanges="true">
 
     <EditText
         android:id="@+id/et_search_edit_text"
@@ -16,7 +17,7 @@
         android:layout_marginTop="8dp"
         android:layout_marginEnd="8dp"
         android:imeOptions="actionNext"
-        android:inputType="text"
+        android:inputType="textCapWords"
         android:maxLines="1"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -47,9 +48,8 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/btn_search" />
 
-    <include
+    <com.chrisfry.socialq.userinterface.widgets.SearchArtistView
         android:id="@+id/cv_artist_result_layout"
-        layout="@layout/search_artist_layout"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
@@ -58,7 +58,8 @@
         android:visibility="gone"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/cv_song_result_layout" />
+        app:layout_constraintTop_toBottomOf="@+id/cv_song_result_layout"
+        android:background="@color/Active_Button_Color"/>
 
     <include
         android:id="@+id/cv_album_result_layout"

@@ -6,9 +6,9 @@ import com.chrisfry.socialq.R
 import com.chrisfry.socialq.userinterface.adapters.holders.BasicImageTextHolder
 import com.chrisfry.socialq.userinterface.adapters.holders.ClickableImageTextHolder
 
-class SelectableArtistListAdapter(val listener: ArtistSelectListener) : BasicArtistListAdapter(), ClickableImageTextHolder.ItemSelectionListener {
+class SelectableAlbumListAdapter(val listener: AlbumSelectListener) : BasicAlbumListAdapter(), ClickableImageTextHolder.ItemSelectionListener {
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ClickableImageTextHolder {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BasicImageTextHolder {
         return ClickableImageTextHolder(LayoutInflater.from(parent.context).inflate(R.layout.base_image_text_holder, parent, false))
     }
 
@@ -22,11 +22,11 @@ class SelectableArtistListAdapter(val listener: ArtistSelectListener) : BasicArt
     }
 
     override fun onItemSelected(itemId: String) {
-        listener.onArtistSelected(itemId)
+        listener.onAlbumSelected(itemId)
     }
 
-    // Interface for passing artist ID up from adapter
-    interface ArtistSelectListener{
-        fun onArtistSelected(artistId: String)
+    // Interface for passing album ID up from adapter
+    interface AlbumSelectListener{
+        fun onAlbumSelected(albumId: String)
     }
 }
