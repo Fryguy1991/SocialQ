@@ -1,5 +1,6 @@
 package com.chrisfry.socialq.userinterface.adapters.holders;
 
+import android.graphics.Typeface;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.widget.TextView;
@@ -29,7 +30,13 @@ public class TrackHolder extends RecyclerView.ViewHolder implements View.OnClick
     }
 
     public void setArtistName(String artistName) {
+        mArtistNameView.setVisibility(View.VISIBLE);
         mArtistNameView.setText(artistName);
+    }
+
+    public void setTrackName(String trackName, boolean shouldBeBold) {
+        mTrackNameView.setTypeface(null, shouldBeBold ? Typeface.BOLD : Typeface.NORMAL);
+        setTrackName(trackName);
     }
 
     public void setTrackName(String trackName) {
