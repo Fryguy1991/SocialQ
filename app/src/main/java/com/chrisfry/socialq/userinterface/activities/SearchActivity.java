@@ -43,6 +43,7 @@ import com.chrisfry.socialq.userinterface.adapters.SearchTrackListAdapter;
 import com.chrisfry.socialq.userinterface.widgets.QueueItemDecoration;
 import com.chrisfry.socialq.userinterface.widgets.SearchArtistView;
 import com.chrisfry.socialq.utils.ApplicationUtils;
+import com.chrisfry.socialq.utils.DisplayUtils;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -162,7 +163,6 @@ public class SearchActivity extends AppCompatActivity implements SearchTrackList
                 // Don't search if search text is empty
                 if (!mSearchText.getText().toString().isEmpty()) {
                     mSearchText.clearFocus();
-                    hideKeyboard();
                     searchByText(mSearchText.getText().toString());
                     mSongResults.setVisibility(View.GONE);
                 }
@@ -208,8 +208,11 @@ public class SearchActivity extends AppCompatActivity implements SearchTrackList
         // Bottom of view should be constrained to bottom of parent
         // Height should match constraint
         constraintSet.clone(mMainLayout);
-        // TODO: Pretty sure the 8 below needs to be converted from pixels to DP
-        constraintSet.connect(view.getId(), ConstraintSet.BOTTOM, mMainLayout.getId(), ConstraintSet.BOTTOM, 8);
+        constraintSet.connect(
+                view.getId(),
+                ConstraintSet.BOTTOM, mMainLayout.getId(),
+                ConstraintSet.BOTTOM,
+                DisplayUtils.convertDpToPixels(this,8));
         constraintSet.constrainHeight(view.getId(), ConstraintSet.MATCH_CONSTRAINT);
         constraintSet.applyTo(mMainLayout);
     }
@@ -246,6 +249,14 @@ public class SearchActivity extends AppCompatActivity implements SearchTrackList
 //        mResultAlbumList = mSpotifyService.searchAlbums(searchText, options).albums.items;
         mResultTrackList = mSpotifyService.searchTracks(searchText, options).tracks.items;
 
+        if (mResultArtistList.isEmpty() && mResultAlbumList.isEmpty() && mResultTrackList.isEmpty()) {
+            // Didn't find anything.  Toast to let user know
+            Toast.makeText(this, String.format(getString(R.string.no_results_found), searchText), Toast.LENGTH_LONG).show();
+        } else {
+            // Don't hide keyboard if no results are found
+            hideKeyboard();
+        }
+
         // Update result views
         closeAnyRecyclerViews();
         mSearchArtistView.resetSearchArtistView();
@@ -281,6 +292,9 @@ public class SearchActivity extends AppCompatActivity implements SearchTrackList
 
     private void closeAnyRecyclerViews() {
         for(View currentBaseView : mResultsBaseViews) {
+            // Hide recycler view and rotate arrow (if needed)
+            currentBaseView.findViewById(R.id.rv_result_recycler_view).setVisibility(View.GONE);
+            currentBaseView.findViewById(R.id.iv_result_arrow).setRotation(0);
             // Bottom of view should be constrained to bottom of parent
             // Height should match constraint
             ConstraintSet constraintSet = new ConstraintSet();
@@ -340,5 +354,19 @@ public class SearchActivity extends AppCompatActivity implements SearchTrackList
         resultIntent.putExtra(AppConstants.SEARCH_RESULTS_EXTRA_KEY, uri);
         setResult(RESULT_OK, resultIntent);
         finish();
+    }
+
+    @Override
+    public void onBackPressed() {
+        // TODO: Handle album search closing when album view is implemented.
+        if (mSongLayout.getVisibility() == View.VISIBLE && mSongResults.getVisibility() == View.VISIBLE) {
+            // If track results are showing close them
+            closeAnyRecyclerViews();
+        } else if (mSearchArtistView.getVisibility() == View.VISIBLE && mSearchArtistView.handleBackPressed()) {
+            // mSearchArtistView.handleBackPressed will handle operation of back (if applicable)
+            return;
+        } else {
+            super.onBackPressed();
+        }
     }
 }

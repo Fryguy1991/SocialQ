@@ -27,6 +27,8 @@
     <string name="number_of_artists">%1$d Artists</string>
     <string name="number_of_songs">%1$d Songs</string>
     <string name="artist_top_tracks">%1$s Top Tracks</string>
+    <string name="invalid_access_token">Invalid Access Token</string>
+    <string name="no_results_found">No Results Found For \'%1$s\'</string>
 
     <!-- Start Screen Strings -->
     <string name="login">Log In</string>

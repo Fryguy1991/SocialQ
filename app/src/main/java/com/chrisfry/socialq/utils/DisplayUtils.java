@@ -1,5 +1,7 @@
 package com.chrisfry.socialq.utils;
 
+import android.content.Context;
+import android.util.TypedValue;
 import android.view.View;
 
 import com.spotify.sdk.android.player.Metadata;
@@ -50,5 +52,16 @@ public class DisplayUtils {
                 view.setVisibility(value);
             }
         };
+    }
+
+    /**
+     * Returns a pixel value based on the conversion from DP given context's display metrics
+     *
+     * @param context - Context to retrieve display metrics from
+     * @param dpValue - Desired DP value
+     * @return - (Rounded to nearest whole) DP conversion to pixels
+     */
+    public static int convertDpToPixels(Context context, int dpValue) {
+        return Math.round(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dpValue, context.getResources().getDisplayMetrics()));
     }
 }

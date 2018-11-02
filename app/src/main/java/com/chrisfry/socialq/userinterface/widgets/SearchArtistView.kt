@@ -239,6 +239,19 @@ class SearchArtistView : ConstraintLayout, SelectableArtistListAdapter.ArtistSel
         }
     }
 
+    /**
+     * In terms of this custom view, pressing back is the same as touching the artist header.
+     * If view is completely closed (ArtistSearchStep.NONE) have nothing to handle.
+     */
+    fun handleBackPressed() : Boolean {
+        return if (artistSearchState == ArtistSearchStep.NONE) {
+            false
+        } else {
+            handleArtistHeaderClick()
+            true
+        }
+    }
+
     private fun handleTopTrackClick() {
         presenter.notifyTopTracksSelected(cachedArtistId)
     }

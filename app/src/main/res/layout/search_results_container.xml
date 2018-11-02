@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
+    android:layout_height="match_parent"
     android:background="@color/Active_Button_Color"
     android:animateLayoutChanges="true">
 
@@ -11,10 +11,10 @@
         android:id="@+id/tv_result_text"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
-        android:layout_marginEnd="8dp"
-        android:layout_marginBottom="8dp"
+        android:layout_marginStart="@dimen/default_margin"
+        android:layout_marginTop="@dimen/default_margin"
+        android:layout_marginEnd="@dimen/default_margin"
+        android:layout_marginBottom="@dimen/default_margin"
         app:layout_constraintBottom_toTopOf="@id/header_barrier"
         app:layout_constraintEnd_toStartOf="@+id/iv_result_arrow"
         app:layout_constraintHorizontal_bias="0.5"
@@ -28,35 +28,36 @@
         android:id="@+id/iv_result_arrow"
         android:layout_width="30dp"
         android:layout_height="30dp"
-        android:layout_marginTop="8dp"
-        android:layout_marginEnd="8dp"
-        android:layout_marginBottom="8dp"
+        android:layout_marginTop="@dimen/default_margin"
+        android:layout_marginEnd="@dimen/default_margin"
         android:src="@mipmap/up_arrow_head_white"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/header_barrier"
+        app:layout_constraintBottom_toTopOf="@id/sp_arrow_space"
         app:layout_constraintEnd_toEndOf="parent"/>
 
-    <android.support.v7.widget.RecyclerView
-        android:id="@+id/rv_result_recycler_view"
+    <Space
+        android:id="@+id/sp_arrow_space"
         android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
-        android:layout_marginEnd="8dp"
-        android:layout_marginBottom="12dp"
-        android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@id/header_barrier" />
+        android:layout_height="@dimen/default_margin"
+        app:layout_constraintTop_toBottomOf="@id/iv_result_arrow"
+        app:layout_constraintBottom_toTopOf="@id/header_barrier"/>
 
     <android.support.constraint.Barrier
         android:id="@+id/header_barrier"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
         app:barrierDirection="bottom"
-        app:constraint_referenced_ids="tv_result_text,iv_result_arrow"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:constraint_referenced_ids="tv_result_text,sp_arrow_space"/>
 
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/rv_result_recycler_view"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginStart="@dimen/default_margin"
+        android:layout_marginEnd="@dimen/default_margin"
+        android:visibility="visible"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@id/header_barrier" />
 </android.support.constraint.ConstraintLayout>
