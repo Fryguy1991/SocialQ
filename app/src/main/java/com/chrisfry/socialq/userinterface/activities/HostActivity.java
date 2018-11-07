@@ -438,11 +438,13 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
 
     @Override
     protected void onDestroy() {
+        // Unbind from the PlayQueueService
         if (mIsServiceBound) {
             unbindService(mServiceConnection);
             mIsServiceBound = false;
         }
 
+        // Remove HostActivity as a listener to PlayQueueService and stop the service
         if (mPlayQueueService != null) {
             mPlayQueueService.removePlayQueueServiceListener(this);
             mPlayQueueService.stopSelf();
