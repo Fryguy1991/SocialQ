@@ -32,6 +32,7 @@ public class AppConstants {
     public static final int SPOTIFY_AUTHENTICATION_REQUEST = 5309;
     public static final int REQUEST_ENABLE_BT = 12345;
     public static final int REQUEST_DISCOVER_BT = 54321;
+    public static final int PERMISSION_REQUEST = 8675;
 
     // Message Strings
     public static final String PLAYLIST_ID_MESSAGE = "#PLAYLIST_ID#";

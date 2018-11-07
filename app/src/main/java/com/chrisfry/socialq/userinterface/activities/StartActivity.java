@@ -1,10 +1,14 @@
 package com.chrisfry.socialq.userinterface.activities;
 
+import android.Manifest;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Process;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.AppCompatCheckBox;
@@ -29,6 +33,26 @@ public class StartActivity extends AppCompatActivity {
     private String mQueueTitle;
 
     @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        switch (requestCode) {
+            case AppConstants.PERMISSION_REQUEST:
+                if (grantResults.length > 0) {
+                    // Received requested permissions
+                } else {
+                    // Permissions rejected.
+                    // TODO: This doesn't seem to be closing the activity.
+                    StartActivity.this.finish();
+                }
+                break;
+            default :
+                // Do nothing
+                break;
+        }
+    }
+
+    @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.start_screen);
@@ -38,6 +62,14 @@ public class StartActivity extends AppCompatActivity {
 
         findViewById(R.id.btn_host_queue).setOnClickListener(mTypeSelect);
         findViewById(R.id.btn_join_queue).setOnClickListener(mTypeSelect);
+
+        // Check and see if we need to request permissions at runtime
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (this.checkPermission(Manifest.permission.ACCESS_COARSE_LOCATION, Process.myPid(), Process.myUid()) !=
+                    PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, AppConstants.PERMISSION_REQUEST);
+            }
+        }
     }
 
     View.OnClickListener mTypeSelect = new View.OnClickListener() {
