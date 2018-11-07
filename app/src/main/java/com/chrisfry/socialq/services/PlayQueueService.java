@@ -60,6 +60,8 @@ public class PlayQueueService extends Service implements ConnectionStateCallback
     private boolean mIncorrectQueueMetaDataFlag = false;
     // Boolean flag to store when a track has been fully delivered
     private boolean mTrackDelivered = false;
+    // Boolean flag for storing whether the service is bound (to the host activity)
+    private boolean mIsBound = false;
 
     private final Player.OperationCallback mConnectivityCallback = new Player.OperationCallback() {
         @Override
@@ -86,19 +88,42 @@ public class PlayQueueService extends Service implements ConnectionStateCallback
     }
 
     @Override
-    public IBinder onBind(Intent intent) {
+    public int onStartCommand(Intent intent, int flags, int startId) {
+
         String accessToken = ApplicationUtils.getAccessToken();
         String playlistId = intent.getStringExtra(AppConstants.SERVICE_PLAYLIST_ID_KEY);
 
-        Log.d(TAG, "onBind: Starting service");
+        Log.d(TAG, "onStartCommand: Starting service");
         if (accessToken == null || playlistId == null) {
             stopSelf();
         } else {
-            Log.d(TAG, "onBind: Initializing player");
+            Log.d(TAG, "onStartCommand: Initializing player");
             initPlayer(accessToken);
             initSpotifyServiceElements(accessToken, playlistId);
         }
+
+        return super.onStartCommand(intent, flags, startId);
+    }
+
+    @Override
+    public IBinder onBind(Intent intent) {
+        Log.d(TAG, "Service is being bound");
+        mIsBound = true;
         return mPlayQueueBinder;
+    }
+
+    @Override
+    public void onRebind(Intent intent) {
+        Log.d(TAG, "Service is rebinding");
+        super.onRebind(intent);
+        mIsBound = true;
+    }
+
+    @Override
+    public boolean onUnbind(Intent intent) {
+        Log.d(TAG, "Service is completely unbound");
+        mIsBound = false;
+        return super.onUnbind(intent);
     }
 
     @Override
@@ -256,9 +281,15 @@ public class PlayQueueService extends Service implements ConnectionStateCallback
                 notifyNext();
                 break;
             case kSpPlaybackNotifyAudioDeliveryDone:
-                // Current queue playlist has finished.
+                // Current queue playlist has finished
                 Log.d(TAG, "Player has finished playing audio");
                 mAudioDeliveryDoneFlag = true;
+
+                // Stop service if we're not bound and out of songs
+                if (!mIsBound) {
+                    Log.d(TAG, "Out of songs and not bound to host activity. Shutting down service.");
+                    stopSelf();
+                }
                 break;
             default:
                 // Do nothing or future implementation

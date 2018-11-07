@@ -84,7 +84,10 @@
 
     <!-- START APPLICATION SERVICES -->
         <!-- Service for playing queue in background -->
-        <service android:name="com.chrisfry.socialq.services.PlayQueueService"/>
+        <service
+            android:name="com.chrisfry.socialq.services.PlayQueueService"
+            android:exported="false"
+            android:description="@string/service_description"/>
     <!-- END APPLICATION SERVICES -->
     </application>
 

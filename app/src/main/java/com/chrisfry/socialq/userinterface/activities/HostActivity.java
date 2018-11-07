@@ -212,7 +212,9 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
                         // Start service that will play and control queue
                         Intent startPlayQueueIntent = new Intent(this, PlayQueueService.class);
                         startPlayQueueIntent.putExtra(AppConstants.SERVICE_PLAYLIST_ID_KEY, mPlaylist.id);
+                        startService(startPlayQueueIntent);
 
+                        // Bind activity to service
                         mIsServiceBound = bindService(startPlayQueueIntent, mServiceConnection, Context.BIND_AUTO_CREATE);
 
                         // All logged in and good to go.  Start host connection.
@@ -443,7 +445,7 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
 
         if (mPlayQueueService != null) {
             mPlayQueueService.removePlayQueueServiceListener(this);
-            mPlayQueueService.onDestroy();
+            mPlayQueueService.stopSelf();
         }
 
         unfollowQueuePlaylist();
