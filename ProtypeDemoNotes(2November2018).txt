@@ -1,0 +1,17 @@
+Prototype Demo Notes:
+Users: my main, fry_dev_1, Kaleen, Alyssa
+
+Issues:
+-- Need to update access token of Search Activity
+
+-- Need to gracefully handle GC of ClientActivity (Kaleen kept getting kicked out of queue)
+
+-- Losing order on songs when starting queue with bad metadata. Noticed this on my own as well.  Sometimes when setting playlist to specific index the wrong song is played?  More investigation needed.
+
+Crashes:
+-- Search activity crashed because it attempted to access Spotify api with old access token.  If this is converted into a fragment then Client/Host activities could very easily update access token.  In mean time could also update similar to how host does.
+
+Suggestions:
+-- Suggestion based on current typing.  Does Spotify host some sort of word bank we could use?
+
+-- Display queue name instead of app name for host/client. Super good idea and should be easy to implement.
