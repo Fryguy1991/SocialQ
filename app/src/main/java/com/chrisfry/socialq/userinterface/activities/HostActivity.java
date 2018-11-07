@@ -161,6 +161,9 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
         mNextButton = findViewById(R.id.btn_next);
         mPlayPauseButton = findViewById(R.id.btn_play_pause);
         mQueueList = findViewById(R.id.rv_queue_list_view);
+
+        // Show queue title as activity title
+        setTitle(getIntent().getStringExtra(AppConstants.QUEUE_TITLE_KEY));
     }
 
     private void addListeners() {

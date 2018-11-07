@@ -87,9 +87,6 @@ public class StartActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.start_screen);
 
-        mIsFairPlayChecked = getResources().getBoolean(R.bool.fair_play_default);
-        mQueueTitle = getResources().getString(R.string.queue_title_default_value);
-
         findViewById(R.id.btn_host_queue).setOnClickListener(mTypeSelect);
         findViewById(R.id.btn_join_queue).setOnClickListener(mTypeSelect);
 
@@ -111,7 +108,7 @@ public class StartActivity extends AppCompatActivity {
                 return false;
             }
         }
-        // If low enough SDK version manifest contains permission and doesn't need to be requested at runtime
+        // If low enough SDK version, manifest contains permission and doesn't need to be requested at runtime
         return true;
     }
 
@@ -147,6 +144,10 @@ public class StartActivity extends AppCompatActivity {
         Log.d(TAG, "Launching host dialog");
         AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(StartActivity.this);
         dialogBuilder.setTitle(R.string.queue_options);
+
+        // Reset default options
+        mIsFairPlayChecked = getResources().getBoolean(R.bool.fair_play_default);
+        mQueueTitle = getResources().getString(R.string.queue_title_default_value);
 
         // Inflate content view and get references to UI elements
         View contentView = getLayoutInflater().inflate(R.layout.new_queue_dialog_content_layout, null);

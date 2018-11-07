@@ -16,12 +16,12 @@ class NearbyDeviceHolder(itemView: View) : RecyclerView.ViewHolder(itemView), Vi
                 view.contentDescription = "selected"
                 view.setBackgroundColor(view.resources.getColor(R.color.Active_Button_Color))
                 nameTextView.setTextColor(view.resources.getColor(R.color.White))
-                listener.onItemSelected(endpointId)
+                listener.onItemSelected(endpointId, nameTextView.text.toString())
             } else {
                 view.contentDescription = "not_selected"
                 view.setBackgroundColor(view.resources.getColor(R.color.White))
                 nameTextView.setTextColor(view.resources.getColor(R.color.Gray))
-                listener.onItemSelected("")
+                listener.onItemSelected("", "")
             }
         }
     }
@@ -38,6 +38,6 @@ class NearbyDeviceHolder(itemView: View) : RecyclerView.ViewHolder(itemView), Vi
     }
 
     interface ItemSelectionListenerNearbyDevices {
-        fun onItemSelected(endpointId: String)
+        fun onItemSelected(endpointId: String, endpointName: String)
     }
 }

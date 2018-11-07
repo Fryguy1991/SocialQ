@@ -19,6 +19,7 @@ import java.lang.Exception
 class QueueConnectActivityNearbyDevices : QueueConnectActivity(), NearbyDevicesAdapter.DeviceSelectionListener {
     private val TAG = QueueConnectActivityNearbyDevices::class.java.name
     private lateinit var queueToJoinEndpointId: String
+    private lateinit var queueToJoinName: String
     private var mNearbyDevices: MutableList<NearbyDeviceData> = mutableListOf()
     private lateinit var mNearbyDevicesAdapter: NearbyDevicesAdapter
 
@@ -72,6 +73,7 @@ class QueueConnectActivityNearbyDevices : QueueConnectActivity(), NearbyDevicesA
         if (queueToJoinEndpointId.isNotEmpty()) {
             val clientIntent = Intent(this, ClientActivityNearbyDevices::class.java)
             clientIntent.putExtra(AppConstants.ND_ENDPOINT_ID_EXTRA_KEY, queueToJoinEndpointId)
+            clientIntent.putExtra(AppConstants.QUEUE_TITLE_KEY, queueToJoinName)
             startActivity(clientIntent)
             finish()
         }
@@ -89,8 +91,9 @@ class QueueConnectActivityNearbyDevices : QueueConnectActivity(), NearbyDevicesA
         Nearby.getConnectionsClient(this).stopDiscovery()
     }
 
-    override fun onDeviceSelected(endpointId: String) {
+    override fun onDeviceSelected(endpointId: String, endpointName: String) {
         this.queueToJoinEndpointId = endpointId
+        this.queueToJoinName = endpointName
         mQueueJoinButton.isEnabled = endpointId.isNotEmpty()
     }
 }

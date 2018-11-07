@@ -78,6 +78,9 @@ public abstract class ClientActivity extends AppCompatActivity implements Connec
     private void initUi() {
         // Initialize UI elements
         mQueueList = findViewById(R.id.rv_queue_list_view);
+
+        // Show queue title as activity title
+        setTitle(getIntent().getStringExtra(AppConstants.QUEUE_TITLE_KEY));
     }
 
     @Override

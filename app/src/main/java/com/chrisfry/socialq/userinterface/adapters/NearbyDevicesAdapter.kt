@@ -33,11 +33,11 @@ class NearbyDevicesAdapter() : RecyclerView.Adapter<NearbyDeviceHolder>(), Nearb
         notifyDataSetChanged()
     }
 
-    override fun onItemSelected(endpointId: String) {
-        mDeviceSelectionListener.onDeviceSelected(endpointId)
+    override fun onItemSelected(endpointId: String, endpointName: String) {
+        mDeviceSelectionListener.onDeviceSelected(endpointId, endpointName)
     }
 
     interface DeviceSelectionListener {
-        fun onDeviceSelected(endpointId: String)
+        fun onDeviceSelected(endpointId: String, endpointName: String)
     }
 }
