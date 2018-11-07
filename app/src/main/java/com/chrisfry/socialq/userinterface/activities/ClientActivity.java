@@ -17,6 +17,7 @@ import com.chrisfry.socialq.business.AppConstants;
 import com.chrisfry.socialq.business.dagger.modules.SpotifyModule;
 import com.chrisfry.socialq.business.dagger.modules.components.DaggerSpotifyComponent;
 import com.chrisfry.socialq.business.dagger.modules.components.SpotifyComponent;
+import com.chrisfry.socialq.enums.RequestType;
 import com.chrisfry.socialq.userinterface.adapters.BasicTrackListAdapter;
 import com.chrisfry.socialq.userinterface.widgets.QueueItemDecoration;
 import com.chrisfry.socialq.utils.ApplicationUtils;
@@ -68,7 +69,7 @@ public abstract class ClientActivity extends AppCompatActivity implements Connec
         AuthenticationRequest request = builder.build();
 
         Log.d(TAG, "Requesting access token from Spotify");
-        AuthenticationClient.openLoginActivity(this, AppConstants.SPOTIFY_AUTHENTICATION_REQUEST, request);
+        AuthenticationClient.openLoginActivity(this, RequestType.SPOTIFY_AUTHENTICATION_REQUEST.getRequestCode(), request);
 
         initUi();
         setupQueueList();
@@ -83,9 +84,12 @@ public abstract class ClientActivity extends AppCompatActivity implements Connec
     protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
         super.onActivityResult(requestCode, resultCode, intent);
 
-        // Check if result comes from the correct activity
-        switch (requestCode) {
-            case AppConstants.SPOTIFY_AUTHENTICATION_REQUEST:
+        RequestType requestType = RequestType.Companion.getRequestTypeFromRequestCode(requestCode);
+        Log.d(TAG, "Received request type: " + requestType);
+
+        // Handle request result
+        switch (requestType) {
+            case SPOTIFY_AUTHENTICATION_REQUEST:
                 AuthenticationResponse response = AuthenticationClient.getResponse(resultCode, intent);
                 if (response.getType() == AuthenticationResponse.Type.TOKEN) {
                     Log.d(TAG, "Access token granted");
@@ -99,7 +103,7 @@ public abstract class ClientActivity extends AppCompatActivity implements Connec
                     finish();
                 }
                 break;
-            case AppConstants.SEARCH_REQUEST:
+            case SEARCH_REQUEST:
                 if (resultCode == RESULT_OK) {
                     String trackUri = intent.getStringExtra(AppConstants.SEARCH_RESULTS_EXTRA_KEY);
                     if (trackUri != null && !trackUri.isEmpty() && mCurrentUserId != null && !mCurrentUserId.isEmpty()) {
@@ -108,8 +112,12 @@ public abstract class ClientActivity extends AppCompatActivity implements Connec
                     }
                 }
                 break;
+            case NONE:
+                Log.e(TAG, "Unhandled request code: " + requestCode);
+            case REQUEST_ENABLE_BT:
+            case REQUEST_DISCOVER_BT:
             default:
-                // Do nothing
+                // Do nothing.  Client activity should not handle BT events and if we got NONE back something is wrong
         }
     }
 
@@ -164,7 +172,7 @@ public abstract class ClientActivity extends AppCompatActivity implements Connec
         switch (item.getItemId()) {
             case R.id.search_action:
                 Intent searchIntent = new Intent(this, SearchActivity.class);
-                startActivityForResult(searchIntent, AppConstants.SEARCH_REQUEST);
+                startActivityForResult(searchIntent, RequestType.SEARCH_REQUEST.getRequestCode());
                 return true;
             default:
                 // Do nothing

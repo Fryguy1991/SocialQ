@@ -12,6 +12,7 @@ import java.nio.charset.StandardCharsets;
 
 import com.chrisfry.socialq.business.AppConstants;
 import com.chrisfry.socialq.business.listeners.BluetoothConnectionListener;
+import com.chrisfry.socialq.enums.RequestType;
 import com.chrisfry.socialq.services.BluetoothConnectThread;
 
 /**
@@ -29,9 +30,12 @@ public class ClientActivityBluetooth extends ClientActivity implements Bluetooth
     protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
         super.onActivityResult(requestCode, resultCode, intent);
 
-        // Check if result comes from the correct activity
-        switch (requestCode) {
-            case AppConstants.REQUEST_ENABLE_BT:
+        RequestType requestType = RequestType.Companion.getRequestTypeFromRequestCode(requestCode);
+        Log.d(TAG, "Received request type: " + requestType);
+
+        // Handle request result
+        switch (requestType) {
+            case REQUEST_ENABLE_BT:
                 if (resultCode == RESULT_OK) {
                     // Bluetooth is enabled.  Launch connection with host
                     connectToBluetoothHost();
@@ -69,7 +73,7 @@ public class ClientActivityBluetooth extends ClientActivity implements Bluetooth
 
         if (!mBluetoothAdapter.isEnabled()) {
             Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-            startActivityForResult(enableBtIntent, AppConstants.REQUEST_ENABLE_BT);
+            startActivityForResult(enableBtIntent, RequestType.REQUEST_ENABLE_BT.getRequestCode());
         } else {
             connectToBluetoothHost();
         }
