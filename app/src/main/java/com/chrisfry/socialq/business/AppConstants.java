@@ -27,13 +27,6 @@ public class AppConstants {
     public static final String QUEUE_TITLE_KEY = "queue_title_key";
     public static final String FAIR_PLAY_KEY = "fair_play_key";
 
-    // Result activity request codes
-    public static final int SEARCH_REQUEST = 1337;
-    public static final int SPOTIFY_AUTHENTICATION_REQUEST = 5309;
-    public static final int REQUEST_ENABLE_BT = 12345;
-    public static final int REQUEST_DISCOVER_BT = 54321;
-    public static final int PERMISSION_REQUEST = 8675;
-
     // Message Strings
     public static final String PLAYLIST_ID_MESSAGE = "#PLAYLIST_ID#";
     public static final String UPDATE_QUEUE_MESSAGE = "#QUEUE_UPDATED#";

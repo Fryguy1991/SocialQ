@@ -8,12 +8,9 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
-import android.support.v7.widget.RecyclerView;
 import android.util.Log;
-import android.widget.Button;
-import android.widget.TextView;
 
-import com.chrisfry.socialq.userinterface.adapters.HostTrackListAdapter;
+import com.chrisfry.socialq.enums.RequestType;
 import com.spotify.sdk.android.player.Error;
 
 import java.io.IOException;
@@ -22,47 +19,21 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.chrisfry.socialq.business.AppConstants;
 import com.chrisfry.socialq.business.listeners.BluetoothConnectionListener;
-
-import kaaes.spotify.webapi.android.SpotifyApi;
-import kaaes.spotify.webapi.android.SpotifyService;
-import kaaes.spotify.webapi.android.models.Track;
 import com.chrisfry.socialq.services.BluetoothAcceptThread;
-import com.chrisfry.socialq.services.PlayQueueService;
 
 public class HostActivityBluetooth extends HostActivity implements BluetoothConnectionListener{
     private final String TAG = HostActivityBluetooth.class.getName();
-    
-    // Request code that will be used to verify if the result comes from correct activity
-    // Can be any integer
-    private static final int SPOTIFY_LOGIN_REQUEST = 8675309;
 
     // Handler message values
     private static final int QUEUE_TRACK = 0;
     private static final String BUNDLE_TRACK_KEY = "bundle_track_key";
-
-    // UI element references
-    private Button mNextButton;
-    private Button mPlayPauseButton;
-    private TextView mCurrentTrackName;
-    private TextView mCurrentArtistName;
-
-    // Track list elements
-    private RecyclerView mQueueList;
-    private HostTrackListAdapter mQueueDisplayAdapter;
-
-    // Spotify elements
-    private SpotifyApi mApi;
-    private SpotifyService mSpotifyService;
-    private PlayQueueService mPlayQueueService;
 
     // Bluetooth elements
     private BluetoothAdapter mBluetoothAdapter;
     private BluetoothServerSocket mBTServerSocket;
     private List<BluetoothSocket> mBluetoothClients = new ArrayList<>();
 
-    private List<Track> mCurrentTrackList = new ArrayList<>();
 
     private Handler mHandler = new Handler(Looper.getMainLooper()) {
 
@@ -71,7 +42,6 @@ public class HostActivityBluetooth extends HostActivity implements BluetoothConn
             switch (inputMessage.what) {
                 case QUEUE_TRACK:
                     String trackUri = inputMessage.getData().getString(BUNDLE_TRACK_KEY);
-                    // TODO: Refactor for client directly adding items to playlist
                     break;
                 default:
                     // Do nothing
@@ -96,20 +66,23 @@ public class HostActivityBluetooth extends HostActivity implements BluetoothConn
     protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
         super.onActivityResult(requestCode, resultCode, intent);
 
-        // Check if result comes from the correct activity
-        switch (requestCode) {
-            case AppConstants.REQUEST_ENABLE_BT:
+        RequestType requestType = RequestType.Companion.getRequestTypeFromRequestCode(requestCode);
+        Log.d(TAG, "Received request type: " + requestType);
+
+        // Handle request result
+        switch (requestType) {
+            case REQUEST_ENABLE_BT:
                 if (resultCode == RESULT_OK) {
                     Log.d(TAG, "Bluetooth Was Enabled");
                     // Request bluetooth discoverability
                     Intent discoverableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
                     discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 0);
-                    startActivityForResult(discoverableIntent, AppConstants.REQUEST_DISCOVER_BT);
+                    startActivityForResult(discoverableIntent, RequestType.REQUEST_DISCOVER_BT.getRequestCode());
                 } else {
                     // TODO: Bluetooth not enabled, need to handle here
                 }
                 break;
-            case AppConstants.REQUEST_DISCOVER_BT:
+            case REQUEST_DISCOVER_BT:
                 if (resultCode == RESULT_CANCELED) {
                     // TODO: User said no to discoverability, handle here
                 } else {
@@ -199,13 +172,13 @@ public class HostActivityBluetooth extends HostActivity implements BluetoothConn
                 Log.d(TAG, "Attempting to enable Bluetooth");
                 // If bluetooth is not enabled request
                 Intent bluetoothEnableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-                startActivityForResult(bluetoothEnableIntent, AppConstants.REQUEST_ENABLE_BT);
+                startActivityForResult(bluetoothEnableIntent, RequestType.REQUEST_ENABLE_BT.getRequestCode());
             } else {
                 // If bluetooth is not discoverable request
                 Log.d(TAG, "Attempting to set device discoverable.");
                 Intent discoverableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
                 discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 0);
-                startActivityForResult(discoverableIntent, AppConstants.REQUEST_DISCOVER_BT);
+                startActivityForResult(discoverableIntent, RequestType.REQUEST_DISCOVER_BT.getRequestCode());
             }
         }
     }

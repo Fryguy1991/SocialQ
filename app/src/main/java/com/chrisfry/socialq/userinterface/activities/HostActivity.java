@@ -25,6 +25,7 @@ import android.widget.Toast;
 import com.chrisfry.socialq.business.dagger.modules.SpotifyModule;
 import com.chrisfry.socialq.business.dagger.modules.components.DaggerSpotifyComponent;
 import com.chrisfry.socialq.business.dagger.modules.components.SpotifyComponent;
+import com.chrisfry.socialq.enums.RequestType;
 import com.chrisfry.socialq.model.SongRequestData;
 import com.chrisfry.socialq.userinterface.adapters.HostTrackListAdapter;
 import com.spotify.sdk.android.authentication.AuthenticationClient;
@@ -152,7 +153,7 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
                 AppConstants.REDIRECT_URI);
         builder.setScopes(new String[]{"user-read-private", "streaming", "playlist-modify-private", "app-remote-control"});
         AuthenticationRequest request = builder.build();
-        AuthenticationClient.openLoginActivity(this, AppConstants.SPOTIFY_AUTHENTICATION_REQUEST, request);
+        AuthenticationClient.openLoginActivity(this, RequestType.SPOTIFY_AUTHENTICATION_REQUEST.getRequestCode(), request);
     }
 
     private void initUi() {
@@ -182,9 +183,12 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
     protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
         super.onActivityResult(requestCode, resultCode, intent);
 
-        // Check if result comes from the correct activity
-        switch (requestCode) {
-            case AppConstants.SPOTIFY_AUTHENTICATION_REQUEST:
+        RequestType requestType = RequestType.Companion.getRequestTypeFromRequestCode(requestCode);
+        Log.d(TAG, "Received request type: " + requestType);
+
+        // Handle request result
+        switch (requestType) {
+            case SPOTIFY_AUTHENTICATION_REQUEST:
                 AuthenticationResponse response = AuthenticationClient.getResponse(resultCode, intent);
                 if (response.getType() == AuthenticationResponse.Type.TOKEN) {
                     Log.d(TAG, "Access token granted");
@@ -224,12 +228,18 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
                     finish();
                 }
                 break;
-            case AppConstants.SEARCH_REQUEST:
+            case SEARCH_REQUEST:
                 if (resultCode == RESULT_OK) {
                     String trackUri = intent.getStringExtra(AppConstants.SEARCH_RESULTS_EXTRA_KEY);
                     handleSongRequest(new SongRequestData(trackUri, mCurrentUser.id));
                 }
                 break;
+            case NONE:
+                Log.e(TAG, "Unhandled request code: " + requestCode);
+            case REQUEST_ENABLE_BT:
+            case REQUEST_DISCOVER_BT:
+            default:
+                // Do nothing.  Host activity should not handle BT events and if we got NONE back something is wrong
         }
     }
 
@@ -452,7 +462,7 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
         switch (item.getItemId()) {
             case R.id.search_action:
                 Intent searchIntent = new Intent(this, SearchActivity.class);
-                startActivityForResult(searchIntent, AppConstants.SEARCH_REQUEST);
+                startActivityForResult(searchIntent, RequestType.SEARCH_REQUEST.getRequestCode());
                 return true;
             default:
                 // Do nothing
