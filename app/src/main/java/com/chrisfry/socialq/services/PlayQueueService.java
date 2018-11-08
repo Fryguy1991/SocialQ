@@ -62,6 +62,8 @@ public class PlayQueueService extends Service implements ConnectionStateCallback
     private boolean mTrackDelivered = false;
     // Boolean flag for storing whether the service is bound (to the host activity)
     private boolean mIsBound = false;
+    // Boolean flag for if a pause event was requested by the user
+    private boolean mUserRequestedPause = false;
 
     private final Player.OperationCallback mConnectivityCallback = new Player.OperationCallback() {
         @Override
@@ -199,6 +201,7 @@ public class PlayQueueService extends Service implements ConnectionStateCallback
 
     public void requestPause() {
         Log.d(TAG, "PAUSE REQUEST");
+        mUserRequestedPause = true;
         mSpotifyPlayer.pause(this);
     }
 
@@ -256,9 +259,10 @@ public class PlayQueueService extends Service implements ConnectionStateCallback
                 break;
             case kSpPlaybackNotifyPause:
                 Log.d(TAG, "Player has paused");
-                if (!mIncorrectQueueMetaDataFlag) {
-                    // If meta data is incorrect we won't actually pause
+                // If meta data is incorrect we won't actually pause (unless user requested pause)
+                if (mUserRequestedPause || !mIncorrectQueueMetaDataFlag) {
                     notifyPaused();
+                    mUserRequestedPause = false;
                 }
                 break;
             case kSpPlaybackNotifyTrackChanged:

@@ -2,6 +2,7 @@ package com.chrisfry.socialq.userinterface.activities;
 
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Build;
@@ -11,6 +12,7 @@ import android.os.IBinder;
 import android.os.Looper;
 import android.os.Message;
 import android.os.StrictMode;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -19,6 +21,10 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.WindowManager;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
 
@@ -164,6 +170,9 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
 
         // Show queue title as activity title
         setTitle(getIntent().getStringExtra(AppConstants.QUEUE_TITLE_KEY));
+
+        // Stop soft keyboard from pushing UI up
+        getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING);
     }
 
     private void addListeners() {
@@ -260,11 +269,71 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
         mPlaylist = createPlaylistForQueue();
     }
 
+    @Override
+    public void onBackPressed() {
+
+        AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
+        dialogBuilder.setTitle(getString(R.string.close_queue_dialog_title));
+
+        // Inflate content view and get references to UI elements
+        View contentView = getLayoutInflater().inflate(R.layout.save_playlist_dialog, null);
+        final EditText playlistNameEditText = contentView.findViewById(R.id.et_save_playlist_name);
+        final CheckBox savePlaylistCheckbox = contentView.findViewById(R.id.cb_save_playlist);
+
+        dialogBuilder.setView(contentView);
+
+        // If save playlist box is checked, enable edit text for playlist name
+        // If save playlist box is unchecked, disabled edit text and clear field value
+        savePlaylistCheckbox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                playlistNameEditText.setEnabled(isChecked);
+
+                if (!isChecked) {
+                    playlistNameEditText.setText("");
+                }
+            }
+        });
+
+        dialogBuilder.setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+
+                if (savePlaylistCheckbox.isChecked()) {
+                    Log.d(TAG, "Updating SocialQ playlist details");
+
+                    String playlistName = playlistNameEditText.getText().toString();
+
+                    // Create body parameters for modifying playlist details
+                    Map<String, Object> playlistParameters = new HashMap<>();
+                    playlistParameters.put("name", playlistName.isEmpty() ? getString(R.string.default_playlist_name) : playlistName);
+
+                    mSpotifyService.changePlaylistDetails(mCurrentUser.id, mPlaylist.id, playlistParameters);
+                } else {
+                    unfollowQueuePlaylist();
+                }
+
+                dialog.dismiss();
+                HostActivity.super.onBackPressed();
+            }
+        });
+
+        dialogBuilder.setNegativeButton(R.string.no, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                // Don't actually want to close the queue
+                dialog.dismiss();
+            }
+        });
+
+        dialogBuilder.create().show();
+    }
+
     private Playlist createPlaylistForQueue() {
         // Create body parameters for new playlist
         Map<String, Object> playlistParameters = new HashMap<>();
-        playlistParameters.put("name", "SocialQ Playlist");
-        playlistParameters.put("public", false);
+        playlistParameters.put("name", getString(R.string.default_playlist_name));
+        playlistParameters.put("public", true);
         playlistParameters.put("collaborative", false);
         playlistParameters.put("description", "Playlist created by the SocialQ App.");
 
@@ -311,7 +380,7 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
     /**
      * Adds a song to the referenced playlist at the given position (or end if not specified)
      *
-     * @param uri - uri of the track to be added
+     * @param uri      - uri of the track to be added
      * @param position - position of the track to be added (if less than 0, track placed at end of playlist)
      */
     private void addTrackToPlaylistPosition(String uri, int position) {
@@ -449,8 +518,6 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
             mPlayQueueService.removePlayQueueServiceListener(this);
             mPlayQueueService.stopSelf();
         }
-
-        unfollowQueuePlaylist();
 
         // This should trigger access request thread to end if it is running
         mSystemAccessExpireTime = -1;
