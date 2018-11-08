@@ -307,9 +307,6 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
                     // Create body parameters for modifying playlist details
                     Map<String, Object> playlistParameters = new HashMap<>();
                     playlistParameters.put("name", playlistName.isEmpty() ? getString(R.string.default_playlist_name) : playlistName);
-                    playlistParameters.put("public", false);
-                    playlistParameters.put("collaborative", false);
-                    playlistParameters.put("description", "Playlist created by the SocialQ App.");
 
                     mSpotifyService.changePlaylistDetails(mCurrentUser.id, mPlaylist.id, playlistParameters);
                 } else {
@@ -336,7 +333,7 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
         // Create body parameters for new playlist
         Map<String, Object> playlistParameters = new HashMap<>();
         playlistParameters.put("name", getString(R.string.default_playlist_name));
-        playlistParameters.put("public", false);
+        playlistParameters.put("public", true);
         playlistParameters.put("collaborative", false);
         playlistParameters.put("description", "Playlist created by the SocialQ App.");
 
