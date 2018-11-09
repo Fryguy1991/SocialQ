@@ -295,7 +295,7 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
             }
         });
 
-        dialogBuilder.setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
+        dialogBuilder.setPositiveButton(R.string.confirm, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
 
@@ -318,7 +318,7 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
             }
         });
 
-        dialogBuilder.setNegativeButton(R.string.no, new DialogInterface.OnClickListener() {
+        dialogBuilder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 // Don't actually want to close the queue

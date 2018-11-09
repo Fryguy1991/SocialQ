@@ -141,7 +141,7 @@ public abstract class ClientActivity extends AppCompatActivity implements Connec
 
         dialogBuilder.setView(contentView);
 
-        dialogBuilder.setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
+        dialogBuilder.setPositiveButton(R.string.confirm, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 Log.d(TAG, "User chose to leave the queue");
@@ -157,7 +157,7 @@ public abstract class ClientActivity extends AppCompatActivity implements Connec
             }
         });
 
-        dialogBuilder.setNegativeButton(R.string.no, new DialogInterface.OnClickListener() {
+        dialogBuilder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 Log.d(TAG, "User chose to remain in the queue");
