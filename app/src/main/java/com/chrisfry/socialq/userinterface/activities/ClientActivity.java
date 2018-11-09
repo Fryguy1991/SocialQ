@@ -1,8 +1,10 @@
 package com.chrisfry.socialq.userinterface.activities;
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.StrictMode;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -10,6 +12,8 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.CheckBox;
 import android.widget.Toast;
 
 import com.chrisfry.socialq.R;
@@ -42,6 +46,9 @@ public abstract class ClientActivity extends AppCompatActivity implements Connec
     private Playlist mPlaylist;
     protected String mHostUserId;
     private String mCurrentUserId;
+
+    // Flag for if the client can follow the host playlist
+    private boolean mCanFollowPlaylistFlag = true;
 
     @Override
     protected void onNewIntent(Intent intent) {
@@ -122,6 +129,43 @@ public abstract class ClientActivity extends AppCompatActivity implements Connec
             default:
                 // Do nothing.  Client activity should not handle BT events and if we got NONE back something is wrong
         }
+    }
+
+    @Override
+    public void onBackPressed() {
+        displayFollowPlaylistDialog();
+    }
+
+    private void displayFollowPlaylistDialog() {
+        AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
+        dialogBuilder.setTitle(R.string.close_client_dialog_title);
+
+        View contentView = getLayoutInflater().inflate(R.layout.client_exit_dialog, null);
+        final CheckBox followCheckbox = contentView.findViewById(R.id.cb_follow_playlist);
+
+        dialogBuilder.setView(contentView);
+
+        dialogBuilder.setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+
+                // If follow is checked follow playlist with client user
+                if (followCheckbox.isChecked()) {
+                    mSpotifyService.followPlaylist(mCurrentUserId, mPlaylist.id);
+                }
+                ClientActivity.super.onBackPressed();
+            }
+        });
+
+        dialogBuilder.setNegativeButton(R.string.no, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+            }
+        });
+
+        dialogBuilder.create().show();
     }
 
     private void initSpotifySearchElements(String accessToken) {
