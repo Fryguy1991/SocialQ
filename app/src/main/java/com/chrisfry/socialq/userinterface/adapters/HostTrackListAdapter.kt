@@ -21,7 +21,10 @@ class HostTrackListAdapter(val context : Context) : BaseRecyclerViewAdapter<Host
         val trackToDisplay = itemList[position]
         holder.setTrackName(trackToDisplay.track.name)
         holder.setArtistName(DisplayUtils.getTrackArtistString(trackToDisplay))
+        if (trackToDisplay.track.album.images.size > 0) {
+            holder.setAlbumImage(trackToDisplay.track.album.images[0].url)
+        }
         // TODO: Replace with actual user id
-        holder.setClientName(String.format(context.getString(R.string.added_by_client_formatter), "not_implemented"))
+        holder.setClientName("not_implemented")
     }
 }

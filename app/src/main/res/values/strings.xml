@@ -26,7 +26,7 @@
 
     <!-- Close Client Dialog Strings -->
     <string name="close_client_dialog_title">Exit Queue?</string>
-    <string name="follow_playlist">Follow Playlist</string>
+    <string name="follow_playlist">Follow Playlist on Spotify</string>
     <string name="close_client_host_disconnect_dialog_title">Queue Closed</string>
     <string name="follow_playlist_question">Would you like to follow the playlist on Spotify?</string>
 
