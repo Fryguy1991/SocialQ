@@ -12,8 +12,8 @@
     <string name="toast_authentication_error_host">Authentication Error</string>
     <string name="added_by_client_formatter">Added By: %1$s</string>
 
-    <!-- Close Queue Dialog Strings -->
-    <string name="close_queue_dialog_title">Close Queue?</string>
+    <!-- Close Host Dialog Strings -->
+    <string name="close_host_dialog_title">Close Queue?</string>
     <string name="save_playlist">Save Playlist</string>
     <string name="playlist_name_hint">Playlist Name</string>
     <string name="yes">Yes</string>
@@ -22,6 +22,13 @@
     <!-- Client Screen Strings -->
     <string name="toast_authentication_error_client">Authentication Error</string>
     <string name="toast_host_disconnected">Queue Closed</string>
+    <string name="toast_host_connection_error">Connection Error</string>
+
+    <!-- Close Client Dialog Strings -->
+    <string name="close_client_dialog_title">Exit Queue?</string>
+    <string name="follow_playlist">Follow Playlist</string>
+    <string name="close_client_host_disconnect_dialog_title">Queue Closed</string>
+    <string name="follow_playlist_question">Would you like to follow the playlist on Spotify?</string>
 
     <!-- Search Screen Strings -->
     <string name="search_activity_name">Search</string>

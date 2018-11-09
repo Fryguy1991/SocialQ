@@ -133,10 +133,6 @@ public abstract class ClientActivity extends AppCompatActivity implements Connec
 
     @Override
     public void onBackPressed() {
-        displayFollowPlaylistDialog();
-    }
-
-    private void displayFollowPlaylistDialog() {
         AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
         dialogBuilder.setTitle(R.string.close_client_dialog_title);
 
@@ -148,12 +144,15 @@ public abstract class ClientActivity extends AppCompatActivity implements Connec
         dialogBuilder.setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
+                Log.d(TAG, "User chose to leave the queue");
                 dialog.dismiss();
 
                 // If follow is checked follow playlist with client user
                 if (followCheckbox.isChecked()) {
+                    Log.d(TAG, "User chose to follow the playlist");
                     mSpotifyService.followPlaylist(mCurrentUserId, mPlaylist.id);
                 }
+                disconnectClient();
                 ClientActivity.super.onBackPressed();
             }
         });
@@ -161,6 +160,7 @@ public abstract class ClientActivity extends AppCompatActivity implements Connec
         dialogBuilder.setNegativeButton(R.string.no, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
+                Log.d(TAG, "User chose to remain in the queue");
                 dialog.dismiss();
             }
         });
@@ -235,14 +235,14 @@ public abstract class ClientActivity extends AppCompatActivity implements Connec
         mQueueList.addItemDecoration(new QueueItemDecoration(getApplicationContext()));
     }
 
-    protected void updateQueue(int currentPlayingIndex) {
+    protected final void updateQueue(int currentPlayingIndex) {
         if (currentPlayingIndex >= 0) {
             refreshPlaylist();
             mTrackDisplayAdapter.updateAdapter(mPlaylist.tracks.items.subList(currentPlayingIndex, mPlaylist.tracks.items.size()));
         }
     }
 
-    protected void setupQueuePlaylistOnConnection(String playlistId) {
+    protected final void setupQueuePlaylistOnConnection(String playlistId) {
         mPlaylist = mSpotifyService.getPlaylist(mHostUserId, playlistId);
     }
 
@@ -250,9 +250,39 @@ public abstract class ClientActivity extends AppCompatActivity implements Connec
         mPlaylist = mSpotifyService.getPlaylist(mHostUserId, mPlaylist.id);
     }
 
+    protected final void showHostDisconnectedFollowPlaylistDialog() {
+        AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
+        dialogBuilder.setTitle(R.string.close_client_host_disconnect_dialog_title);
+        dialogBuilder.setView(R.layout.host_disconnected_dialog);
+
+        dialogBuilder.setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                Log.d(TAG, "User chose to follow the playlist");
+                dialog.dismiss();
+
+                // If yes, follow the Spotify playlist
+                mSpotifyService.followPlaylist(mCurrentUserId, mPlaylist.id);
+            }
+        });
+
+        dialogBuilder.setNegativeButton(R.string.no, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                Log.d(TAG, "User chose not to follow the playlist");
+                dialog.dismiss();
+                finish();
+            }
+        });
+
+        dialogBuilder.create().show();
+    }
+
     protected abstract void sendTrackToHost(String requestMessage);
 
     protected abstract void connectToHost();
+
+    protected abstract void disconnectClient();
 
     private String buildSongRequestMessage(String trackUri, String userId) {
         if (trackUri != null && userId != null && !trackUri.isEmpty() && !userId.isEmpty()) {

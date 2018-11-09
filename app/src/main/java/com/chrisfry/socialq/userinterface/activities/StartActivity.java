@@ -150,7 +150,7 @@ public class StartActivity extends AppCompatActivity {
         mQueueTitle = getResources().getString(R.string.queue_title_default_value);
 
         // Inflate content view and get references to UI elements
-        View contentView = getLayoutInflater().inflate(R.layout.new_queue_dialog_content_layout, null);
+        View contentView = getLayoutInflater().inflate(R.layout.new_queue_dialog, null);
         EditText queueNameEditText = contentView.findViewById(R.id.et_queue_name);
         AppCompatCheckBox fairPlayCheckbox = contentView.findViewById(R.id.cb_fairplay_checkbox);
 

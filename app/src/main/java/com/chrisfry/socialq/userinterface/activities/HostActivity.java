@@ -273,7 +273,7 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
     public void onBackPressed() {
 
         AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
-        dialogBuilder.setTitle(getString(R.string.close_queue_dialog_title));
+        dialogBuilder.setTitle(getString(R.string.close_host_dialog_title));
 
         // Inflate content view and get references to UI elements
         View contentView = getLayoutInflater().inflate(R.layout.save_playlist_dialog, null);
@@ -341,7 +341,7 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
         return mSpotifyService.createPlaylist(mCurrentUser.id, playlistParameters);
     }
 
-    protected void handleSongRequest(SongRequestData songRequest) {
+    protected final void handleSongRequest(SongRequestData songRequest) {
         if (songRequest != null && !songRequest.getUri().isEmpty()) {
             Log.d(TAG, "Received request for URI: " + songRequest.getUri() + ", from User ID: " + songRequest.getUserId());
 
