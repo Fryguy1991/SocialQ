@@ -10,6 +10,7 @@ import com.google.android.gms.nearby.Nearby
 import com.google.android.gms.nearby.connection.*
 import com.google.android.gms.tasks.OnFailureListener
 import com.google.android.gms.tasks.OnSuccessListener
+import kaaes.spotify.webapi.android.models.UserPublic
 import java.lang.Exception
 import java.util.regex.Pattern
 
@@ -122,9 +123,9 @@ class HostActivityNearbyDevices : HostActivity() {
             matcher = pattern.matcher(payloadString)
             val clientId = matcher.replaceFirst("")
 
-            return SongRequestData(songUri, clientId)
+            return SongRequestData(songUri, mSpotifyService.getUser(clientId))
         }
-        return SongRequestData("", "")
+        return SongRequestData("", UserPublic())
     }
 
     override fun startHostConnection(queueTitle: String) {
