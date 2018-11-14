@@ -1,3 +1,5 @@
 package com.chrisfry.socialq.model
 
-data class SongRequestData (val uri: String, val userId: String)
+import kaaes.spotify.webapi.android.models.UserPublic
+
+data class SongRequestData (val uri: String, val user: UserPublic)

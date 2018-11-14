@@ -20,5 +20,8 @@ class BasicTrackListAdapter : BaseRecyclerViewAdapter<BasicTrackHolder, Playlist
         val playlistTrack = itemList[position]
         holder.setArtistName(DisplayUtils.getTrackArtistString(playlistTrack))
         holder.setTrackName(playlistTrack.track.name)
+        if (playlistTrack.track.album.images.size > 0) {
+            holder.setAlbumImage(playlistTrack.track.album.images[0].url)
+        }
     }
 }

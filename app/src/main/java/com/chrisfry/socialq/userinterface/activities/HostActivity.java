@@ -32,6 +32,7 @@ import com.chrisfry.socialq.business.dagger.modules.SpotifyModule;
 import com.chrisfry.socialq.business.dagger.modules.components.DaggerSpotifyComponent;
 import com.chrisfry.socialq.business.dagger.modules.components.SpotifyComponent;
 import com.chrisfry.socialq.enums.RequestType;
+import com.chrisfry.socialq.model.ClientRequestData;
 import com.chrisfry.socialq.model.SongRequestData;
 import com.chrisfry.socialq.userinterface.adapters.HostTrackListAdapter;
 import com.spotify.sdk.android.authentication.AuthenticationClient;
@@ -72,7 +73,7 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
 
     // Spotify elements
     private SpotifyApi mSpotifyApi;
-    private SpotifyService mSpotifyService;
+    protected SpotifyService mSpotifyService;
     private PlayQueueService mPlayQueueService;
     protected UserPrivate mCurrentUser;
     protected Playlist mPlaylist;
@@ -245,7 +246,7 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
             case SEARCH_REQUEST:
                 if (resultCode == RESULT_OK) {
                     String trackUri = intent.getStringExtra(AppConstants.SEARCH_RESULTS_EXTRA_KEY);
-                    handleSongRequest(new SongRequestData(trackUri, mCurrentUser.id));
+                    handleSongRequest(new SongRequestData(trackUri, mCurrentUser));
                 }
                 break;
             case NONE:
@@ -273,7 +274,7 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
     public void onBackPressed() {
 
         AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
-        dialogBuilder.setTitle(getString(R.string.close_queue_dialog_title));
+        dialogBuilder.setTitle(getString(R.string.close_host_dialog_title));
 
         // Inflate content view and get references to UI elements
         View contentView = getLayoutInflater().inflate(R.layout.save_playlist_dialog, null);
@@ -295,7 +296,7 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
             }
         });
 
-        dialogBuilder.setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
+        dialogBuilder.setPositiveButton(R.string.confirm, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
 
@@ -318,7 +319,7 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
             }
         });
 
-        dialogBuilder.setNegativeButton(R.string.no, new DialogInterface.OnClickListener() {
+        dialogBuilder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 // Don't actually want to close the queue
@@ -341,9 +342,9 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
         return mSpotifyService.createPlaylist(mCurrentUser.id, playlistParameters);
     }
 
-    protected void handleSongRequest(SongRequestData songRequest) {
+    protected final void handleSongRequest(SongRequestData songRequest) {
         if (songRequest != null && !songRequest.getUri().isEmpty()) {
-            Log.d(TAG, "Received request for URI: " + songRequest.getUri() + ", from User ID: " + songRequest.getUserId());
+            Log.d(TAG, "Received request for URI: " + songRequest.getUri() + ", from User ID: " + songRequest.getUser().id);
 
             // Add track to request list
             mSongRequests.add(songRequest);
@@ -413,9 +414,9 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
 
             // Start inspecting song requests
             for (newTrackPosition = 0; newTrackPosition < mSongRequests.size(); newTrackPosition++) {
-                String currentRequestUserId = mSongRequests.get(newTrackPosition).getUserId();
+                String currentRequestUserId = mSongRequests.get(newTrackPosition).getUser().id;
 
-                if (currentRequestUserId.equals(songRequest.getUserId())) {
+                if (currentRequestUserId.equals(songRequest.getUser().id)) {
                     // If we found a requestee track set open repeats to true (found requestee track)
                     for (Map.Entry<String, Boolean> mapEntry : clientRepeatHash.entrySet()) {
                         mapEntry.setValue(true);
@@ -571,9 +572,9 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
         // Refresh playlist and update UI
         refreshPlaylist();
         if (currentPlayingIndex >= mPlaylist.tracks.items.size()) {
-            mTrackDisplayAdapter.updateAdapter(new ArrayList<PlaylistTrack>());
+            mTrackDisplayAdapter.updateAdapter(new ArrayList<ClientRequestData>());
         } else {
-            mTrackDisplayAdapter.updateAdapter(mPlaylist.tracks.items.subList(currentPlayingIndex, mPlaylist.tracks.items.size()));
+            mTrackDisplayAdapter.updateAdapter(createDisplayList(mPlaylist.tracks.items.subList(currentPlayingIndex, mPlaylist.tracks.items.size())));
         }
 
         // Notify clients queue has been updated
@@ -604,11 +605,23 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
     public void onQueueUpdated() {
         // Refresh playlist and update UI
         refreshPlaylist();
-        mTrackDisplayAdapter.updateAdapter(mPlaylist.tracks.items.subList(mCachedPlayingIndex, mPlaylist.tracks.items.size()));
+        mTrackDisplayAdapter.updateAdapter(createDisplayList(mPlaylist.tracks.items.subList(mCachedPlayingIndex, mPlaylist.tracks.items.size())));
 
         notifyClientsQueueUpdated(mCachedPlayingIndex);
     }
 
+
+    private List<ClientRequestData> createDisplayList(List<PlaylistTrack> trackList) {
+        ArrayList<ClientRequestData> displayList = new ArrayList<>();
+
+        // TODO: This does not guarantee correct display.  If player does not play songs in
+        // correct order, the incorrect users may be displayed
+        for (int i = 0; i < trackList.size() && i < mSongRequests.size(); i++) {
+            displayList.add(new ClientRequestData(trackList.get(i), mSongRequests.get(i).getUser()));
+        }
+
+        return displayList;
+    }
 
     /**
      * Inner thread class used to detect when a new access code is needed and send message to handler to request a new one.
@@ -645,16 +658,17 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
         Map<String, Object> bodyParameters = new HashMap<>();
 
         mSpotifyService.addTracksToPlaylist(mCurrentUser.id, mPlaylist.id, queryParameters, bodyParameters);
-        mPlayQueueService.notifyServiceQueueHasChanged();
 
         // String for testing fair play (simulate a user name)
         String userId = "fake_user";
 //        String userId = mCurrentUser.id;
 
-        mSongRequests.add(new SongRequestData("spotify:track:0p8fUOBfWtGcaKGiD9drgJ", userId));
-        mSongRequests.add(new SongRequestData("spotify:track:6qtg4gz3DhqOHL5BHtSQw8", userId));
-        mSongRequests.add(new SongRequestData("spotify:track:57bgtoPSgt236HzfBOd8kj", userId));
-        mSongRequests.add(new SongRequestData("spotify:track:7lGh1Dy02c5C0j3tj9AVm3", userId));
+        mSongRequests.add(new SongRequestData("spotify:track:0p8fUOBfWtGcaKGiD9drgJ", mCurrentUser));
+        mSongRequests.add(new SongRequestData("spotify:track:6qtg4gz3DhqOHL5BHtSQw8", mCurrentUser));
+        mSongRequests.add(new SongRequestData("spotify:track:57bgtoPSgt236HzfBOd8kj", mCurrentUser));
+        mSongRequests.add(new SongRequestData("spotify:track:7lGh1Dy02c5C0j3tj9AVm3", mCurrentUser));
+
+        mPlayQueueService.notifyServiceQueueHasChanged();
     }
 
     private void setupLongDemoQueue() {
@@ -680,27 +694,29 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
         Map<String, Object> bodyParameters = new HashMap<>();
 
         mSpotifyService.addTracksToPlaylist(mCurrentUser.id, mPlaylist.id, queryParameters, bodyParameters);
-        mPlayQueueService.notifyServiceQueueHasChanged();
+
 
         // String for testing fair play (simulate a user name)
-        String userId = "fake_user";
+//        String userId = "fake_user";
 //        String userId = mCurrentUser.id;
 
-        mSongRequests.add(new SongRequestData("spotify:track:0p8fUOBfWtGcaKGiD9drgJ", userId));
-        mSongRequests.add(new SongRequestData("spotify:track:6qtg4gz3DhqOHL5BHtSQw8", userId));
-        mSongRequests.add(new SongRequestData("spotify:track:57bgtoPSgt236HzfBOd8kj", userId));
-        mSongRequests.add(new SongRequestData("spotify:track:4VbDJMkAX3dWNBdn3KH6Wx", userId));
-        mSongRequests.add(new SongRequestData("spotify:track:2jnvdMCTvtdVCci3YLqxGY", userId));
-        mSongRequests.add(new SongRequestData("spotify:track:419qOkEdlmbXS1GRJEMntC", userId));
-        mSongRequests.add(new SongRequestData("spotify:track:1jvqZQtbBGK5GJCGT615ao", userId));
-        mSongRequests.add(new SongRequestData("spotify:track:6cG3kY60HMcFqiZN8frkXF", userId));
-        mSongRequests.add(new SongRequestData("spotify:track:0dqrAmrvQ6fCGNf5T8If5A", userId));
-        mSongRequests.add(new SongRequestData("spotify:track:0wHNrrefyaeVewm4NxjxrX", userId));
-        mSongRequests.add(new SongRequestData("spotify:track:1hh4GY1zM7SUAyM3a2ziH5", userId));
-        mSongRequests.add(new SongRequestData("spotify:track:5Cl9GDb0AyQnppRr6q7ldb", userId));
-        mSongRequests.add(new SongRequestData("spotify:track:7D180Q77XAEP7atBLmMTgK", userId));
-        mSongRequests.add(new SongRequestData("spotify:track:2uxL6E8Yq0Psc1V9uBtC4F", userId));
-        mSongRequests.add(new SongRequestData("spotify:track:7lGh1Dy02c5C0j3tj9AVm3", userId));
+        mSongRequests.add(new SongRequestData("spotify:track:0p8fUOBfWtGcaKGiD9drgJ", mCurrentUser));
+        mSongRequests.add(new SongRequestData("spotify:track:6qtg4gz3DhqOHL5BHtSQw8", mCurrentUser));
+        mSongRequests.add(new SongRequestData("spotify:track:57bgtoPSgt236HzfBOd8kj", mCurrentUser));
+        mSongRequests.add(new SongRequestData("spotify:track:4VbDJMkAX3dWNBdn3KH6Wx", mCurrentUser));
+        mSongRequests.add(new SongRequestData("spotify:track:2jnvdMCTvtdVCci3YLqxGY", mCurrentUser));
+        mSongRequests.add(new SongRequestData("spotify:track:419qOkEdlmbXS1GRJEMntC", mCurrentUser));
+        mSongRequests.add(new SongRequestData("spotify:track:1jvqZQtbBGK5GJCGT615ao", mCurrentUser));
+        mSongRequests.add(new SongRequestData("spotify:track:6cG3kY60HMcFqiZN8frkXF", mCurrentUser));
+        mSongRequests.add(new SongRequestData("spotify:track:0dqrAmrvQ6fCGNf5T8If5A", mCurrentUser));
+        mSongRequests.add(new SongRequestData("spotify:track:0wHNrrefyaeVewm4NxjxrX", mCurrentUser));
+        mSongRequests.add(new SongRequestData("spotify:track:1hh4GY1zM7SUAyM3a2ziH5", mCurrentUser));
+        mSongRequests.add(new SongRequestData("spotify:track:5Cl9GDb0AyQnppRr6q7ldb", mCurrentUser));
+        mSongRequests.add(new SongRequestData("spotify:track:7D180Q77XAEP7atBLmMTgK", mCurrentUser));
+        mSongRequests.add(new SongRequestData("spotify:track:2uxL6E8Yq0Psc1V9uBtC4F", mCurrentUser));
+        mSongRequests.add(new SongRequestData("spotify:track:7lGh1Dy02c5C0j3tj9AVm3", mCurrentUser));
+
+        mPlayQueueService.notifyServiceQueueHasChanged();
     }
 
     public abstract void initiateNewClient(Object client);

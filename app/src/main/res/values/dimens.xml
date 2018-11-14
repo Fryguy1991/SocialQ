@@ -19,5 +19,5 @@
     <dimen name="queue_dialog_side_margin">25dp</dimen>
 
     <!-- Search Dimens -->
-    <dimen name="artist_picture_size">50dp</dimen>
+    <dimen name="artist_picture_size">60dp</dimen>
 </resources>

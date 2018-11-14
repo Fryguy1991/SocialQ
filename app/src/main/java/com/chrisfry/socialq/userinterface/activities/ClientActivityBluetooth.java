@@ -79,6 +79,11 @@ public class ClientActivityBluetooth extends ClientActivity implements Bluetooth
         }
     }
 
+    @Override
+    protected void disconnectClient() {
+
+    }
+
     private void connectToBluetoothHost() {
         if (mHostBTDevice != null) {
             mHostBTDevice.setPairingConfirmation(false);

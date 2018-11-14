@@ -5,6 +5,13 @@
     <!-- Menu Action Strings -->
     <string name="search_action">search_action</string>
 
+    <!-- Common Dialog Strings -->
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+    <string name="start">Start</string>
+    <string name="cancel">Cancel</string>
+    <string name="confirm">Confirm</string>
+
     <!-- Host Screen Strings -->
     <string name="next_btn">Next</string>
     <string name="play_btn">Play</string>
@@ -12,16 +19,21 @@
     <string name="toast_authentication_error_host">Authentication Error</string>
     <string name="added_by_client_formatter">Added By: %1$s</string>
 
-    <!-- Close Queue Dialog Strings -->
-    <string name="close_queue_dialog_title">Close Queue?</string>
-    <string name="save_playlist">Save Playlist</string>
+    <!-- Close Host Dialog Strings -->
+    <string name="close_host_dialog_title">Close Queue?</string>
+    <string name="save_playlist">Save Spotify Playlist</string>
     <string name="playlist_name_hint">Playlist Name</string>
-    <string name="yes">Yes</string>
-    <string name="no">No</string>
 
     <!-- Client Screen Strings -->
     <string name="toast_authentication_error_client">Authentication Error</string>
     <string name="toast_host_disconnected">Queue Closed</string>
+    <string name="toast_host_connection_error">Connection Error</string>
+
+    <!-- Close Client Dialog Strings -->
+    <string name="close_client_dialog_title">Exit Queue?</string>
+    <string name="follow_playlist">Follow Spotify Playlist</string>
+    <string name="close_client_host_disconnect_dialog_title">Queue Closed</string>
+    <string name="follow_playlist_question">Would you like to follow the playlist on Spotify?</string>
 
     <!-- Search Screen Strings -->
     <string name="search_activity_name">Search</string>
@@ -45,8 +57,6 @@
     <string name="queue_title">Queue Title</string>
     <string name="queue_title_default_value">SocialQ Host</string>
     <string name="fair_play">Fair Play </string>
-    <string name="start">Start</string>
-    <string name="cancel">Cancel</string>
     <string name="default_playlist_name">SocialQ Playlist</string>
 
     <!-- Queue Connect Screen Strings -->

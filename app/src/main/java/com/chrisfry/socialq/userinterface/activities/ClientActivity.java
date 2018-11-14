@@ -1,8 +1,10 @@
 package com.chrisfry.socialq.userinterface.activities;
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.StrictMode;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -10,6 +12,8 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.CheckBox;
 import android.widget.Toast;
 
 import com.chrisfry.socialq.R;
@@ -42,6 +46,9 @@ public abstract class ClientActivity extends AppCompatActivity implements Connec
     private Playlist mPlaylist;
     protected String mHostUserId;
     private String mCurrentUserId;
+
+    // Flag for if the client can follow the host playlist
+    private boolean mCanFollowPlaylistFlag = true;
 
     @Override
     protected void onNewIntent(Intent intent) {
@@ -124,6 +131,43 @@ public abstract class ClientActivity extends AppCompatActivity implements Connec
         }
     }
 
+    @Override
+    public void onBackPressed() {
+        AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
+        dialogBuilder.setTitle(R.string.close_client_dialog_title);
+
+        View contentView = getLayoutInflater().inflate(R.layout.client_exit_dialog, null);
+        final CheckBox followCheckbox = contentView.findViewById(R.id.cb_follow_playlist);
+
+        dialogBuilder.setView(contentView);
+
+        dialogBuilder.setPositiveButton(R.string.confirm, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                Log.d(TAG, "User chose to leave the queue");
+                dialog.dismiss();
+
+                // If follow is checked follow playlist with client user
+                if (followCheckbox.isChecked()) {
+                    Log.d(TAG, "User chose to follow the playlist");
+                    mSpotifyService.followPlaylist(mCurrentUserId, mPlaylist.id);
+                }
+                disconnectClient();
+                ClientActivity.super.onBackPressed();
+            }
+        });
+
+        dialogBuilder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                Log.d(TAG, "User chose to remain in the queue");
+                dialog.dismiss();
+            }
+        });
+
+        dialogBuilder.create().show();
+    }
+
     private void initSpotifySearchElements(String accessToken) {
         // Setup Spotify service
         SpotifyComponent componenet = DaggerSpotifyComponent.builder().spotifyModule(
@@ -191,14 +235,14 @@ public abstract class ClientActivity extends AppCompatActivity implements Connec
         mQueueList.addItemDecoration(new QueueItemDecoration(getApplicationContext()));
     }
 
-    protected void updateQueue(int currentPlayingIndex) {
+    protected final void updateQueue(int currentPlayingIndex) {
         if (currentPlayingIndex >= 0) {
             refreshPlaylist();
             mTrackDisplayAdapter.updateAdapter(mPlaylist.tracks.items.subList(currentPlayingIndex, mPlaylist.tracks.items.size()));
         }
     }
 
-    protected void setupQueuePlaylistOnConnection(String playlistId) {
+    protected final void setupQueuePlaylistOnConnection(String playlistId) {
         mPlaylist = mSpotifyService.getPlaylist(mHostUserId, playlistId);
     }
 
@@ -206,9 +250,39 @@ public abstract class ClientActivity extends AppCompatActivity implements Connec
         mPlaylist = mSpotifyService.getPlaylist(mHostUserId, mPlaylist.id);
     }
 
+    protected final void showHostDisconnectedFollowPlaylistDialog() {
+        AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
+        dialogBuilder.setTitle(R.string.close_client_host_disconnect_dialog_title);
+        dialogBuilder.setView(R.layout.host_disconnected_dialog);
+
+        dialogBuilder.setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                Log.d(TAG, "User chose to follow the playlist");
+                dialog.dismiss();
+
+                // If yes, follow the Spotify playlist
+                mSpotifyService.followPlaylist(mCurrentUserId, mPlaylist.id);
+            }
+        });
+
+        dialogBuilder.setNegativeButton(R.string.no, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                Log.d(TAG, "User chose not to follow the playlist");
+                dialog.dismiss();
+                finish();
+            }
+        });
+
+        dialogBuilder.create().show();
+    }
+
     protected abstract void sendTrackToHost(String requestMessage);
 
     protected abstract void connectToHost();
+
+    protected abstract void disconnectClient();
 
     private String buildSongRequestMessage(String trackUri, String userId) {
         if (trackUri != null && userId != null && !trackUri.isEmpty() && !userId.isEmpty()) {

@@ -16,6 +16,9 @@ import java.lang.NumberFormatException
 class ClientActivityNearbyDevices : ClientActivity() {
     private val TAG = ClientActivityNearbyDevices::class.java.name
 
+    // Flag to indicate if the user has initiated the disconnect
+    private var userDisconnect = false
+
     // Variable to hold host endpoint
     private lateinit var mHostEndpointId: String
     // Flag indicating success of connection to host (used during activity destruction)
@@ -64,8 +67,13 @@ class ClientActivityNearbyDevices : ClientActivity() {
 
         override fun onDisconnected(endPoint: String) {
             Log.d(TAG, "Host disconnected from the client")
-            Toast.makeText(this@ClientActivityNearbyDevices, getString(R.string.toast_host_disconnected), Toast.LENGTH_SHORT).show()
-            finish()
+
+            // If host has disconnected from the client.  Allow the client to follow the playlist
+            // If client disconnected from the host they will have already picked if they wanted to
+            // follow the playlist
+            if (!userDisconnect) {
+                showHostDisconnectedFollowPlaylistDialog()
+            }
         }
     }
 
@@ -156,8 +164,15 @@ class ClientActivityNearbyDevices : ClientActivity() {
                     .addOnFailureListener(object : OnFailureListener {
                         override fun onFailure(p0: Exception) {
                             Log.d(TAG, "Failed to send a connection request, can't connect")
+                            Toast.makeText(this@ClientActivityNearbyDevices, getString(R.string.toast_host_connection_error), Toast.LENGTH_SHORT).show()
+                            finish()
                         }
                     })
         }
+    }
+
+    override fun disconnectClient() {
+        userDisconnect = true
+        Nearby.getConnectionsClient(this).disconnectFromEndpoint(mHostEndpointId)
     }
 }

@@ -57,7 +57,7 @@ public class PlayQueueService extends Service implements ConnectionStateCallback
     // Boolean flag to store when when delivery is done
     private boolean mAudioDeliveryDoneFlag = true;
     // Boolean flag to store if MetaData is incorrect
-    private boolean mIncorrectQueueMetaDataFlag = false;
+    private boolean mIncorrectMetaDataFlag = false;
     // Boolean flag to store when a track has been fully delivered
     private boolean mTrackDelivered = false;
     // Boolean flag for storing whether the service is bound (to the host activity)
@@ -186,7 +186,7 @@ public class PlayQueueService extends Service implements ConnectionStateCallback
                      Log.d(TAG, "Audio previously finished.\nStarting playlist from index: " + mCurrentPlaylistIndex);
                      mSpotifyPlayer.playUri(this, mPlaylist.uri, mCurrentPlaylistIndex, 1);
                      mAudioDeliveryDoneFlag = false;
-                     mIncorrectQueueMetaDataFlag = false;
+                     mIncorrectMetaDataFlag = false;
                  } else {
                      Log.d(TAG, "Nothing to play");
                  }
@@ -209,11 +209,11 @@ public class PlayQueueService extends Service implements ConnectionStateCallback
         Log.d(TAG, "NEXT REQUEST");
         if (!mAudioDeliveryDoneFlag) {
             // Don't allow a skip when we're waiting on a new track to be queued
-            if (mIncorrectQueueMetaDataFlag) {
+            if (mIncorrectMetaDataFlag) {
                 // Meta data is not correct.  Start playlist from next index
                 Log.d(TAG, "MetaData not correct on NEXT request");
                 mCurrentPlaylistIndex++;
-                mIncorrectQueueMetaDataFlag = false;
+                mIncorrectMetaDataFlag = false;
                 Log.d(TAG, "Starting playlist from index: " + mCurrentPlaylistIndex);
                 mSpotifyPlayer.playUri(this, mPlaylist.uri, mCurrentPlaylistIndex, 1);
                 notifyNext();
@@ -236,7 +236,7 @@ public class PlayQueueService extends Service implements ConnectionStateCallback
         // Flag is used in requestPlayNext method and when track delivery is finished to manually start the playlist
         // at the next song index.
         refreshPlaylist();
-        mIncorrectQueueMetaDataFlag = true;
+        mIncorrectMetaDataFlag = true;
         notifyQueueChanged();
     }
 
@@ -260,7 +260,7 @@ public class PlayQueueService extends Service implements ConnectionStateCallback
             case kSpPlaybackNotifyPause:
                 Log.d(TAG, "Player has paused");
                 // If meta data is incorrect we won't actually pause (unless user requested pause)
-                if (mUserRequestedPause || !mIncorrectQueueMetaDataFlag) {
+                if (mUserRequestedPause || !mIncorrectMetaDataFlag) {
                     notifyPaused();
                     mUserRequestedPause = false;
                 }
@@ -268,11 +268,11 @@ public class PlayQueueService extends Service implements ConnectionStateCallback
             case kSpPlaybackNotifyTrackChanged:
                 break;
             case kSpPlaybackNotifyMetadataChanged:
-                if (mTrackDelivered && mIncorrectQueueMetaDataFlag) {
+                if (mTrackDelivered && mIncorrectMetaDataFlag) {
                     Log.d(TAG, "Incorrect MetaData, playlist not actually done.\nPlaying playlist from index: " + mCurrentPlaylistIndex);
                     mAudioDeliveryDoneFlag = false;
                     mTrackDelivered = false;
-                    mIncorrectQueueMetaDataFlag = false;
+                    mIncorrectMetaDataFlag = false;
                     mSpotifyPlayer.playUri(this, mPlaylist.uri, mCurrentPlaylistIndex, 1);
                 }
                 break;
