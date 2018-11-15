@@ -59,7 +59,7 @@ class HostFragmentNearby : HostFragmentBase() {
         override fun onConnectionResult(endPoint: String, connectionResolution: ConnectionResolution) {
             when (connectionResolution.status.statusCode) {
                 ConnectionsStatusCodes.STATUS_OK -> {
-                    Log.d(TAG, "Established connection with a client, send queue")
+                    Log.d(TAG, "Established connection with a client ($endPoint), initiate client")
                     Toast.makeText(context!!, "Client has joined!", Toast.LENGTH_SHORT).show()
                     mClientEndpoints.add(endPoint)
                     initiateNewClient(endPoint)
@@ -71,6 +71,7 @@ class HostFragmentNearby : HostFragmentBase() {
         }
 
         override fun onDisconnected(endPoint: String) {
+            Log.d(TAG, "Client $endPoint has disconnected")
             Toast.makeText(context!!, "Client has disconnected!", Toast.LENGTH_SHORT).show()
             mClientEndpoints.remove(endPoint)
         }

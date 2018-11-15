@@ -7,6 +7,8 @@ import android.support.v4.app.Fragment
 import android.support.v4.app.FragmentTransaction
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
+import android.view.Menu
+import android.view.MenuItem
 import android.view.View
 import android.view.WindowManager
 import android.view.inputmethod.InputMethodManager
@@ -21,16 +23,21 @@ import com.spotify.sdk.android.authentication.AuthenticationClient
 import com.spotify.sdk.android.authentication.AuthenticationRequest
 import com.spotify.sdk.android.authentication.AuthenticationResponse
 
-class BaseSpotifyActivity: AppCompatActivity(), StartFragment.StartFragmentListener, HostFragmentBase.BaseHostFragmentListener {
+class BaseSpotifyActivity : AppCompatActivity(), StartFragment.StartFragmentListener, HostFragmentBase.BaseHostFragmentListener {
     val TAG = BaseSpotifyActivity::class.java.name
 
     // Fragment references
     private var hostFragment: HostFragmentBase? = null
+    private var searchFragment: SearchFragment? = null
+
+    // Menu action item references
+    private lateinit var searchActionItem: MenuItem
 
     // Variables needed for passing to a new host queue from start fragment
     private lateinit var queueTitle: String
     private var isFairPlay: Boolean = false
 
+    // Cached access type for access token
     private var accessType = UserType.NONE
 
     // Handler for sending messages to the UI thread
@@ -39,11 +46,33 @@ class BaseSpotifyActivity: AppCompatActivity(), StartFragment.StartFragmentListe
             when (msg.what) {
                 AppConstants.ACCESS_TOKEN_REFRESH ->
                     // Don't request access tokens if activity is being shut down
-                    if (!isFinishing && accessType != UserType.NONE) {
+                    if (!isFinishing && AccessModel.getAccessType() != UserType.NONE) {
                         Log.d(TAG, "Requesting new access token on UI thread")
                         requestAccessToken(AccessModel.getAccessType())
                     }
             }
+        }
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        super.onCreateOptionsMenu(menu)
+        val inflater = menuInflater
+        inflater.inflate(R.menu.main_screen_menu, menu)
+
+        searchActionItem = menu!!.findItem(R.id.search_action)
+
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem?): Boolean {
+        when (item?.getItemId()) {
+            R.id.search_action -> {
+                launchSearchFragment()
+                return true
+            }
+            else ->
+                // Do nothing
+                return false
         }
     }
 
@@ -61,13 +90,7 @@ class BaseSpotifyActivity: AppCompatActivity(), StartFragment.StartFragmentListe
         window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING)
 
         // Start application by showing start fragment
-        if (supportFragmentManager.findFragmentById(R.id.fragment_holder) == null) {
-            val startFragment = StartFragment()
-            startFragment.listener = this
-            val transaction = supportFragmentManager.beginTransaction();
-            transaction.add(R.id.fragment_holder, startFragment, StartFragment.TAG)
-            transaction.commit()
-        }
+        launchStartFragment()
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -87,11 +110,11 @@ class BaseSpotifyActivity: AppCompatActivity(), StartFragment.StartFragmentListe
                     // Start thread responsible for notifying UI thread when new access token is needed
                     AccessRefreshThread().start()
 
-                    when (accessType) {
+                    when (AccessModel.getAccessType()) {
                         UserType.HOST -> launchHostFragment()
-                        UserType.CLIENT, UserType.NONE -> {
-                            //TODO: Implement client launching
-                        }
+                        UserType.CLIENT -> Log.e(TAG, "Implement client launching")
+                        UserType.NONE -> Log.e(TAG, "Shouldn't be receiving access token with no stored access type")
+                        else -> Log.e(TAG, "AccessType = null, Not currently handling null case")
                     }
 
                     // Refresh access token for all fragments that require one
@@ -106,10 +129,20 @@ class BaseSpotifyActivity: AppCompatActivity(), StartFragment.StartFragmentListe
                 }
             }
             RequestType.LOCATION_PERMISSION_REQUEST, RequestType.REQUEST_ENABLE_BT, RequestType.REQUEST_DISCOVER_BT,
-                RequestType.SEARCH_REQUEST , RequestType.NONE -> {
+            RequestType.SEARCH_REQUEST, RequestType.NONE -> {
                 // Base activity should do nothing for these requests
             }
 
+        }
+    }
+
+    private fun launchStartFragment() {
+        if (supportFragmentManager.findFragmentById(R.id.fragment_holder) == null) {
+            val startFragment = StartFragment()
+            startFragment.listener = this
+            val transaction = supportFragmentManager.beginTransaction();
+            transaction.add(R.id.fragment_holder, startFragment, StartFragment.TAG)
+            transaction.commit()
         }
     }
 
@@ -127,13 +160,31 @@ class BaseSpotifyActivity: AppCompatActivity(), StartFragment.StartFragmentListe
             val transaction = supportFragmentManager.beginTransaction()
             transaction.replace(R.id.fragment_holder, hostFragment!!)
             transaction.addToBackStack(null)
-            transaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
+            transaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE)
             transaction.commitAllowingStateLoss()
         }
     }
 
     private fun launchQueueSearchFragment() {
+        // TODO: implement this
+    }
 
+    private fun launchSearchFragment() {
+        Log.d(TAG, "Launching search fragment")
+        // TODO: Do we want to return to the search fragment as if we never left?
+        if (searchFragment == null) {
+            searchFragment = SearchFragment()
+        }
+        // TODO: Add listener for searchFragment
+        val transaction = supportFragmentManager.beginTransaction()
+        transaction.replace(R.id.fragment_holder, searchFragment!!)
+        transaction.addToBackStack(null)
+        transaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE)
+        transaction.commit()
+
+        // Change title and remove search icon
+        title = resources.getString(R.string.search_activity_name)
+        searchActionItem.isVisible = false
     }
 
     override fun onBackPressed() {
@@ -142,7 +193,14 @@ class BaseSpotifyActivity: AppCompatActivity(), StartFragment.StartFragmentListe
             if (currentFragment.handleOnBackPressed()) {
                 return
             } else {
-                super.onBackPressed()
+                if (currentFragment is SearchFragment) {
+                    // Reshow search icon and change title to queue name
+                    searchActionItem.isVisible = true
+                    title = queueTitle
+                    supportFragmentManager.popBackStack()
+                } else {
+                    super.onBackPressed()
+                }
             }
         }
     }
@@ -160,7 +218,7 @@ class BaseSpotifyActivity: AppCompatActivity(), StartFragment.StartFragmentListe
     private fun requestAccessToken(userType: UserType) {
         accessType = userType
         lateinit var scopes: Array<String>
-        when(userType) {
+        when (userType) {
             UserType.HOST -> scopes = arrayOf("user-read-private", "streaming", "playlist-modify-private")
             UserType.CLIENT -> scopes = arrayOf("user-read-private")
             UserType.NONE -> {
@@ -221,15 +279,22 @@ class BaseSpotifyActivity: AppCompatActivity(), StartFragment.StartFragmentListe
     override fun hostShutDown() {
         Log.d(TAG, "Removing host fragment")
         hostFragment = null
+
+        // Return to start fragment appearance
         supportFragmentManager.popBackStack()
         title = resources.getString(R.string.app_name)
+        searchActionItem.isVisible = false
+
+        // Reset values used for starting queue
         queueTitle = ""
         isFairPlay = resources.getBoolean(R.bool.fair_play_default)
     }
 
     override fun showHostTitle() {
         Log.d(TAG, "Showing host title")
+        // Change action bar for host activity
         title = queueTitle
+        searchActionItem.isVisible = true
     }
     // END METHODS RESPONSIBLE FOR INTERRACTING WITH HOST FRAGMENT
 }

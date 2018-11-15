@@ -37,7 +37,7 @@ abstract class HostFragmentBase : SpotifyFragment(), PlayQueueService.PlayQueueS
 
     // Track list elements
     private lateinit var mQueueList: RecyclerView
-    private lateinit var mTrackDisplayAdapter: HostTrackListAdapter
+    private var mTrackDisplayAdapter: HostTrackListAdapter? = null
 
     // Spotify elements
     private var mPlayQueueService: PlayQueueService? = null
@@ -54,6 +54,8 @@ abstract class HostFragmentBase : SpotifyFragment(), PlayQueueService.PlayQueueS
     private var mIsQueueFairPlay: Boolean? = false
     // List containing client song requests
     private val mSongRequests = ArrayList<SongRequestData>()
+    // Flag to cache if the player is playing or not
+    private var mIsPlaying = false
 
     // Object for connecting to/from play queue service
     private val mServiceConnection: ServiceConnection = object : ServiceConnection {
@@ -65,9 +67,8 @@ abstract class HostFragmentBase : SpotifyFragment(), PlayQueueService.PlayQueueS
             // Setup activity for callbacks
             mPlayQueueService?.addPlayQueueServiceListener(this@HostFragmentBase)
 
-            setupQueueList()
 //            setupShortDemoQueue()
-//            setupLongDemoQueue()
+            setupLongDemoQueue()
         }
 
         override fun onServiceDisconnected(componentName: ComponentName) {
@@ -76,6 +77,7 @@ abstract class HostFragmentBase : SpotifyFragment(), PlayQueueService.PlayQueueS
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        Log.d(TAG, "Host Fragment onCreate")
         super.onCreate(savedInstanceState)
 
         // Set fair play flag from intent (or default to app boolean default)
@@ -100,10 +102,12 @@ abstract class HostFragmentBase : SpotifyFragment(), PlayQueueService.PlayQueueS
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+        Log.d(TAG, "Host Fragment onCreateView")
         val baseView = inflater.inflate(R.layout.host_screen, container, false)
 
         initUi(baseView)
         addListeners()
+        setupQueueList()
 
         return baseView
     }
@@ -181,6 +185,27 @@ abstract class HostFragmentBase : SpotifyFragment(), PlayQueueService.PlayQueueS
         dialogBuilder.create().show()
         return true
     }
+
+    override fun onResume() {
+        Log.d(TAG, "Host Fragment Resumed")
+        super.onResume()
+
+        // Refresh track display list
+        if (mTrackDisplayAdapter != null) {
+            mTrackDisplayAdapter!!.updateAdapter(createDisplayList(mPlaylist.tracks.items.subList(mCachedPlayingIndex, mPlaylist.tracks.items.size)))
+        }
+
+        // Ensure our play/pause button loads into the right state
+        if (mIsPlaying) {
+            onQueuePlay()
+        } else {
+            onQueuePause()
+        }
+
+        // Fragment is now visible, show the queue title
+        listener?.showHostTitle()
+    }
+
 
     private fun createPlaylistForQueue(): Playlist {
         // Create body parameters for new playlist
@@ -353,6 +378,8 @@ abstract class HostFragmentBase : SpotifyFragment(), PlayQueueService.PlayQueueS
     }
 
     override fun onDestroy() {
+        Log.d(TAG, "Host Fragment Destroyed")
+
         // Unbind from the PlayQueueService
         if (mIsServiceBound) {
             context?.unbindService(mServiceConnection)
@@ -393,9 +420,9 @@ abstract class HostFragmentBase : SpotifyFragment(), PlayQueueService.PlayQueueS
         // Refresh playlist and update UI
         refreshPlaylist()
         if (currentPlayingIndex >= mPlaylist.tracks.items.size) {
-            mTrackDisplayAdapter.updateAdapter(ArrayList())
+            mTrackDisplayAdapter!!.updateAdapter(ArrayList())
         } else {
-            mTrackDisplayAdapter.updateAdapter(createDisplayList(mPlaylist.tracks.items.subList(currentPlayingIndex, mPlaylist.tracks.items.size)))
+            mTrackDisplayAdapter!!.updateAdapter(createDisplayList(mPlaylist.tracks.items.subList(currentPlayingIndex, mPlaylist.tracks.items.size)))
         }
 
         // Notify clients queue has been updated
@@ -403,6 +430,8 @@ abstract class HostFragmentBase : SpotifyFragment(), PlayQueueService.PlayQueueS
     }
 
     override fun onQueuePause() {
+        mIsPlaying = false
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             mPlayPauseButton.setImageDrawable(resources.getDrawable(R.drawable.play_button, activity?.theme))
         } else {
@@ -412,6 +441,8 @@ abstract class HostFragmentBase : SpotifyFragment(), PlayQueueService.PlayQueueS
     }
 
     override fun onQueuePlay() {
+        mIsPlaying = true
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             mPlayPauseButton.setImageDrawable(resources.getDrawable (R.drawable.pause_button, activity?.theme))
         } else {
@@ -423,7 +454,7 @@ abstract class HostFragmentBase : SpotifyFragment(), PlayQueueService.PlayQueueS
     override fun onQueueUpdated() {
         // Refresh playlist and update UI
         refreshPlaylist()
-        mTrackDisplayAdapter.updateAdapter(createDisplayList(mPlaylist.tracks.items.subList(mCachedPlayingIndex, mPlaylist.tracks.items.size)))
+        mTrackDisplayAdapter!!.updateAdapter(createDisplayList(mPlaylist.tracks.items.subList(mCachedPlayingIndex, mPlaylist.tracks.items.size)))
 
         notifyClientsQueueUpdated(mCachedPlayingIndex)
     }
@@ -513,13 +544,6 @@ abstract class HostFragmentBase : SpotifyFragment(), PlayQueueService.PlayQueueS
         mSongRequests.add(SongRequestData("spotify:track:7lGh1Dy02c5C0j3tj9AVm3", mCurrentUser))
 
         mPlayQueueService!!.notifyServiceQueueHasChanged()
-    }
-
-    override fun onResume() {
-        super.onResume()
-
-        // Fragment is now visible, show the queue title
-        listener?.showHostTitle()
     }
 
     // Abstract methods to be implemented by classes through inheritance

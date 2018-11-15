@@ -34,12 +34,8 @@ import kaaes.spotify.webapi.android.models.TrackSimple
 import java.util.ArrayList
 import java.util.HashMap
 
-class SearchFragment : Fragment(), SearchArtistView.SearchArtistViewPresenter, SearchTrackListAdapter.TrackSelectionListener {
+class SearchFragment : SpotifyFragment(), SearchArtistView.SearchArtistViewPresenter, SearchTrackListAdapter.TrackSelectionListener {
     val TAG = SearchFragment::class.java.name
-
-    // Spotify service elements
-    private lateinit var mSpotifyApi: SpotifyApi
-    private lateinit var mSpotifyService: SpotifyService
 
     // UI elements
     private lateinit var mMainLayout: ConstraintLayout
@@ -58,7 +54,7 @@ class SearchFragment : Fragment(), SearchArtistView.SearchArtistViewPresenter, S
     // Search result containers
     private lateinit var mResultTrackList: MutableList<Track>
     private lateinit var mResultArtistList: MutableList<Artist>
-    private lateinit var mResultAlbumList: MutableList<AlbumSimple>
+//    private lateinit var mResultAlbumList: MutableList<AlbumSimple>
 
     // Recycler view adapters
     private lateinit var mSongResultsAdapter: SearchTrackListAdapter
@@ -227,7 +223,7 @@ class SearchFragment : Fragment(), SearchArtistView.SearchArtistViewPresenter, S
         //        mResultAlbumList = mSpotifyService.searchAlbums(searchText, options).albums.items;
         mResultTrackList = mSpotifyService.searchTracks(searchText, options).tracks.items
 
-        if (mResultArtistList.isEmpty() && mResultAlbumList.isEmpty() && mResultTrackList.isEmpty()) {
+        if (mResultArtistList.isEmpty() && mResultTrackList.isEmpty()) {
             // Didn't find anything.  Toast to let user know
             Toast.makeText(context, String.format(getString(R.string.no_results_found), searchText), Toast.LENGTH_LONG).show()
         } else {
@@ -251,7 +247,7 @@ class SearchFragment : Fragment(), SearchArtistView.SearchArtistViewPresenter, S
 
     private fun updateVisibilityBasedOnResults() {
         // Hide expandable views based on results
-        mAlbumLayout.visibility = if (mResultAlbumList.size == 0) View.GONE else View.VISIBLE
+//        mAlbumLayout.visibility = if (mResultAlbumList.size == 0) View.GONE else View.VISIBLE
         mSearchArtistView.visibility = if (mResultArtistList.size == 0) View.GONE else View.VISIBLE
         mSongLayout.visibility = if (mResultTrackList.size == 0) View.GONE else View.VISIBLE
     }
@@ -259,7 +255,7 @@ class SearchFragment : Fragment(), SearchArtistView.SearchArtistViewPresenter, S
     private fun updateBaseLayoutResultCount() {
         //Update count display on base layouts
         mSongText.text = String.format(getString(R.string.number_of_songs), mResultTrackList.size)
-        mAlbumText.text = String.format(getString(R.string.number_of_albums), mResultAlbumList.size)
+//        mAlbumText.text = String.format(getString(R.string.number_of_albums), mResultAlbumList.size)
     }
 
     private fun updateAdapters() {
