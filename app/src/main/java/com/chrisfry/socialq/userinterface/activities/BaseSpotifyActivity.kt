@@ -16,19 +16,16 @@ import com.chrisfry.socialq.business.AppConstants
 import com.chrisfry.socialq.enums.RequestType
 import com.chrisfry.socialq.enums.UserType
 import com.chrisfry.socialq.model.AccessModel
-import com.chrisfry.socialq.userinterface.fragments.BaseFragment
-import com.chrisfry.socialq.userinterface.fragments.BaseHostFragment
-import com.chrisfry.socialq.userinterface.fragments.SpotifyFragment
-import com.chrisfry.socialq.userinterface.fragments.StartFragment
+import com.chrisfry.socialq.userinterface.fragments.*
 import com.spotify.sdk.android.authentication.AuthenticationClient
 import com.spotify.sdk.android.authentication.AuthenticationRequest
 import com.spotify.sdk.android.authentication.AuthenticationResponse
 
-class BaseSpotifyActivity: AppCompatActivity(), StartFragment.StartFragmentListener, BaseHostFragment.BaseHostFragmentListener {
+class BaseSpotifyActivity: AppCompatActivity(), StartFragment.StartFragmentListener, HostFragmentBase.BaseHostFragmentListener {
     val TAG = BaseSpotifyActivity::class.java.name
 
     // Fragment references
-    private var hostFragment: BaseHostFragment? = null
+    private var hostFragment: HostFragmentBase? = null
 
     // Variables needed for passing to a new host queue from start fragment
     private lateinit var queueTitle: String
@@ -124,7 +121,7 @@ class BaseSpotifyActivity: AppCompatActivity(), StartFragment.StartFragmentListe
             val args = Bundle()
             args.putString(AppConstants.QUEUE_TITLE_KEY, queueTitle)
             args.putBoolean(AppConstants.FAIR_PLAY_KEY, isFairPlay)
-            hostFragment = BaseHostFragment.newInstance(args)
+            hostFragment = HostFragmentNearby.newInstance(args)
             hostFragment!!.listener = this
 
             val transaction = supportFragmentManager.beginTransaction()

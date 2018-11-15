@@ -13,7 +13,6 @@ import com.chrisfry.socialq.business.AppConstants
 import com.chrisfry.socialq.model.ClientRequestData
 import com.chrisfry.socialq.model.SongRequestData
 import com.chrisfry.socialq.services.PlayQueueService
-import com.chrisfry.socialq.userinterface.activities.HostActivity
 import com.chrisfry.socialq.userinterface.adapters.HostTrackListAdapter
 import com.chrisfry.socialq.userinterface.widgets.QueueItemDecoration
 import com.spotify.sdk.android.player.ConnectionStateCallback
@@ -24,15 +23,9 @@ import kaaes.spotify.webapi.android.models.UserPrivate
 import java.util.ArrayList
 import java.util.HashMap
 
-class BaseHostFragment : SpotifyFragment(), PlayQueueService.PlayQueueServiceListener, ConnectionStateCallback {
+abstract class HostFragmentBase : SpotifyFragment(), PlayQueueService.PlayQueueServiceListener, ConnectionStateCallback {
     companion object {
-        private val TAG = HostActivity::class.java.name
-
-        fun newInstance(args: Bundle) : BaseHostFragment {
-            val newFragment = BaseHostFragment()
-            newFragment.arguments = args
-            return newFragment
-        }
+        private val TAG = HostFragmentBase::class.java.name
     }
 
     // Listener for fragment notifications
@@ -63,17 +56,17 @@ class BaseHostFragment : SpotifyFragment(), PlayQueueService.PlayQueueServiceLis
     private val mSongRequests = ArrayList<SongRequestData>()
 
     // Object for connecting to/from play queue service
-    private val mServiceConnection = object : ServiceConnection {
+    private val mServiceConnection: ServiceConnection = object : ServiceConnection {
         override fun onServiceConnected(componentName: ComponentName, iBinder: IBinder) {
             Log.d(TAG, "Service Connected")
             val binder = iBinder as PlayQueueService.PlayQueueBinder
             mPlayQueueService = binder.service
 
             // Setup activity for callbacks
-            mPlayQueueService?.addPlayQueueServiceListener(this@BaseHostFragment)
+            mPlayQueueService?.addPlayQueueServiceListener(this@HostFragmentBase)
 
             setupQueueList()
-            setupShortDemoQueue()
+//            setupShortDemoQueue()
 //            setupLongDemoQueue()
         }
 
@@ -102,8 +95,7 @@ class BaseHostFragment : SpotifyFragment(), PlayQueueService.PlayQueueServiceLis
             mIsServiceBound = context!!.bindService(startPlayQueueIntent, mServiceConnection, Context.BIND_AUTO_CREATE)
 
             // All logged in and good to go.  Start host connection.
-            // TODO: Need to start host connection
-//            startHostConnection(if (savedInstanceState.getString(AppConstants.QUEUE_TITLE_KEY) == null) "placeholder" else savedInstanceState.getString(AppConstants.QUEUE_TITLE_KEY))
+            startHostConnection(mQueueTitle!!)
         }
     }
 
@@ -407,8 +399,7 @@ class BaseHostFragment : SpotifyFragment(), PlayQueueService.PlayQueueServiceLis
         }
 
         // Notify clients queue has been updated
-        // TODO: Need way to notify clients that the queue has changed
-//        notifyClientsQueueUpdated(currentPlayingIndex)
+        notifyClientsQueueUpdated(currentPlayingIndex)
     }
 
     override fun onQueuePause() {
@@ -434,8 +425,7 @@ class BaseHostFragment : SpotifyFragment(), PlayQueueService.PlayQueueServiceLis
         refreshPlaylist()
         mTrackDisplayAdapter.updateAdapter(createDisplayList(mPlaylist.tracks.items.subList(mCachedPlayingIndex, mPlaylist.tracks.items.size)))
 
-        // TODO: Need way to notify clients that the queue has changed
-//        notifyClientsQueueUpdated(mCachedPlayingIndex)
+        notifyClientsQueueUpdated(mCachedPlayingIndex)
     }
 
 
@@ -531,12 +521,13 @@ class BaseHostFragment : SpotifyFragment(), PlayQueueService.PlayQueueServiceLis
         // Fragment is now visible, show the queue title
         listener?.showHostTitle()
     }
-//    abstract fun initiateNewClient(client: Any)
-//
-//    protected abstract fun startHostConnection(queueTitle: String)
-//
-//    protected abstract fun notifyClientsQueueUpdated(currentPlayingIndex: Int)
 
+    // Abstract methods to be implemented by classes through inheritance
+    abstract fun initiateNewClient(client: Any)
+    protected abstract fun startHostConnection(queueTitle: String)
+    protected abstract fun notifyClientsQueueUpdated(currentPlayingIndex: Int)
+
+    // Interface for sending events back to the activity
     interface BaseHostFragmentListener {
         fun hostShutDown()
 
