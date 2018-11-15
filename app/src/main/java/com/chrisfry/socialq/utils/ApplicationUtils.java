@@ -2,7 +2,6 @@ package com.chrisfry.socialq.utils;
 
 import com.chrisfry.socialq.business.AppConstants;
 import com.chrisfry.socialq.enums.NearbyDevicesMessage;
-import com.chrisfry.socialq.model.AccessModel;
 import com.spotify.android.appremote.api.ConnectionParams;
 
 /**
@@ -10,14 +9,6 @@ import com.spotify.android.appremote.api.ConnectionParams;
  */
 public class ApplicationUtils {
     private final static  String TAG = ApplicationUtils.class.getName();
-
-    public static void setAccessToken(String token) {
-        AccessModel.setAccessToken(token);
-    }
-
-    public static String getAccessToken() {
-        return AccessModel.getAccessToken();
-    }
 
     public static ConnectionParams getConnectionParams() {
         return new ConnectionParams.Builder(AppConstants.CLIENT_ID)

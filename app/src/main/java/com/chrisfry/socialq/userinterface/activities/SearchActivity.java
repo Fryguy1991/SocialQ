@@ -39,10 +39,10 @@ import kaaes.spotify.webapi.android.models.Track;
 import kaaes.spotify.webapi.android.models.TrackSimple;
 import kaaes.spotify.webapi.android.models.Tracks;
 
+import com.chrisfry.socialq.model.AccessModel;
 import com.chrisfry.socialq.userinterface.adapters.SearchTrackListAdapter;
 import com.chrisfry.socialq.userinterface.widgets.QueueItemDecoration;
 import com.chrisfry.socialq.userinterface.widgets.SearchArtistView;
-import com.chrisfry.socialq.utils.ApplicationUtils;
 import com.chrisfry.socialq.utils.DisplayUtils;
 
 import org.jetbrains.annotations.NotNull;
@@ -85,8 +85,8 @@ public class SearchActivity extends AppCompatActivity implements SearchTrackList
         setContentView(R.layout.search_screen);
         ButterKnife.bind(this);
 
-        String accessToken = ApplicationUtils.getAccessToken();
-        if (accessToken == null) {
+        String accessToken = AccessModel.getAccessToken();
+        if (accessToken == null || System.currentTimeMillis() > AccessModel.getAccessExpireTime()) {
             Log.d(TAG, "Invalid Access Token");
             Toast.makeText(this, "Invalid Access Token", Toast.LENGTH_LONG).show();
             finish();

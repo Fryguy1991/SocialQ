@@ -32,6 +32,8 @@ import com.chrisfry.socialq.business.dagger.modules.SpotifyModule;
 import com.chrisfry.socialq.business.dagger.modules.components.DaggerSpotifyComponent;
 import com.chrisfry.socialq.business.dagger.modules.components.SpotifyComponent;
 import com.chrisfry.socialq.enums.RequestType;
+import com.chrisfry.socialq.enums.UserType;
+import com.chrisfry.socialq.model.AccessModel;
 import com.chrisfry.socialq.model.ClientRequestData;
 import com.chrisfry.socialq.model.SongRequestData;
 import com.chrisfry.socialq.userinterface.adapters.HostTrackListAdapter;
@@ -57,7 +59,6 @@ import kaaes.spotify.webapi.android.models.UserPrivate;
 
 import com.chrisfry.socialq.services.PlayQueueService;
 import com.chrisfry.socialq.userinterface.widgets.QueueItemDecoration;
-import com.chrisfry.socialq.utils.ApplicationUtils;
 
 public abstract class HostActivity extends AppCompatActivity implements ConnectionStateCallback,
         PlayQueueService.PlayQueueServiceListener {
@@ -86,8 +87,6 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
     private boolean mIsQueueFairPlay;
     // List containing client song requests
     private List<SongRequestData> mSongRequests = new ArrayList<>();
-    // Time for when access token expires
-    private long mSystemAccessExpireTime = -1;
 
     // Object for connecting to/from play queue service
     private ServiceConnection mServiceConnection = new ServiceConnection() {
@@ -206,10 +205,10 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
                 if (response.getType() == AuthenticationResponse.Type.TOKEN) {
                     Log.d(TAG, "Access token granted");
 
-                    // Store when access token expires (response "ExpiresIn" is in seconds, subtract a minute to worry less about timing)
-                    mSystemAccessExpireTime = System.currentTimeMillis() + (response.getExpiresIn() - 60) * 1000;
+                    // Calculate when access token expires (response "ExpiresIn" is in seconds, subtract a minute to worry less about timing)
+                    long accessExpireTime = System.currentTimeMillis() + (response.getExpiresIn() - 60) * 1000;
 
-                    ApplicationUtils.setAccessToken(response.getAccessToken());
+                    AccessModel.setAccess(response.getAccessToken(), UserType.HOST, accessExpireTime);
 
                     // Start thread responsible for notifying UI thread when new access token is needed
                     new AccessRefreshThread().start();
@@ -521,7 +520,7 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
         }
 
         // This should trigger access request thread to end if it is running
-        mSystemAccessExpireTime = -1;
+        AccessModel.reset();
         super.onDestroy();
     }
 
@@ -632,7 +631,7 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
                 @Override
                 public void run() {
                     while (true) {
-                        if (System.currentTimeMillis() >= mSystemAccessExpireTime) {
+                        if (System.currentTimeMillis() >= AccessModel.getAccessExpireTime()) {
                             Log.d(TAG, "Detected that we need a new access token");
                             Message message = new Message();
                             message.what = AppConstants.ACCESS_TOKEN_REFRESH;

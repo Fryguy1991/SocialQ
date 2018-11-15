@@ -6,7 +6,6 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.os.Process
-import android.support.v4.app.Fragment
 import android.support.v7.widget.AppCompatCheckBox
 import android.text.Editable
 import android.text.TextWatcher
@@ -20,7 +19,7 @@ import com.chrisfry.socialq.enums.RequestType
 import com.chrisfry.socialq.enums.UserType
 import com.chrisfry.socialq.userinterface.activities.BaseSpotifyActivity
 
-class StartFragment : Fragment() {
+class StartFragment : BaseFragment() {
     companion object {
         val TAG = StartFragment::class.java.name
     }
@@ -51,7 +50,7 @@ class StartFragment : Fragment() {
                 userType = UserType.CLIENT
                 // Ensure we have location permission before starting a client
                 if (hasLocationPermission()) {
-                    listener?.startClient()
+                    listener?.startQueueSearch()
                 }
             }
         }
@@ -84,7 +83,7 @@ class StartFragment : Fragment() {
                 // Received location permission.  If button for host/client was pressed launch respective action
                 when (userType) {
                     UserType.HOST -> handleHostStart()
-                    UserType.CLIENT -> listener?.startClient()
+                    UserType.CLIENT -> listener?.startQueueSearch()
                     UserType.NONE -> {
                         // Nothing to handle here
                     }
@@ -187,6 +186,6 @@ class StartFragment : Fragment() {
         /**
          * Starts a search for host queues
          */
-        fun startClient()
+        fun startQueueSearch()
     }
 }

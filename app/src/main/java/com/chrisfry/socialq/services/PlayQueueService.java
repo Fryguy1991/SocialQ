@@ -13,7 +13,7 @@ import com.chrisfry.socialq.business.AppConstants;
 import com.chrisfry.socialq.business.dagger.modules.SpotifyModule;
 import com.chrisfry.socialq.business.dagger.modules.components.DaggerSpotifyComponent;
 import com.chrisfry.socialq.business.dagger.modules.components.SpotifyComponent;
-import com.chrisfry.socialq.utils.ApplicationUtils;
+import com.chrisfry.socialq.model.AccessModel;
 import com.spotify.sdk.android.player.Config;
 import com.spotify.sdk.android.player.ConnectionStateCallback;
 import com.spotify.sdk.android.player.Connectivity;
@@ -92,7 +92,7 @@ public class PlayQueueService extends Service implements ConnectionStateCallback
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
 
-        String accessToken = ApplicationUtils.getAccessToken();
+        String accessToken = AccessModel.getAccessToken();
         String playlistId = intent.getStringExtra(AppConstants.SERVICE_PLAYLIST_ID_KEY);
 
         Log.d(TAG, "onStartCommand: Starting service");
