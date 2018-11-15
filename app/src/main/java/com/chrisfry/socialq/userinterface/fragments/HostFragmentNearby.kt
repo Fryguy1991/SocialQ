@@ -78,10 +78,10 @@ class HostFragmentNearby : HostFragmentBase() {
 
     private val mPayloadCallback: PayloadCallback = object : PayloadCallback() {
         override fun onPayloadReceived(endpointId: String, payload: Payload) {
-            Log.e(TAG, "Host received a payload")
+            Log.d(TAG, "Host received a payload")
             when (payload.type) {
                 Payload.Type.BYTES -> handleClientPayload(payload)
-                Payload.Type.FILE, Payload.Type.STREAM  -> TODO("not implemented")
+                Payload.Type.FILE, Payload.Type.STREAM  -> Log.e(TAG, "Currently not handling  streams or files")
             }
         }
 
