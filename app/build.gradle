@@ -7,6 +7,7 @@ def daggerVersion = '2.17'
 def butterKnifeVersion = '9.0.0-rc1'
 def retrofitVersion = '2.4.0'
 def glideVersion = '4.8.0'
+def navVersion = "1.0.0-alpha06"
 
 android {
     compileSdkVersion 28
@@ -85,4 +86,9 @@ dependencies {
     implementation ("com.github.bumptech.glide:glide:$glideVersion") {
         exclude group: "com.android.support"
     }
+
+    // Nav Architecture
+    implementation "android.arch.navigation:navigation-fragment-ktx:$navVersion"
+    implementation "android.arch.navigation:navigation-ui-ktx:$navVersion"
+    androidTestImplementation "android.arch.navigation:navigation-testing-ktx:$navVersion"
 }
