@@ -5,6 +5,7 @@ import android.widget.Toast
 import com.chrisfry.socialq.R
 import com.chrisfry.socialq.business.AppConstants
 import com.chrisfry.socialq.enums.NearbyDevicesMessage
+import com.chrisfry.socialq.enums.PayloadTransferUpdateStatus
 import com.chrisfry.socialq.utils.ApplicationUtils
 import com.google.android.gms.nearby.Nearby
 import com.google.android.gms.nearby.connection.*
@@ -79,6 +80,7 @@ class ClientActivityNearbyDevices : ClientActivity() {
 
     private val mPayloadCallback = object : PayloadCallback() {
         override fun onPayloadReceived(endpointId: String, payload: Payload) {
+            Log.e(TAG, "Client received a payload")
             when (payload.type) {
                 Payload.Type.BYTES -> handleHostPayload(payload)
                 Payload.Type.STREAM, Payload.Type.FILE -> TODO("not implemented")
@@ -125,7 +127,8 @@ class ClientActivityNearbyDevices : ClientActivity() {
         }
 
         override fun onPayloadTransferUpdate(endpointId: String, payloadTransferUpdate: PayloadTransferUpdate) {
-            // Do we care about status?
+            val status = PayloadTransferUpdateStatus.getStatusFromConstant(payloadTransferUpdate.status)
+            Log.d(TAG, "Payload Transfer to/from $endpointId has status $status")
         }
 
     }

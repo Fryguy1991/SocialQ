@@ -4,6 +4,7 @@ import android.util.Log
 import android.widget.Toast
 import com.chrisfry.socialq.business.AppConstants
 import com.chrisfry.socialq.enums.NearbyDevicesMessage
+import com.chrisfry.socialq.enums.PayloadTransferUpdateStatus
 import com.chrisfry.socialq.model.SongRequestData
 import com.chrisfry.socialq.utils.ApplicationUtils
 import com.google.android.gms.nearby.Nearby
@@ -68,9 +69,10 @@ class HostActivityNearbyDevices : HostActivity() {
 
     private val mPayloadCallback = object : PayloadCallback() {
         override fun onPayloadReceived(endpointId: String, payload: Payload) {
+            Log.d(TAG, "Host received a payload")
             when (payload.type) {
                 Payload.Type.BYTES -> handleClientPayload(payload)
-                Payload.Type.FILE, Payload.Type.STREAM  -> TODO("not implemented")
+                Payload.Type.FILE, Payload.Type.STREAM  -> Log.e(TAG, "Currently not handling  streams or files")
             }
         }
 
@@ -78,6 +80,8 @@ class HostActivityNearbyDevices : HostActivity() {
             if (payload.asBytes() != null) {
                 val payloadString = String(payload.asBytes()!!)
                 val payloadType = ApplicationUtils.getMessageTypeFromPayload(payloadString)
+
+                Log.e(TAG, "Payload is type $payloadType")
 
                 when (payloadType) {
                     NearbyDevicesMessage.SONG_REQUEST -> {
@@ -100,7 +104,8 @@ class HostActivityNearbyDevices : HostActivity() {
         }
 
         override fun onPayloadTransferUpdate(endpointId: String, payloadTransferUpdate: PayloadTransferUpdate) {
-            // Do we care about status?
+            val status = PayloadTransferUpdateStatus.getStatusFromConstant(payloadTransferUpdate.status)
+            Log.d(TAG, "Payload Transfer to/from $endpointId has status $status")
         }
 
     }
