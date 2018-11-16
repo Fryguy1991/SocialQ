@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/startFragment">
+
+    <fragment
+        android:id="@+id/startFragment"
+        android:name="com.chrisfry.socialq.userinterface.fragments.StartFragment"
+        android:label="StartFragment"
+        tools:layout="@layout/start_screen">
+        <action
+            android:id="@+id/action_startFragment_to_hostFragmentNearby"
+            app:destination="@id/hostFragmentNearby" />
+    </fragment>
+    <fragment
+        android:id="@+id/hostFragmentNearby"
+        android:name="com.chrisfry.socialq.userinterface.fragments.HostFragmentNearby"
+        android:label="HostFragmentNearby"
+        tools:layout="@layout/host_screen">
+        <action
+            android:id="@+id/action_hostFragmentNearby_to_searchFragment"
+            app:destination="@id/searchFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/searchFragment"
+        android:name="com.chrisfry.socialq.userinterface.fragments.SearchFragment"
+        android:label="SearchFragment"
+        tools:layout="@layout/search_screen"/>
+</navigation>

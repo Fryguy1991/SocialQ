@@ -13,6 +13,7 @@ import android.view.View
 import android.view.WindowManager
 import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
+import androidx.navigation.Navigation
 import com.chrisfry.socialq.R
 import com.chrisfry.socialq.business.AppConstants
 import com.chrisfry.socialq.enums.RequestType
@@ -27,6 +28,7 @@ class BaseSpotifyActivity : AppCompatActivity(), StartFragment.StartFragmentList
     val TAG = BaseSpotifyActivity::class.java.name
 
     // Fragment references
+    private var startFragment: StartFragment? = null
     private var hostFragment: HostFragmentBase? = null
     private var searchFragment: SearchFragment? = null
 
@@ -137,11 +139,11 @@ class BaseSpotifyActivity : AppCompatActivity(), StartFragment.StartFragmentList
     }
 
     private fun launchStartFragment() {
-        if (supportFragmentManager.findFragmentById(R.id.fragment_holder) == null) {
-            val startFragment = StartFragment()
-            startFragment.listener = this
+        if (supportFragmentManager.findFragmentById(R.id.nav_host_fragment) == null) {
+            startFragment = StartFragment()
+            startFragment?.listener = this
             val transaction = supportFragmentManager.beginTransaction();
-            transaction.add(R.id.fragment_holder, startFragment, StartFragment.TAG)
+            transaction.add(R.id.nav_host_fragment, startFragment!!, StartFragment.TAG)
             transaction.commit()
         }
     }
@@ -158,7 +160,7 @@ class BaseSpotifyActivity : AppCompatActivity(), StartFragment.StartFragmentList
             hostFragment!!.listener = this
 
             val transaction = supportFragmentManager.beginTransaction()
-            transaction.replace(R.id.fragment_holder, hostFragment!!)
+            transaction.replace(R.id.nav_host_fragment, hostFragment!!)
             transaction.addToBackStack(null)
             transaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE)
             transaction.commitAllowingStateLoss()
@@ -177,7 +179,7 @@ class BaseSpotifyActivity : AppCompatActivity(), StartFragment.StartFragmentList
         }
         // TODO: Add listener for searchFragment
         val transaction = supportFragmentManager.beginTransaction()
-        transaction.replace(R.id.fragment_holder, searchFragment!!)
+        transaction.replace(R.id.nav_host_fragment, searchFragment!!)
         transaction.addToBackStack(null)
         transaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE)
         transaction.commit()
@@ -188,7 +190,7 @@ class BaseSpotifyActivity : AppCompatActivity(), StartFragment.StartFragmentList
     }
 
     override fun onBackPressed() {
-        val currentFragment = supportFragmentManager.findFragmentById(R.id.fragment_holder)
+        val currentFragment = supportFragmentManager.findFragmentById(R.id.nav_host_fragment)
         if (currentFragment != null && currentFragment is BaseFragment) {
             if (currentFragment.handleOnBackPressed()) {
                 return
