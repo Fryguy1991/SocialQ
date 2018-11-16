@@ -5,9 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.*
-import android.support.v4.app.Fragment
-import android.support.v4.app.FragmentTransaction
-import android.support.v7.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatActivity
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
@@ -15,6 +13,10 @@ import android.view.View
 import android.view.WindowManager
 import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
+import androidx.appcompat.widget.Toolbar
+import androidx.navigation.NavController
+import androidx.navigation.findNavController
+import androidx.navigation.ui.AppBarConfiguration
 import com.chrisfry.socialq.R
 import com.chrisfry.socialq.business.AppConstants
 import com.chrisfry.socialq.enums.RequestType
@@ -23,6 +25,7 @@ import com.chrisfry.socialq.userinterface.fragments.*
 import com.spotify.sdk.android.authentication.AuthenticationClient
 import com.spotify.sdk.android.authentication.AuthenticationRequest
 import com.spotify.sdk.android.authentication.AuthenticationResponse
+import androidx.navigation.ui.NavigationUI
 
 class BaseSpotifyActivity : AppCompatActivity(), StartFragment.StartFragmentListener, HostFragmentBase.BaseHostFragmentListener {
     val TAG = BaseSpotifyActivity::class.java.name
@@ -80,6 +83,12 @@ class BaseSpotifyActivity : AppCompatActivity(), StartFragment.StartFragmentList
 
         setContentView(R.layout.base_activity_layout)
 
+        // Setup application toolbar
+        val navController = findNavController(R.id.nav_host_fragment)
+        val appBarConfig = AppBarConfiguration.Builder(navController.graph).build()
+        val toolbar = findViewById<Toolbar>(R.id.app_toolbar)
+        NavigationUI.setupWithNavController(toolbar, navController, appBarConfig)
+
         // Allow network operation in main thread
         val policy = StrictMode.ThreadPolicy.Builder()
                 .permitAll().build()
@@ -136,7 +145,7 @@ class BaseSpotifyActivity : AppCompatActivity(), StartFragment.StartFragmentList
                 AccessRefreshThread().start()
 
                 // Refresh access token for all fragments that require one
-                for (frag: Fragment in supportFragmentManager.fragments) {
+                for (frag: androidx.fragment.app.Fragment in supportFragmentManager.fragments) {
                     if (frag is SpotifyFragment) {
                         frag.refreshAccessToken(response.accessToken)
                     }

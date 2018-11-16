@@ -8,7 +8,7 @@
     <fragment
         android:id="@+id/startFragment"
         android:name="com.chrisfry.socialq.userinterface.fragments.StartFragment"
-        android:label="StartFragment"
+        android:label="SocialQ"
         tools:layout="@layout/start_screen">
         <action
             android:id="@+id/action_startFragment_to_hostFragmentNearby"
@@ -33,6 +33,6 @@
     <fragment
         android:id="@+id/searchFragment"
         android:name="com.chrisfry.socialq.userinterface.fragments.SearchFragment"
-        android:label="SearchFragment"
-        tools:layout="@layout/search_screen"/>
+        android:label="Search"
+        tools:layout="@layout/search_screen" />
 </navigation>

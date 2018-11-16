@@ -6,7 +6,7 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.os.Process
-import android.support.v7.widget.AppCompatCheckBox
+import androidx.appcompat.widget.AppCompatCheckBox
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
@@ -14,8 +14,12 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
+import androidx.core.os.bundleOf
+import androidx.navigation.NavController
+import androidx.navigation.Navigation
 import androidx.navigation.fragment.findNavController
 import com.chrisfry.socialq.R
+import com.chrisfry.socialq.business.AppConstants
 import com.chrisfry.socialq.enums.RequestType
 import com.chrisfry.socialq.enums.UserType
 import com.chrisfry.socialq.userinterface.activities.BaseSpotifyActivity
@@ -34,6 +38,9 @@ class StartFragment : BaseFragment() {
 
     // Listener for fragment notifications
     var listener: StartFragmentListener? = null
+
+    // View used to find nav controller for navigation
+    private lateinit var hostButton: View
 
     // Click listener for start/join buttons
     private var typeSelectClickListener: View.OnClickListener = View.OnClickListener { view ->
@@ -64,7 +71,8 @@ class StartFragment : BaseFragment() {
     }
 
     private fun initUi(baseView: View) {
-        baseView.findViewById<View>(R.id.btn_host_queue).setOnClickListener(typeSelectClickListener)
+        hostButton = baseView.findViewById<View>(R.id.btn_host_queue)
+        hostButton.setOnClickListener(typeSelectClickListener)
         baseView.findViewById<View>(R.id.btn_join_queue).setOnClickListener(typeSelectClickListener)
     }
 
@@ -136,13 +144,12 @@ class StartFragment : BaseFragment() {
                 queueTitle = resources.getString(R.string.queue_title_default_value)
             }
 
-//            listener?.startHost(queueTitle, isFairPlayChecked)
-            val action = StartFragmentDirections.actionStartFragmentToHostFragmentNearby().setQueueTitle(queueTitle)
-//            val args = bundleOf(
-//
-//            )
+            val args = bundleOf(
+                AppConstants.QUEUE_TITLE_KEY to queueTitle,
+                AppConstants.FAIR_PLAY_KEY to isFairPlayChecked
+            )
 
-            findNavController().navigate(action)
+            Navigation.findNavController(hostButton).navigate(R.id.action_startFragment_to_hostFragmentNearby, args)
             dialog.dismiss()
         }
         dialogBuilder.setNegativeButton(R.string.cancel) { dialog, which -> dialog.dismiss() }

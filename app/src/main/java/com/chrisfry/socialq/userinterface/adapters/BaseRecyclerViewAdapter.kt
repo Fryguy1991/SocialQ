@@ -1,6 +1,6 @@
 package com.chrisfry.socialq.userinterface.adapters
 
-import android.support.v7.widget.RecyclerView
+import androidx.recyclerview.widget.RecyclerView
 import android.view.ViewGroup
 
 /**
@@ -8,7 +8,7 @@ import android.view.ViewGroup
  * <T> is the view holder type
  * <E> is the item list type
  */
-abstract class BaseRecyclerViewAdapter<T : RecyclerView.ViewHolder, E> : RecyclerView.Adapter<T>() {
+abstract class BaseRecyclerViewAdapter<T : androidx.recyclerview.widget.RecyclerView.ViewHolder, E> : androidx.recyclerview.widget.RecyclerView.Adapter<T>() {
     protected var itemList = listOf<E>()
 
 

@@ -1,9 +1,9 @@
 package com.chrisfry.socialq.userinterface.widgets
 
 import android.content.Context
-import android.support.constraint.ConstraintLayout
-import android.support.v7.widget.LinearLayoutManager
-import android.support.v7.widget.RecyclerView
+import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View
@@ -69,7 +69,7 @@ class SearchArtistView : ConstraintLayout, SelectableArtistListAdapter.ArtistSel
             resultsRecyclerView = baseView.findViewById(R.id.rv_result_recycler_view)
 
             // Add adapter decoration
-            val artistsLayoutManager = LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false)
+            val artistsLayoutManager = LinearLayoutManager(context, RecyclerView.VERTICAL, false)
             resultsRecyclerView.layoutManager = artistsLayoutManager
             resultsRecyclerView.addItemDecoration(QueueItemDecoration(context))
 

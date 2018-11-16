@@ -1,8 +1,8 @@
 package com.chrisfry.socialq.userinterface.adapters.holders
 
-import android.support.v7.widget.RecyclerView
 import android.view.View
 import android.widget.TextView
+import androidx.recyclerview.widget.RecyclerView
 import com.chrisfry.socialq.R
 
 class NearbyDeviceHolder(itemView: View) : RecyclerView.ViewHolder(itemView), View.OnClickListener{

@@ -2,11 +2,9 @@ package com.chrisfry.socialq.userinterface.fragments
 
 import android.content.Context
 import android.os.Bundle
-import android.support.constraint.ConstraintLayout
-import android.support.constraint.ConstraintSet
-import android.support.v4.app.Fragment
-import android.support.v7.widget.LinearLayoutManager
-import android.support.v7.widget.RecyclerView
+import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.constraintlayout.widget.ConstraintSet
+import androidx.recyclerview.widget.RecyclerView
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -15,6 +13,7 @@ import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
+import androidx.recyclerview.widget.LinearLayoutManager
 import butterknife.BindViews
 import butterknife.ButterKnife
 import com.chrisfry.socialq.R
@@ -25,9 +24,7 @@ import com.chrisfry.socialq.userinterface.adapters.SearchTrackListAdapter
 import com.chrisfry.socialq.userinterface.widgets.QueueItemDecoration
 import com.chrisfry.socialq.userinterface.widgets.SearchArtistView
 import com.chrisfry.socialq.utils.DisplayUtils
-import kaaes.spotify.webapi.android.SpotifyApi
 import kaaes.spotify.webapi.android.SpotifyService
-import kaaes.spotify.webapi.android.models.AlbumSimple
 import kaaes.spotify.webapi.android.models.Artist
 import kaaes.spotify.webapi.android.models.Track
 import kaaes.spotify.webapi.android.models.TrackSimple
@@ -118,7 +115,7 @@ class SearchFragment : SpotifyFragment(), SearchArtistView.SearchArtistViewPrese
         mSongResults = mSongLayout.findViewById(R.id.rv_result_recycler_view)
         mSongResultsAdapter = SearchTrackListAdapter(ArrayList())
         mSongResults.setAdapter(mSongResultsAdapter)
-        val songsLayoutManager = LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false)
+        val songsLayoutManager = LinearLayoutManager(context, RecyclerView.VERTICAL, false)
         mSongResults.setLayoutManager(songsLayoutManager)
         mSongResults.addItemDecoration(QueueItemDecoration(context))
 

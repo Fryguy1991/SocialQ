@@ -4,7 +4,7 @@
     android:background="@color/Active_Button_Color">
 
     <!-- Artist Result/Album Header -->
-    <android.support.constraint.ConstraintLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/cl_artist_header_view"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -53,11 +53,11 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
-    </android.support.constraint.ConstraintLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
 
     <!-- Top Track Header -->
-    <android.support.constraint.ConstraintLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/cl_top_track_header"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -92,9 +92,9 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@id/tv_top_track_text"
             app:layout_constraintTop_toTopOf="parent" />
-    </android.support.constraint.ConstraintLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <android.support.v7.widget.RecyclerView
+    <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rv_result_recycler_view"
         android:layout_width="0dp"
         android:layout_height="0dp"

@@ -1,6 +1,6 @@
 package com.chrisfry.socialq.userinterface.adapters
 
-import android.support.v7.widget.RecyclerView
+import androidx.recyclerview.widget.RecyclerView
 import com.chrisfry.socialq.userinterface.adapters.holders.TrackHolder
 import kaaes.spotify.webapi.android.models.TrackSimple
 

@@ -4,16 +4,17 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.StrictMode;
-import android.support.v7.app.AlertDialog;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.CheckBox;
+import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import com.chrisfry.socialq.R;
@@ -233,7 +234,7 @@ public abstract class ClientActivity extends AppCompatActivity implements Connec
     private void setupQueueList() {
         mTrackDisplayAdapter = new BasicTrackListAdapter();
         mQueueList.setAdapter(mTrackDisplayAdapter);
-        LinearLayoutManager layoutManager = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
+        LinearLayoutManager layoutManager = new LinearLayoutManager(this, RecyclerView.VERTICAL, false);
         mQueueList.setLayoutManager(layoutManager);
         mQueueList.addItemDecoration(new QueueItemDecoration(getApplicationContext()));
     }

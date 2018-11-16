@@ -1,15 +1,15 @@
 package com.chrisfry.socialq.userinterface.adapters
 
-import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.recyclerview.widget.RecyclerView
 import com.chrisfry.socialq.R
 import com.chrisfry.socialq.model.NearbyDeviceData
 import com.chrisfry.socialq.userinterface.adapters.holders.NearbyDeviceHolder
 
 class NearbyDevicesAdapter() : RecyclerView.Adapter<NearbyDeviceHolder>(), NearbyDeviceHolder.ItemSelectionListenerNearbyDevices {
     lateinit var mDeviceSelectionListener: DeviceSelectionListener
-    private var mNearbyDevices: List<NearbyDeviceData> = ArrayList<NearbyDeviceData>()
+    private var mNearbyDevices: List<NearbyDeviceData> = ArrayList()
 
     constructor(listener: DeviceSelectionListener) : this() {
         mDeviceSelectionListener = listener

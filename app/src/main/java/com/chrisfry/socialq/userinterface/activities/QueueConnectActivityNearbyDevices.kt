@@ -2,8 +2,8 @@ package com.chrisfry.socialq.userinterface.activities
 
 import android.content.Intent
 import android.os.Bundle
-import android.support.v7.widget.RecyclerView
 import android.util.Log
+import androidx.recyclerview.widget.RecyclerView
 import com.chrisfry.socialq.business.AppConstants
 import com.chrisfry.socialq.model.NearbyDeviceData
 import com.chrisfry.socialq.userinterface.adapters.NearbyDevicesAdapter

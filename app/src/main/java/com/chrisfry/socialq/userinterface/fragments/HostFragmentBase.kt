@@ -2,12 +2,12 @@ package com.chrisfry.socialq.userinterface.fragments
 
 import android.content.*
 import android.os.*
-import android.support.v7.app.AlertDialog
-import android.support.v7.widget.LinearLayoutManager
-import android.support.v7.widget.RecyclerView
+import androidx.appcompat.app.AlertDialog
 import android.util.Log
 import android.view.*
 import android.widget.*
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.chrisfry.socialq.R
 import com.chrisfry.socialq.business.AppConstants
 import com.chrisfry.socialq.model.ClientRequestData
@@ -397,7 +397,7 @@ abstract class HostFragmentBase : SpotifyFragment(), PlayQueueService.PlayQueueS
     private fun setupQueueList() {
         mTrackDisplayAdapter = HostTrackListAdapter(context!!)
         mQueueList.adapter = mTrackDisplayAdapter
-        val layoutManager = LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false)
+        val layoutManager = LinearLayoutManager(context, RecyclerView.VERTICAL, false)
         mQueueList.layoutManager = layoutManager
         mQueueList.addItemDecoration(QueueItemDecoration(context!!))
     }
