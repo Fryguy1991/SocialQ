@@ -14,6 +14,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
+import androidx.navigation.fragment.findNavController
 import com.chrisfry.socialq.R
 import com.chrisfry.socialq.enums.RequestType
 import com.chrisfry.socialq.enums.UserType
@@ -135,7 +136,13 @@ class StartFragment : BaseFragment() {
                 queueTitle = resources.getString(R.string.queue_title_default_value)
             }
 
-            listener?.startHost(queueTitle, isFairPlayChecked)
+//            listener?.startHost(queueTitle, isFairPlayChecked)
+            val action = StartFragmentDirections.actionStartFragmentToHostFragmentNearby().setQueueTitle(queueTitle)
+//            val args = bundleOf(
+//
+//            )
+
+            findNavController().navigate(action)
             dialog.dismiss()
         }
         dialogBuilder.setNegativeButton(R.string.cancel) { dialog, which -> dialog.dismiss() }

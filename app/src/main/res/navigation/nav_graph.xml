@@ -19,6 +19,13 @@
         android:name="com.chrisfry.socialq.userinterface.fragments.HostFragmentNearby"
         android:label="HostFragmentNearby"
         tools:layout="@layout/host_screen">
+        <argument
+            android:name="queue_title"
+            android:defaultValue="@string/queue_title_default_value"
+            app:argType="string"/>
+        <argument
+            android:name="is_fair_play"
+            android:defaultValue="@bool/fair_play_default"/>
         <action
             android:id="@+id/action_hostFragmentNearby_to_searchFragment"
             app:destination="@id/searchFragment" />
