@@ -32,7 +32,6 @@ import com.chrisfry.socialq.business.dagger.modules.SpotifyModule;
 import com.chrisfry.socialq.business.dagger.modules.components.DaggerSpotifyComponent;
 import com.chrisfry.socialq.business.dagger.modules.components.SpotifyComponent;
 import com.chrisfry.socialq.enums.RequestType;
-import com.chrisfry.socialq.enums.UserType;
 import com.chrisfry.socialq.model.AccessModel;
 import com.chrisfry.socialq.model.ClientRequestData;
 import com.chrisfry.socialq.model.SongRequestData;
@@ -208,7 +207,7 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
                     // Calculate when access token expires (response "ExpiresIn" is in seconds, subtract a minute to worry less about timing)
                     long accessExpireTime = System.currentTimeMillis() + (response.getExpiresIn() - 60) * 1000;
 
-                    AccessModel.setAccess(response.getAccessToken(), UserType.HOST, accessExpireTime);
+                    AccessModel.setAccess(response.getAccessToken(), accessExpireTime);
 
                     // Start thread responsible for notifying UI thread when new access token is needed
                     new AccessRefreshThread().start();

@@ -65,36 +65,6 @@ class StartFragment : BaseFragment() {
     private fun initUi(baseView: View) {
         baseView.findViewById<View>(R.id.btn_host_queue).setOnClickListener(typeSelectClickListener)
         baseView.findViewById<View>(R.id.btn_join_queue).setOnClickListener(typeSelectClickListener)
-
-        // This method checks if we have the needed permissions and requests them if needed
-        hasLocationPermission()
-    }
-
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-
-        val requestType = RequestType.getRequestTypeFromRequestCode(requestCode)
-        Log.d(TAG, "Received request type: $requestType")
-
-        // Handle request result (currently only handling location permission requests)
-        if (requestType == RequestType.LOCATION_PERMISSION_REQUEST) {
-            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                Log.d(TAG, "Received location permission")
-                // Received location permission.  If button for host/client was pressed launch respective action
-                when (userType) {
-                    UserType.HOST -> handleHostStart()
-                    UserType.CLIENT -> listener?.startQueueSearch()
-                    UserType.NONE -> {
-                        // Nothing to handle here
-                    }
-                }
-            } else {
-                // Permissions rejected. User will see permissions request until permission is granted or else
-                // the application will not be able to function
-                Log.d(TAG, "Location permission rejected")
-                userType = UserType.NONE
-            }
-        }
     }
 
     /**

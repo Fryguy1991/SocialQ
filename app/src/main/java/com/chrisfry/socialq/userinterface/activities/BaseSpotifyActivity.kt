@@ -1,7 +1,9 @@
 package com.chrisfry.socialq.userinterface.activities
 
+import android.Manifest
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.*
 import android.support.v4.app.Fragment
 import android.support.v4.app.FragmentTransaction
@@ -13,11 +15,9 @@ import android.view.View
 import android.view.WindowManager
 import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
-import androidx.navigation.Navigation
 import com.chrisfry.socialq.R
 import com.chrisfry.socialq.business.AppConstants
 import com.chrisfry.socialq.enums.RequestType
-import com.chrisfry.socialq.enums.UserType
 import com.chrisfry.socialq.model.AccessModel
 import com.chrisfry.socialq.userinterface.fragments.*
 import com.spotify.sdk.android.authentication.AuthenticationClient
@@ -39,18 +39,15 @@ class BaseSpotifyActivity : AppCompatActivity(), StartFragment.StartFragmentList
     private lateinit var queueTitle: String
     private var isFairPlay: Boolean = false
 
-    // Cached access type for access token
-    private var accessType = UserType.NONE
-
     // Handler for sending messages to the UI thread
     private val mHandler = object : Handler(Looper.getMainLooper()) {
         override fun handleMessage(msg: Message) {
             when (msg.what) {
                 AppConstants.ACCESS_TOKEN_REFRESH ->
                     // Don't request access tokens if activity is being shut down
-                    if (!isFinishing && AccessModel.getAccessType() != UserType.NONE) {
+                    if (!isFinishing) {
                         Log.d(TAG, "Requesting new access token on UI thread")
-                        requestAccessToken(AccessModel.getAccessType())
+                        requestAccessToken()
                     }
             }
         }
@@ -91,8 +88,20 @@ class BaseSpotifyActivity : AppCompatActivity(), StartFragment.StartFragmentList
         // Stop keyboard from pushing UI up
         window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING)
 
+        // Ensure we have location permission and access to Spotify API
+        if (hasLocationPermission()) {
+            requestAccessToken()
+        }
+
         // Start application by showing start fragment
         launchStartFragment()
+    }
+
+    override fun onDestroy() {
+        // This should ensure that the access refresh thread ends
+        AccessModel.reset()
+
+        super.onDestroy()
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -101,40 +110,72 @@ class BaseSpotifyActivity : AppCompatActivity(), StartFragment.StartFragmentList
 
         when (requestType) {
             RequestType.SPOTIFY_AUTHENTICATION_REQUEST -> {
-                val response = AuthenticationClient.getResponse(resultCode, data)
-                if (response.type == AuthenticationResponse.Type.TOKEN) {
-                    Log.d(TAG, "Access token granted")
-
-                    // Store when access token expires (response "ExpiresIn" is in seconds, subtract a minute to worry less about timing)
-                    val accessExpireTime = System.currentTimeMillis() + (response.expiresIn - 60) * 1000
-                    AccessModel.setAccess(response.accessToken, accessType, accessExpireTime)
-
-                    // Start thread responsible for notifying UI thread when new access token is needed
-                    AccessRefreshThread().start()
-
-                    when (AccessModel.getAccessType()) {
-                        UserType.HOST -> launchHostFragment()
-                        UserType.CLIENT -> Log.e(TAG, "Implement client launching")
-                        UserType.NONE -> Log.e(TAG, "Shouldn't be receiving access token with no stored access type")
-                        else -> Log.e(TAG, "AccessType = null, Not currently handling null case")
-                    }
-
-                    // Refresh access token for all fragments that require one
-                    for (frag: Fragment in supportFragmentManager.fragments) {
-                        if (frag is SpotifyFragment) {
-                            frag.refreshAccessToken(response.accessToken)
-                        }
-                    }
-                } else {
-                    Log.d(TAG, "Authentication Response: " + response.error)
-                    Toast.makeText(this@BaseSpotifyActivity, getString(R.string.toast_authentication_error_host), Toast.LENGTH_SHORT).show()
-                }
+                handleAuthenticationResponse(AuthenticationClient.getResponse(resultCode, data))
             }
             RequestType.LOCATION_PERMISSION_REQUEST, RequestType.REQUEST_ENABLE_BT, RequestType.REQUEST_DISCOVER_BT,
             RequestType.SEARCH_REQUEST, RequestType.NONE -> {
                 // Base activity should do nothing for these requests
             }
+        }
+    }
 
+    private fun handleAuthenticationResponse(response: AuthenticationResponse) {
+        when (response.type) {
+            AuthenticationResponse.Type.CODE -> {
+                Log.d(TAG, "Access code granted")
+                // TODO: Part of authentication flow.  Currently not using.
+            }
+            AuthenticationResponse.Type.TOKEN -> {
+                Log.d(TAG, "Access token granted")
+
+                // Store when access token expires (response "ExpiresIn" is in seconds, subtract a minute to worry less about timing)
+                val accessExpireTime = System.currentTimeMillis() + (response.expiresIn - 60) * 1000
+                AccessModel.setAccess(response.accessToken, accessExpireTime)
+
+                // Start thread responsible for notifying UI thread when new access token is needed
+                AccessRefreshThread().start()
+
+                // Refresh access token for all fragments that require one
+                for (frag: Fragment in supportFragmentManager.fragments) {
+                    if (frag is SpotifyFragment) {
+                        frag.refreshAccessToken(response.accessToken)
+                    }
+                }
+            }
+            AuthenticationResponse.Type.EMPTY -> {
+                Log.e(TAG, "User didn't complete Spotify login activity")
+                // TODO: show dialog indicating that spotify access is required for app functionality giving user optinon to close the app
+                finish()
+            }
+            AuthenticationResponse.Type.ERROR -> {
+                Log.e(TAG, "Authentication Error: " + response.error)
+                Toast.makeText(this@BaseSpotifyActivity, getString(R.string.toast_authentication_error_host), Toast.LENGTH_SHORT).show()
+                // TODO: Need to gracefully handle authentication error.  Could be catastrophic depending on where in the application the user is
+            }
+            AuthenticationResponse.Type.UNKNOWN, null -> {
+                Log.e(TAG, "Authentication response is unknown or null. Trying again")
+                requestAccessToken()
+            }
+        }
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+
+        val requestType = RequestType.getRequestTypeFromRequestCode(requestCode)
+        Log.d(StartFragment.TAG, "Received request type: $requestType")
+
+        // Handle request result (currently only handling location permission requests)
+        if (requestType == RequestType.LOCATION_PERMISSION_REQUEST) {
+            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Log.d(StartFragment.TAG, "Received location permission")
+                requestAccessToken()
+            } else {
+                // Permissions rejected. User will see permissions request until permission is granted or else
+                // the application will not be able to function
+                Log.e(StartFragment.TAG, "Location permission rejected, closing application")
+                finish()
+            }
         }
     }
 
@@ -215,26 +256,33 @@ class BaseSpotifyActivity : AppCompatActivity(), StartFragment.StartFragmentList
     }
 
     /**
-     * Use Spotify login activity to retrieve an access token
+     * Determines if ACCESS_COARSE_LOCATION permission has been granted and requests it if needed
+     *
+     * @return - true if permission is already granted, false (and requests) if not
      */
-    private fun requestAccessToken(userType: UserType) {
-        accessType = userType
-        lateinit var scopes: Array<String>
-        when (userType) {
-            UserType.HOST -> scopes = arrayOf("user-read-private", "streaming", "playlist-modify-private")
-            UserType.CLIENT -> scopes = arrayOf("user-read-private")
-            UserType.NONE -> {
-                Log.e(TAG, "Need to request access for host or client")
-                return
+    private fun hasLocationPermission(): Boolean {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            return if (checkPermission(Manifest.permission.ACCESS_COARSE_LOCATION, Process.myPid(), Process.myUid()) == PackageManager.PERMISSION_GRANTED) {
+                true
+            } else {
+                requestPermissions(arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION), RequestType.LOCATION_PERMISSION_REQUEST.requestCode)
+                false
             }
         }
+        // If low enough SDK version, manifest contains permission and doesn't need to be requested at runtime
+        return true
+    }
 
-        Log.d(TAG, "Requesting access token for $accessType")
+    /**
+     * Use Spotify login activity to retrieve an access token
+     */
+    private fun requestAccessToken() {
+        Log.d(TAG, "Requesting Spotify access token")
         val builder = AuthenticationRequest.Builder(
                 AppConstants.CLIENT_ID,
                 AuthenticationResponse.Type.TOKEN,
                 AppConstants.REDIRECT_URI)
-        builder.setScopes(scopes)
+        builder.setScopes(arrayOf("user-read-private", "streaming", "playlist-modify-private"))
         val request = builder.build()
         AuthenticationClient.openLoginActivity(this, RequestType.SPOTIFY_AUTHENTICATION_REQUEST.requestCode, request)
     }
@@ -263,12 +311,14 @@ class BaseSpotifyActivity : AppCompatActivity(), StartFragment.StartFragmentList
         queueTitle = queueName
         this.isFairPlay = isFairPlay
 
-        // Check to see if we need a new access token from Spotify
-        if (AccessModel.getAccessType() != UserType.HOST || System.currentTimeMillis() > AccessModel.getAccessExpireTime()) {
-            requestAccessToken(UserType.HOST)
-        } else {
-            launchHostFragment()
-        }
+        launchHostFragment()
+
+//        // Check to see if we need a new access token from Spotify
+//        if (System.currentTimeMillis() > AccessModel.getAccessExpireTime()) {
+//            requestAccessToken()
+//        } else {
+//            launchHostFragment()
+//        }
     }
 
     override fun startQueueSearch() {
