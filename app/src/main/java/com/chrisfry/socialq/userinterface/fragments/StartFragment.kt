@@ -14,6 +14,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
+import android.widget.Toast
 import androidx.core.os.bundleOf
 import androidx.navigation.NavController
 import androidx.navigation.Navigation
@@ -36,9 +37,6 @@ class StartFragment : BaseFragment() {
     private var isFairPlayChecked = false
     private var queueTitle = ""
 
-    // Listener for fragment notifications
-    var listener: StartFragmentListener? = null
-
     // View used to find nav controller for navigation
     private lateinit var hostButton: View
 
@@ -48,18 +46,15 @@ class StartFragment : BaseFragment() {
             R.id.btn_host_queue -> {
                 userType = UserType.HOST
                 // Ensure we have location permission before starting a host
-                if (hasLocationPermission()) {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                        handleHostStart()
-                    }
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    handleHostStart()
                 }
             }
             R.id.btn_join_queue -> {
                 userType = UserType.CLIENT
                 // Ensure we have location permission before starting a client
-                if (hasLocationPermission()) {
-                    listener?.startQueueSearch()
-                }
+                // TODO: Navigate to queue connect screen
+                Toast.makeText(context, "TODO: Start host search", Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -75,25 +70,6 @@ class StartFragment : BaseFragment() {
         hostButton.setOnClickListener(typeSelectClickListener)
         baseView.findViewById<View>(R.id.btn_join_queue).setOnClickListener(typeSelectClickListener)
     }
-
-    /**
-     * Determines if ACCESS_COARSE_LOCATION permission has been granted and requests it if needed
-     *
-     * @return - true if permission is already granted, false (and requests) if not
-     */
-    private fun hasLocationPermission(): Boolean {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            return if (activity?.checkPermission(Manifest.permission.ACCESS_COARSE_LOCATION, Process.myPid(), Process.myUid()) == PackageManager.PERMISSION_GRANTED) {
-                true
-            } else {
-                requestPermissions(arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION), RequestType.LOCATION_PERMISSION_REQUEST.requestCode)
-                false
-            }
-        }
-        // If low enough SDK version, manifest contains permission and doesn't need to be requested at runtime
-        return true
-    }
-
 
     private fun handleHostStart() {
         Log.d(TAG, "Launching host dialog")
@@ -145,31 +121,18 @@ class StartFragment : BaseFragment() {
             }
 
             val args = bundleOf(
-                AppConstants.QUEUE_TITLE_KEY to queueTitle,
-                AppConstants.FAIR_PLAY_KEY to isFairPlayChecked
+                    AppConstants.QUEUE_TITLE_KEY to queueTitle,
+                    AppConstants.FAIR_PLAY_KEY to isFairPlayChecked
             )
 
-            Navigation.findNavController(hostButton).navigate(R.id.action_startFragment_to_hostFragmentNearby, args)
+//            findNavController().navigate(R.id.host_fragment_nearby, args)
+            findNavController().navigate(R.id.action_startFragment_to_hostFragmentNearby, args)
+
             dialog.dismiss()
         }
         dialogBuilder.setNegativeButton(R.string.cancel) { dialog, which -> dialog.dismiss() }
 
         // Show host queue options dialog
         dialogBuilder.create().show()
-    }
-
-    interface StartFragmentListener {
-        /**
-         * Starts a host qeueue with the given options
-         *
-         * @param queueName - Name of the host queue
-         * @param isFairPlay - True if fairplay is on, false if off
-         */
-        fun startHost(queueName: String, isFairPlay: Boolean)
-
-        /**
-         * Starts a search for host queues
-         */
-        fun startQueueSearch()
     }
 }

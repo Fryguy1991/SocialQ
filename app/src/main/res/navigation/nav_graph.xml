@@ -3,19 +3,19 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/nav_graph"
-    app:startDestination="@id/startFragment">
+    app:startDestination="@id/start_fragment">
 
     <fragment
-        android:id="@+id/startFragment"
+        android:id="@+id/start_fragment"
         android:name="com.chrisfry.socialq.userinterface.fragments.StartFragment"
         android:label="SocialQ"
         tools:layout="@layout/start_screen">
         <action
             android:id="@+id/action_startFragment_to_hostFragmentNearby"
-            app:destination="@id/hostFragmentNearby" />
+            app:destination="@id/host_fragment_nearby"/>
     </fragment>
     <fragment
-        android:id="@+id/hostFragmentNearby"
+        android:id="@+id/host_fragment_nearby"
         android:name="com.chrisfry.socialq.userinterface.fragments.HostFragmentNearby"
         android:label="HostFragmentNearby"
         tools:layout="@layout/host_screen">
@@ -28,10 +28,10 @@
             android:defaultValue="@bool/fair_play_default"/>
         <action
             android:id="@+id/action_hostFragmentNearby_to_searchFragment"
-            app:destination="@id/searchFragment" />
+            app:destination="@id/search_fragment" />
     </fragment>
     <fragment
-        android:id="@+id/searchFragment"
+        android:id="@+id/search_fragment"
         android:name="com.chrisfry.socialq.userinterface.fragments.SearchFragment"
         android:label="Search"
         tools:layout="@layout/search_screen" />

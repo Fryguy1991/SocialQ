@@ -14,7 +14,6 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.CheckBox;
-import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import com.chrisfry.socialq.R;
@@ -221,7 +220,7 @@ public abstract class ClientActivity extends AppCompatActivity implements Connec
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
-            case R.id.search_action:
+            case R.id.search_fragment:
                 Intent searchIntent = new Intent(this, SearchActivity.class);
                 startActivityForResult(searchIntent, RequestType.SEARCH_REQUEST.getRequestCode());
                 return true;

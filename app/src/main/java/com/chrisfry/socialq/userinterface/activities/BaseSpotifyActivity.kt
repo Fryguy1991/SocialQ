@@ -15,7 +15,9 @@ import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
 import androidx.appcompat.widget.Toolbar
 import androidx.navigation.NavController
+import androidx.navigation.NavDestination
 import androidx.navigation.findNavController
+import androidx.navigation.fragment.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import com.chrisfry.socialq.R
 import com.chrisfry.socialq.business.AppConstants
@@ -27,16 +29,19 @@ import com.spotify.sdk.android.authentication.AuthenticationRequest
 import com.spotify.sdk.android.authentication.AuthenticationResponse
 import androidx.navigation.ui.NavigationUI
 
-class BaseSpotifyActivity : AppCompatActivity(), StartFragment.StartFragmentListener, HostFragmentBase.BaseHostFragmentListener {
+class BaseSpotifyActivity : AppCompatActivity(), HostFragmentBase.BaseHostFragmentListener,
+        NavController.OnNavigatedListener {
     val TAG = BaseSpotifyActivity::class.java.name
+
+    // References for toolbar UI elements
+    private lateinit var toolbar: Toolbar
+    private var searchActionItem: MenuItem? = null
 
     // Fragment references
     private var startFragment: StartFragment? = null
     private var hostFragment: HostFragmentBase? = null
     private var searchFragment: SearchFragment? = null
 
-    // Menu action item references
-    private lateinit var searchActionItem: MenuItem
 
     // Variables needed for passing to a new host queue from start fragment
     private lateinit var queueTitle: String
@@ -61,15 +66,17 @@ class BaseSpotifyActivity : AppCompatActivity(), StartFragment.StartFragmentList
         val inflater = menuInflater
         inflater.inflate(R.menu.main_screen_menu, menu)
 
-        searchActionItem = menu!!.findItem(R.id.search_action)
+        searchActionItem = menu!!.findItem(R.id.search_fragment)
 
         return true
     }
 
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {
+        Log.d(TAG, "Toolbar item was selected")
         when (item?.getItemId()) {
-            R.id.search_action -> {
+            R.id.search_fragment -> {
 //                launchSearchFragment()
+                NavigationUI.onNavDestinationSelected(item, findNavController(R.id.nav_host_fragment))
                 return true
             }
             else ->
@@ -83,10 +90,14 @@ class BaseSpotifyActivity : AppCompatActivity(), StartFragment.StartFragmentList
 
         setContentView(R.layout.base_activity_layout)
 
-        // Setup application toolbar
+        // Set activity as listener for navigation events
         val navController = findNavController(R.id.nav_host_fragment)
+        navController.addOnNavigatedListener(this@BaseSpotifyActivity)
+
+        // Setup application toolbar
         val appBarConfig = AppBarConfiguration.Builder(navController.graph).build()
-        val toolbar = findViewById<Toolbar>(R.id.app_toolbar)
+        toolbar = findViewById(R.id.app_toolbar)
+        setSupportActionBar(toolbar)
         NavigationUI.setupWithNavController(toolbar, navController, appBarConfig)
 
         // Allow network operation in main thread
@@ -101,9 +112,6 @@ class BaseSpotifyActivity : AppCompatActivity(), StartFragment.StartFragmentList
         if (hasLocationPermission()) {
             requestAccessToken()
         }
-
-        // Start application by showing start fragment
-//        launchStartFragment()
     }
 
     override fun onDestroy() {
@@ -111,6 +119,11 @@ class BaseSpotifyActivity : AppCompatActivity(), StartFragment.StartFragmentList
         AccessModel.reset()
 
         super.onDestroy()
+    }
+
+    override fun onSupportNavigateUp(): Boolean {
+        Log.d(TAG, "Support nave up?")
+        return super.onSupportNavigateUp()
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -145,7 +158,8 @@ class BaseSpotifyActivity : AppCompatActivity(), StartFragment.StartFragmentList
                 AccessRefreshThread().start()
 
                 // Refresh access token for all fragments that require one
-                for (frag: androidx.fragment.app.Fragment in supportFragmentManager.fragments) {
+                val navHostFragment = supportFragmentManager.findFragmentById(R.id.nav_host_fragment)
+                for (frag: androidx.fragment.app.Fragment in navHostFragment!!.childFragmentManager.fragments) {
                     if (frag is SpotifyFragment) {
                         frag.refreshAccessToken(response.accessToken)
                     }
@@ -188,71 +202,32 @@ class BaseSpotifyActivity : AppCompatActivity(), StartFragment.StartFragmentList
         }
     }
 
-//    private fun launchStartFragment() {
-//        if (supportFragmentManager.findFragmentById(R.id.nav_host_fragment) == null) {
-//            startFragment = StartFragment()
-//            startFragment?.listener = this
-//            val transaction = supportFragmentManager.beginTransaction();
-//            transaction.add(R.id.nav_host_fragment, startFragment!!, StartFragment.TAG)
-//            transaction.commit()
-//        }
-//    }
-
-//    private fun launchHostFragment() {
-//        if (hostFragment == null) {
-//            Log.d(TAG, "Creating new host fragment")
-//
-//            // Initialize a new host activity
-//            val args = Bundle()
-//            args.putString(AppConstants.QUEUE_TITLE_KEY, queueTitle)
-//            args.putBoolean(AppConstants.FAIR_PLAY_KEY, isFairPlay)
-//            hostFragment = HostFragmentNearby.newInstance(args)
-//            hostFragment!!.listener = this
-//
-//            val transaction = supportFragmentManager.beginTransaction()
-//            transaction.replace(R.id.nav_host_fragment, hostFragment!!)
-//            transaction.addToBackStack(null)
-//            transaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE)
-//            transaction.commitAllowingStateLoss()
-//        }
-//    }
-
-    private fun launchQueueSearchFragment() {
-        // TODO: implement this
+    override fun onNavigated(controller: NavController, destination: NavDestination) {
+        Log.d(TAG, "Navigating to ${resources.getResourceEntryName(destination.id)}")
+        when (destination.id) {
+            R.id.start_fragment ->{
+                searchActionItem?.isVisible = false
+            }
+            R.id.host_fragment_nearby -> {
+                searchActionItem!!.isVisible = true
+            }
+            R.id.search_fragment -> {
+                searchActionItem!!.isVisible = false
+            }
+        }
     }
 
-//    private fun launchSearchFragment() {
-//        Log.d(TAG, "Launching search fragment")
-//        // TODO: Do we want to return to the search fragment as if we never left (probably not)?
-//        if (searchFragment == null) {
-//            searchFragment = SearchFragment()
-//        }
-//        // TODO: Add listener for searchFragment
-//        val transaction = supportFragmentManager.beginTransaction()
-//        transaction.replace(R.id.nav_host_fragment, searchFragment!!)
-//        transaction.addToBackStack(null)
-//        transaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE)
-//        transaction.commit()
-//
-//        // Change title and remove search icon
-//        title = resources.getString(R.string.search_activity_name)
-//        searchActionItem.isVisible = false
-//    }
-
     override fun onBackPressed() {
-        val currentFragment = supportFragmentManager.findFragmentById(R.id.nav_host_fragment)
+        findNavController(R.id.nav_host_fragment).currentDestination
+        val navHostFragment = supportFragmentManager.findFragmentById(R.id.nav_host_fragment)
+        val currentFragment = navHostFragment!!.childFragmentManager.findFragmentById(R.id.nav_host_fragment)
         if (currentFragment != null && currentFragment is BaseFragment) {
             if (currentFragment.handleOnBackPressed()) {
                 return
+            } else if (navHostFragment.findNavController().navigateUp()){
+                return
             } else {
-                if (currentFragment is SearchFragment) {
-                    // Reshow search icon and change title to queue name
-                    searchActionItem.isVisible = true
-                    title = queueTitle
-                    supportFragmentManager.popBackStack()
-                } else {
-                    super.onBackPressed()
-                }
+                super.onBackPressed()
             }
         }
     }
@@ -293,7 +268,7 @@ class BaseSpotifyActivity : AppCompatActivity(), StartFragment.StartFragmentList
                 AppConstants.REDIRECT_URI)
         builder.setScopes(arrayOf("user-read-private", "streaming", "playlist-modify-private"))
         val request = builder.build()
-        AuthenticationClient.openLoginActivity(this, RequestType.SPOTIFY_AUTHENTICATION_REQUEST.requestCode, request)
+        AuthenticationClient.openLoginActivity(this@BaseSpotifyActivity, RequestType.SPOTIFY_AUTHENTICATION_REQUEST.requestCode, request)
     }
 
     /**
@@ -315,27 +290,6 @@ class BaseSpotifyActivity : AppCompatActivity(), StartFragment.StartFragmentList
         }
     })
 
-    // BEGIN METHODS RESPONSIBLE FOR INTERRACTING WITH START FRAGMENT
-    override fun startHost(queueName: String, isFairPlay: Boolean) {
-        queueTitle = queueName
-        this.isFairPlay = isFairPlay
-
-//        launchHostFragment()
-
-//        // Check to see if we need a new access token from Spotify
-//        if (System.currentTimeMillis() > AccessModel.getAccessExpireTime()) {
-//            requestAccessToken()
-//        } else {
-//            launchHostFragment()
-//        }
-    }
-
-    override fun startQueueSearch() {
-        Log.d(TAG, "User wants to search for a host queue")
-        Toast.makeText(this, "TODO: Start host search", Toast.LENGTH_SHORT).show()
-    }
-    // END METHODS RESPONSIBLE FOR INTERRACTING WITH START FRAGMENT
-
     // BEGIN METHODS RESPONSIBLE FOR INTERRACTING WITH HOST FRAGMENT
     override fun hostShutDown() {
         Log.d(TAG, "Removing host fragment")
@@ -344,7 +298,7 @@ class BaseSpotifyActivity : AppCompatActivity(), StartFragment.StartFragmentList
         // Return to start fragment appearance
         supportFragmentManager.popBackStack()
         title = resources.getString(R.string.app_name)
-        searchActionItem.isVisible = false
+//        searchActionItem.isVisible = false
 
         // Reset values used for starting queue
         queueTitle = ""
@@ -355,7 +309,7 @@ class BaseSpotifyActivity : AppCompatActivity(), StartFragment.StartFragmentList
         Log.d(TAG, "Showing host title")
         // Change action bar for host activity
         title = queueTitle
-        searchActionItem.isVisible = true
+//        searchActionItem.isVisible = true
     }
     // END METHODS RESPONSIBLE FOR INTERRACTING WITH HOST FRAGMENT
 }

@@ -6,6 +6,8 @@ import androidx.appcompat.app.AlertDialog
 import android.util.Log
 import android.view.*
 import android.widget.*
+import androidx.navigation.NavController
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.chrisfry.socialq.R
@@ -168,12 +170,12 @@ abstract class HostFragmentBase : SpotifyFragment(), PlayQueueService.PlayQueueS
                 val playlistParameters = HashMap<String, Any>()
                 playlistParameters["name"] = if (playlistName.isEmpty()) getString(R.string.default_playlist_name) else playlistName
 
-                mSpotifyService.changePlaylistDetails(mCurrentUser!!.id, mPlaylist!!.id, playlistParameters)
+                mSpotifyService.changePlaylistDetails(mCurrentUser.id, mPlaylist.id, playlistParameters)
             } else {
                 unfollowQueuePlaylist()
             }
 
-            listener?.hostShutDown()
+            findNavController().navigateUp()
             dialog.dismiss()
         }
 

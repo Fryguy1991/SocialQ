@@ -533,7 +533,7 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
-            case R.id.search_action:
+            case R.id.search_fragment:
                 Intent searchIntent = new Intent(this, SearchActivity.class);
                 startActivityForResult(searchIntent, RequestType.SEARCH_REQUEST.getRequestCode());
                 return true;
