@@ -59,6 +59,9 @@ import com.chrisfry.socialq.services.PlayQueueService;
 import com.chrisfry.socialq.userinterface.widgets.QueueItemDecoration;
 import com.chrisfry.socialq.utils.ApplicationUtils;
 
+/**
+ * Activity for the host of a SocialQ
+ */
 public abstract class HostActivity extends AppCompatActivity implements ConnectionStateCallback,
         PlayQueueService.PlayQueueServiceListener {
     private final String TAG = HostActivity.class.getName();
