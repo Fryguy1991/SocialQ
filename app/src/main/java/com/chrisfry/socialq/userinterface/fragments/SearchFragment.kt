@@ -13,6 +13,7 @@ import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import butterknife.BindViews
 import butterknife.ButterKnife
@@ -23,6 +24,7 @@ import com.chrisfry.socialq.model.AccessModel
 import com.chrisfry.socialq.userinterface.adapters.SearchTrackListAdapter
 import com.chrisfry.socialq.userinterface.widgets.QueueItemDecoration
 import com.chrisfry.socialq.userinterface.widgets.SearchArtistView
+import com.chrisfry.socialq.utils.ApplicationUtils
 import com.chrisfry.socialq.utils.DisplayUtils
 import kaaes.spotify.webapi.android.SpotifyService
 import kaaes.spotify.webapi.android.models.Artist
@@ -69,18 +71,15 @@ class SearchFragment : SpotifyFragment(), SearchArtistView.SearchArtistViewPrese
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-//        if (container != null) {
-            val baseView = inflater.inflate(R.layout.search_screen, container, false)
-            mMainLayout = baseView.findViewById(R.id.search_main)
-            ButterKnife.bind(this, baseView)
-            initUi()
-            addListeners()
-            return baseView
-//        }
-//        return null
+        val baseView = inflater.inflate(R.layout.search_screen, container, false)
+        mMainLayout = baseView.findViewById(R.id.search_main)
+        ButterKnife.bind(this, baseView)
+        initUi()
+        addListeners()
+        return baseView
     }
 
-    public fun onBackPressed(): Boolean{
+    override fun handleOnBackPressed(): Boolean {
         // TODO: Handle album search closing when album view is implemented.
         if (mSongLayout.visibility == View.VISIBLE && mSongResults.visibility == View.VISIBLE) {
             // If track results are showing close them
@@ -263,46 +262,53 @@ class SearchFragment : SpotifyFragment(), SearchArtistView.SearchArtistViewPrese
 
 
     private fun closeAnyRecyclerViews() {
-            for (currentBaseView in mResultsBaseViews) {
-                // Hide recycler view and rotate arrow (if needed)
-                currentBaseView.findViewById<RecyclerView>(R.id.rv_result_recycler_view).visibility = View.GONE
-                currentBaseView.findViewById<View>(R.id.iv_result_arrow).rotation = 0f
-                // Bottom of view should be constrained to bottom of parent
-                // Height should match constraint
-                val constraintSet = ConstraintSet()
-                constraintSet.clone(mMainLayout)
-                constraintSet.clear(currentBaseView.getId(), ConstraintSet.BOTTOM)
-                constraintSet.constrainHeight(currentBaseView.getId(), ConstraintSet.WRAP_CONTENT)
-                constraintSet.applyTo(mMainLayout)
-            }
+        for (currentBaseView in mResultsBaseViews) {
+            // Hide recycler view and rotate arrow (if needed)
+            currentBaseView.findViewById<RecyclerView>(R.id.rv_result_recycler_view).visibility = View.GONE
+            currentBaseView.findViewById<View>(R.id.iv_result_arrow).rotation = 0f
+            // Bottom of view should be constrained to bottom of parent
+            // Height should match constraint
+            val constraintSet = ConstraintSet()
+            constraintSet.clone(mMainLayout)
+            constraintSet.clear(currentBaseView.getId(), ConstraintSet.BOTTOM)
+            constraintSet.constrainHeight(currentBaseView.getId(), ConstraintSet.WRAP_CONTENT)
+            constraintSet.applyTo(mMainLayout)
+        }
     }
 
     override fun onTrackSelection(track: TrackSimple?) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        ApplicationUtils.setSearchResults(listOf(track!!.uri))
+        findNavController().navigateUp()
     }
 
     override fun requestArtistResultsExpansion() {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        expandResultsView(mSearchArtistView)
     }
 
     override fun requestArtistResultsClosure() {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        closeResultLayout(mSearchArtistView)
     }
 
     override fun notifyArtistSelected(artistId: String) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        val artistName = mSpotifyService.getArtist(artistId).name
+        val albums = mSpotifyService.getArtistAlbums(artistId)
+        mSearchArtistView.showArtistAlbums(artistName, albums.items)
     }
 
     override fun notifyAlbumSelected(albumId: String) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        val albumToShow = mSpotifyService.getAlbum(albumId)
+        mSearchArtistView.showAlbumTracks("not_implemented", albumToShow.name, albumToShow.tracks.items)
     }
 
     override fun notifyTopTracksSelected(artistId: String) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        val artistToSHow = mSpotifyService.getArtist(artistId)
+        val artistTopTracks = mSpotifyService.getArtistTopTrack(artistId, "US")
+        mSearchArtistView.showArtistTopTracks(artistToSHow.name, artistTopTracks.tracks)
     }
 
     override fun notifyTrackSelected(uri: String) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        ApplicationUtils.setSearchResults(listOf(uri))
+        findNavController().navigateUp()
     }
 
 

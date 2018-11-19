@@ -139,7 +139,7 @@ public class SearchActivity extends AppCompatActivity implements SearchTrackList
         mSongResults = mSongLayout.findViewById(R.id.rv_result_recycler_view);
         mSongResultsAdapter = new SearchTrackListAdapter(new ArrayList<TrackSimple>());
         mSongResults.setAdapter(mSongResultsAdapter);
-        LinearLayoutManager songsLayoutManager = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
+        LinearLayoutManager songsLayoutManager = new LinearLayoutManager(this, RecyclerView.VERTICAL, false);
         mSongResults.setLayoutManager(songsLayoutManager);
         mSongResults.addItemDecoration(new QueueItemDecoration(getApplicationContext()));
 

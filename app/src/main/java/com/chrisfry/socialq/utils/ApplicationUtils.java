@@ -4,11 +4,16 @@ import com.chrisfry.socialq.business.AppConstants;
 import com.chrisfry.socialq.enums.NearbyDevicesMessage;
 import com.spotify.android.appremote.api.ConnectionParams;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Utils required for information required across the application
  */
 public class ApplicationUtils {
-    private final static  String TAG = ApplicationUtils.class.getName();
+    private final static String TAG = ApplicationUtils.class.getName();
+
+    private static ArrayList<String> mSearchResults = new ArrayList<>();
 
     public static ConnectionParams getConnectionParams() {
         return new ConnectionParams.Builder(AppConstants.CLIENT_ID)
@@ -21,7 +26,7 @@ public class ApplicationUtils {
      * Builds a basic payload string for nearby devices.  Basic payload is designed as:
      * <Payload Prefix> + <Payload Content> (both strings)
      *
-     * @param payloadPrefix - Prefix for the payload string see NearbyDevicesMessage enum
+     * @param payloadPrefix  - Prefix for the payload string see NearbyDevicesMessage enum
      * @param payloadContent - Content of the payload string
      * @return Basic payload string
      */
@@ -61,5 +66,30 @@ public class ApplicationUtils {
             return NearbyDevicesMessage.RECEIVE_HOST_USER_ID;
         }
         return NearbyDevicesMessage.INVALID;
+    }
+
+    /**
+     * Sets the list of results for the host fragment to add
+     *
+     * @param uris - List of uris to store
+     */
+    public static void setSearchResults(List<String> uris) {
+        mSearchResults = new ArrayList<>(uris);
+    }
+
+    /**
+     * Clears the list of search results used by host fragment
+     */
+    public static void resetSearchResults() {
+        mSearchResults.clear();
+    }
+
+    /**
+     * Retrieves the list of search results
+     *
+     * @return - List of songs added during search fragment interaction
+     */
+    public static List<String> getSearchResults() {
+        return mSearchResults;
     }
 }

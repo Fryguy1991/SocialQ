@@ -17,6 +17,7 @@ import com.chrisfry.socialq.model.SongRequestData
 import com.chrisfry.socialq.services.PlayQueueService
 import com.chrisfry.socialq.userinterface.adapters.HostTrackListAdapter
 import com.chrisfry.socialq.userinterface.widgets.QueueItemDecoration
+import com.chrisfry.socialq.utils.ApplicationUtils
 import com.spotify.sdk.android.player.ConnectionStateCallback
 import com.spotify.sdk.android.player.Error
 import kaaes.spotify.webapi.android.models.Playlist
@@ -29,9 +30,6 @@ abstract class HostFragmentBase : SpotifyFragment(), PlayQueueService.PlayQueueS
     companion object {
         private val TAG = HostFragmentBase::class.java.name
     }
-
-    // Listener for fragment notifications
-    var listener: BaseHostFragmentListener? = null
 
     // UI element references
     private lateinit var mNextButton: View
@@ -70,7 +68,7 @@ abstract class HostFragmentBase : SpotifyFragment(), PlayQueueService.PlayQueueS
             mPlayQueueService?.addPlayQueueServiceListener(this@HostFragmentBase)
 
 //            setupShortDemoQueue()
-            setupLongDemoQueue()
+//            setupLongDemoQueue()
         }
 
         override fun onServiceDisconnected(componentName: ComponentName) {
@@ -86,6 +84,9 @@ abstract class HostFragmentBase : SpotifyFragment(), PlayQueueService.PlayQueueS
         mIsQueueFairPlay = arguments?.getBoolean(AppConstants.FAIR_PLAY_KEY, resources.getBoolean(R.bool.fair_play_default))
         // Retrieve queue title name
         mQueueTitle = arguments?.getString(AppConstants.QUEUE_TITLE_KEY, resources.getString(R.string.default_playlist_name))
+
+        // Display queue title in toolbar
+        activity!!.title = mQueueTitle
 
         // Start service that will play and control queue
         if (context != null) {
@@ -106,6 +107,9 @@ abstract class HostFragmentBase : SpotifyFragment(), PlayQueueService.PlayQueueS
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         Log.d(TAG, "Host Fragment onCreateView")
         val baseView = inflater.inflate(R.layout.host_screen, container, false)
+
+        // Display queue title in toolbar
+        activity!!.title = mQueueTitle
 
         initUi(baseView)
         addListeners()
@@ -204,8 +208,12 @@ abstract class HostFragmentBase : SpotifyFragment(), PlayQueueService.PlayQueueS
             onQueuePause()
         }
 
-        // Fragment is now visible, show the queue title
-        listener?.showHostTitle()
+        // Add tracks if we have search results
+        val resultsList = ApplicationUtils.getSearchResults()
+        for (trackUri in resultsList) {
+            handleSongRequest(SongRequestData(trackUri, mCurrentUser))
+        }
+        ApplicationUtils.resetSearchResults()
     }
 
 

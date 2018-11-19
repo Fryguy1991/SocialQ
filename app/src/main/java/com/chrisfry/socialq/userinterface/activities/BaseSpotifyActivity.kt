@@ -17,6 +17,7 @@ import androidx.appcompat.widget.Toolbar
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination
 import androidx.navigation.findNavController
+import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import com.chrisfry.socialq.R
@@ -38,6 +39,7 @@ class BaseSpotifyActivity : AppCompatActivity(), HostFragmentBase.BaseHostFragme
     private var searchActionItem: MenuItem? = null
 
     // Fragment references
+    private var navHostFragment: NavHostFragment? = null
     private var startFragment: StartFragment? = null
     private var hostFragment: HostFragmentBase? = null
     private var searchFragment: SearchFragment? = null
@@ -89,6 +91,9 @@ class BaseSpotifyActivity : AppCompatActivity(), HostFragmentBase.BaseHostFragme
         super.onCreate(savedInstanceState)
 
         setContentView(R.layout.base_activity_layout)
+
+        // Get navhost fragment reference
+        navHostFragment = supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment?
 
         // Set activity as listener for navigation events
         val navController = findNavController(R.id.nav_host_fragment)

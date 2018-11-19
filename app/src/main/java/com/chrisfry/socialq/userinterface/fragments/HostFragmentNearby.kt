@@ -3,6 +3,7 @@ package com.chrisfry.socialq.userinterface.fragments
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
+import androidx.navigation.fragment.findNavController
 import com.chrisfry.socialq.business.AppConstants
 import com.chrisfry.socialq.enums.NearbyDevicesMessage
 import com.chrisfry.socialq.enums.PayloadTransferUpdateStatus
@@ -162,7 +163,7 @@ class HostFragmentNearby : HostFragmentBase() {
                 .addOnFailureListener(object : OnFailureListener {
                     override fun onFailure(p0: Exception) {
                         Log.d(TAG, "Failed to start advertising the host")
-                        listener?.hostShutDown()
+                        findNavController().navigateUp()
                     }
                 })
     }
