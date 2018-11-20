@@ -7,6 +7,6 @@
         android:icon="@mipmap/search_icon_white"
         android:title="@string/search_action"
         app:showAsAction="always"
-        android:visible="false"/>
+        android:visible="true"/>
 
 </menu>
