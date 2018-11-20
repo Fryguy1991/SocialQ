@@ -81,7 +81,7 @@ class HostActivityNearbyDevices : HostActivity() {
                 val payloadString = String(payload.asBytes()!!)
                 val payloadType = ApplicationUtils.getMessageTypeFromPayload(payloadString)
 
-                Log.e(TAG, "Payload is type $payloadType")
+                Log.d(TAG, "Payload is type $payloadType")
 
                 when (payloadType) {
                     NearbyDevicesMessage.SONG_REQUEST -> {

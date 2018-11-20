@@ -85,6 +85,8 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
     private PlayQueueService mPlayQueueService;
     protected UserPrivate mCurrentUser;
     protected Playlist mPlaylist;
+    // List that will contain ALL tracks from mPlaylist (mPlaylist contains max 100)
+    private List<PlaylistTrack> mPlaylistTracks = new ArrayList<>();
 
     // Flag to determine if the service is bound or not
     private boolean mIsServiceBound = false;
@@ -584,7 +586,24 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
     }
 
     private void refreshPlaylist() {
+        Log.d(TAG, "Refreshing playlist");
         mPlaylist = mSpotifyService.getPlaylist(mCurrentUser.id, mPlaylist.id);
+        refreshPlaylistTracks();
+    }
+
+    private void refreshPlaylistTracks() {
+        Log.d(TAG, "Refreshing playlist track list");
+        mPlaylistTracks.clear();
+        // refreshPlaylist already retrieved the first 100 tracks, add to list
+        mPlaylistTracks.addAll(mPlaylist.tracks.items);
+        // TODO: This can slow down app functionality if there are a lot of tracks (every 100 tracks in the playlist is another call to the spotify API)
+        for (int i = 100; i < mPlaylist.tracks.total; i+= 100) {
+            Map<String, Object> iterationQueryParameters = new HashMap<>();
+            iterationQueryParameters.put("offset", i);
+            Pager<PlaylistTrack> iterationTracks = mSpotifyService.getPlaylistTracks(mCurrentUser.id, mPlaylist.id, iterationQueryParameters);
+
+            mPlaylistTracks.addAll(iterationTracks.items);
+        }
     }
 
     private void unfollowQueuePlaylist() {
@@ -685,14 +704,10 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
 
         mCachedPlayingIndex = currentPlayingIndex;
 
-        // Refresh playlist and update UI
-        refreshPlaylist();
-
-        // TODO: Local copy of playlist will only have first 100 tracks.  THis needs to be more robust
-        if (currentPlayingIndex >= mPlaylist.tracks.items.size()) {
+        if (currentPlayingIndex >= mPlaylist.tracks.total) {
             mTrackDisplayAdapter.updateAdapter(new ArrayList<ClientRequestData>());
         } else {
-            mTrackDisplayAdapter.updateAdapter(createDisplayList(mPlaylist.tracks.items.subList(currentPlayingIndex, mPlaylist.tracks.items.size())));
+            mTrackDisplayAdapter.updateAdapter(createDisplayList(mPlaylistTracks.subList(currentPlayingIndex, mPlaylist.tracks.total)));
         }
 
         // Notify clients queue has been updated
@@ -724,8 +739,7 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
         // Refresh playlist and update UI
         refreshPlaylist();
 
-        // TODO: Local copy of playlist will only have first 100 tracks.  THis needs to be more robust
-        mTrackDisplayAdapter.updateAdapter(createDisplayList(mPlaylist.tracks.items.subList(mCachedPlayingIndex, mPlaylist.tracks.items.size())));
+        mTrackDisplayAdapter.updateAdapter(createDisplayList(mPlaylistTracks.subList(mCachedPlayingIndex, mPlaylist.tracks.total)));
 
         notifyClientsQueueUpdated(mCachedPlayingIndex);
     }
