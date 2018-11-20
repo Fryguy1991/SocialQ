@@ -18,6 +18,9 @@
     <string name="pause_btn">Pause</string>
     <string name="toast_authentication_error_host">Authentication Error</string>
     <string name="added_by_client_formatter">Added By: %1$s</string>
+    <string name="select_base_playlist">Select A Base Playlist</string>
+    <string name="fresh_playlist">Start A New Playlist</string>
+    <string name="base_playlist">Base Playlist</string>
 
     <!-- Close Host Dialog Strings -->
     <string name="close_host_dialog_title">Close Queue?</string>

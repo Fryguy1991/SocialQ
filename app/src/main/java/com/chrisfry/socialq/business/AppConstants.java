@@ -16,7 +16,10 @@ public class AppConstants {
     // Client ID specific to this application
     public static final String CLIENT_ID = "0fab62a3895a4fa3aae14bc3e46bc59c";
     // Redirect URI
-    public  static final String REDIRECT_URI = "fryredirect://callback";
+    public static final String REDIRECT_URI = "fryredirect://callback";
+
+    // Constant name for base user id
+    public static final String BASE_USER_ID = "social_queue_base_user";
 
     // Intent extra key strings
     public static final String SEARCH_RESULTS_EXTRA_KEY = "search_results_key";

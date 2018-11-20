@@ -12,10 +12,12 @@ import android.os.IBinder;
 import android.os.Looper;
 import android.os.Message;
 import android.os.StrictMode;
+
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -36,6 +38,9 @@ import com.chrisfry.socialq.model.AccessModel;
 import com.chrisfry.socialq.model.ClientRequestData;
 import com.chrisfry.socialq.model.SongRequestData;
 import com.chrisfry.socialq.userinterface.adapters.HostTrackListAdapter;
+import com.chrisfry.socialq.userinterface.adapters.IItemSelectionListener;
+import com.chrisfry.socialq.userinterface.adapters.SelectablePlaylistAdapter;
+import com.google.gson.JsonArray;
 import com.spotify.sdk.android.authentication.AuthenticationClient;
 import com.spotify.sdk.android.authentication.AuthenticationRequest;
 import com.spotify.sdk.android.authentication.AuthenticationResponse;
@@ -52,15 +57,18 @@ import com.chrisfry.socialq.R;
 
 import kaaes.spotify.webapi.android.SpotifyApi;
 import kaaes.spotify.webapi.android.SpotifyService;
+import kaaes.spotify.webapi.android.models.Pager;
 import kaaes.spotify.webapi.android.models.Playlist;
+import kaaes.spotify.webapi.android.models.PlaylistSimple;
 import kaaes.spotify.webapi.android.models.PlaylistTrack;
 import kaaes.spotify.webapi.android.models.UserPrivate;
+import kaaes.spotify.webapi.android.models.UserPublic;
 
 import com.chrisfry.socialq.services.PlayQueueService;
 import com.chrisfry.socialq.userinterface.widgets.QueueItemDecoration;
 
 public abstract class HostActivity extends AppCompatActivity implements ConnectionStateCallback,
-        PlayQueueService.PlayQueueServiceListener {
+        PlayQueueService.PlayQueueServiceListener, IItemSelectionListener<String> {
     private final String TAG = HostActivity.class.getName();
 
     // UI element references
@@ -86,6 +94,10 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
     private boolean mIsQueueFairPlay;
     // List containing client song requests
     private List<SongRequestData> mSongRequests = new ArrayList<>();
+    // Reference to base playlist dialog
+    private AlertDialog mBasePlaylistDialog = null;
+    // Reference to base playlist ID for loading when service is connected
+    private String mBasePlaylistId = "";
 
     // Object for connecting to/from play queue service
     private ServiceConnection mServiceConnection = new ServiceConnection() {
@@ -99,6 +111,10 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
             mPlayQueueService.addPlayQueueServiceListener(HostActivity.this);
 
             setupQueueList();
+
+            if (!mBasePlaylistId.isEmpty()) {
+                loadBasePlaylist(mBasePlaylistId);
+            }
 //            setupShortDemoQueue();
 //            setupLongDemoQueue();
         }
@@ -156,7 +172,7 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
                 AppConstants.CLIENT_ID,
                 AuthenticationResponse.Type.TOKEN,
                 AppConstants.REDIRECT_URI);
-        builder.setScopes(new String[]{"user-read-private", "streaming", "playlist-modify-private", "app-remote-control"});
+        builder.setScopes(new String[]{"user-read-private", "streaming", "playlist-modify-private", "playlist-read-private"});
         AuthenticationRequest request = builder.build();
         AuthenticationClient.openLoginActivity(this, RequestType.SPOTIFY_AUTHENTICATION_REQUEST.getRequestCode(), request);
     }
@@ -217,16 +233,15 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
                         // Initialize spotify elements and create playlist for queue
                         initSpotifyElements(response.getAccessToken());
 
-                        // Start service that will play and control queue
-                        Intent startPlayQueueIntent = new Intent(this, PlayQueueService.class);
-                        startPlayQueueIntent.putExtra(AppConstants.SERVICE_PLAYLIST_ID_KEY, mPlaylist.id);
-                        startService(startPlayQueueIntent);
-
-                        // Bind activity to service
-                        mIsServiceBound = bindService(startPlayQueueIntent, mServiceConnection, Context.BIND_AUTO_CREATE);
-
-                        // All logged in and good to go.  Start host connection.
-                        startHostConnection(getIntent().getStringExtra(AppConstants.QUEUE_TITLE_KEY));
+                        // Show dialog for selecting base playlist if user has playlists to show
+                        Pager<PlaylistSimple> playlistPager = mSpotifyService.getPlaylists(mCurrentUser.id);
+                        if (playlistPager.items.size() > 0) {
+                            showBasePlaylistDialog(playlistPager.items);
+                        } else {
+                            // If no existing Spotify playlists don't show dialog and create one from scratch
+                            createPlaylistForQueue();
+                            startPlayQueueService();
+                        }
                     } else {
                         Log.d(TAG, "New access token granted.  Update Spotify Api and service");
                         mSpotifyApi.setAccessToken(response.getAccessToken());
@@ -254,6 +269,19 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
             default:
                 // Do nothing.  Host activity should not handle BT events and if we got NONE back something is wrong
         }
+    }
+
+    private void startPlayQueueService() {
+        // Start service that will play and control queue
+        Intent startPlayQueueIntent = new Intent(this, PlayQueueService.class);
+        startPlayQueueIntent.putExtra(AppConstants.SERVICE_PLAYLIST_ID_KEY, mPlaylist.id);
+        startService(startPlayQueueIntent);
+
+        // Bind activity to service
+        mIsServiceBound = bindService(startPlayQueueIntent, mServiceConnection, Context.BIND_AUTO_CREATE);
+
+        // All logged in and good to go.  Start host connection.
+        startHostConnection(getIntent().getStringExtra(AppConstants.QUEUE_TITLE_KEY));
     }
 
     private void initSpotifyElements(String accessToken) {
@@ -328,6 +356,50 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
         dialogBuilder.create().show();
     }
 
+    private void showBasePlaylistDialog(List<PlaylistSimple> playlists) {
+        AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
+        dialogBuilder.setTitle(getString(R.string.select_base_playlist));
+
+        // Inflate content view and get references to UI elements
+        View contentView = getLayoutInflater().inflate(R.layout.base_playlist_dialog, null);
+        RecyclerView playlistList = contentView.findViewById(R.id.rv_playlist_list);
+
+        // Add recycler view item decoration
+        LinearLayoutManager layoutManager = new LinearLayoutManager(this, RecyclerView.VERTICAL, false);
+        playlistList.setLayoutManager(layoutManager);
+        playlistList.addItemDecoration(new QueueItemDecoration(getApplicationContext()));
+
+        // Setup list adapter
+        SelectablePlaylistAdapter playlistAdapter = new SelectablePlaylistAdapter();
+        playlistAdapter.setListener(this);
+        playlistAdapter.updateAdapter(playlists);
+        playlistList.setAdapter(playlistAdapter);
+
+        dialogBuilder.setView(contentView);
+
+        dialogBuilder.setNeutralButton(R.string.fresh_playlist, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+                Log.d(TAG, "User selected not to use a base playlist");
+                createPlaylistForQueue();
+                startPlayQueueService();
+            }
+        });
+
+        dialogBuilder.setOnCancelListener(new DialogInterface.OnCancelListener() {
+            @Override
+            public void onCancel(DialogInterface dialog) {
+                Log.d(TAG, "User didn't complete base playlist dialog");
+                createPlaylistForQueue();
+                startPlayQueueService();
+            }
+        });
+
+        mBasePlaylistDialog = dialogBuilder.create();
+        mBasePlaylistDialog.show();
+    }
+
     private Playlist createPlaylistForQueue() {
         // Create body parameters for new playlist
         Map<String, Object> playlistParameters = new HashMap<>();
@@ -338,6 +410,52 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
 
         Log.d(TAG, "Creating playlist for the SocialQ");
         return mSpotifyService.createPlaylist(mCurrentUser.id, playlistParameters);
+    }
+
+    private void loadBasePlaylist(String playlistId) {
+        Log.d(TAG, "Loading base playlist with ID: " + playlistId);
+
+        Playlist basePlaylist = mSpotifyService.getPlaylist(mCurrentUser.id, playlistId);
+
+        // Adding with base user ensure host added tracks are sorted within the base playlist
+        UserPublic baseUser = new UserPublic();
+        baseUser.id = AppConstants.BASE_USER_ID;
+        baseUser.display_name = getResources().getString(R.string.base_playlist);
+
+        // TODO: Consider shuffling tracks suggested process:
+        // 1. Retrieve all tracks (100 at a time)
+        // 2. Shuffle entire list
+        // 3. Add tracks to SocialQ playlist (100 at a time)
+
+        // Can only retrieve/add 100 tracks at a time
+        for (int i = 0; i < basePlaylist.tracks.total; i += 100) {
+            Map<String, Object> iterationQueryParameters = new HashMap<>();
+            iterationQueryParameters.put("offset", i);
+
+            // Retrieve max next 100 tracks
+            Pager<PlaylistTrack> iterationTracks = mSpotifyService.getPlaylistTracks(mCurrentUser.id, playlistId, iterationQueryParameters);
+
+            JsonArray urisArray = new JsonArray();
+
+            // Build JSON array and add request data for each track in the playlist
+            for (PlaylistTrack track : iterationTracks.items) {
+                // Can't add local tracks (local to playlist owner's device)
+                if (!track.is_local) {
+                    SongRequestData requestData = new SongRequestData(track.track.uri, baseUser);
+                    mSongRequests.add(requestData);
+
+                    urisArray.add(track.track.uri);
+                }
+            }
+
+            Map<String, Object> queryParameters = new HashMap<>();
+            Map<String, Object> bodyParameters = new HashMap<>();
+            bodyParameters.put("uris", urisArray);
+
+            // Add max 100 tracks to the playlist
+            mSpotifyService.addTracksToPlaylist(mCurrentUser.id, mPlaylist.id, queryParameters, bodyParameters);
+        }
+        mPlayQueueService.notifyServiceQueueHasChanged();
     }
 
     protected final void handleSongRequest(SongRequestData songRequest) {
@@ -546,7 +664,7 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
     private void setupQueueList() {
         mTrackDisplayAdapter = new HostTrackListAdapter(getApplicationContext());
         mQueueList.setAdapter(mTrackDisplayAdapter);
-        LinearLayoutManager layoutManager = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
+        LinearLayoutManager layoutManager = new LinearLayoutManager(this, RecyclerView.VERTICAL, false);
         mQueueList.setLayoutManager(layoutManager);
         mQueueList.addItemDecoration(new QueueItemDecoration(getApplicationContext()));
     }
@@ -569,6 +687,8 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
 
         // Refresh playlist and update UI
         refreshPlaylist();
+
+        // TODO: Local copy of playlist will only have first 100 tracks.  THis needs to be more robust
         if (currentPlayingIndex >= mPlaylist.tracks.items.size()) {
             mTrackDisplayAdapter.updateAdapter(new ArrayList<ClientRequestData>());
         } else {
@@ -603,6 +723,8 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
     public void onQueueUpdated() {
         // Refresh playlist and update UI
         refreshPlaylist();
+
+        // TODO: Local copy of playlist will only have first 100 tracks.  THis needs to be more robust
         mTrackDisplayAdapter.updateAdapter(createDisplayList(mPlaylist.tracks.items.subList(mCachedPlayingIndex, mPlaylist.tracks.items.size())));
 
         notifyClientsQueueUpdated(mCachedPlayingIndex);
@@ -619,6 +741,21 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
         }
 
         return displayList;
+    }
+
+    /**
+     * Item selection method for playlist ID in base playlist dialog
+     *
+     * @param selectedItem - ID of the playlist that was selected
+     */
+    @Override
+    public void onItemSelected(String selectedItem) {
+        if (mBasePlaylistDialog != null && mBasePlaylistDialog.isShowing()) {
+            mBasePlaylistDialog.dismiss();
+            createPlaylistForQueue();
+            startPlayQueueService();
+            mBasePlaylistId = selectedItem;
+        }
     }
 
     /**
