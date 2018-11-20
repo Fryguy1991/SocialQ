@@ -114,6 +114,7 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
 
             setupQueueList();
 
+            // Load base playlist if one was selected
             if (!mBasePlaylistId.isEmpty()) {
                 loadBasePlaylist(mBasePlaylistId);
             }
@@ -287,6 +288,8 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
     }
 
     private void initSpotifyElements(String accessToken) {
+        Log.d(TAG, "Initializing Spotify elements");
+
         // Setup service for searching Spotify library
         SpotifyComponent componenet = DaggerSpotifyComponent.builder().spotifyModule(
                 new SpotifyModule(accessToken)).build();
@@ -295,7 +298,6 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
         mSpotifyService = componenet.service();
 
         mCurrentUser = mSpotifyService.getMe();
-        mPlaylist = createPlaylistForQueue();
     }
 
     @Override
@@ -402,7 +404,7 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
         mBasePlaylistDialog.show();
     }
 
-    private Playlist createPlaylistForQueue() {
+    private void createPlaylistForQueue() {
         // Create body parameters for new playlist
         Map<String, Object> playlistParameters = new HashMap<>();
         playlistParameters.put("name", getString(R.string.default_playlist_name));
@@ -411,7 +413,7 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
         playlistParameters.put("description", "Playlist created by the SocialQ App.");
 
         Log.d(TAG, "Creating playlist for the SocialQ");
-        return mSpotifyService.createPlaylist(mCurrentUser.id, playlistParameters);
+        mPlaylist = mSpotifyService.createPlaylist(mCurrentUser.id, playlistParameters);
     }
 
     private void loadBasePlaylist(String playlistId) {
