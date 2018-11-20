@@ -18,6 +18,7 @@ import com.spotify.sdk.android.player.Config;
 import com.spotify.sdk.android.player.ConnectionStateCallback;
 import com.spotify.sdk.android.player.Connectivity;
 import com.spotify.sdk.android.player.Error;
+import com.spotify.sdk.android.player.Metadata;
 import com.spotify.sdk.android.player.Player;
 import com.spotify.sdk.android.player.PlayerEvent;
 import com.spotify.sdk.android.player.Spotify;
@@ -171,7 +172,7 @@ public class PlayQueueService extends Service implements ConnectionStateCallback
 
         mSpotifyApi = componenet.api();
         mSpotifyService = componenet.service();
-        
+
         mCurrentUser = mSpotifyService.getMe();
         mPlaylist = mSpotifyService.getPlaylist(mCurrentUser.id, playlistId);
     }
@@ -179,22 +180,22 @@ public class PlayQueueService extends Service implements ConnectionStateCallback
     public void requestPlay() {
         Log.d(TAG, "PLAY REQUEST");
         if (mSpotifyPlayer.getPlaybackState() != null) {
-             if (mAudioDeliveryDoneFlag) {
-                 if (mCurrentPlaylistIndex < mPlaylist.tracks.items.size()) {
-                     // If audio has previously been completed (or never started)
-                     // start the playlist at the current index
-                     Log.d(TAG, "Audio previously finished.\nStarting playlist from index: " + mCurrentPlaylistIndex);
-                     mSpotifyPlayer.playUri(this, mPlaylist.uri, mCurrentPlaylistIndex, 1);
-                     mAudioDeliveryDoneFlag = false;
-                     mIncorrectMetaDataFlag = false;
-                 } else {
-                     Log.d(TAG, "Nothing to play");
-                 }
-             } else {
-                 Log.d(TAG, "Resuming player");
-                 if (!mSpotifyPlayer.getPlaybackState().isPlaying) {
-                     mSpotifyPlayer.resume(this);
-                 }
+            if (mAudioDeliveryDoneFlag) {
+                if (mCurrentPlaylistIndex < mPlaylist.tracks.items.size()) {
+                    // If audio has previously been completed (or never started)
+                    // start the playlist at the current index
+                    Log.d(TAG, "Audio previously finished.\nStarting playlist from index: " + mCurrentPlaylistIndex);
+                    mSpotifyPlayer.playUri(this, mPlaylist.uri, mCurrentPlaylistIndex, 1);
+                    mAudioDeliveryDoneFlag = false;
+                    mIncorrectMetaDataFlag = false;
+                } else {
+                    Log.d(TAG, "Nothing to play");
+                }
+            } else {
+                Log.d(TAG, "Resuming player");
+                if (!mSpotifyPlayer.getPlaybackState().isPlaying) {
+                    mSpotifyPlayer.resume(this);
+                }
             }
         }
     }
@@ -266,6 +267,7 @@ public class PlayQueueService extends Service implements ConnectionStateCallback
                 }
                 break;
             case kSpPlaybackNotifyTrackChanged:
+                logMetaData();
                 break;
             case kSpPlaybackNotifyMetadataChanged:
                 if (mTrackDelivered && mIncorrectMetaDataFlag) {
@@ -299,6 +301,26 @@ public class PlayQueueService extends Service implements ConnectionStateCallback
                 // Do nothing or future implementation
                 break;
         }
+    }
+
+    private void logMetaData() {
+        // Log previous/current/next tracks
+        Metadata metadata = mSpotifyPlayer.getMetadata();
+        String previousTrack = null;
+        String nextTrack = null;
+        String currentTrack = null;
+        if (metadata.prevTrack != null) {
+            previousTrack = metadata.prevTrack.name;
+        }
+        if (metadata.currentTrack != null) {
+            currentTrack = metadata.currentTrack.name;
+        }
+        if (metadata.nextTrack != null) {
+            nextTrack = metadata.nextTrack.name;
+        }
+        Log.d(TAG, "META DATA:\nFinished/Skipped: " + previousTrack
+                + "\nNow Playing : " + currentTrack
+                + "\nNext Track: " + nextTrack);
     }
 
     @Override

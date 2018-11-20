@@ -237,7 +237,9 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
                         initSpotifyElements(response.getAccessToken());
 
                         // Show dialog for selecting base playlist if user has playlists to show
-                        Pager<PlaylistSimple> playlistPager = mSpotifyService.getPlaylists(mCurrentUser.id);
+                        Map<String, Object> options = new HashMap<>();
+                        options.put(SpotifyService.LIMIT, 50);
+                        Pager<PlaylistSimple> playlistPager = mSpotifyService.getPlaylists(mCurrentUser.id, options);
                         if (playlistPager.items.size() > 0) {
                             showBasePlaylistDialog(playlistPager.items);
                         } else {

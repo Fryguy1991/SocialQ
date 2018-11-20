@@ -1,0 +1,261 @@
+11-20 14:01:21.656  D/com.spotify.sdk.android.authentication.LoginActivity: https://accounts.spotify.com/authorize?client_id=0fab62a3895a4fa3aae14bc3e46bc59c&response_type=token&redirect_uri=fryredirect%3A%2F%2Fcallback&show_dialog=false&utm_source=spotify-sdk&utm_medium=android-sdk&utm_campaign=android-sdk&scope=user-read-private%20streaming%20playlist-modify-private%20playlist-read-private
+11-20 14:01:21.656  D/SpotifyAuthHandler: start
+11-20 14:01:22.262  D/com.spotify.sdk.android.authentication.LoginActivity: Response: token
+11-20 14:01:22.263  D/SpotifyAuthHandler: stop
+11-20 14:01:22.325  userinterface.activities.HostActivity: Received request type: SPOTIFY_AUTHENTICATION_REQUEST
+11-20 14:01:22.325  userinterface.activities.HostActivity: Access token granted
+11-20 14:01:22.329  userinterface.activities.HostActivity: First access token granted.  Init Spotify elements, play queue service, and start host connection
+11-20 14:01:22.329  userinterface.activities.HostActivity: Initializing Spotify elements
+11-20 14:01:22.478  D/Retrofit: ---> HTTP GET https://api.spotify.com/v1/me
+11-20 14:01:22.709  D/Retrofit: <--- HTTP 200 https://api.spotify.com/v1/me (231ms)
+11-20 14:01:22.757  D/Retrofit: ---> HTTP GET https://api.spotify.com/v1/users/fry_dev_1/playlists
+11-20 14:01:22.901  D/Retrofit: <--- HTTP 200 https://api.spotify.com/v1/users/fry_dev_1/playlists (144ms)
+11-20 14:01:24.826  userinterface.activities.HostActivity: Creating playlist for the SocialQ
+11-20 14:01:24.838  D/Retrofit: ---> HTTP POST https://api.spotify.com/v1/users/fry_dev_1/playlists
+11-20 14:01:24.967  D/Retrofit: <--- HTTP 201 https://api.spotify.com/v1/users/fry_dev_1/playlists (128ms)
+11-20 14:01:25.101  services.PlayQueueService: onStartCommand: Starting service
+11-20 14:01:25.101  services.PlayQueueService: onStartCommand: Initializing player
+11-20 14:01:25.129  W/linker: /data/app/com.chrisfry.socialq-1/lib/arm/libspotify_embedded_shared.so: unused DT entry: type 0xf arg 0xc77
+11-20 14:01:25.193  services.PlayQueueService: Initializing Spotify elements
+11-20 14:01:25.195  D/Retrofit: ---> HTTP GET https://api.spotify.com/v1/me
+11-20 14:01:25.240  D/Retrofit: <--- HTTP 200 https://api.spotify.com/v1/me (44ms)
+11-20 14:01:25.261  D/Retrofit: ---> HTTP GET https://api.spotify.com/v1/users/fry_dev_1/playlists/0PV313HenWau6LRQkLpNLO
+11-20 14:01:25.324  D/Retrofit: <--- HTTP 200 https://api.spotify.com/v1/users/fry_dev_1/playlists/0PV313HenWau6LRQkLpNLO (63ms)
+11-20 14:01:25.383  services.PlayQueueService: Service is being bound
+11-20 14:01:25.400  services.PlayQueueService: Player initialized
+11-20 14:01:25.402  userinterface.activities.HostActivity: Service Connected
+11-20 14:01:25.405  userinterface.activities.HostActivity: Loading base playlist with ID: 2Qxq5v1p68vVdZjtvhEIs6
+11-20 14:01:25.407  D/Retrofit: ---> HTTP GET https://api.spotify.com/v1/users/fry_dev_1/playlists/2Qxq5v1p68vVdZjtvhEIs6
+11-20 14:01:25.484  D/Retrofit: <--- HTTP 200 https://api.spotify.com/v1/users/fry_dev_1/playlists/2Qxq5v1p68vVdZjtvhEIs6 (77ms)
+11-20 14:01:25.905  D/Retrofit: ---> HTTP GET https://api.spotify.com/v1/users/fry_dev_1/playlists/2Qxq5v1p68vVdZjtvhEIs6/tracks?offset=0
+11-20 14:01:25.984  D/Retrofit: <--- HTTP 200 https://api.spotify.com/v1/users/fry_dev_1/playlists/2Qxq5v1p68vVdZjtvhEIs6/tracks?offset=0 (79ms)
+11-20 14:01:26.402  D/Retrofit: ---> HTTP POST https://api.spotify.com/v1/users/fry_dev_1/playlists/0PV313HenWau6LRQkLpNLO/tracks
+11-20 14:01:26.486  D/Retrofit: <--- HTTP 201 https://api.spotify.com/v1/users/fry_dev_1/playlists/0PV313HenWau6LRQkLpNLO/tracks (83ms)
+11-20 14:01:26.490  D/Retrofit: ---> HTTP GET https://api.spotify.com/v1/users/fry_dev_1/playlists/0PV313HenWau6LRQkLpNLO
+11-20 14:01:26.565  D/Retrofit: <--- HTTP 200 https://api.spotify.com/v1/users/fry_dev_1/playlists/0PV313HenWau6LRQkLpNLO (74ms)
+11-20 14:01:26.995  userinterface.activities.HostActivity: Refreshing playlist
+11-20 14:01:26.995  D/Retrofit: ---> HTTP GET https://api.spotify.com/v1/users/fry_dev_1/playlists/0PV313HenWau6LRQkLpNLO
+11-20 14:01:44.577 24066-24632/com.chrisfry.socialq E/SpotifySDKNative: Unknown connection error of type '5' received
+11-20 14:01:45.629  D/Retrofit: <--- HTTP 200 https://api.spotify.com/v1/users/fry_dev_1/playlists/0PV313HenWau6LRQkLpNLO (18633ms)
+11-20 14:01:46.045  userinterface.activities.HostActivity: Refreshing playlist track list
+11-20 14:01:46.046  I/Choreographer: Skipped 1237 frames!  The application may be doing too much work on its main thread.
+11-20 14:01:46.084  W/Glide: Failed to find GeneratedAppGlideModule. You should include an annotationProcessor compile dependency on com.github.bumptech.glide:compiler in your application and a @GlideModule annotated AppGlideModule implementation or LibraryGlideModules will be silently ignored
+11-20 14:01:46.336  userinterface.activities.HostActivityNearbyDevices: Successfully advertising the host
+11-20 14:01:46.336  services.PlayQueueService: Success!
+11-20 14:01:46.336  services.PlayQueueService: Logged In!
+11-20 14:01:51.538  services.PlayQueueService: PLAY REQUEST
+11-20 14:01:51.538  services.PlayQueueService: Audio previously finished.
+    Starting playlist from index: 0
+11-20 14:01:51.554  services.PlayQueueService: New playback event: kSpPlaybackNotifyBecameActive
+11-20 14:01:51.555  services.PlayQueueService: Great Success!
+11-20 14:01:51.694  services.PlayQueueService: New playback event: kSpPlaybackNotifyMetadataChanged
+11-20 14:01:51.798  services.PlayQueueService: New playback event: kSpPlaybackNotifyMetadataChanged
+11-20 14:01:51.798  services.PlayQueueService: New playback event: kSpPlaybackNotifyMetadataChanged
+11-20 14:01:51.798  services.PlayQueueService: New playback event: kSpPlaybackNotifyContextChanged
+11-20 14:01:51.892  services.PlayQueueService: New playback event: kSpPlaybackNotifyTrackChanged
+11-20 14:01:51.892  services.PlayQueueService: Finished/Skipped: null
+    Now Playing : Brother
+    Next Track: Just One Day
+11-20 14:01:51.944  services.PlayQueueService: New playback event: kSpPlaybackEventAudioFlush
+11-20 14:01:51.944  services.PlayQueueService: New playback event: kSpPlaybackNotifyPlay
+11-20 14:01:51.945  services.PlayQueueService: Player has started playing
+11-20 14:05:06.254  services.PlayQueueService: New playback event: kSpPlaybackNotifyTrackDelivered
+11-20 14:05:06.254  services.PlayQueueService: Player has moved to next track (next/track complete)
+11-20 14:05:06.258  services.PlayQueueService: New playback event: kSpPlaybackNotifyTrackChanged
+11-20 14:05:06.258  services.PlayQueueService: Finished/Skipped: Brother
+    Now Playing : Just One Day
+    Next Track: Back To You
+11-20 14:05:06.478  services.PlayQueueService: New playback event: kSpPlaybackNotifyMetadataChanged
+11-20 14:08:38.411  services.PlayQueueService: New playback event: kSpPlaybackNotifyTrackDelivered
+11-20 14:08:38.411  services.PlayQueueService: Player has moved to next track (next/track complete)
+11-20 14:08:38.537  services.PlayQueueService: New playback event: kSpPlaybackNotifyTrackChanged
+11-20 14:08:38.537  services.PlayQueueService: Finished/Skipped: Just One Day
+    Now Playing : Back To You
+    Next Track: Lemonade
+11-20 14:08:38.537  services.PlayQueueService: New playback event: kSpPlaybackNotifyMetadataChanged
+11-20 14:09:13.826  userinterface.activities.HostActivityNearbyDevices: Established connection with a client, send queue
+11-20 14:09:13.832  userinterface.activities.HostActivityNearbyDevices: Sending host ID to new client
+11-20 14:09:13.838  userinterface.activities.HostActivityNearbyDevices: Sending playlist ID to new client
+11-20 14:09:13.839  userinterface.activities.HostActivityNearbyDevices: Updating queue of new client (current playing index)
+11-20 14:09:13.879  userinterface.activities.HostActivityNearbyDevices: Payload Transfer to/from mmxT has status IN_PROGRESS
+11-20 14:09:13.888  userinterface.activities.HostActivityNearbyDevices: Payload Transfer to/from mmxT has status SUCCESS
+11-20 14:09:13.888  userinterface.activities.HostActivityNearbyDevices: Payload Transfer to/from mmxT has status IN_PROGRESS
+11-20 14:09:13.902  userinterface.activities.HostActivityNearbyDevices: Payload Transfer to/from mmxT has status SUCCESS
+11-20 14:09:13.916  userinterface.activities.HostActivityNearbyDevices: Payload Transfer to/from mmxT has status IN_PROGRESS
+11-20 14:09:13.925  userinterface.activities.HostActivityNearbyDevices: Payload Transfer to/from mmxT has status SUCCESS
+11-20 14:09:23.758  userinterface.activities.HostActivityNearbyDevices: Host received a payload
+11-20 14:09:23.759  userinterface.activities.HostActivityNearbyDevices: Payload is type SONG_REQUEST
+11-20 14:09:23.762  D/Retrofit: ---> HTTP GET https://api.spotify.com/v1/users/121596386
+11-20 14:09:23.991  D/Retrofit: <--- HTTP 200 https://api.spotify.com/v1/users/121596386 (228ms)
+11-20 14:09:23.995  userinterface.activities.HostActivity: Received request for URI: spotify:track:4UaQRnHn0aHG7FeLkpfBDi, from User ID: 121596386
+11-20 14:09:23.995  userinterface.activities.HostActivity: Adding new track at playlist index: 3
+11-20 14:09:23.996  D/Retrofit: ---> HTTP POST https://api.spotify.com/v1/users/fry_dev_1/playlists/0PV313HenWau6LRQkLpNLO/tracks?uris=spotify%3Atrack%3A4UaQRnHn0aHG7FeLkpfBDi&position=3
+11-20 14:09:24.081  D/Retrofit: <--- HTTP 201 https://api.spotify.com/v1/users/fry_dev_1/playlists/0PV313HenWau6LRQkLpNLO/tracks?uris=spotify%3Atrack%3A4UaQRnHn0aHG7FeLkpfBDi&position=3 (85ms)
+11-20 14:09:24.084  D/Retrofit: ---> HTTP GET https://api.spotify.com/v1/users/fry_dev_1/playlists/0PV313HenWau6LRQkLpNLO
+11-20 14:09:24.190  D/Retrofit: <--- HTTP 200 https://api.spotify.com/v1/users/fry_dev_1/playlists/0PV313HenWau6LRQkLpNLO (105ms)
+11-20 14:09:24.736  userinterface.activities.HostActivity: Refreshing playlist
+11-20 14:09:24.736  D/Retrofit: ---> HTTP GET https://api.spotify.com/v1/users/fry_dev_1/playlists/0PV313HenWau6LRQkLpNLO
+11-20 14:09:25.067  D/Retrofit: <--- HTTP 200 https://api.spotify.com/v1/users/fry_dev_1/playlists/0PV313HenWau6LRQkLpNLO (330ms)
+11-20 14:09:25.592  userinterface.activities.HostActivity: Refreshing playlist track list
+11-20 14:09:25.595  userinterface.activities.HostActivityNearbyDevices: Payload Transfer to/from mmxT has status IN_PROGRESS
+11-20 14:09:25.595  userinterface.activities.HostActivityNearbyDevices: Payload Transfer to/from mmxT has status SUCCESS
+11-20 14:09:25.758  userinterface.activities.HostActivityNearbyDevices: Payload Transfer to/from mmxT has status IN_PROGRESS
+11-20 14:09:25.758  userinterface.activities.HostActivityNearbyDevices: Payload Transfer to/from mmxT has status SUCCESS
+11-20 14:11:50.177  services.PlayQueueService: New playback event: kSpPlaybackNotifyTrackDelivered
+11-20 14:11:50.177  services.PlayQueueService: Player has moved to next track (next/track complete)
+11-20 14:11:50.350  userinterface.activities.HostActivityNearbyDevices: Payload Transfer to/from mmxT has status IN_PROGRESS
+11-20 14:11:50.350  userinterface.activities.HostActivityNearbyDevices: Payload Transfer to/from mmxT has status SUCCESS
+11-20 14:11:50.351  services.PlayQueueService: New playback event: kSpPlaybackNotifyTrackChanged
+11-20 14:11:50.351  services.PlayQueueService: Finished/Skipped: Back To You
+    Now Playing : I Said Hey What's Going On
+    Next Track: Lemonade
+11-20 14:11:50.351  services.PlayQueueService: New playback event: kSpPlaybackNotifyMetadataChanged
+11-20 14:11:50.351  services.PlayQueueService: Incorrect MetaData, playlist not actually done.
+    Playing playlist from index: 3
+11-20 14:11:50.384  services.PlayQueueService: New playback event: kSpPlaybackNotifyPlay
+11-20 14:11:50.384  services.PlayQueueService: Player has started playing
+11-20 14:11:50.397  services.PlayQueueService: Great Success!
+11-20 14:11:50.427  services.PlayQueueService: New playback event: kSpPlaybackNotifyMetadataChanged
+11-20 14:11:50.516  services.PlayQueueService: New playback event: kSpPlaybackNotifyMetadataChanged
+11-20 14:11:50.517  services.PlayQueueService: New playback event: kSpPlaybackNotifyMetadataChanged
+11-20 14:11:50.855  services.PlayQueueService: New playback event: kSpPlaybackNotifyTrackChanged
+11-20 14:11:50.855  services.PlayQueueService: Finished/Skipped: Back To You
+    Now Playing : I Said Hey What's Going On
+    Next Track: Lemonade
+11-20 14:11:50.935  services.PlayQueueService: New playback event: kSpPlaybackEventAudioFlush
+11-20 14:13:31.488 24066-24156/com.chrisfry.socialq D/OpenGLRenderer: endAllStagingAnimators on 0xaef65c00 (RippleDrawable) with handle 0xab17fa90
+11-20 14:13:36.222  E/SpannableStringBuilder: SPAN_EXCLUSIVE_EXCLUSIVE spans cannot have a zero length
+11-20 14:13:36.222  E/SpannableStringBuilder: SPAN_EXCLUSIVE_EXCLUSIVE spans cannot have a zero length
+11-20 14:13:38.101  userinterface.activities.SearchActivity: Searching for: Robert
+11-20 14:13:38.107  D/Retrofit: ---> HTTP GET https://api.spotify.com/v1/search?type=artist&q=Robert&limit=50
+11-20 14:13:38.421  D/Retrofit: <--- HTTP 200 https://api.spotify.com/v1/search?type=artist&q=Robert&limit=50 (313ms)
+11-20 14:13:38.541  D/Retrofit: ---> HTTP GET https://api.spotify.com/v1/search?type=track&q=Robert&limit=50
+11-20 14:13:38.670  D/Retrofit: <--- HTTP 200 https://api.spotify.com/v1/search?type=track&q=Robert&limit=50 (129ms)
+11-20 14:13:39.153  userinterface.activities.SearchActivity: Showing all result layouts
+11-20 14:13:39.161  I/Choreographer: Skipped 63 frames!  The application may be doing too much work on its main thread.
+11-20 14:13:40.208  userinterface.activities.SearchActivity: Hiding all but touched layout
+11-20 14:13:41.398  D/Retrofit: ---> HTTP GET https://api.spotify.com/v1/artists/42crL07E4WPfVovyUtMpvC
+11-20 14:13:41.473  D/Retrofit: <--- HTTP 200 https://api.spotify.com/v1/artists/42crL07E4WPfVovyUtMpvC (75ms)
+11-20 14:13:41.481  D/Retrofit: ---> HTTP GET https://api.spotify.com/v1/artists/42crL07E4WPfVovyUtMpvC/albums
+11-20 14:13:41.545  D/Retrofit: <--- HTTP 200 https://api.spotify.com/v1/artists/42crL07E4WPfVovyUtMpvC/albums (63ms)
+11-20 14:13:42.478  D/Retrofit: ---> HTTP GET https://api.spotify.com/v1/artists/42crL07E4WPfVovyUtMpvC
+11-20 14:13:42.525  D/Retrofit: <--- HTTP 200 https://api.spotify.com/v1/artists/42crL07E4WPfVovyUtMpvC (47ms)
+11-20 14:13:42.531  D/Retrofit: ---> HTTP GET https://api.spotify.com/v1/artists/42crL07E4WPfVovyUtMpvC/top-tracks?country=US
+11-20 14:13:42.709  D/Retrofit: <--- HTTP 200 https://api.spotify.com/v1/artists/42crL07E4WPfVovyUtMpvC/top-tracks?country=US (177ms)
+11-20 14:13:45.920  userinterface.activities.HostActivity: Received request type: SEARCH_REQUEST
+11-20 14:13:45.920  userinterface.activities.HostActivity: Received request for URI: spotify:track:69Pfc2fTVYIxLLFgsFXqjg, from User ID: fry_dev_1
+11-20 14:13:45.920  userinterface.activities.HostActivity: Adding new track at playlist index: 5
+11-20 14:13:45.921  D/Retrofit: ---> HTTP POST https://api.spotify.com/v1/users/fry_dev_1/playlists/0PV313HenWau6LRQkLpNLO/tracks?uris=spotify%3Atrack%3A69Pfc2fTVYIxLLFgsFXqjg&position=5
+11-20 14:13:46.009  D/Retrofit: <--- HTTP 201 https://api.spotify.com/v1/users/fry_dev_1/playlists/0PV313HenWau6LRQkLpNLO/tracks?uris=spotify%3Atrack%3A69Pfc2fTVYIxLLFgsFXqjg&position=5 (88ms)
+11-20 14:13:46.015  D/Retrofit: ---> HTTP GET https://api.spotify.com/v1/users/fry_dev_1/playlists/0PV313HenWau6LRQkLpNLO
+11-20 14:13:46.092  D/Retrofit: <--- HTTP 200 https://api.spotify.com/v1/users/fry_dev_1/playlists/0PV313HenWau6LRQkLpNLO (76ms)
+11-20 14:13:46.602  userinterface.activities.HostActivity: Refreshing playlist
+11-20 14:13:46.602  D/Retrofit: ---> HTTP GET https://api.spotify.com/v1/users/fry_dev_1/playlists/0PV313HenWau6LRQkLpNLO
+11-20 14:13:46.722  D/Retrofit: <--- HTTP 200 https://api.spotify.com/v1/users/fry_dev_1/playlists/0PV313HenWau6LRQkLpNLO (119ms)
+11-20 14:13:47.257  userinterface.activities.HostActivity: Refreshing playlist track list
+11-20 14:13:47.263  I/Choreographer: Skipped 80 frames!  The application may be doing too much work on its main thread.
+11-20 14:13:47.428  userinterface.activities.HostActivityNearbyDevices: Payload Transfer to/from mmxT has status IN_PROGRESS
+11-20 14:13:47.428  userinterface.activities.HostActivityNearbyDevices: Payload Transfer to/from mmxT has status SUCCESS
+11-20 14:13:59.180  services.PlayQueueService: NEXT REQUEST
+11-20 14:13:59.207  services.PlayQueueService: New playback event: kSpPlaybackNotifyNext
+11-20 14:13:59.207  services.PlayQueueService: Player has moved to next track (next/track complete)
+11-20 14:13:59.429  services.PlayQueueService: Great Success!
+11-20 14:13:59.429  userinterface.activities.HostActivityNearbyDevices: Payload Transfer to/from mmxT has status IN_PROGRESS
+11-20 14:13:59.429  userinterface.activities.HostActivityNearbyDevices: Payload Transfer to/from mmxT has status SUCCESS
+11-20 14:13:59.430  services.PlayQueueService: New playback event: kSpPlaybackNotifyTrackChanged
+11-20 14:13:59.430  services.PlayQueueService: Finished/Skipped: I Said Hey What's Going On
+    Now Playing : Lemonade
+    Next Track: Long Way Down
+11-20 14:13:59.430  services.PlayQueueService: New playback event: kSpPlaybackEventAudioFlush
+11-20 14:13:59.430  services.PlayQueueService: New playback event: kSpPlaybackNotifyMetadataChanged
+11-20 14:14:08.385  services.PlayQueueService: NEXT REQUEST
+11-20 14:14:08.399  services.PlayQueueService: New playback event: kSpPlaybackNotifyNext
+11-20 14:14:08.399  services.PlayQueueService: Player has moved to next track (next/track complete)
+11-20 14:14:08.403  services.PlayQueueService: Great Success!
+11-20 14:14:08.585  userinterface.activities.HostActivityNearbyDevices: Payload Transfer to/from mmxT has status IN_PROGRESS
+11-20 14:14:08.585  userinterface.activities.HostActivityNearbyDevices: Payload Transfer to/from mmxT has status SUCCESS
+11-20 14:14:08.585  services.PlayQueueService: New playback event: kSpPlaybackNotifyMetadataChanged
+11-20 14:14:08.653  services.PlayQueueService: New playback event: kSpPlaybackNotifyTrackChanged
+11-20 14:14:08.653  services.PlayQueueService: Finished/Skipped: Lemonade
+    Now Playing : Long Way Down
+    Next Track: The Thought of You
+11-20 14:14:08.653  services.PlayQueueService: New playback event: kSpPlaybackEventAudioFlush
+11-20 14:18:01.432  services.PlayQueueService: New playback event: kSpPlaybackNotifyTrackDelivered
+11-20 14:18:01.432  services.PlayQueueService: Player has moved to next track (next/track complete)
+11-20 14:18:01.436  services.PlayQueueService: New playback event: kSpPlaybackNotifyTrackChanged
+11-20 14:18:01.437  services.PlayQueueService: Finished/Skipped: Long Way Down
+    Now Playing : The Thought of You
+    Next Track: Read Receipts
+11-20 14:18:01.577  userinterface.activities.HostActivityNearbyDevices: Payload Transfer to/from mmxT has status IN_PROGRESS
+11-20 14:18:01.577  userinterface.activities.HostActivityNearbyDevices: Payload Transfer to/from mmxT has status SUCCESS
+11-20 14:18:01.577  services.PlayQueueService: New playback event: kSpPlaybackNotifyMetadataChanged
+11-20 14:18:09.307  userinterface.activities.HostActivityNearbyDevices: Host received a payload
+11-20 14:18:09.307  userinterface.activities.HostActivityNearbyDevices: Payload is type SONG_REQUEST
+11-20 14:18:09.308  D/Retrofit: ---> HTTP GET https://api.spotify.com/v1/users/121596386
+11-20 14:18:09.502  D/Retrofit: <--- HTTP 200 https://api.spotify.com/v1/users/121596386 (192ms)
+11-20 14:18:09.505  userinterface.activities.HostActivity: Received request for URI: spotify:track:15BlympuVSfZFROojEMY2M, from User ID: 121596386
+11-20 14:18:09.505  userinterface.activities.HostActivity: Adding new track at playlist index: 7
+11-20 14:18:09.506  D/Retrofit: ---> HTTP POST https://api.spotify.com/v1/users/fry_dev_1/playlists/0PV313HenWau6LRQkLpNLO/tracks?uris=spotify%3Atrack%3A15BlympuVSfZFROojEMY2M&position=7
+11-20 14:18:09.586  D/Retrofit: <--- HTTP 201 https://api.spotify.com/v1/users/fry_dev_1/playlists/0PV313HenWau6LRQkLpNLO/tracks?uris=spotify%3Atrack%3A15BlympuVSfZFROojEMY2M&position=7 (79ms)
+11-20 14:18:09.591  D/Retrofit: ---> HTTP GET https://api.spotify.com/v1/users/fry_dev_1/playlists/0PV313HenWau6LRQkLpNLO
+11-20 14:18:09.690  D/Retrofit: <--- HTTP 200 https://api.spotify.com/v1/users/fry_dev_1/playlists/0PV313HenWau6LRQkLpNLO (98ms)
+11-20 14:18:10.231  userinterface.activities.HostActivity: Refreshing playlist
+11-20 14:18:10.232  D/Retrofit: ---> HTTP GET https://api.spotify.com/v1/users/fry_dev_1/playlists/0PV313HenWau6LRQkLpNLO
+11-20 14:18:10.312  D/Retrofit: <--- HTTP 200 https://api.spotify.com/v1/users/fry_dev_1/playlists/0PV313HenWau6LRQkLpNLO (79ms)
+11-20 14:18:10.863  userinterface.activities.HostActivity: Refreshing playlist track list
+11-20 14:18:10.865  userinterface.activities.HostActivityNearbyDevices: Payload Transfer to/from mmxT has status IN_PROGRESS
+11-20 14:18:10.865  userinterface.activities.HostActivityNearbyDevices: Payload Transfer to/from mmxT has status SUCCESS
+11-20 14:18:11.018  userinterface.activities.HostActivityNearbyDevices: Payload Transfer to/from mmxT has status IN_PROGRESS
+11-20 14:18:11.018  userinterface.activities.HostActivityNearbyDevices: Payload Transfer to/from mmxT has status SUCCESS
+11-20 14:22:10.979  services.PlayQueueService: New playback event: kSpPlaybackNotifyTrackDelivered
+11-20 14:22:10.979  services.PlayQueueService: Player has moved to next track (next/track complete)
+11-20 14:22:11.150  services.PlayQueueService: New playback event: kSpPlaybackNotifyMetadataChanged
+11-20 14:22:11.151  services.PlayQueueService: Incorrect MetaData, playlist not actually done.
+    Playing playlist from index: 7
+11-20 14:22:11.157  services.PlayQueueService: New playback event: kSpPlaybackNotifyPlay
+11-20 14:22:11.157  services.PlayQueueService: Player has started playing
+11-20 14:22:11.159  services.PlayQueueService: Great Success!
+11-20 14:22:11.195  services.PlayQueueService: New playback event: kSpPlaybackNotifyMetadataChanged
+11-20 14:22:11.195  services.PlayQueueService: New playback event: kSpPlaybackNotifyMetadataChanged
+11-20 14:22:11.416  services.PlayQueueService: New playback event: kSpPlaybackNotifyTrackChanged
+11-20 14:22:11.416  services.PlayQueueService: Finished/Skipped: The Thought of You
+    Now Playing : Don't Let Me Down - Illenium Remix
+    Next Track: Read Receipts
+11-20 14:22:11.584  services.PlayQueueService: New playback event: kSpPlaybackEventAudioFlush
+11-20 14:23:43.281  services.PlayQueueService: NEXT REQUEST
+11-20 14:23:43.296  services.PlayQueueService: New playback event: kSpPlaybackNotifyNext
+11-20 14:23:43.296  services.PlayQueueService: Player has moved to next track (next/track complete)
+11-20 14:23:43.300  services.PlayQueueService: Great Success!
+11-20 14:23:43.490  services.PlayQueueService: New playback event: kSpPlaybackNotifyMetadataChanged
+11-20 14:23:43.495  services.PlayQueueService: New playback event: kSpPlaybackNotifyTrackChanged
+11-20 14:23:43.496  services.PlayQueueService: Finished/Skipped: Talking Body
+    Now Playing : Habits (Stay High)
+    Next Track: Not On Drugs
+11-20 14:23:43.496  services.PlayQueueService: New playback event: kSpPlaybackEventAudioFlush
+11-20 14:27:49.839  services.PlayQueueService: New playback event: kSpPlaybackNotifyTrackDelivered
+11-20 14:27:49.839  services.PlayQueueService: Player has moved to next track (next/track complete)
+11-20 14:27:49.841  services.PlayQueueService: New playback event: kSpPlaybackNotifyTrackChanged
+11-20 14:27:49.841  services.PlayQueueService: Finished/Skipped: Habits (Stay High)
+    Now Playing : Not On Drugs
+    Next Track: All This Could Be Yours
+11-20 14:27:50.051  services.PlayQueueService: New playback event: kSpPlaybackNotifyMetadataChanged
+11-20 14:28:09.209  services.PlayQueueService: NEXT REQUEST
+11-20 14:28:09.226  services.PlayQueueService: New playback event: kSpPlaybackNotifyNext
+11-20 14:28:09.226  services.PlayQueueService: Player has moved to next track (next/track complete)
+11-20 14:28:09.227  services.PlayQueueService: Great Success!
+11-20 14:28:09.441  services.PlayQueueService: New playback event: kSpPlaybackNotifyMetadataChanged
+11-20 14:28:09.526  services.PlayQueueService: New playback event: kSpPlaybackNotifyTrackChanged
+11-20 14:28:09.526  services.PlayQueueService: Finished/Skipped: Not On Drugs
+    Now Playing : All This Could Be Yours
+    Next Track: We Used to Vacation
+11-20 14:28:09.526  services.PlayQueueService: New playback event: kSpPlaybackEventAudioFlush
+11-20 14:28:40.163  services.PlayQueueService: PAUSE REQUEST
+11-20 14:28:40.185  services.PlayQueueService: New playback event: kSpPlaybackNotifyPause
+11-20 14:28:40.185  services.PlayQueueService: Player has paused
+11-20 14:28:40.187  services.PlayQueueService: Great Success!
+11-20 14:28:46.970 24066-24076/com.chrisfry.socialq I/art: Background partial concurrent mark sweep GC freed 516129(19MB) AllocSpace objects, 8(656KB) LOS objects, 40% free, 22MB/37MB, paused 866us total 115.579ms
+11-20 14:35:58.532  services.PlayQueueService: PLAY REQUEST
+11-20 14:35:58.532  services.PlayQueueService: Resuming player
+11-20 14:35:58.555  services.PlayQueueService: Great Success!
+11-20 14:35:58.555  services.PlayQueueService: New playback event: kSpPlaybackNotifyPlay
+11-20 14:35:58.555  services.PlayQueueService: Player has started playing
