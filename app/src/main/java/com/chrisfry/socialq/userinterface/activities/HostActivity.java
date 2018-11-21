@@ -475,7 +475,7 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
             if (mIsQueueFairPlay) {
                 if (injectNewTrack(songRequest)) {
                     // If we changed the next track notify service meta data is out of sync
-                    mPlayQueueService.notifyServiceMetaDataIsStale();
+                    mPlayQueueService.notifyServiceMetaDataIsStale(songRequest.getUri());
                 } else {
                     mPlayQueueService.notifyServiceQueueHasChanged();
                 }
@@ -483,7 +483,7 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
                 addTrackToPlaylist(songRequest.getUri());
                 if (mSongRequests.size() == 2) {
                     // If we changed the next track notify service meta data is out of sync
-                    mPlayQueueService.notifyServiceMetaDataIsStale();
+                    mPlayQueueService.notifyServiceMetaDataIsStale(songRequest.getUri());
                 } else {
                     mPlayQueueService.notifyServiceQueueHasChanged();
                 }

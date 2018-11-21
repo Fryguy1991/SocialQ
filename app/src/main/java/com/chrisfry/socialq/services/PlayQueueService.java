@@ -181,7 +181,7 @@ public class PlayQueueService extends Service implements ConnectionStateCallback
         Log.d(TAG, "PLAY REQUEST");
         if (mSpotifyPlayer.getPlaybackState() != null) {
             if (mAudioDeliveryDoneFlag) {
-                if (mCurrentPlaylistIndex < mPlaylist.tracks.items.size()) {
+                if (mCurrentPlaylistIndex < mPlaylist.tracks.total) {
                     // If audio has previously been completed (or never started)
                     // start the playlist at the current index
                     Log.d(TAG, "Audio previously finished.\nStarting playlist from index: " + mCurrentPlaylistIndex);
@@ -210,17 +210,7 @@ public class PlayQueueService extends Service implements ConnectionStateCallback
         Log.d(TAG, "NEXT REQUEST");
         if (!mAudioDeliveryDoneFlag) {
             // Don't allow a skip when we're waiting on a new track to be queued
-            if (mIncorrectMetaDataFlag) {
-                // Meta data is not correct.  Start playlist from next index
-                Log.d(TAG, "MetaData not correct on NEXT request");
-                mCurrentPlaylistIndex++;
-                mIncorrectMetaDataFlag = false;
-                Log.d(TAG, "Starting playlist from index: " + mCurrentPlaylistIndex);
-                mSpotifyPlayer.playUri(this, mPlaylist.uri, mCurrentPlaylistIndex, 1);
-                notifyNext();
-            } else {
-                mSpotifyPlayer.skipToNext(this);
-            }
+            mSpotifyPlayer.skipToNext(this);
         } else {
             Log.d(TAG, "Can't go to next track");
         }
@@ -231,12 +221,14 @@ public class PlayQueueService extends Service implements ConnectionStateCallback
         notifyQueueChanged();
     }
 
-    public void notifyServiceMetaDataIsStale() {
-        // If a track is queued to the next position, SpotifyPlayer MetaData will not be updated. This causes the
-        // player to either not play a track (if one didn't previously exist) or to play the previously queued track.
-        // Flag is used in requestPlayNext method and when track delivery is finished to manually start the playlist
+    public void notifyServiceMetaDataIsStale(String trackUri) {
+        // If a track is queued to the next position, SpotifyPlayer MetaData will be updated but will not play the
+        // correct song. This causes the player to either not play a track (if one didn't previously exist) or to
+        // play the previously queued track. Flag is used in onPlaybackEvent method to detect when an extra skip
+        // is needed. and when track delivery is finished to manually start the playlist
         // at the next song index.
         refreshPlaylist();
+        mSpotifyPlayer.queue(this, trackUri);
         mIncorrectMetaDataFlag = true;
         notifyQueueChanged();
     }
@@ -270,21 +262,23 @@ public class PlayQueueService extends Service implements ConnectionStateCallback
                 logMetaData();
                 break;
             case kSpPlaybackNotifyMetadataChanged:
-                if (mTrackDelivered && mIncorrectMetaDataFlag) {
-                    Log.d(TAG, "Incorrect MetaData, playlist not actually done.\nPlaying playlist from index: " + mCurrentPlaylistIndex);
-                    mAudioDeliveryDoneFlag = false;
-                    mTrackDelivered = false;
-                    mIncorrectMetaDataFlag = false;
-                    mSpotifyPlayer.playUri(this, mPlaylist.uri, mCurrentPlaylistIndex, 1);
-                }
                 break;
             case kSpPlaybackNotifyTrackDelivered:
                 mTrackDelivered = true;
             case kSpPlaybackNotifyNext:
                 // Track has changed, remove top track from queue list
                 Log.d(TAG, "Player has moved to next track (next/track complete)");
-                mCurrentPlaylistIndex++;
-                notifyNext();
+                // If we are about to play the wrong song we need to skip twice and not increment current playing index
+                // due to the handling of the queued track
+                if (mIncorrectMetaDataFlag) {
+                    Log.d(TAG, "Skipping queued placeholder, don't update index or notify we're skipping");
+
+                    mIncorrectMetaDataFlag = false;
+                    mSpotifyPlayer.skipToNext(this);
+                } else {
+                    mCurrentPlaylistIndex++;
+                    notifyNext();
+                }
                 break;
             case kSpPlaybackNotifyAudioDeliveryDone:
                 // Current queue playlist has finished

@@ -6,7 +6,6 @@ import androidx.appcompat.app.AlertDialog
 import android.util.Log
 import android.view.*
 import android.widget.*
-import androidx.navigation.NavController
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -240,7 +239,7 @@ abstract class HostFragmentBase : SpotifyFragment(), PlayQueueService.PlayQueueS
             if (mIsQueueFairPlay == true) {
                 if (injectNewTrack(songRequest)) {
                     // If we changed the next track notify service meta data is out of sync
-                    mPlayQueueService!!.notifyServiceMetaDataIsStale()
+                    mPlayQueueService!!.notifyServiceMetaDataIsStale(songRequest.uri)
                 } else {
                     mPlayQueueService!!.notifyServiceQueueHasChanged()
                 }
@@ -248,7 +247,7 @@ abstract class HostFragmentBase : SpotifyFragment(), PlayQueueService.PlayQueueS
                 addTrackToPlaylist(songRequest.uri)
                 if (mSongRequests.size == 2) {
                     // If we changed the next track notify service meta data is out of sync
-                    mPlayQueueService!!.notifyServiceMetaDataIsStale()
+                    mPlayQueueService!!.notifyServiceMetaDataIsStale(songRequest.uri)
                 } else {
                     mPlayQueueService!!.notifyServiceQueueHasChanged()
                 }
