@@ -100,6 +100,8 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
     private AlertDialog mBasePlaylistDialog = null;
     // Reference to base playlist ID for loading when service is connected
     private String mBasePlaylistId = "";
+    // Flag for storing if the player has been activated
+    private boolean mIsPlayerActive = false;
 
     // Object for connecting to/from play queue service
     private ServiceConnection mServiceConnection = new ServiceConnection() {
@@ -530,40 +532,46 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
         // PLAYLIST RESULT   : 1 -> 2 -> 3 -> 1 -> 2 -> 3 -> 1
         int newTrackPosition;
 
-        // Only run check for song injection if there are 3 or more requests tracked
-        if (mSongRequests.size() > 2) {
-            HashMap<String, Boolean> clientRepeatHash = new HashMap<>();
+        HashMap<String, Boolean> clientRepeatHash = new HashMap<>();
 
-            // Start inspecting song requests
-            for (newTrackPosition = 0; newTrackPosition < mSongRequests.size(); newTrackPosition++) {
-                String currentRequestUserId = mSongRequests.get(newTrackPosition).getUser().id;
+        // Start inspecting song requests
+        for (newTrackPosition = 0; newTrackPosition < mSongRequests.size(); newTrackPosition++) {
+            String currentRequestUserId = mSongRequests.get(newTrackPosition).getUser().id;
 
-                if (currentRequestUserId.equals(songRequest.getUser().id)) {
-                    // If we found a requestee track set open repeats to true (found requestee track)
-                    for (Map.Entry<String, Boolean> mapEntry : clientRepeatHash.entrySet()) {
-                        mapEntry.setValue(true);
-                    }
-                } else {
-                    // Found a request NOT from the requestee client
-                    if (clientRepeatHash.containsKey(currentRequestUserId)) {
-                        // Client already contained in hash (repeat)
-                        if (clientRepeatHash.get(currentRequestUserId)) {
-                            // If repeat contained requestee track (true flag) reset to false
-                            clientRepeatHash.put(currentRequestUserId, false);
-                        } else {
-                            // Client already contained in hash (repeat) and does not have a requestee track
-                            // We have a repeat with no requestee song in between
-                            break;
-                        }
-                    } else {
-                        // Add new client to the hash
-                        clientRepeatHash.put(currentRequestUserId, false);
-                    }
+            // Base playlist track. Check if we can replace it
+            if (currentRequestUserId.equals(AppConstants.BASE_USER_ID)) {
+                // If player is not active we can add a track at index 0 (replace base playlist)
+                // because we haven't started the playlist. Else don't cause the base playlist
+                // track may currently be playing
+                if ((newTrackPosition == 0 && !mIsPlayerActive) || newTrackPosition > 0) {
+                    // We want to keep user tracks above base playlist tracks.  Use base playlist
+                    // as a fall back.
+                    break;
                 }
             }
-        } else {
-            // If not enough requests set new track position so new track will be placed at the end of the list
-            newTrackPosition = mSongRequests.size();
+
+            if (currentRequestUserId.equals(songRequest.getUser().id)) {
+                // If we found a requestee track set open repeats to true (found requestee track)
+                for (Map.Entry<String, Boolean> mapEntry : clientRepeatHash.entrySet()) {
+                    mapEntry.setValue(true);
+                }
+            } else {
+                // Found a request NOT from the requestee client
+                if (clientRepeatHash.containsKey(currentRequestUserId)) {
+                    // Client already contained in hash (repeat)
+                    if (clientRepeatHash.get(currentRequestUserId)) {
+                        // If repeat contained requestee track (true flag) reset to false
+                        clientRepeatHash.put(currentRequestUserId, false);
+                    } else {
+                        // Client already contained in hash (repeat) and does not have a requestee track
+                        // We have a repeat with no requestee song in between
+                        break;
+                    }
+                } else {
+                    // Add new client to the hash
+                    clientRepeatHash.put(currentRequestUserId, false);
+                }
+            }
         }
 
         if (newTrackPosition == mSongRequests.size()) {
@@ -601,7 +609,7 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
         // refreshPlaylist already retrieved the first 100 tracks, add to list
         mPlaylistTracks.addAll(mPlaylist.tracks.items);
         // TODO: This can slow down app functionality if there are a lot of tracks (every 100 tracks in the playlist is another call to the spotify API)
-        for (int i = 100; i < mPlaylist.tracks.total; i+= 100) {
+        for (int i = 100; i < mPlaylist.tracks.total; i += 100) {
             Map<String, Object> iterationQueryParameters = new HashMap<>();
             iterationQueryParameters.put("offset", i);
             Pager<PlaylistTrack> iterationTracks = mSpotifyService.getPlaylistTracks(mCurrentUser.id, mPlaylist.id, iterationQueryParameters);
@@ -746,6 +754,12 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
         mTrackDisplayAdapter.updateAdapter(createDisplayList(mPlaylistTracks.subList(mCachedPlayingIndex, mPlaylist.tracks.total)));
 
         notifyClientsQueueUpdated(mCachedPlayingIndex);
+    }
+
+    @Override
+    public void onPlayerActive() {
+        // Change flag that allows new tracks to be added at the very beginning of the playlist
+        mIsPlayerActive = true;
     }
 
 

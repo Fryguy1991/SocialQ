@@ -291,6 +291,11 @@ public class PlayQueueService extends Service implements ConnectionStateCallback
                     stopSelf();
                 }
                 break;
+            case kSpPlaybackNotifyBecameActive:
+                // Player became active
+                Log.d(TAG, "Player is active");
+
+                notifyPlayerIsActive();
             default:
                 // Do nothing or future implementation
                 break;
@@ -390,6 +395,8 @@ public class PlayQueueService extends Service implements ConnectionStateCallback
         void onQueuePlay();
 
         void onQueueUpdated();
+
+        void onPlayerActive();
     }
 
     private void notifyQueueChanged() {
@@ -413,6 +420,12 @@ public class PlayQueueService extends Service implements ConnectionStateCallback
     private void notifyPlayStarted() {
         for (PlayQueueServiceListener listener : mListeners) {
             listener.onQueuePlay();
+        }
+    }
+
+    private void notifyPlayerIsActive() {
+        for (PlayQueueServiceListener listener : mListeners) {
+            listener.onPlayerActive();
         }
     }
 

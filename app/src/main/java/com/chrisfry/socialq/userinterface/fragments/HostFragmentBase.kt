@@ -468,6 +468,9 @@ abstract class HostFragmentBase : SpotifyFragment(), PlayQueueService.PlayQueueS
         notifyClientsQueueUpdated(mCachedPlayingIndex)
     }
 
+    override fun onPlayerActive() {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
 
     private fun createDisplayList(trackList: List<PlaylistTrack>): List<ClientRequestData> {
         val displayList = ArrayList<ClientRequestData>()
