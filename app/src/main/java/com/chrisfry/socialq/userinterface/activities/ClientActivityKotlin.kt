@@ -7,14 +7,12 @@ import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.CheckBox
-import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.chrisfry.socialq.R
 import com.chrisfry.socialq.business.AppConstants
 import com.chrisfry.socialq.enums.RequestType
-import com.chrisfry.socialq.model.AccessModel
 import com.chrisfry.socialq.userinterface.adapters.BasicTrackListAdapter
 import com.chrisfry.socialq.userinterface.widgets.QueueItemDecoration
 import com.spotify.sdk.android.authentication.AuthenticationClient
@@ -63,8 +61,8 @@ abstract class ClientActivityKotlin : BaseActivity() {
         title = intent.getStringExtra(AppConstants.QUEUE_TITLE_KEY)
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, intent: Intent?) {
-        super.onActivityResult(requestCode, resultCode, intent)
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
 
         val requestType = RequestType.getRequestTypeFromRequestCode(requestCode)
         Log.d(TAG, "Received request type: $requestType")
@@ -72,31 +70,23 @@ abstract class ClientActivityKotlin : BaseActivity() {
         // Handle request result
         when (requestType) {
             RequestType.SPOTIFY_AUTHENTICATION_REQUEST -> {
-                val response = AuthenticationClient.getResponse(resultCode, intent)
+                val response = AuthenticationClient.getResponse(resultCode, data)
                 if (response.type == AuthenticationResponse.Type.TOKEN) {
-                    Log.d(TAG, "Access token granted")
-
-                    // Calculate when access token expires (response "ExpiresIn" is in seconds, subtract a minute to worry less about timing)
-                    val accessExpireTime = System.currentTimeMillis() + (response.expiresIn - 60) * 1000
-
-                    AccessModel.setAccess(response.accessToken, accessExpireTime)
-                    initSpotifyElements(response.accessToken)
-                    connectToHost()
-                } else {
-                    Log.d(TAG, "Authentication Response: " + response.error)
-                    Toast.makeText(this@ClientActivityKotlin, getString(R.string.toast_authentication_error_client), Toast.LENGTH_SHORT).show()
-                    finish()
+                    if (mHostUserId == null) {
+                        Log.d(TAG, "First access token granted.  Connect to host")
+                        connectToHost()
+                    }
                 }
             }
             RequestType.SEARCH_REQUEST -> if (resultCode == RESULT_OK) {
-                val trackUri = intent!!.getStringExtra(AppConstants.SEARCH_RESULTS_EXTRA_KEY)
+                val trackUri = data!!.getStringExtra(AppConstants.SEARCH_RESULTS_EXTRA_KEY)
                 if (trackUri != null && !trackUri.isEmpty() && !mCurrentUser!!.id!!.isEmpty()) {
                     Log.d(TAG, "Client adding track to queue playlist")
                     sendTrackToHost(buildSongRequestMessage(trackUri, mCurrentUser!!.id))
                 }
             }
-            RequestType.NONE -> Log.e(TAG, "Unhandled request code: $requestCode")
-        }// Do nothing.  Client activity should not handle BT events and if we got NONE back something is wrong
+            else -> Log.e(TAG, "Unhandled request code: $requestCode")
+        }
     }
 
     override fun onBackPressed() {

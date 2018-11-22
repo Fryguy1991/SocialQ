@@ -24,8 +24,6 @@ import com.chrisfry.socialq.userinterface.widgets.QueueItemDecoration
 import com.google.gson.JsonArray
 import com.spotify.sdk.android.authentication.AuthenticationClient
 import com.spotify.sdk.android.authentication.AuthenticationResponse
-import com.spotify.sdk.android.player.ConnectionStateCallback
-import com.spotify.sdk.android.player.Error
 import kaaes.spotify.webapi.android.SpotifyService
 import kaaes.spotify.webapi.android.models.PlaylistSimple
 import kaaes.spotify.webapi.android.models.PlaylistTrack
@@ -127,8 +125,8 @@ IItemSelectionListener<String> {
         mPlayPauseButton!!.setOnClickListener { view -> handlePlayPause(view.contentDescription == "queue_playing") }
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, intent: Intent?) {
-        super.onActivityResult(requestCode, resultCode, intent)
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
 
         val requestType = RequestType.getRequestTypeFromRequestCode(requestCode)
         Log.d(TAG, "Received request type: $requestType")
@@ -136,22 +134,10 @@ IItemSelectionListener<String> {
         // Handle request result
         when (requestType) {
             RequestType.SPOTIFY_AUTHENTICATION_REQUEST -> {
-                val response = AuthenticationClient.getResponse(resultCode, intent)
+                val response = AuthenticationClient.getResponse(resultCode, data)
                 if (response.type == AuthenticationResponse.Type.TOKEN) {
-                    Log.d(TAG, "Access token granted")
-
-                    // Calculate when access token expires (response "ExpiresIn" is in seconds, subtract a minute to worry less about timing)
-                    val accessExpireTime = System.currentTimeMillis() + (response.expiresIn - 60) * 1000
-
-                    AccessModel.setAccess(response.accessToken, accessExpireTime)
-
-                    // Start thread responsible for notifying UI thread when new access token is needed
-                    startAccessRefreshThread()
-
                     if (mPlayQueueService == null) {
-                        Log.d(TAG, "First access token granted.  Init Spotify elements, play queue service, and start host connection")
-                        // Initialize spotify elements and create playlist for queue
-                        initSpotifyElements(response.accessToken)
+                        Log.d(TAG, "First access token granted.  Initialize play queue service and start host connection")
 
                         // Show dialog for selecting base playlist if user has playlists to show
                         val options = HashMap<String, Any>()
@@ -165,9 +151,7 @@ IItemSelectionListener<String> {
                             startPlayQueueService()
                         }
                     } else {
-                        Log.d(TAG, "New access token granted.  Update Spotify Api and service")
-                        mSpotifyApi.setAccessToken(response.accessToken)
-                        mSpotifyService = mSpotifyApi.service
+                        Log.d(TAG, "New access token granted.  Update service access token")
 
                         // Update service with new access token
                         mPlayQueueService!!.notifyServiceAccessTokenChanged(response.accessToken)
@@ -179,7 +163,7 @@ IItemSelectionListener<String> {
                 }
             }
             RequestType.SEARCH_REQUEST -> if (resultCode == RESULT_OK) {
-                val trackUri = intent!!.getStringExtra(AppConstants.SEARCH_RESULTS_EXTRA_KEY)
+                val trackUri = data!!.getStringExtra(AppConstants.SEARCH_RESULTS_EXTRA_KEY)
                 handleSongRequest(SongRequestData(trackUri, mCurrentUser!!))
             }
             RequestType.NONE -> Log.e(TAG, "Unhandled request code: $requestCode")

@@ -6,6 +6,7 @@ import android.os.Looper
 import android.os.Message
 import android.util.Log
 import android.view.MenuItem
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.chrisfry.socialq.R
 import com.chrisfry.socialq.business.AppConstants
@@ -23,17 +24,72 @@ import kaaes.spotify.webapi.android.models.PlaylistTrack
 import kaaes.spotify.webapi.android.models.UserPrivate
 import java.util.HashMap
 
-abstract class BaseActivity : AppCompatActivity(){
+abstract class BaseActivity : AppCompatActivity() {
     private val TAG = BaseActivity::class.java.name
 
     // Spotify elements
-    lateinit var mSpotifyApi: SpotifyApi
+    var mSpotifyApi: SpotifyApi? = null
     lateinit var mSpotifyService: SpotifyService
     var mCurrentUser: UserPrivate? = null
     var mPlaylist: Playlist? = null
     val mPlaylistTracks = mutableListOf<PlaylistTrack>()
 
     var accessScopes: Array<String>? = null
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+        val requestType = RequestType.getRequestTypeFromRequestCode(requestCode)
+        Log.d(TAG, "Received request type: $requestType")
+
+        // Handle request result
+        when (requestType) {
+            RequestType.SPOTIFY_AUTHENTICATION_REQUEST -> {
+                val response = AuthenticationClient.getResponse(resultCode, data)
+                when (response.type) {
+                    AuthenticationResponse.Type.TOKEN -> {
+                        Log.d(TAG, "Access token granted")
+
+                        // Calculate when access token expires (response "ExpiresIn" is in seconds, subtract a minute to worry less about timing)
+                        val accessExpireTime = System.currentTimeMillis() + (response.expiresIn - 60) * 1000
+
+                        // Store new token and expire time and start thread responsible for refreshing token
+                        AccessModel.setAccess(response.accessToken, accessExpireTime)
+                        startAccessRefreshThread()
+
+                        if (mSpotifyApi == null) {
+                            Log.d(TAG, "Access token granted. Initializing Spotify elements")
+                            initSpotifyElements(response.accessToken)
+                        } else {
+                            Log.d(TAG, "New access token granted.  Update Spotify Api and service")
+                            mSpotifyApi!!.setAccessToken(response.accessToken)
+                            mSpotifyService = mSpotifyApi!!.service
+                        }
+                    }
+                    AuthenticationResponse.Type.CODE -> {
+                        Log.e(TAG, "Not currently requesting/handling authentication code")
+                    }
+                    AuthenticationResponse.Type.ERROR -> {
+                        Log.d(TAG, "Authentication Error: " + response.error)
+                        Toast.makeText(this@BaseActivity, getString(R.string.toast_authentication_error_host), Toast.LENGTH_SHORT).show()
+                        finish()
+                    }
+                    AuthenticationResponse.Type.EMPTY -> {
+                        Log.e(TAG, "Something weird happened (should not recieve EMPTY")
+                    }
+                    AuthenticationResponse.Type.UNKNOWN -> {
+                        Log.e(TAG, "Something weird happened (should not recieve UNKOWN")
+                    }
+                    else -> {
+                        Log.e(TAG, "Received null for authentication response type")
+                    }
+                }
+            }
+            else -> {
+                Log.d(TAG, "Not handling result in base activity")
+            }
+        }
+    }
 
     // Handler for sending messages to the UI thread
     protected val mHandler = object : Handler(Looper.getMainLooper()) {
