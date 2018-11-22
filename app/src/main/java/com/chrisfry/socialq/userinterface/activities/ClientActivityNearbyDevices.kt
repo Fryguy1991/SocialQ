@@ -14,7 +14,7 @@ import com.google.android.gms.tasks.OnSuccessListener
 import java.lang.Exception
 import java.lang.NumberFormatException
 
-class ClientActivityNearbyDevices : ClientActivity() {
+class ClientActivityNearbyDevices : ClientActivityKotlin() {
     private val TAG = ClientActivityNearbyDevices::class.java.name
 
     // Flag to indicate if the user has initiated the disconnect
@@ -141,7 +141,7 @@ class ClientActivityNearbyDevices : ClientActivity() {
         }
     }
 
-    override fun sendTrackToHost(requestMessage: String) {
+    override fun sendTrackToHost(requestMessage: String?) {
         if (requestMessage != null) {
             Log.d(TAG, "Sending track request message to host: $requestMessage")
             Nearby.getConnectionsClient(this).sendPayload(mHostEndpointId, Payload.fromBytes(requestMessage.toByteArray()))

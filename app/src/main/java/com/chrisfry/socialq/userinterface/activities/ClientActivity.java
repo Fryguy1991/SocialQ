@@ -47,9 +47,6 @@ public abstract class ClientActivity extends AppCompatActivity implements Connec
     protected String mHostUserId;
     private String mCurrentUserId;
 
-    // Flag for if the client can follow the host playlist
-    private boolean mCanFollowPlaylistFlag = true;
-
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);

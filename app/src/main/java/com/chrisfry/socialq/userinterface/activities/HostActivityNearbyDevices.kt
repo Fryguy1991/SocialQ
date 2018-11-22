@@ -15,7 +15,7 @@ import kaaes.spotify.webapi.android.models.UserPublic
 import java.lang.Exception
 import java.util.regex.Pattern
 
-class HostActivityNearbyDevices : HostActivity() {
+class HostActivityNearbyDevices : HostActivityKotlin() {
     private val TAG = HostActivityNearbyDevices::class.java.name
 
     // List of the client enpoints that are currently connected to the host service
@@ -167,13 +167,13 @@ class HostActivityNearbyDevices : HostActivity() {
     }
 
     override fun initiateNewClient(client: Any) {
-        if(mClientEndpoints.contains(client.toString()) && mPlaylist != null && mPlaylist.id != null && mCurrentUser != null && mCurrentUser.id != null) {
+        if(mClientEndpoints.contains(client.toString()) && mPlaylist != null && mPlaylist!!.id != null && mCurrentUser != null && mCurrentUser!!.id != null) {
             Log.d(TAG, "Sending host ID to new client")
             Nearby.getConnectionsClient(this).sendPayload(client.toString(), Payload.fromBytes(
-                    ApplicationUtils.buildBasicPayload(NearbyDevicesMessage.RECEIVE_HOST_USER_ID.payloadPrefix, mCurrentUser.id).toByteArray()))
+                    ApplicationUtils.buildBasicPayload(NearbyDevicesMessage.RECEIVE_HOST_USER_ID.payloadPrefix, mCurrentUser!!.id).toByteArray()))
             Log.d(TAG, "Sending playlist ID to new client")
             Nearby.getConnectionsClient(this).sendPayload(client.toString(), Payload.fromBytes(
-                    ApplicationUtils.buildBasicPayload(NearbyDevicesMessage.RECEIVE_PLAYLIST_ID.payloadPrefix, mPlaylist.id).toByteArray()))
+                    ApplicationUtils.buildBasicPayload(NearbyDevicesMessage.RECEIVE_PLAYLIST_ID.payloadPrefix, mPlaylist!!.id).toByteArray()))
             Log.d(TAG, "Updating queue of new client (current playing index)")
             Nearby.getConnectionsClient(this).sendPayload(client.toString(),
                     Payload.fromBytes(ApplicationUtils.buildBasicPayload(

@@ -496,6 +496,7 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
                     mPlayQueueService.notifyServiceQueueHasChanged();
                 }
             } else {
+
                 addTrackToPlaylist(songRequest.getUri());
                 if (mSongRequests.size() == 2) {
                     // If we changed the next track notify service meta data is out of sync
