@@ -51,6 +51,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 import com.chrisfry.socialq.business.AppConstants;
 import com.chrisfry.socialq.R;
@@ -430,12 +431,9 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
         baseUser.id = AppConstants.BASE_USER_ID;
         baseUser.display_name = getResources().getString(R.string.base_playlist);
 
-        // TODO: Consider shuffling tracks suggested process:
-        // 1. Retrieve all tracks (100 at a time)
-        // 2. Shuffle entire list
-        // 3. Add tracks to SocialQ playlist (100 at a time)
-
-        // Can only retrieve/add 100 tracks at a time
+        // Retrieve all tracks
+        List<PlaylistTrack> playlistTracks = new ArrayList<>();
+        // Can only retrieve 100 tracks at a time
         for (int i = 0; i < basePlaylist.tracks.total; i += 100) {
             Map<String, Object> iterationQueryParameters = new HashMap<>();
             iterationQueryParameters.put("offset", i);
@@ -443,10 +441,27 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
             // Retrieve max next 100 tracks
             Pager<PlaylistTrack> iterationTracks = mSpotifyService.getPlaylistTracks(mCurrentUser.id, playlistId, iterationQueryParameters);
 
-            JsonArray urisArray = new JsonArray();
+            playlistTracks.addAll(iterationTracks.items);
+        }
 
-            // Build JSON array and add request data for each track in the playlist
-            for (PlaylistTrack track : iterationTracks.items) {
+        // Shuffle entire track list
+        List<PlaylistTrack> shuffledTracks = new ArrayList<>();
+        Random randomGenerator = new Random();
+        while (playlistTracks.size() > 0) {
+            int trackIndexToAdd = randomGenerator.nextInt(playlistTracks.size());
+
+            shuffledTracks.add(playlistTracks.remove(trackIndexToAdd));
+        }
+
+        // Add tracks (100 at a time) to playlist and add request date
+        while (shuffledTracks.size() > 0) {
+            JsonArray urisArray = new JsonArray();
+            // Can only add max 100 tracks
+            for (int i = 0; i < 100; i++) {
+                if (shuffledTracks.size() == 0) {
+                    break;
+                }
+                PlaylistTrack track = shuffledTracks.remove(0);
                 // Can't add local tracks (local to playlist owner's device)
                 if (!track.is_local) {
                     SongRequestData requestData = new SongRequestData(track.track.uri, baseUser);
@@ -455,7 +470,6 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
                     urisArray.add(track.track.uri);
                 }
             }
-
             Map<String, Object> queryParameters = new HashMap<>();
             Map<String, Object> bodyParameters = new HashMap<>();
             bodyParameters.put("uris", urisArray);
