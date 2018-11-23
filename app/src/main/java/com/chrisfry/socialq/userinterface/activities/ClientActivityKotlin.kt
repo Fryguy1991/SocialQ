@@ -1,5 +1,6 @@
 package com.chrisfry.socialq.userinterface.activities
 
+import android.content.DialogInterface
 import android.content.Intent
 import android.os.Bundle
 import android.os.StrictMode
@@ -153,12 +154,12 @@ abstract class ClientActivityKotlin : BaseActivity() {
     protected fun updateQueue(currentPlayingIndex: Int) {
         if (currentPlayingIndex >= 0) {
             refreshPlaylist()
-            mTrackDisplayAdapter!!.updateAdapter(mPlaylistTracks!!.subList(currentPlayingIndex, mPlaylist!!.tracks.items.size))
+            mTrackDisplayAdapter!!.updateAdapter(mPlaylistTracks.subList(currentPlayingIndex, mPlaylist!!.tracks.items.size))
         }
     }
 
     protected fun setupQueuePlaylistOnConnection(playlistId: String) {
-        mPlaylist = mSpotifyService!!.getPlaylist(mHostUserId, playlistId)
+        mPlaylist = mSpotifyService.getPlaylist(mHostUserId, playlistId)
     }
 
     protected fun showHostDisconnectedFollowPlaylistDialog() {
@@ -179,6 +180,11 @@ abstract class ClientActivityKotlin : BaseActivity() {
             dialog.dismiss()
             finish()
         }
+
+        dialogBuilder.setOnCancelListener(DialogInterface.OnCancelListener {
+            Log.d(TAG, "User did not complete follow playlist dialog")
+            finish()
+        })
 
         dialogBuilder.create().show()
     }
