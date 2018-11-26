@@ -31,7 +31,7 @@ import kaaes.spotify.webapi.android.models.UserPublic
 import java.util.*
 
 abstract class HostActivityKotlin : BaseActivity(), PlayQueueService.PlayQueueServiceListener,
-IItemSelectionListener<String> {
+        IItemSelectionListener<String> {
     private val TAG = HostActivityKotlin::class.java.name
 
     // UI element references
@@ -58,6 +58,8 @@ IItemSelectionListener<String> {
     private var mBasePlaylistId = ""
     // Flag for storing if the player has been activated
     private var mIsPlayerActive = false
+    // Flag for storing if a base playlist has been loaded
+    private var mWasBasePlaylistLoaded = false
 
     // Object for connecting to/from play queue service
     private val mServiceConnection = object : ServiceConnection {
@@ -285,6 +287,7 @@ IItemSelectionListener<String> {
     private fun loadBasePlaylist(playlistId: String) {
         Log.d(TAG, "Loading base playlist with ID: $playlistId")
 
+        mWasBasePlaylistLoaded = true
         val basePlaylist = mSpotifyService.getPlaylist(mCurrentUser!!.id, playlistId)
 
         // Adding with base user ensure host added tracks are sorted within the base playlist
@@ -352,23 +355,19 @@ IItemSelectionListener<String> {
             // Add track to request list
             mSongRequests.add(songRequest)
 
-            // Don't need to worry about managing the queue if fairplay is off
+            val willNextSongBeWrong: Boolean
+            // Add track and figure out if our next song will be wrong
             if (mIsQueueFairPlay) {
-                if (injectNewTrackFairplay(songRequest)) {
-                    // If we changed the next track notify service meta data is out of sync
-                    mPlayQueueService!!.notifyServiceMetaDataIsStale(songRequest.uri)
-                } else {
-                    mPlayQueueService!!.notifyServiceQueueHasChanged()
-                }
+                willNextSongBeWrong = addNewTrackFairplay(songRequest)
             } else {
+                willNextSongBeWrong = addNewTrack(songRequest)
+            }
 
-                addTrackToPlaylist(songRequest.uri)
-                if (mSongRequests.size == 2) {
-                    // If we changed the next track notify service meta data is out of sync
-                    mPlayQueueService!!.notifyServiceMetaDataIsStale(songRequest.uri)
-                } else {
-                    mPlayQueueService!!.notifyServiceQueueHasChanged()
-                }
+            if (willNextSongBeWrong) {
+                // If we changed the next track notify service next track will be incorrect
+                mPlayQueueService!!.notifyServiceMetaDataIsStale(songRequest.uri)
+            } else {
+                mPlayQueueService!!.notifyServiceQueueHasChanged()
             }
         }
     }
@@ -406,7 +405,7 @@ IItemSelectionListener<String> {
      * @param songRequest - Song request containing requestee and track info
      * @return - Boolean flag for if the track was added at the next position
      */
-    private fun injectNewTrackFairplay(songRequest: SongRequestData): Boolean {
+    private fun addNewTrackFairplay(songRequest: SongRequestData): Boolean {
         // Position of new track needs to go before first repeat that doesn't have a song of the requestee inside
         // EX (Requestee = 3): 1 -> 2 -> 3 -> 1 -> 2 -> 1  New 3 track goes before 3rd track by 1
         // PLAYLIST RESULT   : 1 -> 2 -> 3 -> 1 -> 2 -> 3 -> 1
@@ -455,8 +454,48 @@ IItemSelectionListener<String> {
             newTrackPosition++
         }
 
+        return injectTrackToPosition(newTrackPosition, songRequest)
+    }
+
+    /**
+     * Injects most recently added track to position before base playlist (if it exists)
+     *
+     * @param songRequest - Song request containing requestee and track info
+     * @return - Boolean flag for if the track was added at the next position
+     */
+    private fun addNewTrack(songRequest: SongRequestData): Boolean {
+        if (mWasBasePlaylistLoaded) {
+            // Position of new track needs to go before first base playlist track
+
+            // Start inspecting song requests
+            var newTrackPosition = 0
+            while (newTrackPosition < mSongRequests.size) {
+                val currentRequestUserId = mSongRequests[newTrackPosition].user.id
+
+                // Base playlist track. Check if we can replace it
+                if (currentRequestUserId == AppConstants.BASE_USER_ID) {
+                    // If player is not active we can add a track at index 0 (replace base playlist)
+                    // because we haven't started the playlist. Else don't cause the base playlist
+                    // track may currently be playing
+                    if (newTrackPosition == 0 && !mIsPlayerActive || newTrackPosition > 0) {
+                        // We want to keep user tracks above base playlist tracks.  Use base playlist
+                        // as a fall back.
+                        break
+                    }
+                }
+                newTrackPosition++
+            }
+
+            return injectTrackToPosition(newTrackPosition, songRequest)
+        } else {
+            addTrackToPlaylist(songRequest.uri)
+            return mSongRequests.size == 2
+        }
+    }
+
+    private fun injectTrackToPosition(newTrackPosition: Int, songRequest: SongRequestData): Boolean {
         if (newTrackPosition == mSongRequests.size) {
-            // No repeat found (or list too small) add track to end of playlist
+            // No base playlist track found add track to end of playlist
             Log.d(TAG, "Adding track to end of playlist")
             addTrackToPlaylist(songRequest.uri)
             // Return true if the song being added is next (request size of 2)

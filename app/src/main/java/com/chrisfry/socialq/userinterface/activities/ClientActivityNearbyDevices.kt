@@ -80,7 +80,7 @@ class ClientActivityNearbyDevices : ClientActivityKotlin() {
 
     private val mPayloadCallback = object : PayloadCallback() {
         override fun onPayloadReceived(endpointId: String, payload: Payload) {
-            Log.e(TAG, "Client received a payload")
+            Log.d(TAG, "Client received a payload")
             when (payload.type) {
                 Payload.Type.BYTES -> handleHostPayload(payload)
                 Payload.Type.STREAM, Payload.Type.FILE -> TODO("not implemented")
