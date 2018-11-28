@@ -52,4 +52,10 @@ public class AppConstants {
 
     // Handler Message Types
     public static final int ACCESS_TOKEN_REFRESH = 1;
+    public static final int SEARCH_BY_TEXT = 2;
+
+    // Spotify URI prefixes
+    public static final String SPOTIFY_ALBUM_PREFIX = "spotify:album:";
+    public static final String SPOTIFY_ARTIST_PREFIX = "spotify:artist:";
+    public static final String SPOTIFY_TRACK_PREFIX = "spotify:track:";
 }

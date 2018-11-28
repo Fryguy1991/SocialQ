@@ -49,6 +49,9 @@
     <string name="artist_top_tracks">%1$s Top Tracks</string>
     <string name="invalid_access_token">Invalid Access Token</string>
     <string name="no_results_found">No Results Found For \'%1$s\'</string>
+    <string name="see_all_songs">See All Songs</string>
+    <string name="see_all_artists">See All Artists</string>
+    <string name="see_all_albums">See All Albums</string>
 
     <!-- Start Screen Strings -->
     <string name="login">Log In</string>

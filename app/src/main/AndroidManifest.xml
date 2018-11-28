@@ -82,7 +82,8 @@
         <activity
             android:name="com.chrisfry.socialq.userinterface.activities.SearchActivity"
             android:label="@string/search_activity_name"
-            android:screenOrientation="portrait" />
+            android:screenOrientation="portrait"
+            android:parentActivityName=".userinterface.activities.HostActivityNearbyDevices"/>
 
         <!-- Activity for Spotify login (created by Spotify) -->
         <activity
