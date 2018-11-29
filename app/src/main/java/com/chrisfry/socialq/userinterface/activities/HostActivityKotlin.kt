@@ -143,7 +143,7 @@ abstract class HostActivityKotlin : BaseActivity(), PlayQueueService.PlayQueueSe
 
                         // Show dialog for selecting base playlist if user has playlists to show
                         val options = HashMap<String, Any>()
-                        options[SpotifyService.LIMIT] = 50
+                        options[SpotifyService.LIMIT] = AppConstants.SPOTIFY_SEARCH_LIMIT
                         val playlistPager = mSpotifyService.getPlaylists(mCurrentUser!!.id, options)
                         if (playlistPager.items.size > 0) {
                             showBasePlaylistDialog(playlistPager.items)
