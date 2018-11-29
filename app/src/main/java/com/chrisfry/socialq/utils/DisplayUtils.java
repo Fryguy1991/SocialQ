@@ -8,6 +8,7 @@ import com.spotify.sdk.android.player.Metadata;
 
 import java.util.List;
 
+import androidx.annotation.NonNull;
 import butterknife.ButterKnife;
 import kaaes.spotify.webapi.android.models.ArtistSimple;
 import kaaes.spotify.webapi.android.models.PlaylistTrack;
@@ -64,4 +65,18 @@ public class DisplayUtils {
     public static int convertDpToPixels(Context context, int dpValue) {
         return Math.round(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dpValue, context.getResources().getDisplayMetrics()));
     }
+
+    public static ButterKnife.Action<View> GONE = new ButterKnife.Action<View>() {
+        @Override
+        public void apply(@NonNull View view, int index) {
+            view.setVisibility(View.GONE);
+        }
+    };
+
+    public static ButterKnife.Action<View> VISIBLE = new ButterKnife.Action<View>() {
+        @Override
+        public void apply(@NonNull View view, int index) {
+            view.setVisibility(View.VISIBLE);
+        }
+    };
 }
