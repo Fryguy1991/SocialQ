@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/cl_track_album_holder_base"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <ImageView
-        android:id="@+id/iv_track_image"
+        android:id="@+id/iv_album_image"
         android:layout_width="@dimen/artist_picture_size"
         android:layout_height="@dimen/artist_picture_size"
         android:layout_marginStart="@dimen/default_margin"
@@ -19,13 +20,13 @@
         android:id="@+id/track_image_barrier"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:constraint_referenced_ids="iv_track_image"
+        app:constraint_referenced_ids="iv_album_image"
         app:barrierDirection="end"
         />
 
 
     <TextView
-        android:id="@+id/tv_track_name"
+        android:id="@+id/tv_name"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="@dimen/default_margin"
@@ -49,6 +50,6 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toEndOf="@id/track_image_barrier"
-        app:layout_constraintTop_toBottomOf="@+id/tv_track_name" />
+        app:layout_constraintTop_toBottomOf="@+id/tv_name" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

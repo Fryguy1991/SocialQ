@@ -9,6 +9,7 @@ import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
 import com.bumptech.glide.Glide
 import com.chrisfry.socialq.R
+import com.chrisfry.socialq.userinterface.interfaces.ISpotifySelectionListener
 
 class TrackAlbumView : ConstraintLayout, View.OnClickListener {
     constructor(context: Context) : super(context)
@@ -19,7 +20,7 @@ class TrackAlbumView : ConstraintLayout, View.OnClickListener {
     private var name: TextView
     private var artistName: TextView
 
-    lateinit var listener: TrackAlbumListener
+    lateinit var listener: ISpotifySelectionListener
     lateinit var uri: String
 
     init {
@@ -46,9 +47,5 @@ class TrackAlbumView : ConstraintLayout, View.OnClickListener {
 
     override fun onClick(v: View?) {
         listener.onSelection(uri)
-    }
-
-    interface TrackAlbumListener {
-        fun onSelection(uri: String)
     }
 }

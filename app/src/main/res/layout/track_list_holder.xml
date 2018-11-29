@@ -8,7 +8,7 @@
     android:animateLayoutChanges="true">
 
     <TextView
-        android:id="@+id/tv_track_name"
+        android:id="@+id/tv_name"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="@dimen/default_margin"
@@ -29,7 +29,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/iv_add_button"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/tv_track_name"
+        app:layout_constraintTop_toBottomOf="@+id/tv_name"
         android:textColor="@color/White"
         android:visibility="gone"
         android:textStyle="italic"/>

@@ -19,7 +19,7 @@ class HostTrackListAdapter(val context : Context) : BaseRecyclerViewAdapter<Host
 
     override fun onBindViewHolder(holder: HostTrackHolder, position: Int) {
         val trackToDisplay = itemList[position]
-        holder.setTrackName(trackToDisplay.track.track.name)
+        holder.setName(trackToDisplay.track.track.name)
         holder.setArtistName(DisplayUtils.getTrackArtistString(trackToDisplay.track))
         // Ensure track has an album image before attempting to access
         if (trackToDisplay.track.track.album.images.size > 0) {

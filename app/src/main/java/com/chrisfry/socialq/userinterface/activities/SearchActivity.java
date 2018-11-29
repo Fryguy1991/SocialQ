@@ -5,7 +5,6 @@ import android.os.Bundle;
 
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.constraintlayout.widget.Group;
 
 import android.os.Handler;
 import android.os.Looper;
@@ -16,7 +15,6 @@ import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ScrollView;
 import android.widget.TextView;
@@ -35,20 +33,23 @@ import com.chrisfry.socialq.business.dagger.modules.components.DaggerSpotifyComp
 import com.chrisfry.socialq.business.dagger.modules.components.SpotifyComponent;
 import com.chrisfry.socialq.R;
 
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 import butterknife.BindViews;
 import butterknife.ButterKnife;
 import kaaes.spotify.webapi.android.SpotifyService;
-import kaaes.spotify.webapi.android.models.Album;
 import kaaes.spotify.webapi.android.models.AlbumSimple;
 import kaaes.spotify.webapi.android.models.Artist;
-import kaaes.spotify.webapi.android.models.Pager;
 import kaaes.spotify.webapi.android.models.Track;
 import kaaes.spotify.webapi.android.models.TrackSimple;
-import kaaes.spotify.webapi.android.models.Tracks;
 
+import com.chrisfry.socialq.enums.SearchNavStep;
 import com.chrisfry.socialq.model.AccessModel;
+import com.chrisfry.socialq.userinterface.adapters.SearchTrackAdapter;
 import com.chrisfry.socialq.userinterface.adapters.SearchTrackListAdapter;
+import com.chrisfry.socialq.userinterface.interfaces.ISpotifySelectionListener;
 import com.chrisfry.socialq.userinterface.widgets.ArtistView;
+import com.chrisfry.socialq.userinterface.widgets.QueueItemDecoration;
 import com.chrisfry.socialq.userinterface.widgets.TrackAlbumView;
 import com.chrisfry.socialq.utils.DisplayUtils;
 
@@ -57,7 +58,7 @@ import org.jetbrains.annotations.NotNull;
 /**
  * Activity for searching Spotify tracks
  */
-public class SearchActivity extends AppCompatActivity implements SearchTrackListAdapter.TrackSelectionListener, TrackAlbumView.TrackAlbumListener, ArtistView.ArtistListener {
+public class SearchActivity extends AppCompatActivity implements SearchTrackListAdapter.TrackSelectionListener, ISpotifySelectionListener, View.OnClickListener {
     private final String TAG = SearchActivity.class.getName();
 
     // Spotify search references
@@ -74,6 +75,10 @@ public class SearchActivity extends AppCompatActivity implements SearchTrackList
     private View mViewAllSongs;
     private View mViewAllArtists;
     private View mViewAllAlbums;
+    private RecyclerView mResultsList;
+    private QueueItemDecoration mListDecoration;
+    private EditText mSearchText;
+    private TextView mNoResultsText;
 
     // Bind lists of all views (header, items, and view all button)
     @BindViews({R.id.tv_song_heading, R.id.cv_track_1, R.id.cv_track_2, R.id.cv_track_3, R.id.tv_see_all_songs})
@@ -91,8 +96,7 @@ public class SearchActivity extends AppCompatActivity implements SearchTrackList
     @BindViews({R.id.cv_album_1, R.id.cv_album_2, R.id.cv_album_3})
     List<TrackAlbumView> mAlbumItemViews;
 
-    private EditText mSearchText;
-    private TextView mNoResultsText;
+    private SearchNavStep mNavStep = SearchNavStep.BASE;
 
     // Search result containers
     private List<Track> mResultTrackList = new ArrayList<>();
@@ -100,8 +104,9 @@ public class SearchActivity extends AppCompatActivity implements SearchTrackList
     private List<AlbumSimple> mResultAlbumList = new ArrayList<>();
 
     // Recycler view adapters
-//    private SearchTrackListAdapter mSongResultsAdapter;
+    private SearchTrackAdapter mSongResultsAdapter;
     // TODO: Album adapter
+    // TODO: Artist adapter
 
     private Timer mSearchTimer = null;
 
@@ -139,6 +144,7 @@ public class SearchActivity extends AppCompatActivity implements SearchTrackList
 
         initUi();
         addListeners();
+        initAdapters();
     }
 
     @Override
@@ -147,7 +153,7 @@ public class SearchActivity extends AppCompatActivity implements SearchTrackList
 
         switch (item.getItemId()) {
             case android.R.id.home:
-                finish();
+                onBackPressed();
                 break;
             default:
                 // Didn't handle item selected return false
@@ -182,9 +188,15 @@ public class SearchActivity extends AppCompatActivity implements SearchTrackList
         mViewAllSongs = findViewById(R.id.tv_see_all_songs);
         mViewAllArtists = findViewById(R.id.tv_see_all_artists);
         mViewAllAlbums = findViewById(R.id.tv_see_all_albums);
+
+        // Results list
+        mResultsList = findViewById(R.id.rv_search_results);
+        mListDecoration = new QueueItemDecoration(getApplicationContext());
     }
 
     private void addListeners() {
+        mViewAllSongs.setOnClickListener(this);
+
         // Register for selection events on all items
         for (TrackAlbumView trackView : mSongItemViews) {
             trackView.setListener(this);
@@ -246,6 +258,11 @@ public class SearchActivity extends AppCompatActivity implements SearchTrackList
         });
     }
 
+    private void initAdapters() {
+        mSongResultsAdapter = new SearchTrackAdapter();
+        mSongResultsAdapter.setListener(this);
+    }
+
     private void searchByText(String searchText) {
         // TODO: Searching this way is slow and not user friendly. Consider doing something to speed this up
         Log.d(TAG, "Searching for: " + searchText);
@@ -261,9 +278,9 @@ public class SearchActivity extends AppCompatActivity implements SearchTrackList
             options.put(SpotifyService.LIMIT, 50);
 
             // Get results from spotify
+            mResultTrackList = mSpotifyService.searchTracks(searchText, options).tracks.items;
             mResultArtistList = mSpotifyService.searchArtists(searchText, options).artists.items;
             mResultAlbumList = mSpotifyService.searchAlbums(searchText, options).albums.items;
-            mResultTrackList = mSpotifyService.searchTracks(searchText, options).tracks.items;
 
             if (mResultArtistList.isEmpty() && mResultAlbumList.isEmpty() && mResultTrackList.isEmpty()) {
                 // Didn't find anything.  Show no results text and hide results scrollview
@@ -410,8 +427,44 @@ public class SearchActivity extends AppCompatActivity implements SearchTrackList
 
     @Override
     public void onBackPressed() {
-        // TODO: Re-implement when we have all our views implemented
-        super.onBackPressed();
+        // TODO: Implement full nav
+        switch (mNavStep) {
+            case BASE:
+                super.onBackPressed();
+                break;
+            case VIEW_ALL_SONGS:
+                mNavStep = SearchNavStep.BASE;
+                mResultsList.setVisibility(View.GONE);
+                mResultsList.removeItemDecoration(mListDecoration);
+                showBaseResultsViews();
+                setTitle(getString(R.string.search_activity_name));
+                break;
+            case ARTIST_SELECTED:
+                mNavStep = SearchNavStep.BASE;
+                break;
+            case ARTIST_ALBUM_SELECTED:
+                mNavStep = SearchNavStep.ARTIST_SELECTED;
+                break;
+            case VIEW_ALL_ARTISTS:
+                mNavStep = SearchNavStep.BASE;
+                break;
+            case VIEW_ALL_ARTIST_SELECTED:
+                mNavStep = SearchNavStep.VIEW_ALL_ARTISTS;
+                break;
+            case VIEW_ALL_ARTIST_ALBUM_SELECTED:
+                mNavStep = SearchNavStep.VIEW_ALL_ARTIST_SELECTED;
+                break;
+            case ALBUM_SELECTED:
+                mNavStep = SearchNavStep.BASE;
+                break;
+            case VIEW_ALL_ALBUMS:
+                mNavStep = SearchNavStep.BASE;
+                break;
+            case VIEW_ALL_ALBUM_SELECTED:
+                mNavStep = SearchNavStep.VIEW_ALL_ALBUMS;
+                break;
+
+        }
     }
 
     @Override
@@ -426,13 +479,51 @@ public class SearchActivity extends AppCompatActivity implements SearchTrackList
             finish();
         } else if (uri.startsWith(AppConstants.SPOTIFY_ALBUM_PREFIX)) {
             Log.d(TAG, "User selected album with URI: " + uri);
+        } else if (uri.startsWith(AppConstants.SPOTIFY_ARTIST_PREFIX)) {
+            Log.d(TAG, "User selected artist with URI: " + uri);
         } else {
             Log.e(TAG, "Received unexpected URI: " + uri);
         }
     }
 
     @Override
-    public void onArtistSelected(@NotNull String uri) {
-        Log.d(TAG, "User selected artist with URI: " + uri);
+    public void onClick(View v) {
+        switch (v.getId()) {
+            case R.id.tv_see_all_songs:
+                Log.d(TAG, "User wants to see all songs");
+
+                mNavStep = SearchNavStep.VIEW_ALL_SONGS;
+                setTitle(getString(R.string.songs));
+                hideBaseResultsViews();
+                setupRecyclerViewForViewAllSongs();
+                break;
+            case R.id.tv_see_all_artists:
+                Log.d(TAG, "User wants to see all artists");
+                break;
+            case R.id.tv_see_all_albums:
+                Log.d(TAG, "User wants to see all albums");
+                break;
+        }
+    }
+
+    private void hideBaseResultsViews() {
+        mSearchText.setVisibility(View.GONE);
+        mResultsScrollView.setVisibility(View.GONE);
+    }
+
+    private void showBaseResultsViews() {
+        mSearchText.setVisibility(View.VISIBLE);
+        mResultsScrollView.setVisibility(View.VISIBLE);
+    }
+
+    private void setupRecyclerViewForViewAllSongs() {
+        // Add recycler view item decoration and layout manager
+        LinearLayoutManager layoutManager = new LinearLayoutManager(this, RecyclerView.VERTICAL, false);
+        mResultsList.setLayoutManager(layoutManager);
+        mResultsList.addItemDecoration(mListDecoration);
+
+        mResultsList.setAdapter(mSongResultsAdapter);
+        mSongResultsAdapter.updateAdapter(mResultTrackList);
+        mResultsList.setVisibility(View.VISIBLE);
     }
 }
