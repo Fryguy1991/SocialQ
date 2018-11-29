@@ -4,11 +4,8 @@ import android.content.Intent;
 import android.os.Bundle;
 
 import androidx.constraintlayout.widget.ConstraintLayout;
-import androidx.constraintlayout.widget.ConstraintSet;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.Group;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 
 import android.os.Handler;
 import android.os.Looper;
@@ -17,11 +14,12 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.MenuItem;
-import android.view.MotionEvent;
 import android.view.View;
+import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ScrollView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
@@ -37,6 +35,7 @@ import com.chrisfry.socialq.business.dagger.modules.components.DaggerSpotifyComp
 import com.chrisfry.socialq.business.dagger.modules.components.SpotifyComponent;
 import com.chrisfry.socialq.R;
 
+import butterknife.BindViews;
 import butterknife.ButterKnife;
 import kaaes.spotify.webapi.android.SpotifyService;
 import kaaes.spotify.webapi.android.models.Album;
@@ -50,7 +49,6 @@ import kaaes.spotify.webapi.android.models.Tracks;
 import com.chrisfry.socialq.model.AccessModel;
 import com.chrisfry.socialq.userinterface.adapters.SearchTrackListAdapter;
 import com.chrisfry.socialq.userinterface.widgets.ArtistView;
-import com.chrisfry.socialq.userinterface.widgets.QueueItemDecoration;
 import com.chrisfry.socialq.userinterface.widgets.SearchArtistView;
 import com.chrisfry.socialq.userinterface.widgets.TrackAlbumView;
 import com.chrisfry.socialq.utils.DisplayUtils;
@@ -93,12 +91,14 @@ public class SearchActivity extends AppCompatActivity implements SearchTrackList
     private Group mArtistGroup;
     private Group mAlbumGroup;
 
+//    @BindViews({})
 
     //    private View mSearchButton;
 //    private SearchArtistView mSearchArtistView;
 //    private ViewGroup mSongLayout;
 //    private ViewGroup mAlbumLayout;
     private EditText mSearchText;
+    private TextView mNoResultsText;
 //    private TextView mSongText;
 //    private TextView mAlbumText;
 //    private RecyclerView mSongResults;
@@ -121,12 +121,7 @@ public class SearchActivity extends AppCompatActivity implements SearchTrackList
         @Override
         public void handleMessage(Message msg) {
             if (msg.what == AppConstants.SEARCH_BY_TEXT) {
-
-                if (mSearchText.getText().toString().isEmpty()) {
-                    clearSearchResults();
-                } else {
-                    searchByText(mSearchText.getText().toString());
-                }
+                searchByText(mSearchText.getText().toString());
             }
         }
     };
@@ -136,6 +131,9 @@ public class SearchActivity extends AppCompatActivity implements SearchTrackList
         super.onCreate(savedInstanceState);
         setContentView(R.layout.search_base_layout);
         ButterKnife.bind(this);
+
+        // Stop soft keyboard from pushing UI up
+        getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING);
 
         String accessToken = AccessModel.getAccessToken();
         if (accessToken == null || System.currentTimeMillis() > AccessModel.getAccessExpireTime()) {
@@ -186,6 +184,7 @@ public class SearchActivity extends AppCompatActivity implements SearchTrackList
 //        mSongLayout = findViewById(R.id.cv_song_result_layout);
 //        mAlbumLayout = findViewById(R.id.cv_album_result_layout);
         mSearchText = findViewById(R.id.et_search_edit_text);
+        mNoResultsText = findViewById(R.id.tv_no_results);
 //        mSongText = mSongLayout.findViewById(R.id.tv_result_text);
 //        mAlbumText = mAlbumLayout.findViewById(R.id.tv_result_text);
 //
@@ -320,7 +319,7 @@ public class SearchActivity extends AppCompatActivity implements SearchTrackList
                         message.what = AppConstants.SEARCH_BY_TEXT;
                         message.sendToTarget();
                     }
-                }, 500); // 500ms delay before search is executed
+                }, 650); // 500ms delay before search is executed
             }
         });
     }
@@ -367,25 +366,31 @@ public class SearchActivity extends AppCompatActivity implements SearchTrackList
     }
 
     private void searchByText(String searchText) {
+        // TODO: Searching this way is slow and not user friendly. Consider doing something to speed this up
         Log.d(TAG, "Searching for: " + searchText);
 
-        // Create options to set limit for search results to 50 items
-        Map<String, Object> options = new HashMap<>();
-        options.put(SpotifyService.LIMIT, 50);
-
-        // Get results from spotify
-        mResultArtistList = mSpotifyService.searchArtists(searchText, options).artists.items;
-        mResultAlbumList = mSpotifyService.searchAlbums(searchText, options).albums.items;
-        mResultTrackList = mSpotifyService.searchTracks(searchText, options).tracks.items;
-
-        if (mResultArtistList.isEmpty() && mResultAlbumList.isEmpty() && mResultTrackList.isEmpty()) {
-            // Didn't find anything.  Toast to let user know
-            Toast.makeText(this, String.format(getString(R.string.no_results_found), searchText), Toast.LENGTH_LONG).show();
+        // No search text. Clear/Hide everything
+        if (searchText.isEmpty()) {
+            clearSearchResults();
+            mResultsScrollView.setVisibility(View.GONE);
+            mNoResultsText.setVisibility(View.GONE);
         } else {
-            // Don't hide keyboard if no results are found
-//            hideKeyboard();
+            // Create options to set limit for search results to 50 items
+            Map<String, Object> options = new HashMap<>();
+            options.put(SpotifyService.LIMIT, 50);
 
-        }
+            // Get results from spotify
+            mResultArtistList = mSpotifyService.searchArtists(searchText, options).artists.items;
+            mResultAlbumList = mSpotifyService.searchAlbums(searchText, options).albums.items;
+            mResultTrackList = mSpotifyService.searchTracks(searchText, options).tracks.items;
+
+            if (mResultArtistList.isEmpty() && mResultAlbumList.isEmpty() && mResultTrackList.isEmpty()) {
+                // Didn't find anything.  Show no results text and hide results scrollview
+//                Toast.makeText(this, String.format(getString(R.string.no_results_found), searchText), Toast.LENGTH_LONG).show();
+                showNoResultsView(searchText);
+            } else {
+                showResultsView();
+            }
 
 //        // Update result views
 //        closeAnyRecyclerViews();
@@ -399,11 +404,10 @@ public class SearchActivity extends AppCompatActivity implements SearchTrackList
 //
 //        // Load custom artist search view with results
 //        mSearchArtistView.loadArtistSearchResults(mResultArtistList);
-
-        showResults();
+        }
     }
 
-    private void showResults() {
+    private void showResultsView() {
         for (int i = 0; i < 3; i++) {
             // Load track information
             TrackAlbumView trackView = mTrackViewList.get(i);
@@ -474,6 +478,10 @@ public class SearchActivity extends AppCompatActivity implements SearchTrackList
             mViewAllArtists.setVisibility(View.GONE);
         }
 
+        mResultsScrollView.setVisibility(View.VISIBLE);
+        mNoResultsText.setVisibility(View.GONE);
+
+        // TODO: Below code is for programmatically adding result views. Consider removing if we won't use
 //        ConstraintSet constraints = new ConstraintSet();
 //        for (int i = 0; i < 3; i++) {
 //            if (mResultTrackList.size() > i) {
@@ -503,6 +511,12 @@ public class SearchActivity extends AppCompatActivity implements SearchTrackList
 //        constraints.clone(mBaseResultLayout);
 //        constraints.connect(mViewAllSongs.getId(), ConstraintSet.TOP, mBaseResultLayout.getChildAt(mBaseResultLayout.indexOfChild(mViewAllSongs) - 1).getId(), ConstraintSet.BOTTOM, 0);
 //        constraints.applyTo(mBaseResultLayout);
+    }
+
+    private void showNoResultsView(String searchString) {
+        mNoResultsText.setText(String.format(getString(R.string.no_results_found), searchString));
+        mResultsScrollView.setVisibility(View.GONE);
+        mNoResultsText.setVisibility(View.VISIBLE);
     }
 
     private void clearResultsView() {

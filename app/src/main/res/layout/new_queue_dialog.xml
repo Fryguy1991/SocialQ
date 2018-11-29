@@ -18,7 +18,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         android:inputType="textCapWords"
-        android:lines="1"
+        android:maxLines="1"
         android:selectAllOnFocus="true"
         android:hint="@string/queue_title"/>
 

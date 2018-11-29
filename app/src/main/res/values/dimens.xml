@@ -22,5 +22,6 @@
     <dimen name="artist_picture_size">60dp</dimen>
     <dimen name="add_button_size">30dp</dimen>
     <dimen name="search_header_size">40dp</dimen>
-    <dimen name="search_view_all_size">20dp</dimen>
+    <dimen name="see_all_button_size">30dp</dimen>
+    <dimen name="see_all_text_size">15sp</dimen>
 </resources>
