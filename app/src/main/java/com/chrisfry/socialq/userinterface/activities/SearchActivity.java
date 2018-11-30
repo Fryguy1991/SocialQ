@@ -62,6 +62,7 @@ import com.chrisfry.socialq.userinterface.adapters.SearchTrackAdapter;
 import com.chrisfry.socialq.userinterface.adapters.SearchTrackListAdapter;
 import com.chrisfry.socialq.userinterface.adapters.holders.AlbumCardAdapter;
 import com.chrisfry.socialq.userinterface.interfaces.ISpotifySelectionListener;
+import com.chrisfry.socialq.userinterface.interfaces.ISpotifySelectionPositionListener;
 import com.chrisfry.socialq.userinterface.widgets.ArtistView;
 import com.chrisfry.socialq.userinterface.widgets.QueueItemDecoration;
 import com.chrisfry.socialq.userinterface.widgets.TrackAlbumView;
@@ -72,7 +73,7 @@ import org.jetbrains.annotations.NotNull;
 /**
  * Activity for searching Spotify tracks
  */
-public class SearchActivity extends AppCompatActivity implements SearchTrackListAdapter.TrackSelectionListener, ISpotifySelectionListener, View.OnClickListener {
+public class SearchActivity extends AppCompatActivity implements SearchTrackListAdapter.TrackSelectionListener, ISpotifySelectionListener, ISpotifySelectionPositionListener, View.OnClickListener {
     private final String TAG = SearchActivity.class.getName();
 
     // Spotify search references
@@ -118,6 +119,7 @@ public class SearchActivity extends AppCompatActivity implements SearchTrackList
     List<TrackAlbumView> mAlbumItemViews;
 
     private SearchNavStep mNavStep = SearchNavStep.BASE;
+    private int mCachedPosition = 0;
 
     // Search result containers
     private List<Track> mResultTrackList = new ArrayList<>();
@@ -431,6 +433,7 @@ public class SearchActivity extends AppCompatActivity implements SearchTrackList
         mAlbumSongAdapter = new SearchAlbumTrackAdapter();
         mAlbumSongAdapter.setListener(this);
         mAlbumCardAdapter = new AlbumCardAdapter();
+        mAlbumCardAdapter.setListener(this);
     }
 
     private void searchByText(String searchText) {
@@ -623,6 +626,7 @@ public class SearchActivity extends AppCompatActivity implements SearchTrackList
                 super.onBackPressed();
                 break;
             case VIEW_ALL_SONGS:
+                Log.d(TAG, "Returning to base view");
                 mNavStep = SearchNavStep.BASE;
 
                 mResultsList.setVisibility(View.GONE);
@@ -646,6 +650,7 @@ public class SearchActivity extends AppCompatActivity implements SearchTrackList
                 mNavStep = SearchNavStep.VIEW_ALL_ARTIST_SELECTED;
                 break;
             case ALBUM_SELECTED:
+                Log.d(TAG, "Returning to base from album");
                 mNavStep = SearchNavStep.BASE;
 
                 mResultsList.removeItemDecoration(mListDecoration);
@@ -654,6 +659,7 @@ public class SearchActivity extends AppCompatActivity implements SearchTrackList
                 setTitle(getString(R.string.search_activity_name));
                 break;
             case VIEW_ALL_ALBUMS:
+                Log.d(TAG, "Returning to base from view all albums");
                 mNavStep = SearchNavStep.BASE;
 
                 mResultsList.setVisibility(View.GONE);
@@ -661,7 +667,16 @@ public class SearchActivity extends AppCompatActivity implements SearchTrackList
                 setTitle(getString(R.string.search_activity_name));
                 break;
             case VIEW_ALL_ALBUM_SELECTED:
+                Log.d(TAG, "Returning to view all albums");
                 mNavStep = SearchNavStep.VIEW_ALL_ALBUMS;
+
+                ButterKnife.apply(mAlbumDisplayViews, DisplayUtils.GONE);
+                setupRecyclerViewForAlbums();
+                mResultsList.setAdapter(mAlbumCardAdapter);
+                mResultsList.setVisibility(View.VISIBLE);
+                mResultsList.scrollToPosition(mCachedPosition);
+                mCachedPosition = 0;
+                setTitle(getString(R.string.albums));
                 break;
 
         }
@@ -669,8 +684,14 @@ public class SearchActivity extends AppCompatActivity implements SearchTrackList
 
     @Override
     public void onSelection(@NotNull String uri) {
+        // Items from base search view will not have an index, default to -1
+        onSelection(uri, -1);
+    }
+
+    @Override
+    public void onSelection(@NotNull String uri, int position) {
         if (uri.startsWith(AppConstants.SPOTIFY_TRACK_PREFIX)) {
-            Log.d(TAG, "User selected track with URI: " + uri);
+            Log.d(TAG, "User selected track with URI: " + uri + " and position: " + position);
 
             // If a track is selected add it to the queue
             Intent resultIntent = new Intent();
@@ -678,25 +699,22 @@ public class SearchActivity extends AppCompatActivity implements SearchTrackList
             setResult(RESULT_OK, resultIntent);
             finish();
         } else if (uri.startsWith(AppConstants.SPOTIFY_ALBUM_PREFIX)) {
-            Log.d(TAG, "User selected album with URI: " + uri);
+            Log.d(TAG, "User selected album with URI: " + uri + " and position: " + position);
             // Album to display will be different depending on where we are in navigation
             switch (mNavStep) {
                 case BASE:
-                case VIEW_ALL_ALBUMS:
-                    Album albumToDisplay = null;
-                    for (Album album : mResultAlbumList) {
-                        if (uri.equals(album.uri)) {
-                            albumToDisplay = album;
-                        }
-                    }
-
-                    if (albumToDisplay == null) {
-                        Log.d(TAG, "Something went wrong. Lost album information");
-                        return;
-                    }
-
-                    displayAlbum(albumToDisplay);
+                    displayAlbumFromAlbumList(uri);
                     mNavStep = SearchNavStep.ALBUM_SELECTED;
+                    break;
+                case VIEW_ALL_ALBUMS:
+                    if (position >= 0) {
+                        // Cache position to scroll list back to selected item
+                        mCachedPosition = position;
+                        displayAlbumFromAlbumList(position);
+                    } else {
+                        displayAlbumFromAlbumList(uri);
+                    }
+                    mNavStep = SearchNavStep.VIEW_ALL_ALBUM_SELECTED;
                     break;
                 case ARTIST_SELECTED:
                     // TODO: Display album selected from artist view
@@ -704,9 +722,33 @@ public class SearchActivity extends AppCompatActivity implements SearchTrackList
 
             }
         } else if (uri.startsWith(AppConstants.SPOTIFY_ARTIST_PREFIX)) {
-            Log.d(TAG, "User selected artist with URI: " + uri);
+            Log.d(TAG, "User selected artist with URI: " + uri + " and position: " + position);
         } else {
             Log.e(TAG, "Received unexpected URI: " + uri);
+        }
+    }
+
+    private void displayAlbumFromAlbumList(@NotNull String uri) {
+        Album albumToDisplay = null;
+        for (Album album : mResultAlbumList) {
+            if (uri.equals(album.uri)) {
+                albumToDisplay = album;
+            }
+        }
+
+        if (albumToDisplay == null) {
+            Log.d(TAG, "Something went wrong. Lost album information");
+            return;
+        }
+
+        displayAlbum(albumToDisplay);
+    }
+
+    private void displayAlbumFromAlbumList(int position) {
+        if (position >= 0 && position < mResultAlbumList.size()) {
+            displayAlbum(mResultAlbumList.get(position));
+        } else {
+            Log.e(TAG, "Invalid index for album");
         }
     }
 
