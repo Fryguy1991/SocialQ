@@ -16,6 +16,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -29,6 +30,7 @@ import java.util.TimerTask;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.bumptech.glide.Glide;
 import com.chrisfry.socialq.business.AppConstants;
 import com.chrisfry.socialq.business.dagger.modules.SpotifyModule;
 import com.chrisfry.socialq.business.dagger.modules.components.DaggerSpotifyComponent;
@@ -54,6 +56,7 @@ import retrofit.client.Response;
 
 import com.chrisfry.socialq.enums.SearchNavStep;
 import com.chrisfry.socialq.model.AccessModel;
+import com.chrisfry.socialq.userinterface.adapters.SearchAlbumTrackAdapter;
 import com.chrisfry.socialq.userinterface.adapters.SearchTrackAdapter;
 import com.chrisfry.socialq.userinterface.adapters.SearchTrackListAdapter;
 import com.chrisfry.socialq.userinterface.interfaces.ISpotifySelectionListener;
@@ -88,6 +91,7 @@ public class SearchActivity extends AppCompatActivity implements SearchTrackList
     private QueueItemDecoration mListDecoration;
     private EditText mSearchText;
     private TextView mNoResultsText;
+    private ImageView mArtistAlbumImage;
 
     // Bind lists of all views (header, items, and view all button)
     @BindViews({R.id.tv_song_heading, R.id.cv_track_1, R.id.cv_track_2, R.id.cv_track_3, R.id.tv_see_all_songs})
@@ -96,6 +100,12 @@ public class SearchActivity extends AppCompatActivity implements SearchTrackList
     List<View> mAllArtistViews;
     @BindViews({R.id.tv_album_heading, R.id.cv_album_1, R.id.cv_album_2, R.id.cv_album_3, R.id.tv_see_all_albums})
     List<View> mAllAlbumViews;
+
+    // Views for different nav states
+    @BindViews({R.id.et_search_edit_text, R.id.sv_search_scroll_view})
+    List<View> mBaseDisplayViews;
+    @BindViews({R.id.iv_artist_album_image, R.id.rv_search_results})
+    List<View> mAlbumDisplayViews;
 
     // Bind lists of item views
     @BindViews({R.id.cv_track_1, R.id.cv_track_2, R.id.cv_track_3})
@@ -114,7 +124,7 @@ public class SearchActivity extends AppCompatActivity implements SearchTrackList
 
     // Recycler view adapters
     private SearchTrackAdapter mSongResultsAdapter;
-    // TODO: Album adapter
+    private SearchAlbumTrackAdapter mAlbumSongAdapter;
     // TODO: Artist adapter
 
     // Timer to start searches when edittext is modified
@@ -337,6 +347,9 @@ public class SearchActivity extends AppCompatActivity implements SearchTrackList
         // Results list
         mResultsList = findViewById(R.id.rv_search_results);
         mListDecoration = new QueueItemDecoration(getApplicationContext());
+
+        // Image used for album/artist display
+        mArtistAlbumImage = findViewById(R.id.iv_artist_album_image);
     }
 
     private void addListeners() {
@@ -409,6 +422,7 @@ public class SearchActivity extends AppCompatActivity implements SearchTrackList
     private void initAdapters() {
         mSongResultsAdapter = new SearchTrackAdapter();
         mSongResultsAdapter.setListener(this);
+        mAlbumSongAdapter = new SearchAlbumTrackAdapter();
     }
 
     private void searchByText(String searchText) {
@@ -496,7 +510,7 @@ public class SearchActivity extends AppCompatActivity implements SearchTrackList
             // If more than 3 songs show view all songs button
             mViewAllSongs.setVisibility(mResultTrackList.size() > 3 ? View.VISIBLE : View.GONE);
 
-            showBaseResultsViews();
+            ButterKnife.apply(mBaseDisplayViews, DisplayUtils.VISIBLE);
         } else {
             // If we have no results hide all song views
             ButterKnife.apply(mAllSongViews, DisplayUtils.GONE);
@@ -526,7 +540,7 @@ public class SearchActivity extends AppCompatActivity implements SearchTrackList
             // If more than 3 artists show view all artists button
             mViewAllArtists.setVisibility(mResultArtistList.size() > 3 ? View.VISIBLE : View.GONE);
 
-            showBaseResultsViews();
+            ButterKnife.apply(mBaseDisplayViews, DisplayUtils.VISIBLE);
         } else {
             ButterKnife.apply(mAllArtistViews, DisplayUtils.GONE);
         }
@@ -556,7 +570,7 @@ public class SearchActivity extends AppCompatActivity implements SearchTrackList
             // If more than 3 albums show view all albums button
             mViewAllAlbums.setVisibility(mResultAlbumList.size() > 3 ? View.VISIBLE : View.GONE);
 
-            showBaseResultsViews();
+            ButterKnife.apply(mBaseDisplayViews, DisplayUtils.VISIBLE);
         } else {
             ButterKnife.apply(mAllAlbumViews, DisplayUtils.GONE);
         }
@@ -604,7 +618,7 @@ public class SearchActivity extends AppCompatActivity implements SearchTrackList
                 mNavStep = SearchNavStep.BASE;
                 mResultsList.setVisibility(View.GONE);
                 mResultsList.removeItemDecoration(mListDecoration);
-                showBaseResultsViews();
+                ButterKnife.apply(mBaseDisplayViews, DisplayUtils.VISIBLE);
                 setTitle(getString(R.string.search_activity_name));
                 break;
             case ARTIST_SELECTED:
@@ -624,6 +638,10 @@ public class SearchActivity extends AppCompatActivity implements SearchTrackList
                 break;
             case ALBUM_SELECTED:
                 mNavStep = SearchNavStep.BASE;
+                mResultsList.removeItemDecoration(mListDecoration);
+                ButterKnife.apply(mAlbumDisplayViews, DisplayUtils.GONE);
+                ButterKnife.apply(mBaseDisplayViews, DisplayUtils.VISIBLE);
+                setTitle(getString(R.string.search_activity_name));
                 break;
             case VIEW_ALL_ALBUMS:
                 mNavStep = SearchNavStep.BASE;
@@ -647,11 +665,48 @@ public class SearchActivity extends AppCompatActivity implements SearchTrackList
             finish();
         } else if (uri.startsWith(AppConstants.SPOTIFY_ALBUM_PREFIX)) {
             Log.d(TAG, "User selected album with URI: " + uri);
+            // Album to display will be different depending on where we are in navigation
+            switch (mNavStep) {
+                case BASE:
+                case VIEW_ALL_ALBUMS:
+                    Album albumToDisplay = null;
+                    for (Album album : mResultAlbumList) {
+                        if (uri.equals(album.uri)) {
+                            albumToDisplay = album;
+                        }
+                    }
+
+                    if (albumToDisplay == null) {
+                        Log.d(TAG, "Something went wrong. Lost album information");
+                        return;
+                    }
+
+                    displayAlbum(albumToDisplay);
+                    mNavStep = SearchNavStep.ALBUM_SELECTED;
+                    break;
+                case ARTIST_SELECTED:
+                    // TODO: Display album selected from artist view
+                    break;
+
+            }
         } else if (uri.startsWith(AppConstants.SPOTIFY_ARTIST_PREFIX)) {
             Log.d(TAG, "User selected artist with URI: " + uri);
         } else {
             Log.e(TAG, "Received unexpected URI: " + uri);
         }
+    }
+
+    private void displayAlbum(Album albumToDisplay) {
+        if (albumToDisplay.images.size() > 0) {
+            Glide.with(this).load(albumToDisplay.images.get(0).url).into(mArtistAlbumImage);
+        }
+
+        ButterKnife.apply(mBaseDisplayViews, DisplayUtils.GONE);
+        setupRecyclerViewForTracks();
+        mResultsList.setAdapter(mAlbumSongAdapter);
+        mAlbumSongAdapter.updateAdapter(albumToDisplay.tracks.items);
+        ButterKnife.apply(mAlbumDisplayViews, DisplayUtils.VISIBLE);
+        setTitle(albumToDisplay.name);
     }
 
     @Override
@@ -662,8 +717,11 @@ public class SearchActivity extends AppCompatActivity implements SearchTrackList
 
                 mNavStep = SearchNavStep.VIEW_ALL_SONGS;
                 setTitle(getString(R.string.songs));
-                hideBaseResultsViews();
-                setupRecyclerViewForViewAllSongs();
+                ButterKnife.apply(mBaseDisplayViews, DisplayUtils.GONE);
+                setupRecyclerViewForTracks();
+                mResultsList.setAdapter(mSongResultsAdapter);
+                mSongResultsAdapter.updateAdapter(mResultTrackList);
+                mResultsList.setVisibility(View.VISIBLE);
                 break;
             case R.id.tv_see_all_artists:
                 Log.d(TAG, "User wants to see all artists");
@@ -674,24 +732,10 @@ public class SearchActivity extends AppCompatActivity implements SearchTrackList
         }
     }
 
-    private void hideBaseResultsViews() {
-        mSearchText.setVisibility(View.GONE);
-        mResultsScrollView.setVisibility(View.GONE);
-    }
-
-    private void showBaseResultsViews() {
-        mSearchText.setVisibility(View.VISIBLE);
-        mResultsScrollView.setVisibility(View.VISIBLE);
-    }
-
-    private void setupRecyclerViewForViewAllSongs() {
+    private void setupRecyclerViewForTracks() {
         // Add recycler view item decoration and layout manager
         LinearLayoutManager layoutManager = new LinearLayoutManager(this, RecyclerView.VERTICAL, false);
         mResultsList.setLayoutManager(layoutManager);
         mResultsList.addItemDecoration(mListDecoration);
-
-        mResultsList.setAdapter(mSongResultsAdapter);
-        mSongResultsAdapter.updateAdapter(mResultTrackList);
-        mResultsList.setVisibility(View.VISIBLE);
     }
 }
