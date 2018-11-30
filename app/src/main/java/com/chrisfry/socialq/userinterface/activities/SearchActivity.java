@@ -259,6 +259,8 @@ public class SearchActivity extends AppCompatActivity implements SearchTrackList
 
         @Override
         public void success(Albums albums, Response response) {
+            Log.d(TAG, "Successfully retrieved full albums");
+
             mResultAlbumList = albums.albums;
             if (!checkIfNoResults()) {
                 showAlbumResults();
@@ -451,9 +453,9 @@ public class SearchActivity extends AppCompatActivity implements SearchTrackList
             options.put(SpotifyService.LIMIT, AppConstants.SPOTIFY_SEARCH_LIMIT);
 
             // Get results from spotify
+            mSpotifyService.searchAlbums(searchText, options, mAlbumsCallback);
             mSpotifyService.searchTracks(searchText, options, mSongsCallback);
             mSpotifyService.searchArtists(searchText, options, mArtistsCallback);
-            mSpotifyService.searchAlbums(searchText, options, mAlbumsCallback);
         }
     }
 

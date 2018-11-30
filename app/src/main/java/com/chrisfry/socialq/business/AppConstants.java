@@ -40,6 +40,7 @@ public class AppConstants {
 
     // Spotify search limits
     public static final int SPOTIFY_SEARCH_LIMIT = 50;
+    public static final int PLAYLIST_LIMIT = 50;
 
     // Regular expressions
     // Regex for track request messages (Example: #SONG_REQUEST#spotify:track:6qtg4gz3DhqOHL5BHtSQw8#CLIENT_USER_ID#fry_dev_1

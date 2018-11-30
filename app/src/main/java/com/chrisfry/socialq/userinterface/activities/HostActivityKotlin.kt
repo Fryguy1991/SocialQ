@@ -142,11 +142,28 @@ abstract class HostActivityKotlin : BaseActivity(), PlayQueueService.PlayQueueSe
                         Log.d(TAG, "First access token granted.  Initialize play queue service and start host connection")
 
                         // Show dialog for selecting base playlist if user has playlists to show
+                        // TODO: Don't do this on the main thread.
                         val options = HashMap<String, Any>()
-                        options[SpotifyService.LIMIT] = AppConstants.SPOTIFY_SEARCH_LIMIT
+                        options[SpotifyService.LIMIT] = AppConstants.PLAYLIST_LIMIT
                         val playlistPager = mSpotifyService.getPlaylists(mCurrentUser!!.id, options)
-                        if (playlistPager.items.size > 0) {
-                            showBasePlaylistDialog(playlistPager.items)
+
+                        // Show dialog for selecting base playlist if user has playlists to show
+                        val playlists = playlistPager.items
+
+                        // If user has more than 50 playlist keep pulling them
+                        var offset = playlistPager.items.size
+                        while (playlistPager.total > offset) {
+
+                            val offsetOptions = HashMap<String, Any>()
+                            options[SpotifyService.LIMIT] = AppConstants.PLAYLIST_LIMIT
+                            options[SpotifyService.OFFSET] = offset
+
+                            playlists.addAll(mSpotifyService.getPlaylists(mCurrentUser!!.id, offsetOptions).items)
+                            offset += AppConstants.PLAYLIST_LIMIT
+                        }
+
+                        if (playlists.size > 0) {
+                            showBasePlaylistDialog(playlists)
                         } else {
                             // If no existing Spotify playlists don't show dialog and create one from scratch
                             createPlaylistForQueue()
