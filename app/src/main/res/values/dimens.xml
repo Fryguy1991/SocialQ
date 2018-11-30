@@ -25,4 +25,5 @@
     <dimen name="see_all_button_size">30dp</dimen>
     <dimen name="see_all_text_size">15sp</dimen>
     <dimen name="artist_album_image_size">150dp</dimen>
+    <dimen name="album_card_text_size">12sp</dimen>
 </resources>

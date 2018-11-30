@@ -37,6 +37,7 @@ import com.chrisfry.socialq.business.dagger.modules.components.DaggerSpotifyComp
 import com.chrisfry.socialq.business.dagger.modules.components.SpotifyComponent;
 import com.chrisfry.socialq.R;
 
+import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import butterknife.BindViews;
@@ -59,6 +60,7 @@ import com.chrisfry.socialq.model.AccessModel;
 import com.chrisfry.socialq.userinterface.adapters.SearchAlbumTrackAdapter;
 import com.chrisfry.socialq.userinterface.adapters.SearchTrackAdapter;
 import com.chrisfry.socialq.userinterface.adapters.SearchTrackListAdapter;
+import com.chrisfry.socialq.userinterface.adapters.holders.AlbumCardAdapter;
 import com.chrisfry.socialq.userinterface.interfaces.ISpotifySelectionListener;
 import com.chrisfry.socialq.userinterface.widgets.ArtistView;
 import com.chrisfry.socialq.userinterface.widgets.QueueItemDecoration;
@@ -125,6 +127,7 @@ public class SearchActivity extends AppCompatActivity implements SearchTrackList
     // Recycler view adapters
     private SearchTrackAdapter mSongResultsAdapter;
     private SearchAlbumTrackAdapter mAlbumSongAdapter;
+    private AlbumCardAdapter mAlbumCardAdapter;
     // TODO: Artist adapter
 
     // Timer to start searches when edittext is modified
@@ -353,7 +356,10 @@ public class SearchActivity extends AppCompatActivity implements SearchTrackList
     }
 
     private void addListeners() {
+        // Add on click listeners to view all buttons
         mViewAllSongs.setOnClickListener(this);
+        mViewAllArtists.setOnClickListener(this);
+        mViewAllAlbums.setOnClickListener(this);
 
         // Register for selection events on all items
         for (TrackAlbumView trackView : mSongItemViews) {
@@ -424,6 +430,7 @@ public class SearchActivity extends AppCompatActivity implements SearchTrackList
         mSongResultsAdapter.setListener(this);
         mAlbumSongAdapter = new SearchAlbumTrackAdapter();
         mAlbumSongAdapter.setListener(this);
+        mAlbumCardAdapter = new AlbumCardAdapter();
     }
 
     private void searchByText(String searchText) {
@@ -617,6 +624,7 @@ public class SearchActivity extends AppCompatActivity implements SearchTrackList
                 break;
             case VIEW_ALL_SONGS:
                 mNavStep = SearchNavStep.BASE;
+
                 mResultsList.setVisibility(View.GONE);
                 mResultsList.removeItemDecoration(mListDecoration);
                 ButterKnife.apply(mBaseDisplayViews, DisplayUtils.VISIBLE);
@@ -639,6 +647,7 @@ public class SearchActivity extends AppCompatActivity implements SearchTrackList
                 break;
             case ALBUM_SELECTED:
                 mNavStep = SearchNavStep.BASE;
+
                 mResultsList.removeItemDecoration(mListDecoration);
                 ButterKnife.apply(mAlbumDisplayViews, DisplayUtils.GONE);
                 ButterKnife.apply(mBaseDisplayViews, DisplayUtils.VISIBLE);
@@ -646,6 +655,10 @@ public class SearchActivity extends AppCompatActivity implements SearchTrackList
                 break;
             case VIEW_ALL_ALBUMS:
                 mNavStep = SearchNavStep.BASE;
+
+                mResultsList.setVisibility(View.GONE);
+                ButterKnife.apply(mBaseDisplayViews, DisplayUtils.VISIBLE);
+                setTitle(getString(R.string.search_activity_name));
                 break;
             case VIEW_ALL_ALBUM_SELECTED:
                 mNavStep = SearchNavStep.VIEW_ALL_ALBUMS;
@@ -729,6 +742,14 @@ public class SearchActivity extends AppCompatActivity implements SearchTrackList
                 break;
             case R.id.tv_see_all_albums:
                 Log.d(TAG, "User wants to see all albums");
+
+                mNavStep = SearchNavStep.VIEW_ALL_ALBUMS;
+                setTitle(getString(R.string.albums));
+                ButterKnife.apply(mBaseDisplayViews, DisplayUtils.GONE);
+                setupRecyclerViewForAlbums();
+                mResultsList.setAdapter(mAlbumCardAdapter);
+                mAlbumCardAdapter.updateAdapter(mResultAlbumList);
+                mResultsList.setVisibility(View.VISIBLE);
                 break;
         }
     }
@@ -738,5 +759,12 @@ public class SearchActivity extends AppCompatActivity implements SearchTrackList
         LinearLayoutManager layoutManager = new LinearLayoutManager(this, RecyclerView.VERTICAL, false);
         mResultsList.setLayoutManager(layoutManager);
         mResultsList.addItemDecoration(mListDecoration);
+    }
+
+    private void setupRecyclerViewForAlbums() {
+        // Add recylerview grid layout manager and remove decoration
+        GridLayoutManager layoutManager = new GridLayoutManager(this, 2);
+        mResultsList.removeItemDecoration(mListDecoration);
+        mResultsList.setLayoutManager(layoutManager);
     }
 }
