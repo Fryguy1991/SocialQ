@@ -57,10 +57,11 @@ import retrofit.client.Response;
 
 import com.chrisfry.socialq.enums.SearchNavStep;
 import com.chrisfry.socialq.model.AccessModel;
+import com.chrisfry.socialq.userinterface.adapters.ArtistCardAdapter;
 import com.chrisfry.socialq.userinterface.adapters.SearchAlbumTrackAdapter;
 import com.chrisfry.socialq.userinterface.adapters.SearchTrackAdapter;
 import com.chrisfry.socialq.userinterface.adapters.SearchTrackListAdapter;
-import com.chrisfry.socialq.userinterface.adapters.holders.AlbumCardAdapter;
+import com.chrisfry.socialq.userinterface.adapters.AlbumCardAdapter;
 import com.chrisfry.socialq.userinterface.interfaces.ISpotifySelectionListener;
 import com.chrisfry.socialq.userinterface.interfaces.ISpotifySelectionPositionListener;
 import com.chrisfry.socialq.userinterface.widgets.ArtistView;
@@ -130,6 +131,7 @@ public class SearchActivity extends AppCompatActivity implements SearchTrackList
     private SearchTrackAdapter mSongResultsAdapter;
     private SearchAlbumTrackAdapter mAlbumSongAdapter;
     private AlbumCardAdapter mAlbumCardAdapter;
+    private ArtistCardAdapter mArtistCardAdapter;
     // TODO: Artist adapter
 
     // Timer to start searches when edittext is modified
@@ -436,6 +438,7 @@ public class SearchActivity extends AppCompatActivity implements SearchTrackList
         mAlbumSongAdapter.setListener(this);
         mAlbumCardAdapter = new AlbumCardAdapter();
         mAlbumCardAdapter.setListener(this);
+        mArtistCardAdapter = new ArtistCardAdapter();
     }
 
     private void searchByText(String searchText) {
@@ -643,7 +646,12 @@ public class SearchActivity extends AppCompatActivity implements SearchTrackList
                 mNavStep = SearchNavStep.ARTIST_SELECTED;
                 break;
             case VIEW_ALL_ARTISTS:
+                Log.d(TAG, "Returning to base from view all artists");
                 mNavStep = SearchNavStep.BASE;
+
+                mResultsList.setVisibility(View.GONE);
+                ButterKnife.apply(mBaseDisplayViews, DisplayUtils.VISIBLE);
+                setTitle(getString(R.string.search_activity_name));
                 break;
             case VIEW_ALL_ARTIST_SELECTED:
                 mNavStep = SearchNavStep.VIEW_ALL_ARTISTS;
@@ -673,7 +681,7 @@ public class SearchActivity extends AppCompatActivity implements SearchTrackList
                 mNavStep = SearchNavStep.VIEW_ALL_ALBUMS;
 
                 ButterKnife.apply(mAlbumDisplayViews, DisplayUtils.GONE);
-                setupRecyclerViewForAlbums();
+                setupRecyclerViewWithGrid();
                 mResultsList.setAdapter(mAlbumCardAdapter);
                 mResultsList.setVisibility(View.VISIBLE);
                 mResultsList.scrollToPosition(mCachedPosition);
@@ -760,7 +768,7 @@ public class SearchActivity extends AppCompatActivity implements SearchTrackList
         }
 
         ButterKnife.apply(mBaseDisplayViews, DisplayUtils.GONE);
-        setupRecyclerViewForTracks();
+        setupRecyclerViewWithList();
         mResultsList.setAdapter(mAlbumSongAdapter);
         mAlbumSongAdapter.updateAdapter(albumToDisplay.tracks.items);
         ButterKnife.apply(mAlbumDisplayViews, DisplayUtils.VISIBLE);
@@ -776,13 +784,21 @@ public class SearchActivity extends AppCompatActivity implements SearchTrackList
                 mNavStep = SearchNavStep.VIEW_ALL_SONGS;
                 setTitle(getString(R.string.songs));
                 ButterKnife.apply(mBaseDisplayViews, DisplayUtils.GONE);
-                setupRecyclerViewForTracks();
+                setupRecyclerViewWithList();
                 mResultsList.setAdapter(mSongResultsAdapter);
                 mSongResultsAdapter.updateAdapter(mResultTrackList);
                 mResultsList.setVisibility(View.VISIBLE);
                 break;
             case R.id.tv_see_all_artists:
                 Log.d(TAG, "User wants to see all artists");
+
+                mNavStep = SearchNavStep.VIEW_ALL_ARTISTS;
+                setTitle(getString(R.string.artists));
+                ButterKnife.apply(mBaseDisplayViews, DisplayUtils.GONE);
+                setupRecyclerViewWithGrid();
+                mResultsList.setAdapter(mArtistCardAdapter);
+                mArtistCardAdapter.updateAdapter(mResultArtistList);
+                mResultsList.setVisibility(View.VISIBLE);
                 break;
             case R.id.tv_see_all_albums:
                 Log.d(TAG, "User wants to see all albums");
@@ -790,7 +806,7 @@ public class SearchActivity extends AppCompatActivity implements SearchTrackList
                 mNavStep = SearchNavStep.VIEW_ALL_ALBUMS;
                 setTitle(getString(R.string.albums));
                 ButterKnife.apply(mBaseDisplayViews, DisplayUtils.GONE);
-                setupRecyclerViewForAlbums();
+                setupRecyclerViewWithGrid();
                 mResultsList.setAdapter(mAlbumCardAdapter);
                 mAlbumCardAdapter.updateAdapter(mResultAlbumList);
                 mResultsList.setVisibility(View.VISIBLE);
@@ -798,14 +814,14 @@ public class SearchActivity extends AppCompatActivity implements SearchTrackList
         }
     }
 
-    private void setupRecyclerViewForTracks() {
+    private void setupRecyclerViewWithList() {
         // Add recycler view item decoration and layout manager
         LinearLayoutManager layoutManager = new LinearLayoutManager(this, RecyclerView.VERTICAL, false);
         mResultsList.setLayoutManager(layoutManager);
         mResultsList.addItemDecoration(mListDecoration);
     }
 
-    private void setupRecyclerViewForAlbums() {
+    private void setupRecyclerViewWithGrid() {
         // Add recylerview grid layout manager and remove decoration
         GridLayoutManager layoutManager = new GridLayoutManager(this, 2);
         mResultsList.removeItemDecoration(mListDecoration);
