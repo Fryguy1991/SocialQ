@@ -52,6 +52,7 @@
     <string name="see_all_songs">See All Songs</string>
     <string name="see_all_artists">See All Artists</string>
     <string name="see_all_albums">See All Albums</string>
+    <string name="album_track_with_position_number">%1$s. %2$s</string>
 
     <!-- Start Screen Strings -->
     <string name="login">Log In</string>

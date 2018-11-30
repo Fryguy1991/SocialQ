@@ -6,7 +6,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.chrisfry.socialq.R
 
 open class SimpleTextHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-    private val textView = itemView.findViewById<TextView>(R.id.tv_holder_text)
+    protected val textView = itemView.findViewById<TextView>(R.id.tv_holder_text)
 
     fun setText(displayText: String) {
         textView.text = displayText

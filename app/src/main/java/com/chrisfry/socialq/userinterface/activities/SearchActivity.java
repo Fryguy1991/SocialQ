@@ -244,7 +244,7 @@ public class SearchActivity extends AppCompatActivity implements SearchTrackList
     };
 
     // Full album search callback object
-    // TODO: this makes searching for albums really slow. Should attempt to modify underlying spotify service coce
+    // TODO: this makes searching for albums really slow. Should attempt to modify underlying spotify service code
     // in order to pull full albums instead of simple ones (so artist data is included)
     private SpotifyCallback<Albums> mFullAlbumsCallback = new SpotifyCallback<Albums>() {
         @Override
@@ -423,6 +423,7 @@ public class SearchActivity extends AppCompatActivity implements SearchTrackList
         mSongResultsAdapter = new SearchTrackAdapter();
         mSongResultsAdapter.setListener(this);
         mAlbumSongAdapter = new SearchAlbumTrackAdapter();
+        mAlbumSongAdapter.setListener(this);
     }
 
     private void searchByText(String searchText) {
