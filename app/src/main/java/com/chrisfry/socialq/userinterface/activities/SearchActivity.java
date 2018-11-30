@@ -42,7 +42,8 @@ import butterknife.ButterKnife;
 import kaaes.spotify.webapi.android.SpotifyCallback;
 import kaaes.spotify.webapi.android.SpotifyError;
 import kaaes.spotify.webapi.android.SpotifyService;
-import kaaes.spotify.webapi.android.models.AlbumSimple;
+import kaaes.spotify.webapi.android.models.Album;
+import kaaes.spotify.webapi.android.models.Albums;
 import kaaes.spotify.webapi.android.models.AlbumsPager;
 import kaaes.spotify.webapi.android.models.Artist;
 import kaaes.spotify.webapi.android.models.ArtistsPager;
@@ -109,7 +110,7 @@ public class SearchActivity extends AppCompatActivity implements SearchTrackList
     // Search result containers
     private List<Track> mResultTrackList = new ArrayList<>();
     private List<Artist> mResultArtistList = new ArrayList<>();
-    private List<AlbumSimple> mResultAlbumList = new ArrayList<>();
+    private List<Album> mResultAlbumList = new ArrayList<>();
 
     // Recycler view adapters
     private SearchTrackAdapter mSongResultsAdapter;
@@ -208,12 +209,44 @@ public class SearchActivity extends AppCompatActivity implements SearchTrackList
             if (doSearchTermsMatch(response, AppConstants.URL_FULL_ALBUM_SEARCH)) {
                 Log.d(TAG, "Album search terms match");
                 mAlbumSearchComplete = true;
-                mResultAlbumList = albumsPager.albums.items;
-                if (!checkIfNoResults()) {
-                    showAlbumResults();
+
+                // Only retrieve full albums if we know more than 1 exists
+                if (albumsPager.albums.items.size() > 0) {
+                    String albumSearchString = "";
+                    for (int i = 0; i < 20 && i < albumsPager.albums.items.size(); i++) {
+                        albumSearchString = albumSearchString.concat(albumsPager.albums.items.get(i).id);
+
+                        if (i != 19 && i < albumsPager.albums.items.size() - 1) {
+                            albumSearchString = albumSearchString.concat(",");
+                        }
+                    }
+
+                    mSpotifyService.getAlbums(albumSearchString, mFullAlbumsCallback);
+                } else {
+                    if (!checkIfNoResults()) {
+                        showAlbumResults();
+                    }
                 }
             } else {
                 Log.d(TAG, "Album search terms DON'T match");
+            }
+        }
+    };
+
+    // Full album search callback object
+    // TODO: this makes searching for albums really slow. Should attempt to modify underlying spotify service coce
+    // in order to pull full albums instead of simple ones (so artist data is included)
+    private SpotifyCallback<Albums> mFullAlbumsCallback = new SpotifyCallback<Albums>() {
+        @Override
+        public void failure(SpotifyError spotifyError) {
+            Log.e(TAG, "Error retrieveing full albums: " + spotifyError.getErrorDetails());
+        }
+
+        @Override
+        public void success(Albums albums, Response response) {
+            mResultAlbumList = albums.albums;
+            if (!checkIfNoResults()) {
+                showAlbumResults();
             }
         }
     };
@@ -505,10 +538,10 @@ public class SearchActivity extends AppCompatActivity implements SearchTrackList
                 // Load album information
                 TrackAlbumView albumView = mAlbumItemViews.get(i);
                 if (mResultAlbumList.size() > i) {
-                    AlbumSimple albumToShow = mResultAlbumList.get(i);
+                    Album albumToShow = mResultAlbumList.get(i);
 
                     albumView.setName(albumToShow.name);
-//                albumView.setArtistName(albumToShow);
+                    albumView.setArtistName(DisplayUtils.getAlbumArtistString(albumToShow));
                     if (albumToShow.images.size() > 0) {
                         albumView.setArtistImage(albumToShow.images.get(0).url);
                     }

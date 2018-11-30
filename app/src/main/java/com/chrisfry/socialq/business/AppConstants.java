@@ -38,7 +38,7 @@ public class AppConstants {
     public static final String CLIENT_USER_ID_MESSAGE = "#CLIENT_USER_ID#";
     public static final String SONG_REQUEST_MESSAGE_FORMAT = SONG_REQUEST_MESSAGE + "%1$s" + CLIENT_USER_ID_MESSAGE + "%2$s";
 
-    // Spotify search limit
+    // Spotify search limits
     public static final int SPOTIFY_SEARCH_LIMIT = 50;
 
     // Regular expressions
