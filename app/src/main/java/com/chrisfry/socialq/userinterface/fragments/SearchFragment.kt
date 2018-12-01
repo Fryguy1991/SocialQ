@@ -23,8 +23,8 @@ import com.chrisfry.socialq.business.dagger.modules.SpotifyModule
 import com.chrisfry.socialq.business.dagger.modules.components.DaggerSpotifyComponent
 import com.chrisfry.socialq.model.AccessModel
 import com.chrisfry.socialq.userinterface.adapters.SearchTrackListAdapter
-import com.chrisfry.socialq.userinterface.widgets.QueueItemDecoration
-import com.chrisfry.socialq.userinterface.widgets.SearchArtistView
+import com.chrisfry.socialq.userinterface.views.QueueItemDecoration
+import com.chrisfry.socialq.userinterface.views.SearchArtistView
 import com.chrisfry.socialq.utils.ApplicationUtils
 import com.chrisfry.socialq.utils.DisplayUtils
 import kaaes.spotify.webapi.android.SpotifyService

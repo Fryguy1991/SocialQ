@@ -15,7 +15,7 @@ import com.chrisfry.socialq.model.ClientRequestData
 import com.chrisfry.socialq.model.SongRequestData
 import com.chrisfry.socialq.services.PlayQueueService
 import com.chrisfry.socialq.userinterface.adapters.HostTrackListAdapter
-import com.chrisfry.socialq.userinterface.widgets.QueueItemDecoration
+import com.chrisfry.socialq.userinterface.views.QueueItemDecoration
 import com.chrisfry.socialq.utils.ApplicationUtils
 import com.spotify.sdk.android.player.ConnectionStateCallback
 import com.spotify.sdk.android.player.Error

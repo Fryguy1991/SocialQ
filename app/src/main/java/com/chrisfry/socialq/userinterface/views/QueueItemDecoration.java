@@ -1,4 +1,4 @@
-package com.chrisfry.socialq.userinterface.widgets;
+package com.chrisfry.socialq.userinterface.views;
 
 import android.content.Context;
 import android.graphics.Canvas;

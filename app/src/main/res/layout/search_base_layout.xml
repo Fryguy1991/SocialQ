@@ -51,7 +51,7 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
-            <com.chrisfry.socialq.userinterface.widgets.TrackAlbumView
+            <com.chrisfry.socialq.userinterface.views.TrackAlbumView
                 android:id="@+id/cv_track_1"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
@@ -60,7 +60,7 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/tv_song_heading"/>
 
-            <com.chrisfry.socialq.userinterface.widgets.TrackAlbumView
+            <com.chrisfry.socialq.userinterface.views.TrackAlbumView
                 android:id="@+id/cv_track_2"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
@@ -68,7 +68,7 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/cv_track_1" />
 
-            <com.chrisfry.socialq.userinterface.widgets.TrackAlbumView
+            <com.chrisfry.socialq.userinterface.views.TrackAlbumView
                 android:id="@+id/cv_track_3"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
@@ -112,7 +112,7 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/tv_see_all_songs" />
 
-            <com.chrisfry.socialq.userinterface.widgets.ArtistView
+            <com.chrisfry.socialq.userinterface.views.ArtistView
                 android:id="@+id/cv_artist_1"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
@@ -120,7 +120,7 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/tv_artist_heading" />
 
-            <com.chrisfry.socialq.userinterface.widgets.ArtistView
+            <com.chrisfry.socialq.userinterface.views.ArtistView
                 android:id="@+id/cv_artist_2"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
@@ -128,7 +128,7 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/cv_artist_1" />
 
-            <com.chrisfry.socialq.userinterface.widgets.ArtistView
+            <com.chrisfry.socialq.userinterface.views.ArtistView
                 android:id="@+id/cv_artist_3"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
@@ -172,7 +172,7 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/tv_see_all_artists" />
 
-            <com.chrisfry.socialq.userinterface.widgets.TrackAlbumView
+            <com.chrisfry.socialq.userinterface.views.TrackAlbumView
                 android:id="@+id/cv_album_1"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
@@ -180,7 +180,7 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/tv_album_heading" />
 
-            <com.chrisfry.socialq.userinterface.widgets.TrackAlbumView
+            <com.chrisfry.socialq.userinterface.views.TrackAlbumView
                 android:id="@+id/cv_album_2"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
@@ -188,7 +188,7 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/cv_album_1" />
 
-            <com.chrisfry.socialq.userinterface.widgets.TrackAlbumView
+            <com.chrisfry.socialq.userinterface.views.TrackAlbumView
                 android:id="@+id/cv_album_3"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"

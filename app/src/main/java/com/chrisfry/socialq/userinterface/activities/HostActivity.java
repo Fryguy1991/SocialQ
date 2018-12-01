@@ -66,7 +66,7 @@ import kaaes.spotify.webapi.android.models.UserPrivate;
 import kaaes.spotify.webapi.android.models.UserPublic;
 
 import com.chrisfry.socialq.services.PlayQueueService;
-import com.chrisfry.socialq.userinterface.widgets.QueueItemDecoration;
+import com.chrisfry.socialq.userinterface.views.QueueItemDecoration;
 
 public abstract class HostActivity extends AppCompatActivity implements ConnectionStateCallback,
         PlayQueueService.PlayQueueServiceListener, IItemSelectionListener<String> {

@@ -9,7 +9,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
-        <com.chrisfry.socialq.userinterface.widgets.SquareImageView
+        <com.chrisfry.socialq.userinterface.views.SquareImageView
             android:id="@+id/iv_album_image"
             android:layout_width="0dp"
             android:layout_height="wrap_content"

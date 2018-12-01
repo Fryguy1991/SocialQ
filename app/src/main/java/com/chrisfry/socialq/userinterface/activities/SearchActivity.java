@@ -64,9 +64,9 @@ import com.chrisfry.socialq.userinterface.adapters.SearchTrackListAdapter;
 import com.chrisfry.socialq.userinterface.adapters.AlbumCardAdapter;
 import com.chrisfry.socialq.userinterface.interfaces.ISpotifySelectionListener;
 import com.chrisfry.socialq.userinterface.interfaces.ISpotifySelectionPositionListener;
-import com.chrisfry.socialq.userinterface.widgets.ArtistView;
-import com.chrisfry.socialq.userinterface.widgets.QueueItemDecoration;
-import com.chrisfry.socialq.userinterface.widgets.TrackAlbumView;
+import com.chrisfry.socialq.userinterface.views.ArtistView;
+import com.chrisfry.socialq.userinterface.views.QueueItemDecoration;
+import com.chrisfry.socialq.userinterface.views.TrackAlbumView;
 import com.chrisfry.socialq.utils.DisplayUtils;
 
 import org.jetbrains.annotations.NotNull;
@@ -628,6 +628,7 @@ public class SearchActivity extends AppCompatActivity implements SearchTrackList
         // TODO: Implement full nav
         switch (mNavStep) {
             case BASE:
+                Log.d(TAG, "Close search");
                 super.onBackPressed();
                 break;
             case VIEW_ALL_SONGS:
@@ -747,7 +748,7 @@ public class SearchActivity extends AppCompatActivity implements SearchTrackList
         }
 
         if (albumToDisplay == null) {
-            Log.d(TAG, "Something went wrong. Lost album information");
+            Log.e(TAG, "Something went wrong. Lost album information");
             return;
         }
 
