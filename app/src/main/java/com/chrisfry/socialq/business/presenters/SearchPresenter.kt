@@ -2,12 +2,8 @@ package com.chrisfry.socialq.business.presenters
 
 import android.util.Log
 import com.chrisfry.socialq.business.AppConstants
-import com.chrisfry.socialq.business.dagger.modules.SpotifyModule
-import com.chrisfry.socialq.business.dagger.modules.components.DaggerSpotifyComponent
-import com.chrisfry.socialq.enums.SearchNavStep
 import com.chrisfry.socialq.enums.SearchNavStep.*
 import com.chrisfry.socialq.userinterface.interfaces.ISearchView
-import kaaes.spotify.webapi.android.SpotifyApi
 import kaaes.spotify.webapi.android.SpotifyCallback
 import kaaes.spotify.webapi.android.SpotifyError
 import kaaes.spotify.webapi.android.SpotifyService
@@ -38,6 +34,15 @@ class SearchPresenter : SpotifyAccessPresenter(), ISearchPresenter {
     private var artistSearchComplete = false
     private var albumSearchComplete = false
 
+    override fun getView(): ISearchView? {
+        if (presenterView is ISearchView) {
+            return presenterView as ISearchView
+        } else {
+            Log.e(TAG, "Error, we have the wrong view type")
+            return null
+        }
+    }
+
     override fun searchByText(searchTerm: String) {
         Log.d(TAG, "Searching for: $searchTerm")
 
@@ -50,7 +55,7 @@ class SearchPresenter : SpotifyAccessPresenter(), ISearchPresenter {
 
         if (searchTerm.isEmpty()) {
             clearSearchResults()
-            view!!.showEmptyBaseView()
+            getView()!!.showEmptyBaseView()
         } else {
             // Create options to set limit for search results to 50 items
             val options = HashMap<String, Any>()
@@ -67,19 +72,19 @@ class SearchPresenter : SpotifyAccessPresenter(), ISearchPresenter {
             BASE -> {
                 Log.d(TAG, "Close search view")
 
-                view!!.closeSearchView()
+                getView()!!.closeSearchView()
             }
             VIEW_ALL_SONGS -> {
                 Log.d(TAG, "Returning to base view from view all songs")
                 navStep = BASE
 
-                view!!.showBaseResultsView()
+                getView()!!.showBaseResultsView()
             }
             ARTIST_SELECTED -> {
                 Log.d(TAG, "Returning to base view from artist")
                 navStep = BASE
 
-                view!!.showBaseResultsView()
+                getView()!!.showBaseResultsView()
             }
             ARTIST_ALBUM_SELECTED -> {
                 Log.d(TAG, "Returning to artist from album")
@@ -91,13 +96,13 @@ class SearchPresenter : SpotifyAccessPresenter(), ISearchPresenter {
                 Log.d(TAG, "Returning to base view from view all artists")
                 navStep = BASE
 
-                view!!.showBaseResultsView()
+                getView()!!.showBaseResultsView()
             }
             VIEW_ALL_ARTIST_SELECTED -> {
                 Log.d(TAG, "Returning to view all artists")
                 navStep = VIEW_ALL_ARTISTS
 
-                view!!.showAllArtists(baseArtistResults, cachedPosition)
+                getView()!!.showAllArtists(baseArtistResults, cachedPosition)
                 cachedPosition = 0;
             }
             VIEW_ALL_ARTIST_ALBUM_SELECTED -> {
@@ -108,19 +113,19 @@ class SearchPresenter : SpotifyAccessPresenter(), ISearchPresenter {
                 Log.d(TAG, "Returning to base view from album")
                 navStep = BASE
 
-                view!!.showBaseResultsView()
+                getView()!!.showBaseResultsView()
             }
             VIEW_ALL_ALBUMS -> {
                 Log.d(TAG, "Returning to base view from all albums")
                 navStep = BASE
 
-                view!!.showBaseResultsView()
+                getView()!!.showBaseResultsView()
             }
             VIEW_ALL_ALBUM_SELECTED -> {
                 Log.d(TAG, "Returning to view all albums")
                 navStep = VIEW_ALL_ALBUMS
 
-                view!!.showAllAlbums(baseAlbumResults, cachedPosition)
+                getView()!!.showAllAlbums(baseAlbumResults, cachedPosition)
                 cachedPosition = 0
             }
         }
@@ -142,18 +147,21 @@ class SearchPresenter : SpotifyAccessPresenter(), ISearchPresenter {
     }
 
     override fun viewAllSongsRequest() {
-        view!!.showAllSongs(baseSongResults)
+        navStep = VIEW_ALL_SONGS
+        getView()!!.showAllSongs(baseSongResults)
     }
 
     override fun viewAllArtistsRequest() {
-        view!!.showAllArtists(baseArtistResults, 0)
+        navStep = VIEW_ALL_ARTISTS
+        getView()!!.showAllArtists(baseArtistResults, 0)
     }
 
     override fun viewAllAlbumsRequest() {
-        view!!.showAllAlbums(baseAlbumResults, 0)
+        navStep = VIEW_ALL_ALBUMS
+        getView()!!.showAllAlbums(baseAlbumResults, 0)
     }
 
-    private val songsCallback = object: SpotifyCallback<TracksPager>() {
+    private val songsCallback = object : SpotifyCallback<TracksPager>() {
         override fun success(tracksPager: TracksPager?, response: Response?) {
             if (tracksPager != null && response != null) {
                 if (doSearchTermsMatch(response, AppConstants.URL_FULL_TRACK_SEARCH)) {
@@ -163,8 +171,7 @@ class SearchPresenter : SpotifyAccessPresenter(), ISearchPresenter {
                     baseSongResults = tracksPager.tracks.items
 
                     if (!checkIfNoResults()) {
-                        view!!.showBaseSongResults(baseSongResults)
-                        view!!.showBaseResultsView()
+                        getView()!!.showBaseSongResults(baseSongResults)
                     }
                 }
             }
@@ -177,7 +184,7 @@ class SearchPresenter : SpotifyAccessPresenter(), ISearchPresenter {
         }
     }
 
-    private val artistsCallback = object: SpotifyCallback<ArtistsPager>() {
+    private val artistsCallback = object : SpotifyCallback<ArtistsPager>() {
         override fun success(artistsPager: ArtistsPager?, response: Response?) {
             if (artistsPager != null && response != null) {
                 if (doSearchTermsMatch(response, AppConstants.URL_FULL_ARTIST_SEARCH)) {
@@ -187,8 +194,7 @@ class SearchPresenter : SpotifyAccessPresenter(), ISearchPresenter {
                     baseArtistResults = artistsPager.artists.items
 
                     if (!checkIfNoResults()) {
-                        view!!.showBaseArtistResults(baseArtistResults)
-                        view!!.showBaseResultsView()
+                        getView()!!.showBaseArtistResults(baseArtistResults)
                     }
                 }
             }
@@ -201,14 +207,13 @@ class SearchPresenter : SpotifyAccessPresenter(), ISearchPresenter {
         }
     }
 
-
-    private val albumsCallback = object: SpotifyCallback<AlbumsPager>() {
+    private val albumsCallback = object : SpotifyCallback<AlbumsPager>() {
         override fun success(albumsPager: AlbumsPager?, response: Response?) {
             if (albumsPager != null && response != null) {
                 if (doSearchTermsMatch(response, AppConstants.URL_FULL_ALBUM_SEARCH)) {
                     Log.d(TAG, "Album search terms match")
 
-                    artistSearchComplete = true
+                    albumSearchComplete = true
 
                     if (albumsPager.albums.items.size > 0) {
                         var albumSearchString = ""
@@ -220,6 +225,7 @@ class SearchPresenter : SpotifyAccessPresenter(), ISearchPresenter {
                             if (i != 19 && i < albumsPager.albums.items.size - 1) {
                                 albumSearchString += ","
                             }
+                            i++
                         }
 
                         spotifyService.getAlbums(albumSearchString, fullAlbumsCallback)
@@ -227,8 +233,7 @@ class SearchPresenter : SpotifyAccessPresenter(), ISearchPresenter {
                     } else {
                         baseAlbumResults.clear()
                         if (!checkIfNoResults()) {
-                            view!!.showBaseAlbumResults(baseAlbumResults)
-                            view!!.showBaseResultsView()
+                            getView()!!.showBaseAlbumResults(baseAlbumResults)
                         }
                     }
                 }
@@ -244,20 +249,20 @@ class SearchPresenter : SpotifyAccessPresenter(), ISearchPresenter {
 
     private val fullAlbumsCallback = object : SpotifyCallback<Albums>() {
         override fun success(albums: Albums?, response: Response?) {
-            if (albums != null && response != null) {
+            if (albums != null) {
                 Log.d(TAG, "Successfully retrieved full albums")
 
                 baseAlbumResults = albums.albums
+
                 if (!checkIfNoResults()) {
-                    view!!.showBaseAlbumResults(baseAlbumResults)
-                    view!!.showBaseResultsView()
+                    getView()!!.showBaseAlbumResults(baseAlbumResults)
                 }
             }
         }
 
         override fun failure(spotifyError: SpotifyError?) {
             if (spotifyError != null) {
-            Log.e(TAG, "Error retrieveing full albums: " + spotifyError.errorDetails)
+                Log.e(TAG, "Error retrieveing full albums: " + spotifyError.errorDetails)
             }
         }
     }
@@ -281,10 +286,10 @@ class SearchPresenter : SpotifyAccessPresenter(), ISearchPresenter {
         return false
     }
 
-    private fun checkIfNoResults() : Boolean {
+    private fun checkIfNoResults(): Boolean {
         if (songSearchComplete && artistSearchComplete && albumSearchComplete) {
             if (baseSongResults.isEmpty() && baseArtistResults.isEmpty() && baseAlbumResults.isEmpty()) {
-                view!!.showNoResultsView()
+                getView()!!.showNoResultsView(cachedSearchTerm)
                 return true
             }
         }
@@ -301,7 +306,7 @@ class SearchPresenter : SpotifyAccessPresenter(), ISearchPresenter {
             VIEW_ALL_ARTIST_ALBUM_SELECTED,
             ALBUM_SELECTED,
             VIEW_ALL_ALBUM_SELECTED -> {
-                view!!.sendTrackToHost(uri)
+                getView()!!.sendTrackToHost(uri)
             }
             VIEW_ALL_ARTISTS,
             VIEW_ALL_ALBUMS -> {
@@ -330,15 +335,17 @@ class SearchPresenter : SpotifyAccessPresenter(), ISearchPresenter {
             BASE -> {
                 for (album in baseAlbumResults) {
                     if (uri == album.uri) {
-                        view!!.showAlbum(album)
+                        navStep = ALBUM_SELECTED
+                        getView()!!.showAlbum(album)
                     }
                 }
                 Log.e(TAG, "Something went wrong. Lost album information")
             }
             VIEW_ALL_ALBUMS -> {
-                if (position > 0 && position < baseAlbumResults.size) {
+                if (position >= 0 && position < baseAlbumResults.size) {
+                    navStep = VIEW_ALL_ALBUM_SELECTED
                     cachedPosition = position
-                    view!!.showAlbum(baseAlbumResults[position])
+                    getView()!!.showAlbum(baseAlbumResults[position])
                 }
                 Log.e(TAG, "Invalid album index")
             }

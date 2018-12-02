@@ -14,7 +14,7 @@ interface ISearchView : ISpotifyAccessView{
 
     fun showBaseAlbumResults(albumList: List<Album>)
 
-    fun showNoResultsView()
+    fun showNoResultsView(searchTerm: String)
 
     fun showEmptyBaseView()
 

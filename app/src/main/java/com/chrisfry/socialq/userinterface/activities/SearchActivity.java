@@ -21,20 +21,12 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import com.bumptech.glide.Glide;
 import com.chrisfry.socialq.business.AppConstants;
-import com.chrisfry.socialq.business.dagger.modules.SpotifyModule;
-import com.chrisfry.socialq.business.dagger.modules.components.DaggerSpotifyComponent;
-import com.chrisfry.socialq.business.dagger.modules.components.SpotifyComponent;
 import com.chrisfry.socialq.R;
 
 import androidx.recyclerview.widget.GridLayoutManager;
@@ -42,26 +34,18 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import butterknife.BindViews;
 import butterknife.ButterKnife;
-import kaaes.spotify.webapi.android.SpotifyCallback;
-import kaaes.spotify.webapi.android.SpotifyError;
-import kaaes.spotify.webapi.android.SpotifyService;
 import kaaes.spotify.webapi.android.models.Album;
-import kaaes.spotify.webapi.android.models.Albums;
-import kaaes.spotify.webapi.android.models.AlbumsPager;
 import kaaes.spotify.webapi.android.models.Artist;
-import kaaes.spotify.webapi.android.models.ArtistsPager;
 import kaaes.spotify.webapi.android.models.Track;
-import kaaes.spotify.webapi.android.models.TrackSimple;
-import kaaes.spotify.webapi.android.models.TracksPager;
-import retrofit.client.Response;
 
-import com.chrisfry.socialq.enums.SearchNavStep;
+import com.chrisfry.socialq.business.presenters.ISearchPresenter;
+import com.chrisfry.socialq.business.presenters.SearchPresenter;
 import com.chrisfry.socialq.model.AccessModel;
 import com.chrisfry.socialq.userinterface.adapters.ArtistCardAdapter;
 import com.chrisfry.socialq.userinterface.adapters.SearchAlbumTrackAdapter;
 import com.chrisfry.socialq.userinterface.adapters.SearchTrackAdapter;
-import com.chrisfry.socialq.userinterface.adapters.SearchTrackListAdapter;
 import com.chrisfry.socialq.userinterface.adapters.AlbumCardAdapter;
+import com.chrisfry.socialq.userinterface.interfaces.ISearchView;
 import com.chrisfry.socialq.userinterface.interfaces.ISpotifySelectionListener;
 import com.chrisfry.socialq.userinterface.interfaces.ISpotifySelectionPositionListener;
 import com.chrisfry.socialq.userinterface.views.ArtistView;
@@ -74,11 +58,12 @@ import org.jetbrains.annotations.NotNull;
 /**
  * Activity for searching Spotify tracks
  */
-public class SearchActivity extends AppCompatActivity implements SearchTrackListAdapter.TrackSelectionListener, ISpotifySelectionListener, ISpotifySelectionPositionListener, View.OnClickListener {
+public class SearchActivity extends AppCompatActivity implements ISearchView, ISpotifySelectionListener,
+        ISpotifySelectionPositionListener, View.OnClickListener {
     private final String TAG = SearchActivity.class.getName();
 
-    // Spotify search references
-    private SpotifyService mSpotifyService;
+    // Reference to search presenter
+    private ISearchPresenter presenter = new SearchPresenter();
 
     // UI references
     private ConstraintLayout mMainLayout;
@@ -119,14 +104,6 @@ public class SearchActivity extends AppCompatActivity implements SearchTrackList
     @BindViews({R.id.cv_album_1, R.id.cv_album_2, R.id.cv_album_3})
     List<TrackAlbumView> mAlbumItemViews;
 
-    private SearchNavStep mNavStep = SearchNavStep.BASE;
-    private int mCachedPosition = 0;
-
-    // Search result containers
-    private List<Track> mResultTrackList = new ArrayList<>();
-    private List<Artist> mResultArtistList = new ArrayList<>();
-    private List<Album> mResultAlbumList = new ArrayList<>();
-
     // Recycler view adapters
     private SearchTrackAdapter mSongResultsAdapter;
     private SearchAlbumTrackAdapter mAlbumSongAdapter;
@@ -137,19 +114,12 @@ public class SearchActivity extends AppCompatActivity implements SearchTrackList
     // Timer to start searches when edittext is modified
     private Timer mSearchTimer = null;
 
-    // Flags for detecting if search is complete
-    private boolean mSongSearchComplete = false;
-    private boolean mArtistSearchComplete = false;
-    private boolean mAlbumSearchComplete = false;
-
-    private String mCachedSearchTerm = "";
-
     private Handler mHandler = new Handler(Looper.getMainLooper()) {
         @Override
         public void handleMessage(Message msg) {
             switch (msg.what) {
                 case AppConstants.HANDLER_SEARCH_BY_TEXT:
-                    searchByText(mSearchText.getText().toString());
+                    presenter.searchByText(mSearchText.getText().toString());
                     break;
             }
         }
@@ -159,127 +129,6 @@ public class SearchActivity extends AppCompatActivity implements SearchTrackList
         Message message = mHandler.obtainMessage();
         message.what = msgWhat;
         message.sendToTarget();
-    }
-
-    // Song search callback object
-    private SpotifyCallback<TracksPager> mSongsCallback = new SpotifyCallback<TracksPager>() {
-        @Override
-        public void failure(SpotifyError spotifyError) {
-            Log.e(TAG, "Error searching for tracks: " + spotifyError.getErrorDetails());
-        }
-
-        @Override
-        public void success(TracksPager tracksPager, Response response) {
-            Log.d(TAG, "Successfully searched for tracks");
-
-            if (doSearchTermsMatch(response, AppConstants.URL_FULL_TRACK_SEARCH)) {
-                Log.d(TAG, "Track search terms match");
-
-                mSongSearchComplete = true;
-                mResultTrackList = tracksPager.tracks.items;
-                if (!checkIfNoResults()) {
-                    showSongResults();
-                }
-
-            } else {
-                Log.d(TAG, "Track search terms DON'T match");
-            }
-        }
-    };
-
-    // Artist search callback object
-    private SpotifyCallback<ArtistsPager> mArtistsCallback = new SpotifyCallback<ArtistsPager>() {
-        @Override
-        public void failure(SpotifyError spotifyError) {
-            Log.e(TAG, "Error searching for artists: " + spotifyError.getErrorDetails());
-        }
-
-        @Override
-        public void success(ArtistsPager artistsPager, Response response) {
-            Log.d(TAG, "Successfully searched for artists");
-
-            if (doSearchTermsMatch(response, AppConstants.URL_FULL_ARTIST_SEARCH)) {
-                Log.d(TAG, "Artist search terms match");
-
-                mArtistSearchComplete = true;
-                mResultArtistList = artistsPager.artists.items;
-                if (!checkIfNoResults()) {
-                    showArtistResults();
-                }
-            } else {
-                Log.d(TAG, "Artist search terms DON'T match");
-            }
-        }
-    };
-
-    // Album search callback object
-    private SpotifyCallback<AlbumsPager> mAlbumsCallback = new SpotifyCallback<AlbumsPager>() {
-        @Override
-        public void failure(SpotifyError spotifyError) {
-            Log.e(TAG, "Error searching for albums: " + spotifyError.getErrorDetails());
-        }
-
-        @Override
-        public void success(AlbumsPager albumsPager, Response response) {
-            Log.d(TAG, "Successfully searched for albums");
-
-            if (doSearchTermsMatch(response, AppConstants.URL_FULL_ALBUM_SEARCH)) {
-                Log.d(TAG, "Album search terms match");
-                mAlbumSearchComplete = true;
-
-                // Only retrieve full albums if we know more than 1 exists
-                if (albumsPager.albums.items.size() > 0) {
-                    String albumSearchString = "";
-                    for (int i = 0; i < 20 && i < albumsPager.albums.items.size(); i++) {
-                        albumSearchString = albumSearchString.concat(albumsPager.albums.items.get(i).id);
-
-                        if (i != 19 && i < albumsPager.albums.items.size() - 1) {
-                            albumSearchString = albumSearchString.concat(",");
-                        }
-                    }
-
-                    mSpotifyService.getAlbums(albumSearchString, mFullAlbumsCallback);
-                } else {
-                    if (!checkIfNoResults()) {
-                        showAlbumResults();
-                    }
-                }
-            } else {
-                Log.d(TAG, "Album search terms DON'T match");
-            }
-        }
-    };
-
-    // Full album search callback object
-    // TODO: this makes searching for albums really slow. Should attempt to modify underlying spotify service code
-    // in order to pull full albums instead of simple ones (so artist data is included)
-    private SpotifyCallback<Albums> mFullAlbumsCallback = new SpotifyCallback<Albums>() {
-        @Override
-        public void failure(SpotifyError spotifyError) {
-            Log.e(TAG, "Error retrieveing full albums: " + spotifyError.getErrorDetails());
-        }
-
-        @Override
-        public void success(Albums albums, Response response) {
-            Log.d(TAG, "Successfully retrieved full albums");
-
-            mResultAlbumList = albums.albums;
-            if (!checkIfNoResults()) {
-                showAlbumResults();
-            }
-        }
-    };
-
-    private boolean doSearchTermsMatch(Response response, String regex) {
-        Pattern pattern = Pattern.compile(regex);
-        Matcher matcher = pattern.matcher(response.getUrl());
-
-        if (matcher.find()) {
-            String searchTerm = matcher.group(1);
-            // URL search term replaces spaces with '+'
-            return searchTerm.equals(mCachedSearchTerm.replace(' ', '+'));
-        }
-        return false;
     }
 
 
@@ -298,7 +147,7 @@ public class SearchActivity extends AppCompatActivity implements SearchTrackList
             Toast.makeText(this, "Invalid Access Token", Toast.LENGTH_LONG).show();
             finish();
         } else {
-            initSpotifySearchElements(accessToken);
+            presenter.receiveNewAccessToken(accessToken);
         }
 
         // Show up nav icon
@@ -309,6 +158,7 @@ public class SearchActivity extends AppCompatActivity implements SearchTrackList
         initUi();
         addListeners();
         initAdapters();
+        presenter.attach(this);
     }
 
     @Override
@@ -317,21 +167,12 @@ public class SearchActivity extends AppCompatActivity implements SearchTrackList
 
         switch (item.getItemId()) {
             case android.R.id.home:
-                onBackPressed();
-                break;
+                presenter.backOrUpNavigation();
+                return true;
             default:
                 // Didn't handle item selected return false
                 return false;
         }
-        return true;
-    }
-
-    private void initSpotifySearchElements(String accessToken) {
-        // Setup service for searching Spotify library
-        SpotifyComponent componenet = DaggerSpotifyComponent.builder().spotifyModule(
-                new SpotifyModule(accessToken)).build();
-
-        mSpotifyService = componenet.service();
     }
 
     private void initUi() {
@@ -408,16 +249,11 @@ public class SearchActivity extends AppCompatActivity implements SearchTrackList
                     Log.d(TAG, "Cancelling search timer");
                     mSearchTimer.cancel();
                 }
-
-                mCachedSearchTerm = currentText;
             }
 
             @Override
             public void afterTextChanged(final Editable s) {
                 if (changeFlag) {
-                    mSongSearchComplete = false;
-                    mArtistSearchComplete = false;
-                    mAlbumSearchComplete = false;
                     // User typed, start timer
                     mSearchTimer = new Timer();
                     mSearchTimer.schedule(new TimerTask() {
@@ -441,36 +277,7 @@ public class SearchActivity extends AppCompatActivity implements SearchTrackList
         mArtistCardAdapter = new ArtistCardAdapter();
     }
 
-    private void searchByText(String searchText) {
-        // TODO: Searching this way is slow and not user friendly. Consider doing something to speed this up
-        Log.d(TAG, "Searching for: " + searchText);
-
-        // No search text. Clear/Hide everything
-        if (searchText.isEmpty()) {
-            clearSearchResults();
-            mResultsScrollView.setVisibility(View.GONE);
-            mNoResultsText.setVisibility(View.GONE);
-        } else {
-            // Create options to set limit for search results to 50 items
-            Map<String, Object> options = new HashMap<>();
-            options.put(SpotifyService.LIMIT, AppConstants.SPOTIFY_SEARCH_LIMIT);
-
-            // Get results from spotify
-            mSpotifyService.searchAlbums(searchText, options, mAlbumsCallback);
-            mSpotifyService.searchTracks(searchText, options, mSongsCallback);
-            mSpotifyService.searchArtists(searchText, options, mArtistsCallback);
-        }
-    }
-
-    private void showResultsView() {
-        showSongResults();
-        showArtistResults();
-        showAlbumResults();
-
-        mResultsScrollView.setVisibility(View.VISIBLE);
-        mNoResultsText.setVisibility(View.GONE);
-
-        // TODO: Below code is for programmatically adding result views. Consider removing if we won't use
+    // TODO: Below code is for programmatically adding result views. Consider removing if we won't use
 //        ConstraintSet constraints = new ConstraintSet();
 //        for (int i = 0; i < 3; i++) {
 //            if (mResultTrackList.size() > i) {
@@ -500,15 +307,73 @@ public class SearchActivity extends AppCompatActivity implements SearchTrackList
 //        constraints.clone(mBaseResultLayout);
 //        constraints.connect(mViewAllSongs.getId(), ConstraintSet.TOP, mBaseResultLayout.getChildAt(mBaseResultLayout.indexOfChild(mViewAllSongs) - 1).getId(), ConstraintSet.BOTTOM, 0);
 //        constraints.applyTo(mBaseResultLayout);
+
+    @Override
+    public void onBackPressed() {
+        presenter.backOrUpNavigation();
     }
 
-    private void showSongResults() {
-        if (mResultTrackList.size() > 0) {
+    @Override
+    public void onSelection(@NotNull String uri) {
+        presenter.itemSelected(uri);
+    }
+
+    @Override
+    public void onSelection(@NotNull String uri, int position) {
+        presenter.itemSelected(uri, position);
+    }
+
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()) {
+            case R.id.tv_see_all_songs:
+                Log.d(TAG, "User wants to see all songs");
+
+                presenter.viewAllSongsRequest();
+                break;
+            case R.id.tv_see_all_artists:
+                Log.d(TAG, "User wants to see all artists");
+
+                presenter.viewAllArtistsRequest();
+                break;
+            case R.id.tv_see_all_albums:
+                Log.d(TAG, "User wants to see all albums");
+
+                presenter.viewAllAlbumsRequest();
+                break;
+        }
+    }
+
+    private void setupRecyclerViewWithList() {
+        // Add recycler view item decoration and layout manager
+        mResultsList.removeItemDecoration(mListDecoration);
+        LinearLayoutManager layoutManager = new LinearLayoutManager(this, RecyclerView.VERTICAL, false);
+        mResultsList.setLayoutManager(layoutManager);
+        mResultsList.addItemDecoration(mListDecoration);
+    }
+
+    private void setupRecyclerViewWithGrid() {
+        // Add recylerview grid layout manager and remove decoration
+        GridLayoutManager layoutManager = new GridLayoutManager(this, 2);
+        mResultsList.removeItemDecoration(mListDecoration);
+        mResultsList.setLayoutManager(layoutManager);
+    }
+
+    @Override
+    public void showBaseResultsView() {
+        ButterKnife.apply(mAlbumDisplayViews, DisplayUtils.GONE);
+        mNoResultsText.setVisibility(View.GONE);
+        ButterKnife.apply(mBaseDisplayViews, DisplayUtils.VISIBLE);
+    }
+
+    @Override
+    public void showBaseSongResults(@NotNull List<? extends Track> songList) {
+        if (songList.size() > 0) {
             for (int i = 0; i < 3; i++) {
                 // Load song information
                 TrackAlbumView trackView = mSongItemViews.get(i);
-                if (mResultTrackList.size() > i) {
-                    Track trackToShow = mResultTrackList.get(i);
+                if (songList.size() > i) {
+                    Track trackToShow = songList.get(i);
 
                     trackView.setName(trackToShow.name);
                     trackView.setArtistName(DisplayUtils.getTrackArtistString(trackToShow));
@@ -524,22 +389,23 @@ public class SearchActivity extends AppCompatActivity implements SearchTrackList
             // Reshow header
             mSongsHeader.setVisibility(View.VISIBLE);
             // If more than 3 songs show view all songs button
-            mViewAllSongs.setVisibility(mResultTrackList.size() > 3 ? View.VISIBLE : View.GONE);
+            mViewAllSongs.setVisibility(songList.size() > 3 ? View.VISIBLE : View.GONE);
 
-            ButterKnife.apply(mBaseDisplayViews, DisplayUtils.VISIBLE);
+            showBaseResultsView();
         } else {
             // If we have no results hide all song views
             ButterKnife.apply(mAllSongViews, DisplayUtils.GONE);
         }
     }
 
-    private void showArtistResults() {
-        if (mResultArtistList.size() > 0) {
+    @Override
+    public void showBaseArtistResults(@NotNull List<? extends Artist> artistList) {
+        if (artistList.size() > 0) {
             for (int i = 0; i < 3; i++) {
                 // Load artist information
                 ArtistView artistView = mArtistItemViews.get(i);
-                if (mResultArtistList.size() > i) {
-                    Artist artistToShow = mResultArtistList.get(i);
+                if (artistList.size() > i) {
+                    Artist artistToShow = artistList.get(i);
 
                     artistView.setArtistName(artistToShow.name);
                     if (artistToShow.images.size() > 0) {
@@ -554,21 +420,22 @@ public class SearchActivity extends AppCompatActivity implements SearchTrackList
             // Reshow header
             mArtistsHeader.setVisibility(View.VISIBLE);
             // If more than 3 artists show view all artists button
-            mViewAllArtists.setVisibility(mResultArtistList.size() > 3 ? View.VISIBLE : View.GONE);
+            mViewAllArtists.setVisibility(artistList.size() > 3 ? View.VISIBLE : View.GONE);
 
-            ButterKnife.apply(mBaseDisplayViews, DisplayUtils.VISIBLE);
+            showBaseResultsView();
         } else {
             ButterKnife.apply(mAllArtistViews, DisplayUtils.GONE);
         }
     }
 
-    private void showAlbumResults() {
-        if (mResultAlbumList.size() > 0) {
-            for (int i = 0; i < 3 && i < mResultAlbumList.size(); i++) {
+    @Override
+    public void showBaseAlbumResults(@NotNull List<? extends Album> albumList) {
+        if (albumList.size() > 0) {
+            for (int i = 0; i < 3 && i < albumList.size(); i++) {
                 // Load album information
                 TrackAlbumView albumView = mAlbumItemViews.get(i);
-                if (mResultAlbumList.size() > i) {
-                    Album albumToShow = mResultAlbumList.get(i);
+                if (albumList.size() > i) {
+                    Album albumToShow = albumList.get(i);
 
                     albumView.setName(albumToShow.name);
                     albumView.setArtistName(DisplayUtils.getAlbumArtistString(albumToShow));
@@ -584,248 +451,101 @@ public class SearchActivity extends AppCompatActivity implements SearchTrackList
             // Reshow header
             mAlbumsHeader.setVisibility(View.VISIBLE);
             // If more than 3 albums show view all albums button
-            mViewAllAlbums.setVisibility(mResultAlbumList.size() > 3 ? View.VISIBLE : View.GONE);
+            mViewAllAlbums.setVisibility(albumList.size() > 3 ? View.VISIBLE : View.GONE);
 
-            ButterKnife.apply(mBaseDisplayViews, DisplayUtils.VISIBLE);
+            showBaseResultsView();
         } else {
             ButterKnife.apply(mAllAlbumViews, DisplayUtils.GONE);
         }
     }
 
-    private boolean checkIfNoResults() {
-        if (mSongSearchComplete && mArtistSearchComplete && mAlbumSearchComplete) {
-            if (mResultTrackList.isEmpty() && mResultArtistList.isEmpty() && mResultAlbumList.isEmpty()) {
-                showNoResultsView(mSearchText.getText().toString());
-                return true;
-            }
-        }
-        mNoResultsText.setVisibility(View.GONE);
-        return false;
-    }
-
-    private void showNoResultsView(String searchString) {
-        mNoResultsText.setText(String.format(getString(R.string.no_results_found), searchString));
+    @Override
+    public void showNoResultsView(@NotNull String searchTerm) {
+        mNoResultsText.setText(String.format(getString(R.string.no_results_found), searchTerm));
         mResultsScrollView.setVisibility(View.GONE);
         mNoResultsText.setVisibility(View.VISIBLE);
     }
 
-    private void clearSearchResults() {
-        mResultAlbumList.clear();
-        mResultArtistList.clear();
-        mResultTrackList.clear();
+    @Override
+    public void showEmptyBaseView() {
+        mResultsScrollView.setVisibility(View.GONE);
+        mNoResultsText.setVisibility(View.GONE);
     }
 
     @Override
-    public void onTrackSelection(TrackSimple track) {
-        Intent resultIntent = new Intent();
-        resultIntent.putExtra(AppConstants.SEARCH_RESULTS_EXTRA_KEY, track.uri);
-        setResult(RESULT_OK, resultIntent);
-        finish();
+    public void showAllSongs(@NotNull List<? extends Track> songList) {
+        setTitle(getString(R.string.songs));
+        ButterKnife.apply(mBaseDisplayViews, DisplayUtils.GONE);
+        setupRecyclerViewWithList();
+        mResultsList.setAdapter(mSongResultsAdapter);
+        mSongResultsAdapter.updateAdapter(songList);
+        mResultsList.setVisibility(View.VISIBLE);
     }
 
     @Override
-    public void onBackPressed() {
-        // TODO: Implement full nav
-        switch (mNavStep) {
-            case BASE:
-                Log.d(TAG, "Close search");
-                super.onBackPressed();
-                break;
-            case VIEW_ALL_SONGS:
-                Log.d(TAG, "Returning to base view");
-                mNavStep = SearchNavStep.BASE;
-
-                mResultsList.setVisibility(View.GONE);
-                mResultsList.removeItemDecoration(mListDecoration);
-                ButterKnife.apply(mBaseDisplayViews, DisplayUtils.VISIBLE);
-                setTitle(getString(R.string.search_activity_name));
-                break;
-            case ARTIST_SELECTED:
-                mNavStep = SearchNavStep.BASE;
-                break;
-            case ARTIST_ALBUM_SELECTED:
-                mNavStep = SearchNavStep.ARTIST_SELECTED;
-                break;
-            case VIEW_ALL_ARTISTS:
-                Log.d(TAG, "Returning to base from view all artists");
-                mNavStep = SearchNavStep.BASE;
-
-                mResultsList.setVisibility(View.GONE);
-                ButterKnife.apply(mBaseDisplayViews, DisplayUtils.VISIBLE);
-                setTitle(getString(R.string.search_activity_name));
-                break;
-            case VIEW_ALL_ARTIST_SELECTED:
-                mNavStep = SearchNavStep.VIEW_ALL_ARTISTS;
-                break;
-            case VIEW_ALL_ARTIST_ALBUM_SELECTED:
-                mNavStep = SearchNavStep.VIEW_ALL_ARTIST_SELECTED;
-                break;
-            case ALBUM_SELECTED:
-                Log.d(TAG, "Returning to base from album");
-                mNavStep = SearchNavStep.BASE;
-
-                mResultsList.removeItemDecoration(mListDecoration);
-                ButterKnife.apply(mAlbumDisplayViews, DisplayUtils.GONE);
-                ButterKnife.apply(mBaseDisplayViews, DisplayUtils.VISIBLE);
-                setTitle(getString(R.string.search_activity_name));
-                break;
-            case VIEW_ALL_ALBUMS:
-                Log.d(TAG, "Returning to base from view all albums");
-                mNavStep = SearchNavStep.BASE;
-
-                mResultsList.setVisibility(View.GONE);
-                ButterKnife.apply(mBaseDisplayViews, DisplayUtils.VISIBLE);
-                setTitle(getString(R.string.search_activity_name));
-                break;
-            case VIEW_ALL_ALBUM_SELECTED:
-                Log.d(TAG, "Returning to view all albums");
-                mNavStep = SearchNavStep.VIEW_ALL_ALBUMS;
-
-                ButterKnife.apply(mAlbumDisplayViews, DisplayUtils.GONE);
-                setupRecyclerViewWithGrid();
-                mResultsList.setAdapter(mAlbumCardAdapter);
-                mResultsList.setVisibility(View.VISIBLE);
-                mResultsList.scrollToPosition(mCachedPosition);
-                mCachedPosition = 0;
-                setTitle(getString(R.string.albums));
-                break;
-
-        }
+    public void showAllArtists(@NotNull List<? extends Artist> artistList, int position) {
+        setTitle(getString(R.string.artists));
+        ButterKnife.apply(mBaseDisplayViews, DisplayUtils.GONE);
+        setupRecyclerViewWithGrid();
+        mResultsList.setAdapter(mArtistCardAdapter);
+        mArtistCardAdapter.updateAdapter(artistList);
+        mResultsList.setVisibility(View.VISIBLE);
+        mResultsList.scrollToPosition(position);
     }
 
     @Override
-    public void onSelection(@NotNull String uri) {
-        // Items from base search view will not have an index, default to -1
-        onSelection(uri, -1);
+    public void showAllAlbums(@NotNull List<? extends Album> albumList, int position) {
+        setTitle(getString(R.string.albums));
+        ButterKnife.apply(mBaseDisplayViews, DisplayUtils.GONE);
+        ButterKnife.apply(mAlbumDisplayViews, DisplayUtils.GONE);
+        setupRecyclerViewWithGrid();
+        mResultsList.setAdapter(mAlbumCardAdapter);
+        mAlbumCardAdapter.updateAdapter(albumList);
+        mResultsList.setVisibility(View.VISIBLE);
+        mResultsList.scrollToPosition(position);
     }
 
     @Override
-    public void onSelection(@NotNull String uri, int position) {
-        if (uri.startsWith(AppConstants.SPOTIFY_TRACK_PREFIX)) {
-            Log.d(TAG, "User selected track with URI: " + uri + " and position: " + position);
-
-            // If a track is selected add it to the queue
-            Intent resultIntent = new Intent();
-            resultIntent.putExtra(AppConstants.SEARCH_RESULTS_EXTRA_KEY, uri);
-            setResult(RESULT_OK, resultIntent);
-            finish();
-        } else if (uri.startsWith(AppConstants.SPOTIFY_ALBUM_PREFIX)) {
-            Log.d(TAG, "User selected album with URI: " + uri + " and position: " + position);
-            // Album to display will be different depending on where we are in navigation
-            switch (mNavStep) {
-                case BASE:
-                    displayAlbumFromAlbumList(uri);
-                    mNavStep = SearchNavStep.ALBUM_SELECTED;
-                    break;
-                case VIEW_ALL_ALBUMS:
-                    if (position >= 0) {
-                        // Cache position to scroll list back to selected item
-                        mCachedPosition = position;
-                        displayAlbumFromAlbumList(position);
-                    } else {
-                        displayAlbumFromAlbumList(uri);
-                    }
-                    mNavStep = SearchNavStep.VIEW_ALL_ALBUM_SELECTED;
-                    break;
-                case ARTIST_SELECTED:
-                    // TODO: Display album selected from artist view
-                    break;
-
-            }
-        } else if (uri.startsWith(AppConstants.SPOTIFY_ARTIST_PREFIX)) {
-            Log.d(TAG, "User selected artist with URI: " + uri + " and position: " + position);
-        } else {
-            Log.e(TAG, "Received unexpected URI: " + uri);
-        }
-    }
-
-    private void displayAlbumFromAlbumList(@NotNull String uri) {
-        Album albumToDisplay = null;
-        for (Album album : mResultAlbumList) {
-            if (uri.equals(album.uri)) {
-                albumToDisplay = album;
-            }
-        }
-
-        if (albumToDisplay == null) {
-            Log.e(TAG, "Something went wrong. Lost album information");
-            return;
-        }
-
-        displayAlbum(albumToDisplay);
-    }
-
-    private void displayAlbumFromAlbumList(int position) {
-        if (position >= 0 && position < mResultAlbumList.size()) {
-            displayAlbum(mResultAlbumList.get(position));
-        } else {
-            Log.e(TAG, "Invalid index for album");
-        }
-    }
-
-    private void displayAlbum(Album albumToDisplay) {
-        if (albumToDisplay.images.size() > 0) {
-            Glide.with(this).load(albumToDisplay.images.get(0).url).into(mArtistAlbumImage);
+    public void showAlbum(@NotNull Album album) {
+        if (album.images.size() > 0) {
+            Glide.with(this).load(album.images.get(0).url).into(mArtistAlbumImage);
         }
 
         ButterKnife.apply(mBaseDisplayViews, DisplayUtils.GONE);
         setupRecyclerViewWithList();
         mResultsList.setAdapter(mAlbumSongAdapter);
-        mAlbumSongAdapter.updateAdapter(albumToDisplay.tracks.items);
+        mAlbumSongAdapter.updateAdapter(album.tracks.items);
         ButterKnife.apply(mAlbumDisplayViews, DisplayUtils.VISIBLE);
-        setTitle(albumToDisplay.name);
+        setTitle(album.name);
     }
 
     @Override
-    public void onClick(View v) {
-        switch (v.getId()) {
-            case R.id.tv_see_all_songs:
-                Log.d(TAG, "User wants to see all songs");
-
-                mNavStep = SearchNavStep.VIEW_ALL_SONGS;
-                setTitle(getString(R.string.songs));
-                ButterKnife.apply(mBaseDisplayViews, DisplayUtils.GONE);
-                setupRecyclerViewWithList();
-                mResultsList.setAdapter(mSongResultsAdapter);
-                mSongResultsAdapter.updateAdapter(mResultTrackList);
-                mResultsList.setVisibility(View.VISIBLE);
-                break;
-            case R.id.tv_see_all_artists:
-                Log.d(TAG, "User wants to see all artists");
-
-                mNavStep = SearchNavStep.VIEW_ALL_ARTISTS;
-                setTitle(getString(R.string.artists));
-                ButterKnife.apply(mBaseDisplayViews, DisplayUtils.GONE);
-                setupRecyclerViewWithGrid();
-                mResultsList.setAdapter(mArtistCardAdapter);
-                mArtistCardAdapter.updateAdapter(mResultArtistList);
-                mResultsList.setVisibility(View.VISIBLE);
-                break;
-            case R.id.tv_see_all_albums:
-                Log.d(TAG, "User wants to see all albums");
-
-                mNavStep = SearchNavStep.VIEW_ALL_ALBUMS;
-                setTitle(getString(R.string.albums));
-                ButterKnife.apply(mBaseDisplayViews, DisplayUtils.GONE);
-                setupRecyclerViewWithGrid();
-                mResultsList.setAdapter(mAlbumCardAdapter);
-                mAlbumCardAdapter.updateAdapter(mResultAlbumList);
-                mResultsList.setVisibility(View.VISIBLE);
-                break;
-        }
+    public void showArtist(@NotNull Artist artist) {
+        // TODO: show artist view when implemented
     }
 
-    private void setupRecyclerViewWithList() {
-        // Add recycler view item decoration and layout manager
-        LinearLayoutManager layoutManager = new LinearLayoutManager(this, RecyclerView.VERTICAL, false);
-        mResultsList.setLayoutManager(layoutManager);
-        mResultsList.addItemDecoration(mListDecoration);
+    @Override
+    public void sendTrackToHost(@NotNull String uri) {
+        Intent resultIntent = new Intent();
+        resultIntent.putExtra(AppConstants.SEARCH_RESULTS_EXTRA_KEY, uri);
+        setResult(RESULT_OK, resultIntent);
+        finish();
+        presenter.detach();
     }
 
-    private void setupRecyclerViewWithGrid() {
-        // Add recylerview grid layout manager and remove decoration
-        GridLayoutManager layoutManager = new GridLayoutManager(this, 2);
-        mResultsList.removeItemDecoration(mListDecoration);
-        mResultsList.setLayoutManager(layoutManager);
+    @Override
+    public void closeSearchView() {
+        super.onBackPressed();
+        presenter.detach();
+    }
+
+    @Override
+    public void requestNewAccessToken() {
+        // TODO: Implement access token refreshing
+    }
+
+    @Override
+    public void initiateView() {
+        showEmptyBaseView();
     }
 }
