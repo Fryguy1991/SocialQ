@@ -49,11 +49,11 @@ public class AppConstants {
     public static final String EXTRACT_SONG_ID_REGEX = CLIENT_USER_ID_MESSAGE + "\\S+";
 
     // Spotify URL Regex
-    public static final String URL_FULL_TRACK_SEARCH = "https:\\/\\/api.spotify.com\\/v1\\/search\\?type=track&q=(.+)&limit=" + SPOTIFY_SEARCH_LIMIT;
+    public static final String URL_TRACK_SEARCH = "https:\\/\\/api.spotify.com\\/v1\\/search\\?type=track&q=([^&]+).+";
     // Example:  https://api.spotify.com/v1/search?type=track&q=avenged+sevenfold&limit=50
-    public static final String URL_FULL_ARTIST_SEARCH = "https:\\/\\/api.spotify.com\\/v1\\/search\\?type=artist&q=(.+)&limit=" + SPOTIFY_SEARCH_LIMIT;
+    public static final String URL_ARTIST_SEARCH = "https:\\/\\/api.spotify.com\\/v1\\/search\\?type=artist&q=([^&]+).+";
     // Example: https://api.spotify.com/v1/search?type=artist&q=avenged+sevenfold&limit=50
-    public static final String URL_FULL_ALBUM_SEARCH = "https:\\/\\/api\\.spotify\\.com\\/v1\\/search\\?type=album&q=(.+)&limit=" + SPOTIFY_SEARCH_LIMIT;
+    public static final String URL_ALBUM_SEARCH = "https:\\/\\/api\\.spotify\\.com\\/v1\\/search\\?type=album&q=([^&]+).+";
     // Example: https://api.spotify.com/v1/search?type=album&q=avenged+sevenfold&limit=50
 
     // Charset Name
