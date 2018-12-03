@@ -95,6 +95,10 @@ public class SearchActivity extends AppCompatActivity implements ISearchView, IS
     List<View> mBaseDisplayViews;
     @BindViews({R.id.iv_artist_album_image, R.id.rv_search_results})
     List<View> mAlbumDisplayViews;
+    // TODO: Include views for top tracks and first few albums. Also consider not using square image for artists.
+    // Artist image size is much more erratic
+    @BindViews({R.id.iv_artist_album_image})
+    List<View> mArtistDisplayViews;
 
     // Bind lists of item views
     @BindViews({R.id.cv_track_1, R.id.cv_track_2, R.id.cv_track_3})
@@ -275,6 +279,7 @@ public class SearchActivity extends AppCompatActivity implements ISearchView, IS
         mAlbumCardAdapter = new AlbumCardAdapter();
         mAlbumCardAdapter.setListener(this);
         mArtistCardAdapter = new ArtistCardAdapter();
+        mArtistCardAdapter.setListener(this);
     }
 
     // TODO: Below code is for programmatically adding result views. Consider removing if we won't use
@@ -362,8 +367,10 @@ public class SearchActivity extends AppCompatActivity implements ISearchView, IS
     @Override
     public void showBaseResultsView() {
         ButterKnife.apply(mAlbumDisplayViews, DisplayUtils.GONE);
+        ButterKnife.apply(mArtistDisplayViews, DisplayUtils.GONE);
         mNoResultsText.setVisibility(View.GONE);
         ButterKnife.apply(mBaseDisplayViews, DisplayUtils.VISIBLE);
+        setTitle(getString(R.string.search_activity_name));
     }
 
     @Override
@@ -486,6 +493,7 @@ public class SearchActivity extends AppCompatActivity implements ISearchView, IS
     public void showAllArtists(@NotNull List<? extends Artist> artistList, int position) {
         setTitle(getString(R.string.artists));
         ButterKnife.apply(mBaseDisplayViews, DisplayUtils.GONE);
+        ButterKnife.apply(mArtistDisplayViews, DisplayUtils.GONE);
         setupRecyclerViewWithGrid();
         mResultsList.setAdapter(mArtistCardAdapter);
         mArtistCardAdapter.updateAdapter(artistList);
@@ -522,6 +530,16 @@ public class SearchActivity extends AppCompatActivity implements ISearchView, IS
     @Override
     public void showArtist(@NotNull Artist artist) {
         // TODO: show artist view when implemented
+        // Below only shows artist image (when selected) and changes actionbar title
+        ButterKnife.apply(mBaseDisplayViews, DisplayUtils.GONE);
+        mResultsList.setVisibility(View.GONE);
+        ButterKnife.apply(mArtistDisplayViews, DisplayUtils.VISIBLE);
+        if (artist.images.size() > 0) {
+            Glide.with(this).load(artist.images.get(0).url).into(mArtistAlbumImage);
+        } else {
+            mArtistAlbumImage.setVisibility(View.GONE);
+        }
+        setTitle(artist.name);
     }
 
     @Override

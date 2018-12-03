@@ -103,7 +103,7 @@ class SearchPresenter : SpotifyAccessPresenter(), ISearchPresenter {
                 navStep = VIEW_ALL_ARTISTS
 
                 getView()!!.showAllArtists(baseArtistResults, cachedPosition)
-                cachedPosition = 0;
+                cachedPosition = 0
             }
             VIEW_ALL_ARTIST_ALBUM_SELECTED -> {
                 Log.d(TAG, "Returning to artist (all) from album")
@@ -317,37 +317,64 @@ class SearchPresenter : SpotifyAccessPresenter(), ISearchPresenter {
 
     private fun handleArtistSelected(uri: String, position: Int) {
         when (navStep) {
-            BASE -> TODO()
-            VIEW_ALL_SONGS -> TODO()
-            ARTIST_SELECTED -> TODO()
-            ARTIST_ALBUM_SELECTED -> TODO()
-            VIEW_ALL_ARTISTS -> TODO()
-            VIEW_ALL_ARTIST_SELECTED -> TODO()
-            VIEW_ALL_ARTIST_ALBUM_SELECTED -> TODO()
-            ALBUM_SELECTED -> TODO()
-            VIEW_ALL_ALBUMS -> TODO()
-            VIEW_ALL_ALBUM_SELECTED -> TODO()
+            BASE -> {
+                // Selected one of the first shown artists. Position is worthless.
+                // Look in results list (currently only showing first 3 items)
+                for (artist in baseArtistResults.subList(0, 4)) {
+                    if (uri == artist.uri) {
+                        navStep = ARTIST_SELECTED
+                        getView()!!.showArtist(artist)
+                        return
+                    }
+                }
+                Log.e(TAG, "Something went wrong. Lost artist information")
+            }
+            VIEW_ALL_ARTISTS -> {
+                // Selected an artist from view all list. Ensure position is valid and use for direct retrieval
+                if (position >= 0 && position < baseArtistResults.size) {
+                    navStep = VIEW_ALL_ARTIST_SELECTED
+                    cachedPosition = position
+                    getView()!!.showArtist(baseArtistResults[position])
+                } else {
+                    Log.e(TAG, "Invalid artist index")
+                }
+            }
+            VIEW_ALL_SONGS,
+            ARTIST_SELECTED,
+            ARTIST_ALBUM_SELECTED,
+            VIEW_ALL_ARTIST_SELECTED,
+            VIEW_ALL_ARTIST_ALBUM_SELECTED,
+            ALBUM_SELECTED,
+            VIEW_ALL_ALBUMS,
+            VIEW_ALL_ALBUM_SELECTED -> {
+                Log.e(TAG, "Not expecting artist to be selected here")
+            }
         }
     }
 
     private fun handleAlbumSelected(uri: String, position: Int) {
         when (navStep) {
             BASE -> {
-                for (album in baseAlbumResults) {
+                // Selected one of the first shown albums. Position is worthless.
+                // Look in results list (currently only showing first 3 items)
+                for (album in baseAlbumResults.subList(0, 4)) {
                     if (uri == album.uri) {
                         navStep = ALBUM_SELECTED
                         getView()!!.showAlbum(album)
+                        return
                     }
                 }
                 Log.e(TAG, "Something went wrong. Lost album information")
             }
             VIEW_ALL_ALBUMS -> {
+                // Selected an album from view all list. Ensure position is valid and use for direct retrieval
                 if (position >= 0 && position < baseAlbumResults.size) {
                     navStep = VIEW_ALL_ALBUM_SELECTED
                     cachedPosition = position
                     getView()!!.showAlbum(baseAlbumResults[position])
+                } else {
+                    Log.e(TAG, "Invalid album index")
                 }
-                Log.e(TAG, "Invalid album index")
             }
             ARTIST_SELECTED -> {
                 TODO()

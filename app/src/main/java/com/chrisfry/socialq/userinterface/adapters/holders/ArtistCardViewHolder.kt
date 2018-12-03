@@ -7,7 +7,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.chrisfry.socialq.R
 
-class ArtistCardViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+open class ArtistCardViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
     private val image = itemView.findViewById<ImageView>(R.id.iv_image)
     private val name = itemView.findViewById<TextView>(R.id.tv_name)
 
