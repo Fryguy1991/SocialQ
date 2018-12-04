@@ -16,6 +16,8 @@ open class BasicAlbumListAdapter : BaseRecyclerViewAdapter<BasicImageTextHolder,
         holder.setDisplayName(albumToDisplay.name)
         if (albumToDisplay.images.size > 0) {
             holder.setImage(albumToDisplay.images[0].url)
+        } else {
+            holder.setImage("")
         }
     }
 }

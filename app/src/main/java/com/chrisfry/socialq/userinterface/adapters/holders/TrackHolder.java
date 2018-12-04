@@ -21,7 +21,7 @@ public class TrackHolder extends RecyclerView.ViewHolder implements View.OnClick
 
     public TrackHolder(View v) {
         super(v);
-        mTrackNameView = v.findViewById(R.id.tv_track_name);
+        mTrackNameView = v.findViewById(R.id.tv_name);
         mArtistNameView = v.findViewById(R.id.tv_artist_name);
         mAddButton = v.findViewById(R.id.iv_add_button);
 

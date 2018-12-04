@@ -24,7 +24,7 @@ import com.chrisfry.socialq.business.dagger.modules.components.SpotifyComponent;
 import com.chrisfry.socialq.enums.RequestType;
 import com.chrisfry.socialq.model.AccessModel;
 import com.chrisfry.socialq.userinterface.adapters.BasicTrackListAdapter;
-import com.chrisfry.socialq.userinterface.widgets.QueueItemDecoration;
+import com.chrisfry.socialq.userinterface.views.QueueItemDecoration;
 import com.spotify.sdk.android.authentication.AuthenticationClient;
 import com.spotify.sdk.android.authentication.AuthenticationRequest;
 import com.spotify.sdk.android.authentication.AuthenticationResponse;

@@ -4,7 +4,7 @@ import android.view.View
 import android.widget.TextView
 import com.chrisfry.socialq.R
 
-class HostTrackHolder(view : View) : BasicTrackHolder(view) {
+class HostTrackHolder(view : View) : BasicTrackAlbumHolder(view) {
     private val clientNameView = view.findViewById<TextView>(R.id.tv_client_name)
 
     fun setClientName(name : String) {

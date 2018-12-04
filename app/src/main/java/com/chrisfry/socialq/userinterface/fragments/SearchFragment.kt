@@ -18,12 +18,13 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import butterknife.BindViews
 import butterknife.ButterKnife
 import com.chrisfry.socialq.R
+import com.chrisfry.socialq.business.AppConstants
 import com.chrisfry.socialq.business.dagger.modules.SpotifyModule
 import com.chrisfry.socialq.business.dagger.modules.components.DaggerSpotifyComponent
 import com.chrisfry.socialq.model.AccessModel
 import com.chrisfry.socialq.userinterface.adapters.SearchTrackListAdapter
-import com.chrisfry.socialq.userinterface.widgets.QueueItemDecoration
-import com.chrisfry.socialq.userinterface.widgets.SearchArtistView
+import com.chrisfry.socialq.userinterface.views.QueueItemDecoration
+import com.chrisfry.socialq.userinterface.views.SearchArtistView
 import com.chrisfry.socialq.utils.ApplicationUtils
 import com.chrisfry.socialq.utils.DisplayUtils
 import kaaes.spotify.webapi.android.SpotifyService
@@ -212,7 +213,7 @@ class SearchFragment : SpotifyFragment(), SearchArtistView.SearchArtistViewPrese
 
         // Create options to set limit for search results to 50 items
         val options = HashMap<String, Any>()
-        options[SpotifyService.LIMIT] = 50
+        options[SpotifyService.LIMIT] = AppConstants.SPOTIFY_SEARCH_LIMIT
 
         // Get results from spotify
         mResultArtistList = mSpotifyService.searchArtists(searchText, options).artists.items

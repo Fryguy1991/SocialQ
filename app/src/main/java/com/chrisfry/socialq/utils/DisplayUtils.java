@@ -8,7 +8,9 @@ import com.spotify.sdk.android.player.Metadata;
 
 import java.util.List;
 
+import androidx.annotation.NonNull;
 import butterknife.ButterKnife;
+import kaaes.spotify.webapi.android.models.Album;
 import kaaes.spotify.webapi.android.models.ArtistSimple;
 import kaaes.spotify.webapi.android.models.PlaylistTrack;
 import kaaes.spotify.webapi.android.models.TrackSimple;
@@ -25,7 +27,10 @@ public class DisplayUtils {
      * @return - string containing artists in above format
      */
     public static String getTrackArtistString(TrackSimple track) {
-        List<ArtistSimple> trackArtists = track.artists;
+        return getArtistStringFromList(track.artists);
+    }
+
+    private static String getArtistStringFromList(List<ArtistSimple> trackArtists) {
         String artistString = "";
         for(ArtistSimple artist : trackArtists) {
             if(artistString.isEmpty()) {
@@ -43,6 +48,10 @@ public class DisplayUtils {
 
     public static String getTrackArtistString(Metadata.Track track) {
         return track.artistName;
+    }
+
+    public static String getAlbumArtistString(Album album) {
+        return getArtistStringFromList(album.artists);
     }
 
     public static ButterKnife.Setter<View, Integer> getVisibilitySetter() {
@@ -64,4 +73,18 @@ public class DisplayUtils {
     public static int convertDpToPixels(Context context, int dpValue) {
         return Math.round(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dpValue, context.getResources().getDisplayMetrics()));
     }
+
+    public static ButterKnife.Action<View> GONE = new ButterKnife.Action<View>() {
+        @Override
+        public void apply(@NonNull View view, int index) {
+            view.setVisibility(View.GONE);
+        }
+    };
+
+    public static ButterKnife.Action<View> VISIBLE = new ButterKnife.Action<View>() {
+        @Override
+        public void apply(@NonNull View view, int index) {
+            view.setVisibility(View.VISIBLE);
+        }
+    };
 }

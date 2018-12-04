@@ -8,7 +8,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import android.view.View;
 
 import com.chrisfry.socialq.R;
-import com.chrisfry.socialq.userinterface.widgets.QueueItemDecoration;
+import com.chrisfry.socialq.userinterface.views.QueueItemDecoration;
 
 /**
  * Activity used to search for and connect to a SocialQ

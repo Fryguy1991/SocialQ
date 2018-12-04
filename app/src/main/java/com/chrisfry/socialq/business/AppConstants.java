@@ -38,11 +38,23 @@ public class AppConstants {
     public static final String CLIENT_USER_ID_MESSAGE = "#CLIENT_USER_ID#";
     public static final String SONG_REQUEST_MESSAGE_FORMAT = SONG_REQUEST_MESSAGE + "%1$s" + CLIENT_USER_ID_MESSAGE + "%2$s";
 
+    // Spotify search limits
+    public static final int SPOTIFY_SEARCH_LIMIT = 50;
+    public static final int PLAYLIST_LIMIT = 50;
+
     // Regular expressions
     // Regex for track request messages (Example: #SONG_REQUEST#spotify:track:6qtg4gz3DhqOHL5BHtSQw8#CLIENT_USER_ID#fry_dev_1
     public static final String FULL_SONG_REQUEST_REGEX = SONG_REQUEST_MESSAGE + "spotify:track:\\S{22}" + CLIENT_USER_ID_MESSAGE + "\\S+";
     public static final String EXTRACT_CLIENT_ID_REGEX= SONG_REQUEST_MESSAGE + "spotify:track:\\S{22}" + CLIENT_USER_ID_MESSAGE;
     public static final String EXTRACT_SONG_ID_REGEX = CLIENT_USER_ID_MESSAGE + "\\S+";
+
+    // Spotify URL Regex
+    public static final String URL_TRACK_SEARCH = "https:\\/\\/api.spotify.com\\/v1\\/search\\?type=track&q=([^&]+).+";
+    // Example:  https://api.spotify.com/v1/search?type=track&q=avenged+sevenfold&limit=50
+    public static final String URL_ARTIST_SEARCH = "https:\\/\\/api.spotify.com\\/v1\\/search\\?type=artist&q=([^&]+).+";
+    // Example: https://api.spotify.com/v1/search?type=artist&q=avenged+sevenfold&limit=50
+    public static final String URL_ALBUM_SEARCH = "https:\\/\\/api\\.spotify\\.com\\/v1\\/search\\?type=album&q=([^&]+).+";
+    // Example: https://api.spotify.com/v1/search?type=album&q=avenged+sevenfold&limit=50
 
     // Charset Name
     public static final String UTF8_CHARSET_NAME = "UTF-8";
@@ -51,5 +63,11 @@ public class AppConstants {
     public static final String INVALID = "INVALID";
 
     // Handler Message Types
-    public static final int ACCESS_TOKEN_REFRESH = 1;
+    public static final int HANDLER_ACCESS_TOKEN_REFRESH = 1;
+    public static final int HANDLER_SEARCH_BY_TEXT = 2;
+
+    // Spotify URI prefixes
+    public static final String SPOTIFY_ALBUM_PREFIX = "spotify:album:";
+    public static final String SPOTIFY_ARTIST_PREFIX = "spotify:artist:";
+    public static final String SPOTIFY_TRACK_PREFIX = "spotify:track:";
 }

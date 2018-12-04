@@ -3,6 +3,7 @@ apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-kapt'
 apply plugin: 'androidx.navigation.safeargs'
 apply plugin: 'kotlin-android-extensions'
+apply plugin: 'com.github.dcendents.android-maven'
 
 def supportLibraryVersion = '28.0.0'
 def daggerVersion = '2.17'
@@ -29,8 +30,6 @@ android {
 }
 
 repositories {
-    mavenCentral()
-    maven { url "https://jitpack.io" }
     flatDir {
         dirs 'libs'
     }
@@ -45,7 +44,9 @@ dependencies {
     // This library handles music playback
     implementation 'com.spotify.sdk:spotify-player-24-noconnect-2.20b@aar'
     //Spotify WebAPI Android wrapper
-    implementation 'com.github.kaaes:spotify-web-api-android:0.4.1'
+//    implementation 'com.github.kaaes:spotify-web-api-android:0.4.1'
+    // Pull my own version of Spotify web api wrapper
+    implementation 'com.github.Fryguy1991:spotify-web-api-android:0.4.1'
 
     // Nearby Connections API
     implementation "com.google.android.gms:play-services-nearby:16.0.0"
@@ -82,6 +83,7 @@ dependencies {
     implementation 'com.squareup.retrofit2:retrofit:2.4.0'
 
     // Glide (for pulling images from the web)
+    kapt 'com.github.bumptech.glide:compiler:4.8.0'
     implementation('com.github.bumptech.glide:glide:4.8.0') {
         exclude group: "com.android.support"
     }
@@ -93,5 +95,4 @@ dependencies {
 
     // Android-KTX
     implementation "androidx.core:core-ktx:1.0.1"
-
 }

@@ -95,7 +95,7 @@ abstract class BaseActivity : AppCompatActivity() {
     protected val mHandler = object : Handler(Looper.getMainLooper()) {
         override fun handleMessage(msg: Message) {
             when (msg.what) {
-                AppConstants.ACCESS_TOKEN_REFRESH ->
+                AppConstants.HANDLER_ACCESS_TOKEN_REFRESH ->
                     // Don't request access tokens if activity is being shut down
                     if (!isFinishing) {
                         Log.d(TAG, "Requesting new access token on UI thread")
@@ -179,7 +179,7 @@ abstract class BaseActivity : AppCompatActivity() {
             if (System.currentTimeMillis() >= AccessModel.getAccessExpireTime()) {
                 Log.d(TAG, "Detected that we need a new access token")
                 val message = Message()
-                message.what = AppConstants.ACCESS_TOKEN_REFRESH
+                message.what = AppConstants.HANDLER_ACCESS_TOKEN_REFRESH
                 mHandler.dispatchMessage(message)
                 break
             }

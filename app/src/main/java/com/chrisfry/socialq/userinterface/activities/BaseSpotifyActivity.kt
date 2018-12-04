@@ -53,7 +53,7 @@ class BaseSpotifyActivity : AppCompatActivity(), HostFragmentBase.BaseHostFragme
     private val mHandler = object : Handler(Looper.getMainLooper()) {
         override fun handleMessage(msg: Message) {
             when (msg.what) {
-                AppConstants.ACCESS_TOKEN_REFRESH ->
+                AppConstants.HANDLER_ACCESS_TOKEN_REFRESH ->
                     // Don't request access tokens if activity is being shut down
                     if (!isFinishing) {
                         Log.d(TAG, "Requesting new access token on UI thread")
@@ -288,7 +288,7 @@ class BaseSpotifyActivity : AppCompatActivity(), HostFragmentBase.BaseHostFragme
                 AccessModel.reset()
 
                 val message = Message()
-                message.what = AppConstants.ACCESS_TOKEN_REFRESH
+                message.what = AppConstants.HANDLER_ACCESS_TOKEN_REFRESH
                 mHandler.dispatchMessage(message)
                 break
             }

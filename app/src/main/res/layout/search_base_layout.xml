@@ -1,0 +1,417 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/cl_search_main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:animateLayoutChanges="true">
+
+    <EditText
+        android:id="@+id/et_search_edit_text"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/default_margin"
+        android:layout_marginTop="@dimen/default_margin"
+        android:layout_marginEnd="@dimen/default_margin"
+        android:inputType="text"
+        android:maxLines="1"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <ScrollView
+        android:id="@+id/sv_search_scroll_view"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginTop="@dimen/default_margin"
+        android:visibility="visible"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/et_search_edit_text">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/cl_search_result_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <!-- START BASE RESULT VIEWS-->
+            <TextView
+                android:id="@+id/tv_song_heading"
+                android:layout_width="0dp"
+                android:layout_height="@dimen/search_header_size"
+                android:layout_marginStart="@dimen/default_margin"
+                android:layout_marginTop="@dimen/default_margin"
+                android:layout_marginEnd="@dimen/default_margin"
+                android:gravity="center"
+                android:text="@string/songs"
+                android:textSize="@dimen/medium_text"
+                android:textStyle="bold"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <com.chrisfry.socialq.userinterface.views.TrackAlbumView
+                android:id="@+id/cv_track_1"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/default_margin"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tv_song_heading" />
+
+            <com.chrisfry.socialq.userinterface.views.TrackAlbumView
+                android:id="@+id/cv_track_2"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/cv_track_1" />
+
+            <com.chrisfry.socialq.userinterface.views.TrackAlbumView
+                android:id="@+id/cv_track_3"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/cv_track_2" />
+
+            <TextView
+                android:id="@+id/tv_see_all_songs"
+                android:layout_width="0dp"
+                android:layout_height="@dimen/see_all_button_size"
+                android:layout_marginStart="@dimen/default_margin"
+                android:layout_marginTop="@dimen/default_margin"
+                android:layout_marginEnd="@dimen/default_margin"
+                android:gravity="center_vertical"
+                android:text="@string/see_all_songs"
+                android:textSize="@dimen/see_all_text_size"
+                android:textStyle="bold"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/cv_track_3" />
+
+            <TextView
+                android:id="@+id/tv_artist_heading"
+                android:layout_width="0dp"
+                android:layout_height="@dimen/search_header_size"
+                android:layout_marginStart="@dimen/default_margin"
+                android:layout_marginTop="@dimen/default_margin"
+                android:layout_marginEnd="@dimen/default_margin"
+                android:gravity="center"
+                android:text="@string/artists"
+                android:textSize="@dimen/medium_text"
+                android:textStyle="bold"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tv_see_all_songs" />
+
+            <com.chrisfry.socialq.userinterface.views.ArtistView
+                android:id="@+id/cv_artist_1"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tv_artist_heading" />
+
+            <com.chrisfry.socialq.userinterface.views.ArtistView
+                android:id="@+id/cv_artist_2"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/cv_artist_1" />
+
+            <com.chrisfry.socialq.userinterface.views.ArtistView
+                android:id="@+id/cv_artist_3"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/cv_artist_2" />
+
+            <TextView
+                android:id="@+id/tv_see_all_artists"
+                android:layout_width="0dp"
+                android:layout_height="@dimen/see_all_button_size"
+                android:layout_marginStart="@dimen/default_margin"
+                android:layout_marginTop="@dimen/default_margin"
+                android:layout_marginEnd="@dimen/default_margin"
+                android:gravity="center_vertical"
+                android:text="@string/see_all_artists"
+                android:textSize="@dimen/see_all_text_size"
+                android:textStyle="bold"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/cv_artist_3" />
+
+            <TextView
+                android:id="@+id/tv_album_heading"
+                android:layout_width="0dp"
+                android:layout_height="@dimen/search_header_size"
+                android:layout_marginStart="@dimen/default_margin"
+                android:layout_marginTop="@dimen/default_margin"
+                android:layout_marginEnd="@dimen/default_margin"
+                android:gravity="center"
+                android:text="@string/albums"
+                android:textSize="@dimen/medium_text"
+                android:textStyle="bold"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tv_see_all_artists" />
+
+            <com.chrisfry.socialq.userinterface.views.TrackAlbumView
+                android:id="@+id/cv_album_1"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tv_album_heading" />
+
+            <com.chrisfry.socialq.userinterface.views.TrackAlbumView
+                android:id="@+id/cv_album_2"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/cv_album_1" />
+
+            <com.chrisfry.socialq.userinterface.views.TrackAlbumView
+                android:id="@+id/cv_album_3"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/cv_album_2" />
+
+            <TextView
+                android:id="@+id/tv_see_all_albums"
+                android:layout_width="0dp"
+                android:layout_height="@dimen/see_all_button_size"
+                android:layout_marginStart="@dimen/default_margin"
+                android:layout_marginTop="@dimen/default_margin"
+                android:layout_marginEnd="@dimen/default_margin"
+                android:layout_marginBottom="10dp"
+                android:gravity="center_vertical"
+                android:text="@string/see_all_albums"
+                android:textSize="@dimen/see_all_text_size"
+                android:textStyle="bold"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/cv_album_3" />
+            <!-- END BASE RESULT VIEWS-->
+
+            <!-- START ARTIST VIEWS-->
+            <ImageView
+                android:id="@+id/iv_artist_layout_image"
+                android:layout_width="0dp"
+                android:layout_height="@dimen/artist_album_image_size"
+                android:layout_marginStart="@dimen/default_margin"
+                android:layout_marginTop="@dimen/default_margin"
+                android:layout_marginEnd="@dimen/default_margin"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <TextView
+                android:id="@+id/tv_top_track_header"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/default_margin"
+                android:layout_marginTop="10dp"
+                android:layout_marginEnd="@dimen/default_margin"
+                android:gravity="center"
+                android:text="@string/top_tracks"
+                android:textSize="@dimen/medium_text"
+                android:textStyle="bold"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/iv_artist_layout_image" />
+
+            <com.chrisfry.socialq.userinterface.views.TextViewWithUri
+                android:id="@+id/tv_top_track_1"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:minHeight="@dimen/top_track_view_min_height"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tv_top_track_header" />
+
+            <com.chrisfry.socialq.userinterface.views.TextViewWithUri
+                android:id="@+id/tv_top_track_2"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:minHeight="@dimen/top_track_view_min_height"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tv_top_track_1" />
+
+            <com.chrisfry.socialq.userinterface.views.TextViewWithUri
+                android:id="@+id/tv_top_track_3"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:minHeight="@dimen/top_track_view_min_height"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tv_top_track_2" />
+
+            <com.chrisfry.socialq.userinterface.views.TextViewWithUri
+                android:id="@+id/tv_top_track_4"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:minHeight="@dimen/top_track_view_min_height"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tv_top_track_3" />
+
+            <com.chrisfry.socialq.userinterface.views.TextViewWithUri
+                android:id="@+id/tv_top_track_5"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:minHeight="@dimen/top_track_view_min_height"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tv_top_track_4" />
+
+            <TextView
+                android:id="@+id/tv_artist_album_header"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/default_margin"
+                android:layout_marginTop="10dp"
+                android:layout_marginEnd="@dimen/default_margin"
+                android:gravity="center"
+                android:text="@string/albums"
+                android:textSize="@dimen/medium_text"
+                android:textStyle="bold"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tv_top_track_5" />
+
+            <com.chrisfry.socialq.userinterface.views.AlbumCardView
+                android:id="@+id/cv_artist_album_1"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/default_margin"
+                android:layout_marginTop="@dimen/default_margin"
+                android:layout_marginEnd="@dimen/half_default_margin"
+                app:layout_constraintEnd_toStartOf="@+id/cv_artist_album_2"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintHorizontal_chainStyle="packed"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tv_artist_album_header" />
+
+            <com.chrisfry.socialq.userinterface.views.AlbumCardView
+                android:id="@+id/cv_artist_album_2"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/half_default_margin"
+                android:layout_marginTop="@dimen/default_margin"
+                android:layout_marginEnd="@dimen/default_margin"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintStart_toEndOf="@+id/cv_artist_album_1"
+                app:layout_constraintTop_toBottomOf="@id/tv_artist_album_header" />
+
+            <com.chrisfry.socialq.userinterface.views.AlbumCardView
+                android:id="@+id/cv_artist_album_3"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/default_margin"
+                android:layout_marginTop="@dimen/default_margin"
+                android:layout_marginEnd="@dimen/half_default_margin"
+                android:layout_marginBottom="@dimen/default_margin"
+                app:layout_constraintBottom_toTopOf="@id/tv_see_all_artist_albums"
+                app:layout_constraintEnd_toStartOf="@+id/cv_artist_album_4"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintHorizontal_chainStyle="packed"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/cv_artist_album_1" />
+
+            <com.chrisfry.socialq.userinterface.views.AlbumCardView
+                android:id="@+id/cv_artist_album_4"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/half_default_margin"
+                android:layout_marginTop="@dimen/default_margin"
+                android:layout_marginEnd="@dimen/default_margin"
+                android:layout_marginBottom="@dimen/default_margin"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintStart_toEndOf="@+id/cv_artist_album_3"
+                app:layout_constraintTop_toBottomOf="@id/cv_artist_album_2" />
+
+            <TextView
+                android:id="@+id/tv_see_all_artist_albums"
+                android:layout_width="0dp"
+                android:layout_height="@dimen/see_all_button_size"
+                android:layout_marginStart="@dimen/default_margin"
+                android:layout_marginTop="@dimen/default_margin"
+                android:layout_marginEnd="@dimen/default_margin"
+                android:layout_marginBottom="10dp"
+                android:gravity="center_vertical"
+                android:text="@string/see_all_albums"
+                android:textSize="@dimen/see_all_text_size"
+                android:textStyle="bold"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/cv_artist_album_3" />
+            <!-- END ARTIST VIEWS-->
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </ScrollView>
+
+    <!-- START NO RESULT VIEWS-->
+    <TextView
+        android:id="@+id/tv_no_results"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginStart="@dimen/default_margin"
+        android:layout_marginTop="@dimen/default_margin"
+        android:layout_marginEnd="@dimen/default_margin"
+        android:gravity="center_horizontal"
+        android:text="@string/no_results_found"
+        android:textSize="@dimen/large_text"
+        android:textStyle="bold"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/et_search_edit_text" />
+    <!-- END NO RESULT VIEWS-->
+
+    <!-- START ALBUM VIEWS-->
+    <ImageView
+        android:id="@+id/iv_album_layout_image"
+        android:layout_width="@dimen/artist_album_image_size"
+        android:layout_height="@dimen/artist_album_image_size"
+        android:layout_marginStart="@dimen/default_margin"
+        android:layout_marginTop="@dimen/default_margin"
+        android:layout_marginEnd="@dimen/default_margin"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rv_search_results"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginStart="@dimen/default_margin"
+        android:layout_marginTop="@dimen/default_margin"
+        android:layout_marginEnd="@dimen/default_margin"
+        android:scrollbarStyle="outsideInset"
+        android:scrollbars="vertical"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/iv_album_layout_image" />
+    <!-- END ALBUM VIEWS-->
+</androidx.constraintlayout.widget.ConstraintLayout>

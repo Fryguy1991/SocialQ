@@ -7,20 +7,24 @@ import android.widget.TextView
 import com.bumptech.glide.Glide
 import com.chrisfry.socialq.R
 
-open class BasicTrackHolder(view: View) : androidx.recyclerview.widget.RecyclerView.ViewHolder(view) {
-    private val trackNameView = view.findViewById<TextView>(R.id.tv_track_name)
+open class BasicTrackAlbumHolder(view: View) : RecyclerView.ViewHolder(view) {
+    private val trackNameView = view.findViewById<TextView>(R.id.tv_name)
     private val artistNameView = view.findViewById<TextView>(R.id.tv_artist_name)
-    private val albumImageView = view.findViewById<ImageView>(R.id.iv_track_image)
+    private val albumImageView = view.findViewById<ImageView>(R.id.iv_album_image)
 
     fun setArtistName(name: String) {
         artistNameView.text = name
     }
 
-    fun setTrackName(name: String) {
+    fun setName(name: String) {
         trackNameView.text = name
     }
 
     fun setAlbumImage(url: String) {
-        Glide.with(itemView).load(url).into(albumImageView)
+        if (url.isEmpty()) {
+            Glide.with(itemView).load(R.color.Transparent).into(albumImageView)
+        } else {
+            Glide.with(itemView).load(url).into(albumImageView)
+        }
     }
 }

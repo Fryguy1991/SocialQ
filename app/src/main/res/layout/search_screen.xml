@@ -49,7 +49,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/btn_search" />
 
-    <com.chrisfry.socialq.userinterface.widgets.SearchArtistView
+    <com.chrisfry.socialq.userinterface.views.SearchArtistView
         android:id="@+id/cv_artist_result_layout"
         android:layout_width="0dp"
         android:layout_height="wrap_content"

@@ -66,7 +66,7 @@ import kaaes.spotify.webapi.android.models.UserPrivate;
 import kaaes.spotify.webapi.android.models.UserPublic;
 
 import com.chrisfry.socialq.services.PlayQueueService;
-import com.chrisfry.socialq.userinterface.widgets.QueueItemDecoration;
+import com.chrisfry.socialq.userinterface.views.QueueItemDecoration;
 
 public abstract class HostActivity extends AppCompatActivity implements ConnectionStateCallback,
         PlayQueueService.PlayQueueServiceListener, IItemSelectionListener<String> {
@@ -136,7 +136,7 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
         @Override
         public void handleMessage(Message msg) {
             switch (msg.what) {
-                case AppConstants.ACCESS_TOKEN_REFRESH:
+                case AppConstants.HANDLER_ACCESS_TOKEN_REFRESH:
                     // Don't request access tokens if activity is being shut down
                     if (!isFinishing()) {
                         Log.d(TAG, "Requesting new access token on UI thread");
@@ -241,7 +241,7 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
 
                         // Show dialog for selecting base playlist if user has playlists to show
                         Map<String, Object> options = new HashMap<>();
-                        options.put(SpotifyService.LIMIT, 50);
+                        options.put(SpotifyService.LIMIT, AppConstants.SPOTIFY_SEARCH_LIMIT);
                         Pager<PlaylistSimple> playlistPager = mSpotifyService.getPlaylists(mCurrentUser.id, options);
                         if (playlistPager.items.size() > 0) {
                             showBasePlaylistDialog(playlistPager.items);
@@ -817,7 +817,7 @@ public abstract class HostActivity extends AppCompatActivity implements Connecti
                         if (System.currentTimeMillis() >= AccessModel.getAccessExpireTime()) {
                             Log.d(TAG, "Detected that we need a new access token");
                             Message message = new Message();
-                            message.what = AppConstants.ACCESS_TOKEN_REFRESH;
+                            message.what = AppConstants.HANDLER_ACCESS_TOKEN_REFRESH;
                             mHandler.dispatchMessage(message);
                             break;
                         }

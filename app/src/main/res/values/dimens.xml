@@ -4,6 +4,7 @@
 
     <!-- Spacing Dimens -->
     <dimen name="default_margin">8dp</dimen>
+    <dimen name="half_default_margin">4dp</dimen>
     <dimen name="standard_spacing">20dp</dimen>
     <dimen name="large_spacing">30dp</dimen>
 
@@ -20,4 +21,13 @@
 
     <!-- Search Dimens -->
     <dimen name="artist_picture_size">60dp</dimen>
+    <dimen name="add_button_size">30dp</dimen>
+    <dimen name="search_header_size">40dp</dimen>
+    <dimen name="see_all_button_size">30dp</dimen>
+    <dimen name="see_all_text_size">15sp</dimen>
+    <dimen name="artist_album_image_size">150dp</dimen>
+    <dimen name="album_card_text_size">12sp</dimen>
+    <dimen name="top_track_text_size">16sp</dimen>
+    <dimen name="top_track_view_min_height">40dp</dimen>
+    <dimen name="number_width">30dp</dimen>
 </resources>
