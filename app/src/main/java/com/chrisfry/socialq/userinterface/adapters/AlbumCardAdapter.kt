@@ -9,16 +9,19 @@ import com.chrisfry.socialq.utils.DisplayUtils
 import kaaes.spotify.webapi.android.models.Album
 
 class AlbumCardAdapter : BaseRecyclerViewAdapter<SelectableAlbumCardViewHolder, Album>(), ISpotifySelectionPositionListener {
+    var displayArtistFlag = true
     lateinit var listener: ISpotifySelectionPositionListener
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SelectableAlbumCardViewHolder {
-        return SelectableAlbumCardViewHolder(LayoutInflater.from(parent.context).inflate(R.layout.album_card_view, parent, false))
+        return SelectableAlbumCardViewHolder(LayoutInflater.from(parent.context).inflate(R.layout.album_card_view_holder, parent, false))
     }
 
     override fun onBindViewHolder(holder: SelectableAlbumCardViewHolder, position: Int) {
         val albumToDisplay = itemList[position]
         holder.setAlbumName(albumToDisplay.name)
-        holder.setArtistName(DisplayUtils.getAlbumArtistString(albumToDisplay))
+        if (displayArtistFlag) {
+            holder.setArtistName(DisplayUtils.getAlbumArtistString(albumToDisplay))
+        }
         if (albumToDisplay.images.size > 0) {
             holder.setImageUrl(albumToDisplay.images[0].url)
         } else {

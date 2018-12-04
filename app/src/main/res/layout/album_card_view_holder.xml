@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<merge xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/album_card_view"
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
 
@@ -24,9 +25,9 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             app:layout_constraintTop_toBottomOf="@id/iv_album_image"
-            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toTopOf="@id/tv_artist_name"
             android:layout_marginTop="@dimen/default_margin"
             android:layout_marginStart="@dimen/default_margin"
             android:layout_marginEnd="@dimen/default_margin"
@@ -55,4 +56,4 @@
             android:gravity="center_horizontal"
             android:visibility="gone"/>
     </androidx.constraintlayout.widget.ConstraintLayout>
-</merge>
+</androidx.cardview.widget.CardView>

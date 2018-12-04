@@ -23,10 +23,12 @@ interface ISearchView : ISpotifyAccessView{
     fun showAllArtists(artistList: List<Artist>, position: Int)
 
     fun showAllAlbums(albumList: List<Album>, position: Int)
+    fun showAllArtistAlbums(artist: Artist, albumList: List<Album>, position: Int)
 
     fun showAlbum(album: Album)
 
     fun showArtist(artist: Artist, topTracks: List<Track>, albums: List<Album>)
+    fun returnToArtist(artist: Artist)
 
     fun sendTrackToHost(uri: String)
 

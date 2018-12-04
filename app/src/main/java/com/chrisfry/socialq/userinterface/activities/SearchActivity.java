@@ -25,7 +25,6 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import com.bumptech.glide.Glide;
-import com.bumptech.glide.request.RequestOptions;
 import com.chrisfry.socialq.business.AppConstants;
 import com.chrisfry.socialq.R;
 
@@ -48,6 +47,7 @@ import com.chrisfry.socialq.userinterface.adapters.AlbumCardAdapter;
 import com.chrisfry.socialq.userinterface.interfaces.ISearchView;
 import com.chrisfry.socialq.userinterface.interfaces.ISpotifySelectionListener;
 import com.chrisfry.socialq.userinterface.interfaces.ISpotifySelectionPositionListener;
+import com.chrisfry.socialq.userinterface.views.AlbumCardView;
 import com.chrisfry.socialq.userinterface.views.ArtistView;
 import com.chrisfry.socialq.userinterface.views.QueueItemDecoration;
 import com.chrisfry.socialq.userinterface.views.TextViewWithUri;
@@ -74,6 +74,7 @@ public class SearchActivity extends AppCompatActivity implements ISearchView, IS
     private View mViewAllSongs;
     private View mViewAllArtists;
     private View mViewAllAlbums;
+    private View mViewAllArtistAlbums;
     private RecyclerView mResultsList;
     private QueueItemDecoration mListDecoration;
     private EditText mSearchEditText;
@@ -84,24 +85,34 @@ public class SearchActivity extends AppCompatActivity implements ISearchView, IS
     // Bind lists of all views (header, items, and view all button)
     @BindViews({R.id.tv_song_heading, R.id.cv_track_1, R.id.cv_track_2, R.id.cv_track_3, R.id.tv_see_all_songs})
     List<View> mAllSongViews;
+
     @BindViews({R.id.tv_artist_heading, R.id.cv_artist_1, R.id.cv_artist_2, R.id.cv_artist_3, R.id.tv_see_all_artists})
     List<View> mAllArtistViews;
+
     @BindViews({R.id.tv_album_heading, R.id.cv_album_1, R.id.cv_album_2, R.id.cv_album_3, R.id.tv_see_all_albums})
     List<View> mAllAlbumViews;
-    @BindViews({R.id.tv_top_track_1, R.id.tv_top_track_2, R.id.tv_top_track_3, R.id.tv_top_track_4, R.id.tv_top_track_5})
-    List<TextViewWithUri> mTopTrackViews;
+
+    @BindViews({R.id.tv_top_track_header, R.id.tv_top_track_1, R.id.tv_top_track_2, R.id.tv_top_track_3,
+            R.id.tv_top_track_4, R.id.tv_top_track_5})
+    List<TextView> mTopTrackViews;
+
+    @BindViews({R.id.tv_artist_album_header, R.id.cv_artist_album_1, R.id.cv_artist_album_2, R.id.cv_artist_album_3,
+            R.id.cv_artist_album_4, R.id.tv_see_all_artist_albums})
+    List<View> mArtistAlbumViews;
 
     // Views for different nav states
     @BindViews({R.id.tv_song_heading, R.id.cv_track_1, R.id.cv_track_2, R.id.cv_track_3, R.id.tv_see_all_songs,
             R.id.tv_artist_heading, R.id.cv_artist_1, R.id.cv_artist_2, R.id.cv_artist_3, R.id.tv_see_all_artists,
             R.id.tv_album_heading, R.id.cv_album_1, R.id.cv_album_2, R.id.cv_album_3, R.id.tv_see_all_albums})
     List<View> mBaseDisplayViews;
+
     @BindViews({R.id.iv_album_layout_image, R.id.rv_search_results})
     List<View> mAlbumDisplayViews;
-    // TODO: Include views for first few albums.
-    // Artist image size is much more erratic
+
     @BindViews({R.id.iv_artist_layout_image, R.id.tv_top_track_header, R.id.tv_top_track_1, R.id.tv_top_track_2,
-            R.id.tv_top_track_3, R.id.tv_top_track_4, R.id.tv_top_track_5})
+            R.id.tv_top_track_3, R.id.tv_top_track_4, R.id.tv_top_track_5, R.id.tv_artist_album_header,
+            R.id.cv_artist_album_1, R.id.cv_artist_album_2, R.id.cv_artist_album_3, R.id.cv_artist_album_4,
+            R.id.tv_see_all_artist_albums})
     List<View> mArtistDisplayViews;
 
     // Bind lists of item views
@@ -111,6 +122,10 @@ public class SearchActivity extends AppCompatActivity implements ISearchView, IS
     List<ArtistView> mArtistItemViews;
     @BindViews({R.id.cv_album_1, R.id.cv_album_2, R.id.cv_album_3})
     List<TrackAlbumView> mAlbumItemViews;
+    @BindViews({R.id.tv_top_track_1, R.id.tv_top_track_2, R.id.tv_top_track_3, R.id.tv_top_track_4, R.id.tv_top_track_5})
+    List<TextViewWithUri> mTopTrackItemViews;
+    @BindViews({R.id.cv_artist_album_1, R.id.cv_artist_album_2, R.id.cv_artist_album_3, R.id.cv_artist_album_4})
+    List<AlbumCardView> mArtistAlbumItemViews;
 
     // Recycler view adapters
     private SearchTrackAdapter mSongResultsAdapter;
@@ -197,6 +212,7 @@ public class SearchActivity extends AppCompatActivity implements ISearchView, IS
         mViewAllSongs = findViewById(R.id.tv_see_all_songs);
         mViewAllArtists = findViewById(R.id.tv_see_all_artists);
         mViewAllAlbums = findViewById(R.id.tv_see_all_albums);
+        mViewAllArtistAlbums = findViewById(R.id.tv_see_all_artist_albums);
 
         // Results list
         mResultsList = findViewById(R.id.rv_search_results);
@@ -212,9 +228,15 @@ public class SearchActivity extends AppCompatActivity implements ISearchView, IS
         mViewAllSongs.setOnClickListener(this);
         mViewAllArtists.setOnClickListener(this);
         mViewAllAlbums.setOnClickListener(this);
+        mViewAllArtistAlbums.setOnClickListener(this);
 
         // Add listeners to artist top track items
-        for(TextViewWithUri view : mTopTrackViews) {
+        for(TextViewWithUri view : mTopTrackItemViews) {
+            view.setListener(this);
+        }
+
+        // Add listeners to artist album items
+        for (AlbumCardView view : mArtistAlbumItemViews) {
             view.setListener(this);
         }
 
@@ -351,6 +373,11 @@ public class SearchActivity extends AppCompatActivity implements ISearchView, IS
                 Log.d(TAG, "User wants to see all albums");
 
                 presenter.viewAllAlbumsRequest();
+                break;
+            case R.id.tv_see_all_artist_albums:
+                Log.d(TAG, "User wants to see all artist albums");
+
+                presenter.viewALlArtistAlbumsRequest();
                 break;
         }
     }
@@ -529,16 +556,25 @@ public class SearchActivity extends AppCompatActivity implements ISearchView, IS
         ButterKnife.apply(mAlbumDisplayViews, DisplayUtils.GONE);
         setupRecyclerViewWithGrid();
         mResultsList.setAdapter(mAlbumCardAdapter);
+        mAlbumCardAdapter.setDisplayArtistFlag(true);
         mAlbumCardAdapter.updateAdapter(albumList);
         mResultsList.setVisibility(View.VISIBLE);
         mResultsList.scrollToPosition(position);
     }
 
     @Override
+    public void showAllArtistAlbums(@NotNull Artist artist, @NotNull List<? extends Album> albumList, int position) {
+        showAllAlbums(albumList, position);
+        mAlbumCardAdapter.setDisplayArtistFlag(false);
+        mAlbumCardAdapter.notifyDataSetChanged();
+        setTitle(String.format(getString(R.string.artist_albums), artist.name));
+    }
+
+    @Override
     public void showAlbum(@NotNull Album album) {
         ButterKnife.apply(mAlbumDisplayViews, DisplayUtils.VISIBLE);
         if (album.images.size() > 0) {
-            Glide.with(this).load(album.images.get(0).url).apply(new RequestOptions().placeholder(R.mipmap.black_record)).into(mAlbumImage);
+            Glide.with(this).load(album.images.get(0).url).into(mAlbumImage);
         } else {
             mAlbumImage.setVisibility(View.GONE);
         }
@@ -554,6 +590,7 @@ public class SearchActivity extends AppCompatActivity implements ISearchView, IS
     @Override
     public void showArtist(@NotNull Artist artist, @NotNull List<? extends Track> topTracks, @NotNull List<? extends Album> albums) {
         // TODO: show artist view when implemented
+        mResultsScrollView.scrollTo(0, 0);
         mSearchEditText.setVisibility(View.GONE);
         mResultsScrollView.setVisibility(View.VISIBLE);
         ButterKnife.apply(mBaseDisplayViews, DisplayUtils.GONE);
@@ -561,23 +598,59 @@ public class SearchActivity extends AppCompatActivity implements ISearchView, IS
         ButterKnife.apply(mArtistDisplayViews, DisplayUtils.VISIBLE);
 
         if (artist.images.size() > 0) {
-            Glide.with(getBaseContext()).load(artist.images.get(0).url).apply(new RequestOptions().placeholder(R.mipmap.black_blank_person)).into(mArtistImage);
+            Glide.with(getBaseContext()).load(artist.images.get(0).url).into(mArtistImage);
         } else {
             mArtistImage.setVisibility(View.GONE);
         }
 
         // Load top track information
         int i = 0;
-        for (TextViewWithUri topTrackView : mTopTrackViews) {
-            if (topTracks.size() > i) {
-                topTrackView.setText(topTracks.get(i).name);
-                topTrackView.setUri(topTracks.get(i).uri);
-                mTopTrackViews.get(i).setVisibility(View.VISIBLE);
-            } else {
-                mTopTrackViews.get(i).setVisibility(View.GONE);
+        if (topTracks.size() > 0) {
+            for (TextViewWithUri topTrackView : mTopTrackItemViews) {
+                if (topTracks.size() > i) {
+                    topTrackView.setText(topTracks.get(i).name);
+                    topTrackView.setUri(topTracks.get(i).uri);
+                    topTrackView.setVisibility(View.VISIBLE);
+                } else {
+                    topTrackView.setVisibility(View.GONE);
+                }
+                i++;
             }
-            i++;
+        } else {
+            ButterKnife.apply(mTopTrackViews, DisplayUtils.GONE);
         }
+        setTitle(artist.name);
+
+        // Load artist album information
+        i = 0;
+        if (albums.size() > 0) {
+            for (AlbumCardView albumView : mArtistAlbumItemViews) {
+                if (albums.size() > i) {
+                    albumView.setName(albums.get(i).name);
+                    albumView.setUri(albums.get(i).uri);
+                    if (albums.get(i).images.size() > 0) {
+                        albumView.setImageUrl(albums.get(i).images.get(0).url);
+                    } else {
+                        albumView.setImageUrl("");
+                    }
+                } else {
+                    // If we're hiding album on the end side we need to set it invisible
+                    // (could cause album on start side to become large in size)
+                    albumView.setVisibility(i == albums.size() && (i % 2 == 1) ? View.INVISIBLE : View.GONE);
+                }
+                i++;
+            }
+            mViewAllArtistAlbums.setVisibility(albums.size() > mArtistAlbumItemViews.size() ? View.VISIBLE : View.GONE);
+        } else {
+            ButterKnife.apply(mArtistAlbumViews, DisplayUtils.GONE);
+        }
+    }
+
+    @Override
+    public void returnToArtist(@NotNull Artist artist) {
+        ButterKnife.apply(mAlbumDisplayViews, DisplayUtils.GONE);
+        mResultsScrollView.setVisibility(View.VISIBLE);
+        setTitle(artist.name);
     }
 
     @Override

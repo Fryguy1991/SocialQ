@@ -27,7 +27,8 @@ class SearchPresenter : SpotifyAccessPresenter(), ISearchPresenter {
     private var artistAlbums = mutableListOf<Album>()
 
     private var navStep = BASE
-    private var cachedPosition = 0
+    private var cachedArtistPosition = 0;
+    private var cachedAlbumPosition = 0
     private var cachedSearchTerm = ""
     private var cachedArtist: Artist? = null
 
@@ -37,6 +38,7 @@ class SearchPresenter : SpotifyAccessPresenter(), ISearchPresenter {
     private var albumSearchComplete = false
     private var artistAlbumRetrievalComplete = false
     private var artistTopTrackRetrievalComplete = false
+    private var artistFromViewAllFlag = false
 
     // Options to set limit for search results to 50 items
     val options = HashMap<String, Any>()
@@ -82,13 +84,13 @@ class SearchPresenter : SpotifyAccessPresenter(), ISearchPresenter {
 
                 getView()!!.closeSearchView()
             }
-            VIEW_ALL_SONGS -> {
+            ALL_SONGS -> {
                 Log.d(TAG, "Returning to base view from view all songs")
                 navStep = BASE
 
                 getView()!!.showBaseResultsView()
             }
-            ARTIST_SELECTED -> {
+            ARTIST -> {
                 Log.d(TAG, "Returning to base view from artist")
                 navStep = BASE
                 cachedArtist = null
@@ -98,13 +100,13 @@ class SearchPresenter : SpotifyAccessPresenter(), ISearchPresenter {
                 getView()!!.showBaseArtistResults(baseArtistResults)
                 getView()!!.showBaseAlbumResults(baseAlbumResults)
             }
-            ARTIST_ALBUM_SELECTED -> {
+            ARTIST_ALBUM -> {
                 Log.d(TAG, "Returning to artist from album")
-                navStep = ARTIST_SELECTED
+                navStep = ARTIST
 
-                getView()!!.showArtist(cachedArtist!!, artistTopTracks, artistAlbums)
+                getView()!!.returnToArtist(cachedArtist!!)
             }
-            VIEW_ALL_ARTISTS -> {
+            ALL_ARTISTS -> {
                 Log.d(TAG, "Returning to base view from view all artists")
                 navStep = BASE
                 cachedArtist = null
@@ -114,16 +116,16 @@ class SearchPresenter : SpotifyAccessPresenter(), ISearchPresenter {
                 getView()!!.showBaseArtistResults(baseArtistResults)
                 getView()!!.showBaseAlbumResults(baseAlbumResults)
             }
-            VIEW_ALL_ARTIST_SELECTED -> {
+            ALL_ARTIST_SELECTED -> {
                 Log.d(TAG, "Returning to view all artists")
-                navStep = VIEW_ALL_ARTISTS
+                navStep = ALL_ARTISTS
 
-                getView()!!.showAllArtists(baseArtistResults, cachedPosition)
-                cachedPosition = 0
+                getView()!!.showAllArtists(baseArtistResults, cachedArtistPosition)
+                cachedArtistPosition = 0
             }
-            VIEW_ALL_ARTIST_ALBUM_SELECTED -> {
+            ALL_ARTIST_SELECTED_ALBUM -> {
                 Log.d(TAG, "Returning to artist (all) from album")
-                navStep = VIEW_ALL_ARTIST_SELECTED
+                navStep = ALL_ARTIST_SELECTED
 
                 getView()!!.showArtist(cachedArtist!!, artistTopTracks, artistAlbums)
             }
@@ -133,18 +135,37 @@ class SearchPresenter : SpotifyAccessPresenter(), ISearchPresenter {
 
                 getView()!!.showBaseResultsView()
             }
-            VIEW_ALL_ALBUMS -> {
+            ALL_ALBUMS -> {
                 Log.d(TAG, "Returning to base view from all albums")
                 navStep = BASE
 
                 getView()!!.showBaseResultsView()
             }
-            VIEW_ALL_ALBUM_SELECTED -> {
-                Log.d(TAG, "Returning to view all albums")
-                navStep = VIEW_ALL_ALBUMS
+            ALL_ALBUM_SELECTED -> {
+                Log.d(TAG, "Returning to all albums from album")
+                navStep = ALL_ALBUMS
 
-                getView()!!.showAllAlbums(baseAlbumResults, cachedPosition)
-                cachedPosition = 0
+                getView()!!.showAllAlbums(baseAlbumResults, cachedAlbumPosition)
+                cachedAlbumPosition = 0
+            }
+            ALL_ARTIST_SELECTED_ALL_ALBUMS -> {
+                Log.d(TAG, "Returning to artist from all artist albums (all artist selection)")
+                navStep = ALL_ARTIST_SELECTED
+
+                getView()!!.returnToArtist(cachedArtist!!)
+            }
+            ALL_ARTIST_SELECTED_ALL_ALBUM_SELECTED -> {
+                Log.d(TAG, "Returning to all artist albums from album (all artist selection)")
+                navStep = ALL_ARTIST_SELECTED_ALL_ALBUMS
+
+                getView()!!.showAllArtistAlbums(cachedArtist!!, artistAlbums, cachedAlbumPosition)
+                cachedAlbumPosition = 0
+            }
+            ARTIST_ALL_ALBUM -> {
+                Log.d(TAG, "Returning to artist from all artist albums")
+                navStep = ARTIST
+
+                getView()!!.returnToArtist(cachedArtist!!)
             }
         }
     }
@@ -165,19 +186,29 @@ class SearchPresenter : SpotifyAccessPresenter(), ISearchPresenter {
     }
 
     override fun viewAllSongsRequest() {
-        navStep = VIEW_ALL_SONGS
+        navStep = ALL_SONGS
         getView()!!.showAllSongs(baseSongResults)
     }
 
     override fun viewAllArtistsRequest() {
-        navStep = VIEW_ALL_ARTISTS
+        navStep = ALL_ARTISTS
         getView()!!.showAllArtists(baseArtistResults, 0)
     }
 
     override fun viewAllAlbumsRequest() {
-        navStep = VIEW_ALL_ALBUMS
+        navStep = ALL_ALBUMS
         getView()!!.showAllAlbums(baseAlbumResults, 0)
     }
+
+    override fun viewALlArtistAlbumsRequest() {
+        if (artistFromViewAllFlag) {
+            navStep = ALL_ARTIST_SELECTED_ALL_ALBUMS
+        } else {
+            navStep = ARTIST_ALL_ALBUM
+        }
+        getView()!!.showAllArtistAlbums(cachedArtist!!, artistAlbums, 0)
+    }
+
 
     private val songsCallback = object : SpotifyCallback<TracksPager>() {
         override fun success(tracksPager: TracksPager?, response: Response?) {
@@ -379,17 +410,19 @@ class SearchPresenter : SpotifyAccessPresenter(), ISearchPresenter {
     private fun handleTrackSelected(uri: String, position: Int) {
         when (navStep) {
             BASE,
-            VIEW_ALL_SONGS,
-            ARTIST_SELECTED,
-            ARTIST_ALBUM_SELECTED,
-            VIEW_ALL_ARTIST_SELECTED,
-            VIEW_ALL_ARTIST_ALBUM_SELECTED,
+            ALL_SONGS,
+            ARTIST,
+            ARTIST_ALBUM,
+            ALL_ARTIST_SELECTED,
+            ALL_ARTIST_SELECTED_ALBUM,
             ALBUM_SELECTED,
-            VIEW_ALL_ALBUM_SELECTED -> {
+            ALL_ALBUM_SELECTED,
+            ALL_ARTIST_SELECTED_ALL_ALBUM_SELECTED-> {
                 getView()!!.sendTrackToHost(uri)
             }
-            VIEW_ALL_ARTISTS,
-            VIEW_ALL_ALBUMS -> {
+            ALL_ARTISTS,
+            ALL_ALBUMS,
+            ALL_ARTIST_SELECTED_ALL_ALBUMS -> {
                 Log.e(TAG, "Not expecting track to be selected here")
             }
         }
@@ -406,7 +439,8 @@ class SearchPresenter : SpotifyAccessPresenter(), ISearchPresenter {
                 }
                 for (artist in baseArtistResults.subList(0, subListLimit)) {
                     if (uri == artist.uri) {
-                        navStep = ARTIST_SELECTED
+                        navStep = ARTIST
+                        artistFromViewAllFlag = false
 
                         // Retrieve artist's albums and top tracks (callbacks responsible for notifying view)
                         artistAlbumRetrievalComplete = false
@@ -419,11 +453,12 @@ class SearchPresenter : SpotifyAccessPresenter(), ISearchPresenter {
                 }
                 Log.e(TAG, "Something went wrong. Lost artist information")
             }
-            VIEW_ALL_ARTISTS -> {
+            ALL_ARTISTS -> {
                 // Selected an artist from view all list. Ensure position is valid and use for direct retrieval
                 if (position >= 0 && position < baseArtistResults.size) {
-                    navStep = VIEW_ALL_ARTIST_SELECTED
-                    cachedPosition = position
+                    navStep = ALL_ARTIST_SELECTED
+                    artistFromViewAllFlag = true
+                    cachedArtistPosition = position
                     cachedArtist = baseArtistResults[position]
 
                     // Retrieve artist's albums and top tracks (callbacks responsible for notifying view)
@@ -435,14 +470,16 @@ class SearchPresenter : SpotifyAccessPresenter(), ISearchPresenter {
                     Log.e(TAG, "Invalid artist index")
                 }
             }
-            VIEW_ALL_SONGS,
-            ARTIST_SELECTED,
-            ARTIST_ALBUM_SELECTED,
-            VIEW_ALL_ARTIST_SELECTED,
-            VIEW_ALL_ARTIST_ALBUM_SELECTED,
+            ALL_SONGS,
+            ARTIST,
+            ARTIST_ALBUM,
+            ALL_ARTIST_SELECTED,
+            ALL_ARTIST_SELECTED_ALBUM,
             ALBUM_SELECTED,
-            VIEW_ALL_ALBUMS,
-            VIEW_ALL_ALBUM_SELECTED -> {
+            ALL_ALBUMS,
+            ALL_ALBUM_SELECTED,
+            ALL_ARTIST_SELECTED_ALL_ALBUMS,
+            ALL_ARTIST_SELECTED_ALL_ALBUM_SELECTED -> {
                 Log.e(TAG, "Not expecting artist to be selected here")
             }
         }
@@ -466,26 +503,30 @@ class SearchPresenter : SpotifyAccessPresenter(), ISearchPresenter {
                 }
                 Log.e(TAG, "Something went wrong. Lost album information")
             }
-            VIEW_ALL_ALBUMS -> {
+            ALL_ALBUMS -> {
                 // Selected an album from view all list. Ensure position is valid and use for direct retrieval
                 if (position >= 0 && position < baseAlbumResults.size) {
-                    navStep = VIEW_ALL_ALBUM_SELECTED
-                    cachedPosition = position
+                    navStep = ALL_ALBUM_SELECTED
+                    cachedAlbumPosition = position
                     getView()!!.showAlbum(baseAlbumResults[position])
                 } else {
                     Log.e(TAG, "Invalid album index")
                 }
             }
-            ARTIST_SELECTED -> {
+            ARTIST -> {
                 TODO()
             }
-            VIEW_ALL_SONGS,
-            ARTIST_ALBUM_SELECTED,
-            VIEW_ALL_ARTISTS,
-            VIEW_ALL_ARTIST_SELECTED,
-            VIEW_ALL_ARTIST_ALBUM_SELECTED,
+            ALL_ARTIST_SELECTED_ALL_ALBUMS -> {
+                TODO()
+            }
+            ALL_SONGS,
+            ARTIST_ALBUM,
+            ALL_ARTISTS,
+            ALL_ARTIST_SELECTED,
+            ALL_ARTIST_SELECTED_ALBUM,
             ALBUM_SELECTED,
-            VIEW_ALL_ALBUM_SELECTED -> {
+            ALL_ALBUM_SELECTED,
+            ALL_ARTIST_SELECTED_ALL_ALBUM_SELECTED-> {
                 Log.e(TAG, "Not expecting album to be selected here")
             }
         }

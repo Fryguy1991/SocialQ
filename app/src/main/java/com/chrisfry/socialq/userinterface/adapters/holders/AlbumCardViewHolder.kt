@@ -27,5 +27,6 @@ open class AlbumCardViewHolder(itemView: View) : RecyclerView.ViewHolder(itemVie
 
     fun setArtistName(name: String) {
         artistNameText.text = name
+        artistNameText.visibility = View.VISIBLE
     }
 }
