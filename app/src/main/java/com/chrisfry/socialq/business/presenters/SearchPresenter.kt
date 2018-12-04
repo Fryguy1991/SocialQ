@@ -25,6 +25,7 @@ class SearchPresenter : SpotifyAccessPresenter(), ISearchPresenter {
     // Lists for artists results (top tracks, albums)
     private var artistTopTracks = mutableListOf<Track>()
     private var artistAlbums = mutableListOf<Album>()
+    private var fullArtistAlbums = mutableListOf<Album>()
 
     private var navStep = BASE
     private var cachedArtistPosition = 0;
@@ -36,8 +37,10 @@ class SearchPresenter : SpotifyAccessPresenter(), ISearchPresenter {
     private var songSearchComplete = false
     private var artistSearchComplete = false
     private var albumSearchComplete = false
-    private var artistAlbumRetrievalComplete = false
+    private var artistFullAlbumRetrievalComplete = false
     private var artistTopTrackRetrievalComplete = false
+
+    private var cachedAlbumCount = 0
 
     // Flags for detecting nav state
     private var artistSelectedFlag = false
@@ -128,16 +131,14 @@ class SearchPresenter : SpotifyAccessPresenter(), ISearchPresenter {
                     allArtistAlbumFlag -> {
                         Log.d(TAG, "Returning to all artist albums from album")
                         navStep = ALL_ALBUMS
-                        getView()!!.showAllArtistAlbums(selectedArtist!!, artistAlbums, cachedAlbumPosition)
+                        getView()!!.showAllArtistAlbums(selectedArtist!!, fullArtistAlbums, cachedAlbumPosition)
                         cachedAlbumPosition = 0
-                        allArtistAlbumFlag = false
                     }
                     allAlbumFlag -> {
                         Log.d(TAG, "Returning to all albums from album")
                         navStep = ALL_ALBUMS
                         getView()!!.showAllAlbums(baseAlbumResults, cachedAlbumPosition)
                         cachedAlbumPosition = 0
-                        allAlbumFlag = false
                     }
                     artistSelectedFlag -> {
                         Log.d(TAG, "Returning to artist from album")
@@ -202,7 +203,7 @@ class SearchPresenter : SpotifyAccessPresenter(), ISearchPresenter {
     override fun viewALlArtistAlbumsRequest() {
         navStep = ALL_ALBUMS
         allArtistAlbumFlag = true
-        getView()!!.showAllArtistAlbums(selectedArtist!!, artistAlbums, 0)
+        getView()!!.showAllArtistAlbums(selectedArtist!!, fullArtistAlbums, 0)
     }
 
 
@@ -318,6 +319,8 @@ class SearchPresenter : SpotifyAccessPresenter(), ISearchPresenter {
                 if (albumsPager.offset == 0) {
                     // Fresh retrieval
                     artistAlbums.clear()
+                    fullArtistAlbums.clear()
+                    cachedAlbumCount = albumsPager.total
                 }
 
                 artistAlbums.addAll(albumsPager.items)
@@ -327,14 +330,12 @@ class SearchPresenter : SpotifyAccessPresenter(), ISearchPresenter {
                     options[SpotifyService.OFFSET] = albumsPager.offset + albumsPager.items.size
                     spotifyService.getArtistAlbums(selectedArtist!!.id, options, this)
                 } else {
-                    // TODO: Not receiving full albums from artist
                     Log.d(TAG, "Finished retrieving ${selectedArtist!!.name} albums")
-                    artistAlbumRetrievalComplete = true
 
-                    if (artistTopTrackRetrievalComplete) {
-                        getView()!!.showArtist(selectedArtist!!, artistTopTracks, artistAlbums)
-                    }
+                    retrieveFullAlbums(artistAlbums)
+
                     options[SpotifyService.OFFSET] = 0
+                    options.remove("include_groups")
                 }
             }
         }
@@ -345,7 +346,29 @@ class SearchPresenter : SpotifyAccessPresenter(), ISearchPresenter {
                 options[SpotifyService.OFFSET] = 0
             }
         }
+    }
 
+    private val artistFullAlbumCallback = object : SpotifyCallback<Albums>() {
+        override fun success(albums: Albums?, response: Response?) {
+            if (albums != null) {
+                fullArtistAlbums.addAll(albums.albums)
+
+                if (fullArtistAlbums.size == cachedAlbumCount) {
+                    Log.d(TAG, "Finished retrieving full albums for ${selectedArtist!!.name}")
+                    if (artistTopTrackRetrievalComplete) {
+                        getView()!!.showArtist(selectedArtist!!, artistTopTracks, fullArtistAlbums)
+                    }
+                } else {
+                    Log.d(TAG, "Successfully retrieved some full albums for ${selectedArtist!!.name}")
+                }
+            }
+        }
+
+        override fun failure(spotifyError: SpotifyError?) {
+            if (spotifyError != null) {
+                Log.e(TAG, "Error retrieving full artist albums: " + spotifyError.errorDetails)
+            }
+        }
     }
 
     private val artistTopTracksCallback = object : SpotifyCallback<Tracks>() {
@@ -356,7 +379,7 @@ class SearchPresenter : SpotifyAccessPresenter(), ISearchPresenter {
                 artistTopTracks.clear()
                 artistTopTracks = tracks.tracks
 
-                if (artistAlbumRetrievalComplete) {
+                if (artistFullAlbumRetrievalComplete) {
                     getView()!!.showArtist(selectedArtist!!, artistTopTracks, artistAlbums)
                 }
             }
@@ -370,6 +393,28 @@ class SearchPresenter : SpotifyAccessPresenter(), ISearchPresenter {
 
     }
 
+    private fun retrieveFullAlbums(albums: List<Album>) {
+        var i = 0
+        var albumSearchString = ""
+        while (i < albums.size) {
+
+            albumSearchString += albums[i].id
+
+            // Can only load 20 albums at a time (or size of list if it's smaller)
+            if (i % 20 != 19 && i < albums.size -1) {
+                albumSearchString += ","
+            }
+
+            i++
+
+            // If we're loaded up with 20 albums or at end of list send full album call
+            if (i % 20 == 0 || i >= albums.size) {
+                spotifyService.getAlbums(albumSearchString, artistFullAlbumCallback)
+                albumSearchString = ""
+            }
+        }
+    }
+
     private fun clearSearchResults() {
         baseSongResults.clear()
         baseArtistResults.clear()
@@ -378,6 +423,7 @@ class SearchPresenter : SpotifyAccessPresenter(), ISearchPresenter {
 
     private fun clearArtistResults() {
         artistAlbums.clear()
+        fullArtistAlbums.clear()
         artistTopTracks.clear()
     }
 
@@ -426,7 +472,7 @@ class SearchPresenter : SpotifyAccessPresenter(), ISearchPresenter {
                 // Look in results list (currently only showing first 3 items)
                 var subListLimit = baseArtistResults.size
                 if (baseArtistResults.size >= 3) {
-                    subListLimit = 4
+                    subListLimit = 3
                 }
                 for (artist in baseArtistResults.subList(0, subListLimit)) {
                     if (uri == artist.uri) {
@@ -435,9 +481,10 @@ class SearchPresenter : SpotifyAccessPresenter(), ISearchPresenter {
                         artistSelectedFlag = true
 
                         // Retrieve artist's albums and top tracks (callbacks responsible for notifying view)
-                        artistAlbumRetrievalComplete = false
                         artistTopTrackRetrievalComplete = false
+                        artistFullAlbumRetrievalComplete = false
                         selectedArtist = artist
+                        options["include_groups"] = "album,single"
                         spotifyService.getArtistAlbums(artist.id, options, artistAlbumCallback)
                         spotifyService.getArtistTopTrack(artist.id, Locale.getDefault().country, artistTopTracksCallback)
                         return
@@ -455,8 +502,8 @@ class SearchPresenter : SpotifyAccessPresenter(), ISearchPresenter {
                     selectedArtist = baseArtistResults[position]
 
                     // Retrieve artist's albums and top tracks (callbacks responsible for notifying view)
-                    artistAlbumRetrievalComplete = false
                     artistTopTrackRetrievalComplete = false
+                    artistFullAlbumRetrievalComplete = false
                     spotifyService.getArtistAlbums(baseArtistResults[position].id, options, artistAlbumCallback)
                     spotifyService.getArtistTopTrack(baseArtistResults[position].id, Locale.getDefault().country, artistTopTracksCallback)
                 } else {
@@ -479,7 +526,7 @@ class SearchPresenter : SpotifyAccessPresenter(), ISearchPresenter {
                 // Look in results list (currently only showing first 3 items)
                 var subListLimit = baseAlbumResults.size
                 if (baseAlbumResults.size >= 3) {
-                    subListLimit = 4
+                    subListLimit = 3
                 }
                 for (album in baseAlbumResults.subList(0, subListLimit)) {
                     if (uri == album.uri) {
@@ -495,11 +542,11 @@ class SearchPresenter : SpotifyAccessPresenter(), ISearchPresenter {
                 // Selected an album from view all list. Ensure position is valid and use for direct retrieval
                 when {
                     artistSelectedFlag -> {
-                        if (position >= 0 && position < artistAlbums.size) {
-                            Log.d(TAG, "Selected ${artistAlbums[position].name} from artist albums")
+                        if (position >= 0 && position < fullArtistAlbums.size) {
+                            Log.d(TAG, "Selected ${fullArtistAlbums[position].name} from artist albums")
                             navStep = ALBUM
                             cachedAlbumPosition = position
-                            getView()!!.showAlbum(artistAlbums[position])
+                            getView()!!.showAlbum(fullArtistAlbums[position])
                         } else {
                             Log.e(TAG, "Invalid album index")
                         }
@@ -522,11 +569,11 @@ class SearchPresenter : SpotifyAccessPresenter(), ISearchPresenter {
             ARTIST -> {
                 // Selected an album from artist view (base artist) Position is worthless.
                 // Look in artist album results list (currently only showing first 4 items)
-                var subListLimit = artistAlbums.size
-                if (artistAlbums.size >= 4) {
+                var subListLimit = fullArtistAlbums.size
+                if (fullArtistAlbums.size >= 4) {
                     subListLimit = 4
                 }
-                for (album in artistAlbums.subList(0, subListLimit)) {
+                for (album in fullArtistAlbums.subList(0, subListLimit)) {
                     if (uri == album.uri) {
                         Log.d(TAG, "Selected ${album.name} from artist")
                         navStep = ALBUM
