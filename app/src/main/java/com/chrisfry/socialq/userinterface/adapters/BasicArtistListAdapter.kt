@@ -16,6 +16,8 @@ open class BasicArtistListAdapter : BaseRecyclerViewAdapter<BasicImageTextHolder
         holder.setDisplayName(artistToDisplay.name)
         if (artistToDisplay.images.size > 0) {
             holder.setImage(artistToDisplay.images[0].url)
+        } else {
+            holder.setImage("")
         }
     }
 }

@@ -83,6 +83,7 @@ dependencies {
     implementation 'com.squareup.retrofit2:retrofit:2.4.0'
 
     // Glide (for pulling images from the web)
+    kapt 'com.github.bumptech.glide:compiler:4.8.0'
     implementation('com.github.bumptech.glide:glide:4.8.0') {
         exclude group: "com.android.support"
     }

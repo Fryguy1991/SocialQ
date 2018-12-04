@@ -21,6 +21,8 @@ class SearchTrackAdapter : BaseRecyclerViewAdapter<SelectableTrackAlbumHolder, T
         holder.setName(trackToDisplay.name)
         if (trackToDisplay.album.images.size > 0) {
             holder.setAlbumImage(trackToDisplay.album.images[0].url)
+        } else {
+            holder.setAlbumImage("")
         }
         holder.uri = trackToDisplay.uri
         holder.listener = this

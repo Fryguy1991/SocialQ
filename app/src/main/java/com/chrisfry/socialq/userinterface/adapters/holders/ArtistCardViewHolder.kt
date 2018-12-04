@@ -5,6 +5,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
+import com.bumptech.glide.request.RequestOptions
 import com.chrisfry.socialq.R
 
 open class ArtistCardViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -16,6 +17,10 @@ open class ArtistCardViewHolder(itemView: View) : RecyclerView.ViewHolder(itemVi
     }
 
     fun setImageUrl(url: String) {
-        Glide.with(image).load(url).into(image)
+        if (url.isEmpty()) {
+            Glide.with(image).load(R.mipmap.black_blank_person).into(image)
+        } else {
+            Glide.with(image).load(url).apply(RequestOptions().placeholder(R.mipmap.black_blank_person)).into(image)
+        }
     }
 }

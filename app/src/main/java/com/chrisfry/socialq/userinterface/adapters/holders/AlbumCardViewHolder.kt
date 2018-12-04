@@ -5,6 +5,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
+import com.bumptech.glide.request.RequestOptions
 import com.chrisfry.socialq.R
 
 open class AlbumCardViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView){
@@ -13,7 +14,11 @@ open class AlbumCardViewHolder(itemView: View) : RecyclerView.ViewHolder(itemVie
     private val artistNameText = itemView.findViewById<TextView>(R.id.tv_artist_name)
 
     fun setImageUrl(url: String) {
-        Glide.with(albumImage).load(url).into(albumImage)
+        if (url.isEmpty()) {
+            Glide.with(albumImage).load(R.mipmap.black_record).into(albumImage)
+        } else {
+            Glide.with(albumImage).load(url).apply(RequestOptions().placeholder(R.mipmap.black_record)).into(albumImage)
+        }
     }
 
     fun setAlbumName(name: String) {

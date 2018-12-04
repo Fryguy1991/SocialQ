@@ -8,6 +8,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
 import com.bumptech.glide.Glide
+import com.bumptech.glide.request.RequestOptions
 import com.chrisfry.socialq.R
 import com.chrisfry.socialq.userinterface.interfaces.ISpotifySelectionListener
 
@@ -32,7 +33,11 @@ class ArtistView : ConstraintLayout, View.OnClickListener {
     }
 
     fun setArtistImage(imageUrl: String) {
-        Glide.with(context).load(imageUrl).into(artistImage)
+        if (imageUrl.isEmpty()) {
+            Glide.with(context).load(R.mipmap.black_blank_person).into(artistImage)
+        } else {
+            Glide.with(context).load(imageUrl).apply(RequestOptions().placeholder(R.mipmap.black_blank_person)).into(artistImage)
+        }
     }
 
     fun setArtistName(name: String) {

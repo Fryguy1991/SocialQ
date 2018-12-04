@@ -22,6 +22,8 @@ class BasicTrackListAdapter : BaseRecyclerViewAdapter<BasicTrackAlbumHolder, Pla
         holder.setName(playlistTrack.track.name)
         if (playlistTrack.track.album.images.size > 0) {
             holder.setAlbumImage(playlistTrack.track.album.images[0].url)
+        } else {
+            holder.setAlbumImage("")
         }
     }
 }

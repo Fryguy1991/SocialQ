@@ -26,7 +26,7 @@ interface ISearchView : ISpotifyAccessView{
 
     fun showAlbum(album: Album)
 
-    fun showArtist(artist: Artist)
+    fun showArtist(artist: Artist, topTracks: List<Track>, albums: List<Album>)
 
     fun sendTrackToHost(uri: String)
 

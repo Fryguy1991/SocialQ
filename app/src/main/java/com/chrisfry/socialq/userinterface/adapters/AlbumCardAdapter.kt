@@ -21,6 +21,8 @@ class AlbumCardAdapter : BaseRecyclerViewAdapter<SelectableAlbumCardViewHolder, 
         holder.setArtistName(DisplayUtils.getAlbumArtistString(albumToDisplay))
         if (albumToDisplay.images.size > 0) {
             holder.setImageUrl(albumToDisplay.images[0].url)
+        } else {
+            holder.setImageUrl("")
         }
         holder.uri = albumToDisplay.uri
         holder.listener = this

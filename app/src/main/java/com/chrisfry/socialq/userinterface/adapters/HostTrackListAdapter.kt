@@ -24,6 +24,8 @@ class HostTrackListAdapter(val context : Context) : BaseRecyclerViewAdapter<Host
         // Ensure track has an album image before attempting to access
         if (trackToDisplay.track.track.album.images.size > 0) {
             holder.setAlbumImage(trackToDisplay.track.track.album.images[0].url)
+        } else {
+            holder.setAlbumImage("")
         }
         // If display name is blank display user ID instead
         if (trackToDisplay.user.display_name != null && !trackToDisplay.user.display_name.isEmpty()) {

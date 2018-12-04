@@ -21,6 +21,10 @@ open class BasicTrackAlbumHolder(view: View) : RecyclerView.ViewHolder(view) {
     }
 
     fun setAlbumImage(url: String) {
-        Glide.with(itemView).load(url).into(albumImageView)
+        if (url.isEmpty()) {
+            Glide.with(itemView).load(R.color.Transparent).into(albumImageView)
+        } else {
+            Glide.with(itemView).load(url).into(albumImageView)
+        }
     }
 }

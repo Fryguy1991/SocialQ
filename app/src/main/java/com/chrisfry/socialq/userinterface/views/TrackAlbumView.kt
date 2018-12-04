@@ -34,7 +34,12 @@ class TrackAlbumView : ConstraintLayout, View.OnClickListener {
     }
 
     fun setArtistImage(imageUrl: String) {
-        Glide.with(context).load(imageUrl).into(albumImage)
+        if (imageUrl.isEmpty()) {
+            Glide.with(context).load(R.color.Transparent).into(albumImage)
+        } else {
+            Glide.with(context).load(imageUrl).into(albumImage)
+        }
+
     }
 
     fun setName(name: String) {

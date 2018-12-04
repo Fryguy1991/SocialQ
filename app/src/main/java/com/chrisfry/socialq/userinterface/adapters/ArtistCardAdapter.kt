@@ -20,6 +20,8 @@ class ArtistCardAdapter : BaseRecyclerViewAdapter<ArtistCardAdapter.SelectableAr
         holder.setName(artistToDisplay.name)
         if (artistToDisplay.images.size > 0) {
             holder.setImageUrl(artistToDisplay.images[0].url)
+        } else {
+            holder.setImageUrl("")
         }
         holder.listener = this
         holder.uri = artistToDisplay.uri

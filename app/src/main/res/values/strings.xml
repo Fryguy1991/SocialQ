@@ -43,6 +43,7 @@
     <string name="artists">Artists</string>
     <string name="songs">Songs</string>
     <string name="albums">Albums</string>
+    <string name="top_tracks">Top Tracks</string>
     <string name="number_of_albums">%1$d Albums</string>
     <string name="number_of_artists">%1$d Artists</string>
     <string name="number_of_songs">%1$d Songs</string>

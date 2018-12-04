@@ -17,7 +17,7 @@ class SearchAlbumTrackAdapter : BaseRecyclerViewAdapter<SelectableAlbumTrackHold
 
     override fun onBindViewHolder(holder: SelectableAlbumTrackHolder, position: Int) {
         val trackToShow = itemList[position]
-        holder.setText(String.format(holder.itemView.context.getString(R.string.album_track_with_position_number), position + 1, trackToShow.name))
+        holder.setText(trackToShow.name)
         holder.uri = trackToShow.uri
         holder.listener = this
     }

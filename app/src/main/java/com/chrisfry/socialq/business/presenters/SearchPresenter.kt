@@ -9,7 +9,7 @@ import kaaes.spotify.webapi.android.SpotifyError
 import kaaes.spotify.webapi.android.SpotifyService
 import kaaes.spotify.webapi.android.models.*
 import retrofit.client.Response
-import java.util.HashMap
+import java.util.*
 import java.util.regex.Pattern
 
 class SearchPresenter : SpotifyAccessPresenter(), ISearchPresenter {
@@ -29,10 +29,22 @@ class SearchPresenter : SpotifyAccessPresenter(), ISearchPresenter {
     private var navStep = BASE
     private var cachedPosition = 0
     private var cachedSearchTerm = ""
+    private var cachedArtist: Artist? = null
 
+    // Flags for detecting if search/retrieval is complete
     private var songSearchComplete = false
     private var artistSearchComplete = false
     private var albumSearchComplete = false
+    private var artistAlbumRetrievalComplete = false
+    private var artistTopTrackRetrievalComplete = false
+
+    // Options to set limit for search results to 50 items
+    val options = HashMap<String, Any>()
+
+    init {
+        options[SpotifyService.LIMIT] = AppConstants.SPOTIFY_SEARCH_LIMIT
+        options[SpotifyService.OFFSET] = 0
+    }
 
     override fun getView(): ISearchView? {
         if (presenterView is ISearchView) {
@@ -57,10 +69,6 @@ class SearchPresenter : SpotifyAccessPresenter(), ISearchPresenter {
             clearSearchResults()
             getView()!!.showEmptyBaseView()
         } else {
-            // Create options to set limit for search results to 50 items
-            val options = HashMap<String, Any>()
-            options[SpotifyService.LIMIT] = AppConstants.SPOTIFY_SEARCH_LIMIT
-
             spotifyService.searchAlbums(searchTerm, options, albumsCallback)
             spotifyService.searchTracks(searchTerm, options, songsCallback)
             spotifyService.searchArtists(searchTerm, options, artistsCallback)
@@ -83,20 +91,28 @@ class SearchPresenter : SpotifyAccessPresenter(), ISearchPresenter {
             ARTIST_SELECTED -> {
                 Log.d(TAG, "Returning to base view from artist")
                 navStep = BASE
+                cachedArtist = null
 
                 getView()!!.showBaseResultsView()
+                getView()!!.showBaseSongResults(baseSongResults)
+                getView()!!.showBaseArtistResults(baseArtistResults)
+                getView()!!.showBaseAlbumResults(baseAlbumResults)
             }
             ARTIST_ALBUM_SELECTED -> {
                 Log.d(TAG, "Returning to artist from album")
                 navStep = ARTIST_SELECTED
 
-                // TODO: Return to artist
+                getView()!!.showArtist(cachedArtist!!, artistTopTracks, artistAlbums)
             }
             VIEW_ALL_ARTISTS -> {
                 Log.d(TAG, "Returning to base view from view all artists")
                 navStep = BASE
+                cachedArtist = null
 
                 getView()!!.showBaseResultsView()
+                getView()!!.showBaseSongResults(baseSongResults)
+                getView()!!.showBaseArtistResults(baseArtistResults)
+                getView()!!.showBaseAlbumResults(baseAlbumResults)
             }
             VIEW_ALL_ARTIST_SELECTED -> {
                 Log.d(TAG, "Returning to view all artists")
@@ -108,6 +124,8 @@ class SearchPresenter : SpotifyAccessPresenter(), ISearchPresenter {
             VIEW_ALL_ARTIST_ALBUM_SELECTED -> {
                 Log.d(TAG, "Returning to artist (all) from album")
                 navStep = VIEW_ALL_ARTIST_SELECTED
+
+                getView()!!.showArtist(cachedArtist!!, artistTopTracks, artistAlbums)
             }
             ALBUM_SELECTED -> {
                 Log.d(TAG, "Returning to base view from album")
@@ -164,7 +182,7 @@ class SearchPresenter : SpotifyAccessPresenter(), ISearchPresenter {
     private val songsCallback = object : SpotifyCallback<TracksPager>() {
         override fun success(tracksPager: TracksPager?, response: Response?) {
             if (tracksPager != null && response != null) {
-                if (doSearchTermsMatch(response, AppConstants.URL_FULL_TRACK_SEARCH)) {
+                if (doSearchTermsMatch(response, AppConstants.URL_TRACK_SEARCH)) {
                     Log.d(TAG, "Track search terms match")
 
                     songSearchComplete = true
@@ -187,7 +205,7 @@ class SearchPresenter : SpotifyAccessPresenter(), ISearchPresenter {
     private val artistsCallback = object : SpotifyCallback<ArtistsPager>() {
         override fun success(artistsPager: ArtistsPager?, response: Response?) {
             if (artistsPager != null && response != null) {
-                if (doSearchTermsMatch(response, AppConstants.URL_FULL_ARTIST_SEARCH)) {
+                if (doSearchTermsMatch(response, AppConstants.URL_ARTIST_SEARCH)) {
                     Log.d(TAG, "Artist search terms match")
 
                     artistSearchComplete = true
@@ -210,7 +228,7 @@ class SearchPresenter : SpotifyAccessPresenter(), ISearchPresenter {
     private val albumsCallback = object : SpotifyCallback<AlbumsPager>() {
         override fun success(albumsPager: AlbumsPager?, response: Response?) {
             if (albumsPager != null && response != null) {
-                if (doSearchTermsMatch(response, AppConstants.URL_FULL_ALBUM_SEARCH)) {
+                if (doSearchTermsMatch(response, AppConstants.URL_ALBUM_SEARCH)) {
                     Log.d(TAG, "Album search terms match")
 
                     albumSearchComplete = true
@@ -267,10 +285,72 @@ class SearchPresenter : SpotifyAccessPresenter(), ISearchPresenter {
         }
     }
 
+    private val artistAlbumCallback = object : SpotifyCallback<Pager<Album>>() {
+        override fun success(albumsPager: Pager<Album>?, response: Response?) {
+            if (albumsPager != null) {
+                if (albumsPager.offset == 0) {
+                    // Fresh retrieval
+                    artistAlbums.clear()
+                }
+
+                artistAlbums.addAll(albumsPager.items)
+
+                if (albumsPager.total > artistAlbums.size) {
+                    Log.d(TAG, "Retrieving more albums by ${cachedArtist!!.name}")
+                    options[SpotifyService.OFFSET] = albumsPager.offset + albumsPager.items.size
+                    spotifyService.getArtistAlbums(cachedArtist!!.id, options, this)
+                } else {
+                    Log.d(TAG, "Finished retrieving ${cachedArtist!!.name} albums")
+                    artistAlbumRetrievalComplete = true
+
+                    if (artistTopTrackRetrievalComplete) {
+                        getView()!!.showArtist(cachedArtist!!, artistTopTracks, artistAlbums)
+                    }
+                    options[SpotifyService.OFFSET] = 0
+                }
+            }
+        }
+
+        override fun failure(spotifyError: SpotifyError?) {
+            if (spotifyError != null) {
+                Log.e(TAG, "Error retrieving artist's albums: " + spotifyError.errorDetails)
+                options[SpotifyService.OFFSET] = 0
+            }
+        }
+
+    }
+
+    private val artistTopTracksCallback = object : SpotifyCallback<Tracks>() {
+        override fun success(tracks: Tracks?, response: Response?) {
+            if (tracks != null) {
+                Log.d(TAG, "Finished retrieving ${cachedArtist!!.name} top tracks")
+                artistTopTrackRetrievalComplete = true
+                artistTopTracks.clear()
+                artistTopTracks = tracks.tracks
+
+                if (artistAlbumRetrievalComplete) {
+                    getView()!!.showArtist(cachedArtist!!, artistTopTracks, artistAlbums)
+                }
+            }
+        }
+
+        override fun failure(spotifyError: SpotifyError?) {
+            if (spotifyError != null) {
+                Log.e(TAG, "Error retrieving artist's top tracks: " + spotifyError.errorDetails)
+            }
+        }
+
+    }
+
     private fun clearSearchResults() {
         baseSongResults.clear()
         baseArtistResults.clear()
         baseAlbumResults.clear()
+    }
+
+    private fun clearArtistResults() {
+        artistAlbums.clear()
+        artistTopTracks.clear()
     }
 
 
@@ -320,10 +400,20 @@ class SearchPresenter : SpotifyAccessPresenter(), ISearchPresenter {
             BASE -> {
                 // Selected one of the first shown artists. Position is worthless.
                 // Look in results list (currently only showing first 3 items)
-                for (artist in baseArtistResults.subList(0, 4)) {
+                var subListLimit = baseArtistResults.size
+                if (baseArtistResults.size >= 3) {
+                    subListLimit = 4
+                }
+                for (artist in baseArtistResults.subList(0, subListLimit)) {
                     if (uri == artist.uri) {
                         navStep = ARTIST_SELECTED
-                        getView()!!.showArtist(artist)
+
+                        // Retrieve artist's albums and top tracks (callbacks responsible for notifying view)
+                        artistAlbumRetrievalComplete = false
+                        artistTopTrackRetrievalComplete = false
+                        cachedArtist = artist
+                        spotifyService.getArtistAlbums(artist.id, options, artistAlbumCallback)
+                        spotifyService.getArtistTopTrack(artist.id, Locale.getDefault().country, artistTopTracksCallback)
                         return
                     }
                 }
@@ -334,7 +424,13 @@ class SearchPresenter : SpotifyAccessPresenter(), ISearchPresenter {
                 if (position >= 0 && position < baseArtistResults.size) {
                     navStep = VIEW_ALL_ARTIST_SELECTED
                     cachedPosition = position
-                    getView()!!.showArtist(baseArtistResults[position])
+                    cachedArtist = baseArtistResults[position]
+
+                    // Retrieve artist's albums and top tracks (callbacks responsible for notifying view)
+                    artistAlbumRetrievalComplete = false
+                    artistTopTrackRetrievalComplete = false
+                    spotifyService.getArtistAlbums(baseArtistResults[position].id, options, artistAlbumCallback)
+                    spotifyService.getArtistTopTrack(baseArtistResults[position].id, Locale.getDefault().country, artistTopTracksCallback)
                 } else {
                     Log.e(TAG, "Invalid artist index")
                 }
@@ -357,7 +453,11 @@ class SearchPresenter : SpotifyAccessPresenter(), ISearchPresenter {
             BASE -> {
                 // Selected one of the first shown albums. Position is worthless.
                 // Look in results list (currently only showing first 3 items)
-                for (album in baseAlbumResults.subList(0, 4)) {
+                var subListLimit = baseAlbumResults.size
+                if (baseAlbumResults.size >= 3) {
+                    subListLimit = 4
+                }
+                for (album in baseAlbumResults.subList(0, subListLimit)) {
                     if (uri == album.uri) {
                         navStep = ALBUM_SELECTED
                         getView()!!.showAlbum(album)
