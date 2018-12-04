@@ -310,37 +310,6 @@ public class SearchActivity extends AppCompatActivity implements ISearchView, IS
         mArtistCardAdapter.setListener(this);
     }
 
-    // TODO: Below code is for programmatically adding result views. Consider removing if we won't use
-//        ConstraintSet constraints = new ConstraintSet();
-//        for (int i = 0; i < 3; i++) {
-//            if (mResultTrackList.size() > i) {
-//                Track trackToShow = mResultTrackList.get(i);
-//                TrackAlbumView newView = new TrackAlbumView(this);
-//                newView.setListener(this);
-//                newView.setUri(trackToShow.uri);
-//                newView.setArtistName(DisplayUtils.getTrackArtistString(trackToShow));
-//                newView.setName(trackToShow.name);
-//                if (trackToShow.album.images.size() > 0) {
-//                    newView.setArtistImage(trackToShow.album.images.get(0).url);
-//                }
-//                newView.setContentDescription("track_view");
-//                ConstraintLayout.LayoutParams layoutParams = new ConstraintLayout.LayoutParams(0, ConstraintLayout.LayoutParams.WRAP_CONTENT);
-//                newView.setLayoutParams(layoutParams);
-//                newView.setId(View.generateViewId());
-//                mBaseResultLayout.addView(newView, i + 1);
-//
-//                constraints.clone(mBaseResultLayout);
-//                constraints.constrainDefaultWidth(newView.getId(), ConstraintSet.MATCH_CONSTRAINT_SPREAD);
-//                constraints.connect(newView.getId(), ConstraintSet.TOP, mBaseResultLayout.getChildAt(i).getId(), ConstraintSet.BOTTOM, 0);
-//                constraints.connect(newView.getId(), ConstraintSet.START, mBaseResultLayout.getId(), ConstraintSet.START, 0);
-//                constraints.connect(newView.getId(), ConstraintSet.END, mBaseResultLayout.getId(), ConstraintSet.END, 0);
-//                constraints.applyTo(mBaseResultLayout);
-//            }
-//        }
-//        constraints.clone(mBaseResultLayout);
-//        constraints.connect(mViewAllSongs.getId(), ConstraintSet.TOP, mBaseResultLayout.getChildAt(mBaseResultLayout.indexOfChild(mViewAllSongs) - 1).getId(), ConstraintSet.BOTTOM, 0);
-//        constraints.applyTo(mBaseResultLayout);
-
     @Override
     public void onBackPressed() {
         presenter.backOrUpNavigation();
@@ -589,7 +558,6 @@ public class SearchActivity extends AppCompatActivity implements ISearchView, IS
 
     @Override
     public void showArtist(@NotNull Artist artist, @NotNull List<? extends Track> topTracks, @NotNull List<? extends Album> albums) {
-        // TODO: show artist view when implemented
         mResultsScrollView.scrollTo(0, 0);
         mSearchEditText.setVisibility(View.GONE);
         mResultsScrollView.setVisibility(View.VISIBLE);
