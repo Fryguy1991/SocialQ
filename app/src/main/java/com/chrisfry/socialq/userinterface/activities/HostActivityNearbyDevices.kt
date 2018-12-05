@@ -93,7 +93,7 @@ class HostActivityNearbyDevices : HostActivityKotlin() {
                         }
                     }
                     NearbyDevicesMessage.QUEUE_UPDATE, NearbyDevicesMessage.INITIATE_CLIENT -> {
-                        Log.e(TAG, "Hosts should not receive queue update or initiate client messages")
+                        Log.e(TAG, "Hosts should not receive update queue or initiate client messages")
                     }
                     NearbyDevicesMessage.INVALID -> {
                         Log.e(TAG, "Invalid payload was sent to host")
@@ -153,7 +153,7 @@ class HostActivityNearbyDevices : HostActivityKotlin() {
         if (currentPlayingIndex >= 0) {
             for (endpointId: String in mClientEndpoints) {
                 Nearby.getConnectionsClient(this).sendPayload(endpointId,
-                        Payload.fromBytes(String.format(AppConstants.UPDATE_QUEUE_MESSAGE,
+                        Payload.fromBytes(String.format(NearbyDevicesMessage.QUEUE_UPDATE.messageFormat,
                                 currentPlayingIndex.toString()).toByteArray()))
             }
         }
@@ -163,7 +163,7 @@ class HostActivityNearbyDevices : HostActivityKotlin() {
         if (mClientEndpoints.contains(client.toString()) && mPlaylist != null && mPlaylist!!.id != null && mCurrentUser != null && mCurrentUser!!.id != null) {
             Log.d(TAG, "Sending host ID, playlist id, and current playing index to new client")
             Nearby.getConnectionsClient(this).sendPayload(client.toString(), Payload.fromBytes(
-                    String.format(AppConstants.INITIATE_CLIENT_MESSAGE_FORMAT,
+                    String.format(NearbyDevicesMessage.INITIATE_CLIENT.messageFormat,
                             mCurrentUser!!.id,
                             mPlaylist!!.id,
                             mCachedPlayingIndex).toByteArray()))

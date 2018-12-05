@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.chrisfry.socialq.R
 import com.chrisfry.socialq.business.AppConstants
+import com.chrisfry.socialq.enums.NearbyDevicesMessage
 import com.chrisfry.socialq.enums.RequestType
 import com.chrisfry.socialq.userinterface.adapters.BasicTrackListAdapter
 import com.chrisfry.socialq.userinterface.views.QueueItemDecoration
@@ -197,7 +198,7 @@ abstract class ClientActivityKotlin : BaseActivity() {
 
     private fun buildSongRequestMessage(trackUri: String?, userId: String?): String? {
         if (trackUri != null && userId != null && !trackUri.isEmpty() && !userId.isEmpty()) {
-            return String.format(AppConstants.SONG_REQUEST_MESSAGE_FORMAT, trackUri, userId)
+            return String.format(NearbyDevicesMessage.SONG_REQUEST.messageFormat, trackUri, userId)
         }
         Log.d(TAG, "Can't build track request for URI: $trackUri, user ID: $userId")
         return null

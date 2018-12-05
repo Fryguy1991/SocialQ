@@ -30,26 +30,25 @@ public class AppConstants {
     public static final String QUEUE_TITLE_KEY = "queue_title_key";
     public static final String FAIR_PLAY_KEY = "fair_play_key";
 
-    // Message Strings
-    public static final String PLAYLIST_ID_MESSAGE = "#PLAYLIST_ID#";
-    public static final String UPDATE_QUEUE_MESSAGE = "#QUEUE_UPDATED#";
-    public static final String SONG_REQUEST_MESSAGE = "#SONG_REQUEST#";
-    public static final String HOST_USER_ID_MESSAGE = "#HOST_USER_ID#";
-    public static final String CLIENT_USER_ID_MESSAGE = "#CLIENT_USER_ID#";
-    public static final String SONG_REQUEST_MESSAGE_FORMAT = SONG_REQUEST_MESSAGE + "%1$s" + CLIENT_USER_ID_MESSAGE + "%2$s";
-    public static final String INITIATE_CLIENT_MESSAGE_FORMAT = HOST_USER_ID_MESSAGE + "%1$s" + PLAYLIST_ID_MESSAGE + "%2$s" + UPDATE_QUEUE_MESSAGE + "%3$s";
+    // Message Prefix Strings
+    private static final String PLAYLIST_ID_PREFIX = "#PLAYLIST_ID#";
+    private static final String QUEUE_UPDATE_PREFIX = "#QUEUE_UPDATED#";
+    private static final String SONG_REQUEST_PREFIX = "#SONG_REQUEST#";
+    private static final String HOST_USER_ID_PREFIX = "#HOST_USER_ID#";
+    private static final String CLIENT_USER_ID_PREFIX = "#CLIENT_USER_ID#";
 
-    // Spotify search limits
-    public static final int SPOTIFY_SEARCH_LIMIT = 50;
-    public static final int PLAYLIST_LIMIT = 50;
+    // Message Format String
+    public static final String SONG_REQUEST_MESSAGE_FORMAT = SONG_REQUEST_PREFIX + "%1$s" + CLIENT_USER_ID_PREFIX + "%2$s";
+    public static final String INITIATE_CLIENT_MESSAGE_FORMAT = HOST_USER_ID_PREFIX + "%1$s" + PLAYLIST_ID_PREFIX + "%2$s" + QUEUE_UPDATE_PREFIX + "%3$s";
+    public static final String QUEUE_UPDATE_MESSAGE_FORMAT = QUEUE_UPDATE_PREFIX + "%1$s";
 
     // START REGULAR EXPRESSIONS
     // Regex for notifying client queue is updated
-    public static final String UPDATE_QUEUE_REGEX = UPDATE_QUEUE_MESSAGE + "(\\S+)";
+    public static final String UPDATE_QUEUE_REGEX = QUEUE_UPDATE_PREFIX + "(\\S+)";
     // Regex for initiating client
-    public static final String INITIATE_CLIENT_REGEX = HOST_USER_ID_MESSAGE + "(\\S+)" + PLAYLIST_ID_MESSAGE + "(\\S+)" + UPDATE_QUEUE_MESSAGE + "([0-9+])";
+    public static final String INITIATE_CLIENT_REGEX = HOST_USER_ID_PREFIX + "(\\S+)" + PLAYLIST_ID_PREFIX + "(\\S+)" + QUEUE_UPDATE_PREFIX + "([0-9+])";
     // Regex for track request messages (Example: #SONG_REQUEST#spotify:track:6qtg4gz3DhqOHL5BHtSQw8#CLIENT_USER_ID#fry_dev_1
-    public static final String FULL_SONG_REQUEST_REGEX = SONG_REQUEST_MESSAGE + "(spotify:track:\\S+)" + CLIENT_USER_ID_MESSAGE + "(\\S+)";
+    public static final String FULL_SONG_REQUEST_REGEX = SONG_REQUEST_PREFIX + "(spotify:track:\\S+)" + CLIENT_USER_ID_PREFIX + "(\\S+)";
 
     // Spotify URL Regexs
     public static final String URL_TRACK_SEARCH = "https:\\/\\/api.spotify.com\\/v1\\/search\\?type=track&q=([^&]+).+";
@@ -71,4 +70,8 @@ public class AppConstants {
     public static final String SPOTIFY_ALBUM_PREFIX = "spotify:album:";
     public static final String SPOTIFY_ARTIST_PREFIX = "spotify:artist:";
     public static final String SPOTIFY_TRACK_PREFIX = "spotify:track:";
+
+    // Spotify search limits
+    public static final int SPOTIFY_SEARCH_LIMIT = 50;
+    public static final int PLAYLIST_LIMIT = 50;
 }

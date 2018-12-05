@@ -21,6 +21,7 @@ import com.chrisfry.socialq.business.AppConstants;
 import com.chrisfry.socialq.business.dagger.modules.SpotifyModule;
 import com.chrisfry.socialq.business.dagger.modules.components.DaggerSpotifyComponent;
 import com.chrisfry.socialq.business.dagger.modules.components.SpotifyComponent;
+import com.chrisfry.socialq.enums.NearbyDevicesMessage;
 import com.chrisfry.socialq.enums.RequestType;
 import com.chrisfry.socialq.model.AccessModel;
 import com.chrisfry.socialq.userinterface.adapters.BasicTrackListAdapter;
@@ -286,7 +287,7 @@ public abstract class ClientActivity extends AppCompatActivity implements Connec
 
     private String buildSongRequestMessage(String trackUri, String userId) {
         if (trackUri != null && userId != null && !trackUri.isEmpty() && !userId.isEmpty()) {
-            return String.format(AppConstants.SONG_REQUEST_MESSAGE_FORMAT, trackUri, userId);
+            return String.format(NearbyDevicesMessage.SONG_REQUEST.getMessageFormat(), trackUri, userId);
         }
         Log.d(TAG, "Can't build track request for URI: " + trackUri + ", user ID: " + userId);
         return null;

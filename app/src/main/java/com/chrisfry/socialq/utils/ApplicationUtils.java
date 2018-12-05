@@ -17,37 +17,6 @@ public class ApplicationUtils {
 
     private static ArrayList<String> mSearchResults = new ArrayList<>();
 
-    public static ConnectionParams getConnectionParams() {
-        return new ConnectionParams.Builder(AppConstants.CLIENT_ID)
-                .setRedirectUri(AppConstants.REDIRECT_URI)
-                .showAuthView(true)
-                .build();
-    }
-
-    /**
-     * Builds a basic payload string for nearby devices.  Basic payload is designed as:
-     * <Payload Prefix> + <Payload Content> (both strings)
-     *
-     * @param payloadPrefix  - Prefix for the payload string see NearbyDevicesMessage enum
-     * @param payloadContent - Content of the payload string
-     * @return Basic payload string
-     */
-    public static String buildBasicPayload(String payloadPrefix, String payloadContent) {
-        return payloadPrefix.concat(payloadContent);
-    }
-
-    /**
-     * Retrieves content of a basic payload.  Basic payload is designed as:
-     * <Payload Prefix> + <Payload Content> (both strings)
-     *
-     * @param payloadPrefix - Prefix for the payload string see NearbyDevicesMessage enum
-     * @param payloadString - Basic payload string to retrieve data from
-     * @return Content in the basic payload string
-     */
-    public static String getBasicPayloadDataFromPayloadString(String payloadPrefix, String payloadString) {
-        return payloadString.replace(payloadPrefix, "");
-    }
-
     /**
      * Determines the payload type from the given payload string
      *

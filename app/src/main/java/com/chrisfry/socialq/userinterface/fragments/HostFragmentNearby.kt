@@ -170,9 +170,9 @@ class HostFragmentNearby : HostFragmentBase() {
     override fun notifyClientsQueueUpdated(currentPlayingIndex: Int) {
         if (currentPlayingIndex >= 0) {
             for (endpointId: String in mClientEndpoints) {
-                Nearby.getConnectionsClient(context!!).sendPayload(endpointId,
-                        Payload.fromBytes(ApplicationUtils.buildBasicPayload(
-                                NearbyDevicesMessage.QUEUE_UPDATE.regex, currentPlayingIndex.toString()).toByteArray()))
+                Nearby.getConnectionsClient(context!!).sendPayload(endpointId, Payload.fromBytes(
+                        String.format(NearbyDevicesMessage.QUEUE_UPDATE.messageFormat,
+                                currentPlayingIndex.toString()).toByteArray()))
             }
         }
     }
