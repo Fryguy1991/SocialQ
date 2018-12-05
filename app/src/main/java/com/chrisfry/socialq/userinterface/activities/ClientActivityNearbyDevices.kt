@@ -144,11 +144,14 @@ class ClientActivityNearbyDevices : ClientActivityKotlin() {
     }
 
     override fun onDestroy() {
-        super.onDestroy()
+        Log.d(TAG, "Client nearby activity being destroyed")
 
         if (mSuccessfulConnectionFlag) {
+            Log.d(TAG, "Disconnecting from host")
             Nearby.getConnectionsClient(this).stopAllEndpoints()
         }
+
+        super.onDestroy()
     }
 
     override fun sendTrackToHost(requestMessage: String?) {

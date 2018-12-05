@@ -171,7 +171,10 @@ class HostActivityNearbyDevices : HostActivityKotlin() {
     }
 
     override fun onDestroy() {
+        Log.d(TAG, "Host nearby activity being destroyed")
+
         if (mSuccessfulAdvertisingFlag) {
+            Log.d(TAG, "Stop advertising as host and disconnect from any clients")
             Nearby.getConnectionsClient(this).stopAdvertising()
             Nearby.getConnectionsClient(this).stopAllEndpoints()
         }
