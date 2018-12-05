@@ -96,11 +96,10 @@ class HostFragmentNearby : HostFragmentBase() {
 
                 when (payloadType) {
                     NearbyDevicesMessage.SONG_REQUEST -> {
-                        val songRequest = getSongRequestFromPayload(payloadString)
-                        handleSongRequest(songRequest)
+//                        val songRequest = getSongRequestFromPayload(payloadString)
+//                        handleSongRequest(songRequest)
                     }
-                    NearbyDevicesMessage.RECEIVE_PLAYLIST_ID, NearbyDevicesMessage.QUEUE_UPDATE,
-                    NearbyDevicesMessage.RECEIVE_HOST_USER_ID -> {
+                    NearbyDevicesMessage.QUEUE_UPDATE -> {
                         // Should not receive these messages as the host
                         Log.e(TAG, "Hosts should not receive playlist ID, host ID or queue update messages")
                     }
@@ -122,28 +121,28 @@ class HostFragmentNearby : HostFragmentBase() {
     }
 
     // TODO: Consider pulling this out to a utils method?
-    private fun getSongRequestFromPayload(payloadString: String): SongRequestData {
-        var pattern = Pattern.compile(AppConstants.FULL_SONG_REQUEST_REGEX)
-        var matcher = pattern.matcher(payloadString)
-        // Ensure a proper format has been sent for the track request
-        if (matcher.matches()) {
-            // Extract track URI
-            pattern = Pattern.compile(AppConstants.SONG_REQUEST_MESSAGE)
-            matcher = pattern.matcher(payloadString)
-            var songUri = matcher.replaceFirst("")
-            pattern = Pattern.compile(AppConstants.EXTRACT_SONG_ID_REGEX)
-            matcher = pattern.matcher(songUri)
-            songUri = matcher.replaceFirst("")
-
-            // Extract user ID
-            pattern = Pattern.compile(AppConstants.EXTRACT_CLIENT_ID_REGEX)
-            matcher = pattern.matcher(payloadString)
-            val clientId = matcher.replaceFirst("")
-
-            return SongRequestData(songUri, mSpotifyService.getUser(clientId))
-        }
-        return SongRequestData("", UserPublic())
-    }
+//    private fun getSongRequestFromPayload(payloadString: String): SongRequestData {
+//        var pattern = Pattern.compile(AppConstants.FULL_SONG_REQUEST_REGEX)
+//        var matcher = pattern.matcher(payloadString)
+//        // Ensure a proper format has been sent for the track request
+//        if (matcher.matches()) {
+//            // Extract track URI
+//            pattern = Pattern.compile(AppConstants.SONG_REQUEST_MESSAGE)
+//            matcher = pattern.matcher(payloadString)
+//            var songUri = matcher.replaceFirst("")
+//            pattern = Pattern.compile(AppConstants.EXTRACT_SONG_ID_REGEX)
+//            matcher = pattern.matcher(songUri)
+//            songUri = matcher.replaceFirst("")
+//
+//            // Extract user ID
+//            pattern = Pattern.compile(AppConstants.EXTRACT_CLIENT_ID_REGEX)
+//            matcher = pattern.matcher(payloadString)
+//            val clientId = matcher.replaceFirst("")
+//
+//            return SongRequestData(songUri, mSpotifyService.getUser(clientId))
+//        }
+//        return SongRequestData("", UserPublic())
+//    }
 
     override fun startHostConnection(queueTitle: String) {
         // Create advertising options (strategy)
@@ -173,25 +172,24 @@ class HostFragmentNearby : HostFragmentBase() {
             for (endpointId: String in mClientEndpoints) {
                 Nearby.getConnectionsClient(context!!).sendPayload(endpointId,
                         Payload.fromBytes(ApplicationUtils.buildBasicPayload(
-                                NearbyDevicesMessage.QUEUE_UPDATE.payloadPrefix, currentPlayingIndex.toString()).toByteArray()))
+                                NearbyDevicesMessage.QUEUE_UPDATE.regex, currentPlayingIndex.toString()).toByteArray()))
             }
         }
     }
 
     override fun initiateNewClient(client: Any) {
-        // TODO: Consider doing this all in 1 payload using Regex (see track request)
-        if(mClientEndpoints.contains(client.toString())&& mPlaylist.id != null && mCurrentUser.id != null) {
-            Log.d(TAG, "Sending host ID to new client")
-            Nearby.getConnectionsClient(context!!).sendPayload(client.toString(), Payload.fromBytes(
-                    ApplicationUtils.buildBasicPayload(NearbyDevicesMessage.RECEIVE_HOST_USER_ID.payloadPrefix, mCurrentUser.id).toByteArray()))
-            Log.d(TAG, "Sending playlist ID to new client")
-            Nearby.getConnectionsClient(context!!).sendPayload(client.toString(), Payload.fromBytes(
-                    ApplicationUtils.buildBasicPayload(NearbyDevicesMessage.RECEIVE_PLAYLIST_ID.payloadPrefix, mPlaylist.id).toByteArray()))
-            Log.d(TAG, "Updating queue of new client (current playing index)")
-            Nearby.getConnectionsClient(context!!).sendPayload(client.toString(),
-                    Payload.fromBytes(ApplicationUtils.buildBasicPayload(
-                            NearbyDevicesMessage.QUEUE_UPDATE.payloadPrefix, mCachedPlayingIndex.toString()).toByteArray()))
-        }
+//        if(mClientEndpoints.contains(client.toString())&& mPlaylist.id != null && mCurrentUser.id != null) {
+//            Log.d(TAG, "Sending host ID to new client")
+//            Nearby.getConnectionsClient(context!!).sendPayload(client.toString(), Payload.fromBytes(
+//                    ApplicationUtils.buildBasicPayload(NearbyDevicesMessage.RECEIVE_HOST_USER_ID.regex, mCurrentUser.id).toByteArray()))
+//            Log.d(TAG, "Sending playlist ID to new client")
+//            Nearby.getConnectionsClient(context!!).sendPayload(client.toString(), Payload.fromBytes(
+//                    ApplicationUtils.buildBasicPayload(NearbyDevicesMessage.RECEIVE_PLAYLIST_ID.regex, mPlaylist.id).toByteArray()))
+//            Log.d(TAG, "Updating queue of new client (current playing index)")
+//            Nearby.getConnectionsClient(context!!).sendPayload(client.toString(),
+//                    Payload.fromBytes(ApplicationUtils.buildBasicPayload(
+//                            NearbyDevicesMessage.QUEUE_UPDATE.regex, mCachedPlayingIndex.toString()).toByteArray()))
+//        }
     }
 
     override fun onDestroy() {

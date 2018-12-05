@@ -6,6 +6,8 @@ import com.spotify.android.appremote.api.ConnectionParams;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Utils required for information required across the application
@@ -53,17 +55,11 @@ public class ApplicationUtils {
      * @return Enum type of the payload (see NearbyDevicesMessage)
      */
     public static NearbyDevicesMessage getMessageTypeFromPayload(String payload) {
-        if (payload.startsWith(NearbyDevicesMessage.RECEIVE_PLAYLIST_ID.getPayloadPrefix())) {
-            return NearbyDevicesMessage.RECEIVE_PLAYLIST_ID;
-        }
-        if (payload.startsWith(NearbyDevicesMessage.QUEUE_UPDATE.getPayloadPrefix())) {
-            return NearbyDevicesMessage.QUEUE_UPDATE;
-        }
-        if (payload.startsWith(NearbyDevicesMessage.SONG_REQUEST.getPayloadPrefix())) {
-            return NearbyDevicesMessage.SONG_REQUEST;
-        }
-        if (payload.startsWith(NearbyDevicesMessage.RECEIVE_HOST_USER_ID.getPayloadPrefix())) {
-            return NearbyDevicesMessage.RECEIVE_HOST_USER_ID;
+        for (NearbyDevicesMessage enumValue : NearbyDevicesMessage.values()) {
+            Matcher matcher = Pattern.compile(enumValue.getRegex()).matcher(payload);
+            if (matcher.matches()) {
+                return enumValue;
+            }
         }
         return NearbyDevicesMessage.INVALID;
     }

@@ -13,6 +13,7 @@ import com.google.android.gms.tasks.OnFailureListener
 import com.google.android.gms.tasks.OnSuccessListener
 import java.lang.Exception
 import java.lang.NumberFormatException
+import java.util.regex.Pattern
 
 class ClientActivityNearbyDevices : ClientActivityKotlin() {
     private val TAG = ClientActivityNearbyDevices::class.java.name
@@ -92,24 +93,33 @@ class ClientActivityNearbyDevices : ClientActivityKotlin() {
                 val payloadString = String(payload.asBytes()!!)
                 val payloadType = ApplicationUtils.getMessageTypeFromPayload(payloadString)
 
-                Log.d(TAG, payloadType.toString() + " payload received from host")
+                val regexMatcher = Pattern.compile(payloadType.regex).matcher(payloadString)
 
+                Log.d(TAG, payloadType.toString() + " payload received from host")
                 when (payloadType) {
-                    NearbyDevicesMessage.RECEIVE_HOST_USER_ID -> {
-                        // Host is giving us the playlist owner ID
-                        mHostUserId = ApplicationUtils.getBasicPayloadDataFromPayloadString(payloadType.payloadPrefix, payloadString)
-                    }
-                    NearbyDevicesMessage.RECEIVE_PLAYLIST_ID -> {
-                        // Host is giving us the playlist ID
-                        setupQueuePlaylistOnConnection(ApplicationUtils.getBasicPayloadDataFromPayloadString(payloadType.payloadPrefix, payloadString))
+                    NearbyDevicesMessage.INITIATE_CLIENT -> {
+                        if (regexMatcher.find()) {
+                            mHostUserId = regexMatcher.group(1)
+                            setupQueuePlaylistOnConnection(regexMatcher.group(2))
+                            try {
+                                updateQueue(regexMatcher.group(3).toInt())
+                            } catch (ex: NumberFormatException) {
+                                Log.e(TAG, "Invalid index was sent")
+                            }
+                        } else {
+                            Log.e(TAG, "Something went wrong. Regex failed matching for $payloadType")
+                        }
                     }
                     NearbyDevicesMessage.QUEUE_UPDATE -> {
                         // Host is notifying us that the queue has been updated
-                        val currentPlayingIndex = ApplicationUtils.getBasicPayloadDataFromPayloadString(payloadType.payloadPrefix, payloadString)
-                        try {
-                            updateQueue(Integer.parseInt(currentPlayingIndex))
-                        } catch (exception: NumberFormatException) {
-                            Log.e(TAG, "Invalid index was sent")
+                        if (regexMatcher.find()) {
+                            try {
+                                updateQueue(regexMatcher.group(1).toInt())
+                            } catch (exception: NumberFormatException) {
+                                Log.e(TAG, "Invalid index was sent")
+                            }
+                        }  else {
+                            Log.e(TAG, "Something went wrong. Regex failed matching for $payloadType")
                         }
                     }
                     NearbyDevicesMessage.SONG_REQUEST -> {
@@ -117,7 +127,7 @@ class ClientActivityNearbyDevices : ClientActivityKotlin() {
                         Log.e(TAG, "Clients should not receive song request messages")
                     }
                     NearbyDevicesMessage.INVALID -> {
-                        // TODO currently not handling this case
+                         Log.e(TAG, "Invalid payload was sent to client")
                     }
                     else -> {
                         // TODO currently not handling null case

@@ -155,8 +155,8 @@ abstract class HostActivityKotlin : BaseActivity(), PlayQueueService.PlayQueueSe
                         while (playlistPager.total > offset) {
 
                             val offsetOptions = HashMap<String, Any>()
-                            options[SpotifyService.LIMIT] = AppConstants.PLAYLIST_LIMIT
-                            options[SpotifyService.OFFSET] = offset
+                            offsetOptions[SpotifyService.LIMIT] = AppConstants.PLAYLIST_LIMIT
+                            offsetOptions[SpotifyService.OFFSET] = offset
 
                             playlists.addAll(mSpotifyService.getPlaylists(mCurrentUser!!.id, offsetOptions).items)
                             offset += AppConstants.PLAYLIST_LIMIT

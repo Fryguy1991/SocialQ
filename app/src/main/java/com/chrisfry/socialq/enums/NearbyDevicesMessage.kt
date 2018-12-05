@@ -2,10 +2,9 @@ package com.chrisfry.socialq.enums
 
 import com.chrisfry.socialq.business.AppConstants
 
-enum class NearbyDevicesMessage (val payloadPrefix : String) {
-    QUEUE_UPDATE(AppConstants.UPDATE_QUEUE_MESSAGE),
-    SONG_REQUEST(AppConstants.SONG_REQUEST_MESSAGE),
-    RECEIVE_PLAYLIST_ID(AppConstants.PLAYLIST_ID_MESSAGE),
-    RECEIVE_HOST_USER_ID(AppConstants.HOST_USER_ID_MESSAGE),
+enum class NearbyDevicesMessage (val regex : String) {
+    QUEUE_UPDATE(AppConstants.UPDATE_QUEUE_REGEX),
+    SONG_REQUEST(AppConstants.FULL_SONG_REQUEST_REGEX),
+    INITIATE_CLIENT(AppConstants.INITIATE_CLIENT_REGEX),
     INVALID(AppConstants.INVALID)
 }

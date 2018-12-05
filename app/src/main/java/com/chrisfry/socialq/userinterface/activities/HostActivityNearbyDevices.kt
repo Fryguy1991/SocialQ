@@ -72,7 +72,7 @@ class HostActivityNearbyDevices : HostActivityKotlin() {
             Log.d(TAG, "Host received a payload")
             when (payload.type) {
                 Payload.Type.BYTES -> handleClientPayload(payload)
-                Payload.Type.FILE, Payload.Type.STREAM  -> Log.e(TAG, "Currently not handling  streams or files")
+                Payload.Type.FILE, Payload.Type.STREAM -> Log.e(TAG, "Currently not handling  streams or files")
             }
         }
 
@@ -86,15 +86,17 @@ class HostActivityNearbyDevices : HostActivityKotlin() {
                 when (payloadType) {
                     NearbyDevicesMessage.SONG_REQUEST -> {
                         val songRequest = getSongRequestFromPayload(payloadString)
-                        handleSongRequest(songRequest)
+                        if (songRequest.uri.isNotEmpty()) {
+                            handleSongRequest(songRequest)
+                        } else {
+                            Log.e(TAG, "Error retrieving data from client song request")
+                        }
                     }
-                    NearbyDevicesMessage.RECEIVE_PLAYLIST_ID, NearbyDevicesMessage.QUEUE_UPDATE,
-                    NearbyDevicesMessage.RECEIVE_HOST_USER_ID -> {
-                        // Should not receive these messages as the host
-                        Log.e(TAG, "Hosts should not receive playlist ID, host ID or queue update messages")
+                    NearbyDevicesMessage.QUEUE_UPDATE, NearbyDevicesMessage.INITIATE_CLIENT -> {
+                        Log.e(TAG, "Hosts should not receive queue update or initiate client messages")
                     }
                     NearbyDevicesMessage.INVALID -> {
-                        // TODO currently not handling this case
+                        Log.e(TAG, "Invalid payload was sent to host")
                     }
                     else -> {
                         // TODO currently not handling null case
@@ -114,19 +116,10 @@ class HostActivityNearbyDevices : HostActivityKotlin() {
         var pattern = Pattern.compile(AppConstants.FULL_SONG_REQUEST_REGEX)
         var matcher = pattern.matcher(payloadString)
         // Ensure a proper format has been sent for the track request
-        if (matcher.matches()) {
-            // Extract track URI
-            pattern = Pattern.compile(AppConstants.SONG_REQUEST_MESSAGE)
-            matcher = pattern.matcher(payloadString)
-            var songUri = matcher.replaceFirst("")
-            pattern = Pattern.compile(AppConstants.EXTRACT_SONG_ID_REGEX)
-            matcher = pattern.matcher(songUri)
-            songUri = matcher.replaceFirst("")
-
-            // Extract user ID
-            pattern = Pattern.compile(AppConstants.EXTRACT_CLIENT_ID_REGEX)
-            matcher = pattern.matcher(payloadString)
-            val clientId = matcher.replaceFirst("")
+        if (matcher.find()) {
+            // Extract track URI and client ID
+            val songUri = matcher.group(1)
+            val clientId = matcher.group(2)
 
             return SongRequestData(songUri, mSpotifyService.getUser(clientId))
         }
@@ -160,24 +153,20 @@ class HostActivityNearbyDevices : HostActivityKotlin() {
         if (currentPlayingIndex >= 0) {
             for (endpointId: String in mClientEndpoints) {
                 Nearby.getConnectionsClient(this).sendPayload(endpointId,
-                        Payload.fromBytes(ApplicationUtils.buildBasicPayload(
-                                NearbyDevicesMessage.QUEUE_UPDATE.payloadPrefix, currentPlayingIndex.toString()).toByteArray()))
+                        Payload.fromBytes(String.format(AppConstants.UPDATE_QUEUE_MESSAGE,
+                                currentPlayingIndex.toString()).toByteArray()))
             }
         }
     }
 
     override fun initiateNewClient(client: Any) {
-        if(mClientEndpoints.contains(client.toString()) && mPlaylist != null && mPlaylist!!.id != null && mCurrentUser != null && mCurrentUser!!.id != null) {
-            Log.d(TAG, "Sending host ID to new client")
+        if (mClientEndpoints.contains(client.toString()) && mPlaylist != null && mPlaylist!!.id != null && mCurrentUser != null && mCurrentUser!!.id != null) {
+            Log.d(TAG, "Sending host ID, playlist id, and current playing index to new client")
             Nearby.getConnectionsClient(this).sendPayload(client.toString(), Payload.fromBytes(
-                    ApplicationUtils.buildBasicPayload(NearbyDevicesMessage.RECEIVE_HOST_USER_ID.payloadPrefix, mCurrentUser!!.id).toByteArray()))
-            Log.d(TAG, "Sending playlist ID to new client")
-            Nearby.getConnectionsClient(this).sendPayload(client.toString(), Payload.fromBytes(
-                    ApplicationUtils.buildBasicPayload(NearbyDevicesMessage.RECEIVE_PLAYLIST_ID.payloadPrefix, mPlaylist!!.id).toByteArray()))
-            Log.d(TAG, "Updating queue of new client (current playing index)")
-            Nearby.getConnectionsClient(this).sendPayload(client.toString(),
-                    Payload.fromBytes(ApplicationUtils.buildBasicPayload(
-                            NearbyDevicesMessage.QUEUE_UPDATE.payloadPrefix, mCachedPlayingIndex.toString()).toByteArray()))
+                    String.format(AppConstants.INITIATE_CLIENT_MESSAGE_FORMAT,
+                            mCurrentUser!!.id,
+                            mPlaylist!!.id,
+                            mCachedPlayingIndex).toByteArray()))
         }
     }
 

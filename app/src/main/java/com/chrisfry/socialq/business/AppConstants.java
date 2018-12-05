@@ -37,27 +37,28 @@ public class AppConstants {
     public static final String HOST_USER_ID_MESSAGE = "#HOST_USER_ID#";
     public static final String CLIENT_USER_ID_MESSAGE = "#CLIENT_USER_ID#";
     public static final String SONG_REQUEST_MESSAGE_FORMAT = SONG_REQUEST_MESSAGE + "%1$s" + CLIENT_USER_ID_MESSAGE + "%2$s";
+    public static final String INITIATE_CLIENT_MESSAGE_FORMAT = HOST_USER_ID_MESSAGE + "%1$s" + PLAYLIST_ID_MESSAGE + "%2$s" + UPDATE_QUEUE_MESSAGE + "%3$s";
 
     // Spotify search limits
     public static final int SPOTIFY_SEARCH_LIMIT = 50;
     public static final int PLAYLIST_LIMIT = 50;
 
-    // Regular expressions
+    // START REGULAR EXPRESSIONS
+    // Regex for notifying client queue is updated
+    public static final String UPDATE_QUEUE_REGEX = UPDATE_QUEUE_MESSAGE + "(\\S+)";
+    // Regex for initiating client
+    public static final String INITIATE_CLIENT_REGEX = HOST_USER_ID_MESSAGE + "(\\S+)" + PLAYLIST_ID_MESSAGE + "(\\S+)" + UPDATE_QUEUE_MESSAGE + "([0-9+])";
     // Regex for track request messages (Example: #SONG_REQUEST#spotify:track:6qtg4gz3DhqOHL5BHtSQw8#CLIENT_USER_ID#fry_dev_1
-    public static final String FULL_SONG_REQUEST_REGEX = SONG_REQUEST_MESSAGE + "spotify:track:\\S{22}" + CLIENT_USER_ID_MESSAGE + "\\S+";
-    public static final String EXTRACT_CLIENT_ID_REGEX= SONG_REQUEST_MESSAGE + "spotify:track:\\S{22}" + CLIENT_USER_ID_MESSAGE;
-    public static final String EXTRACT_SONG_ID_REGEX = CLIENT_USER_ID_MESSAGE + "\\S+";
+    public static final String FULL_SONG_REQUEST_REGEX = SONG_REQUEST_MESSAGE + "(spotify:track:\\S+)" + CLIENT_USER_ID_MESSAGE + "(\\S+)";
 
-    // Spotify URL Regex
+    // Spotify URL Regexs
     public static final String URL_TRACK_SEARCH = "https:\\/\\/api.spotify.com\\/v1\\/search\\?type=track&q=([^&]+).+";
     // Example:  https://api.spotify.com/v1/search?type=track&q=avenged+sevenfold&limit=50
     public static final String URL_ARTIST_SEARCH = "https:\\/\\/api.spotify.com\\/v1\\/search\\?type=artist&q=([^&]+).+";
     // Example: https://api.spotify.com/v1/search?type=artist&q=avenged+sevenfold&limit=50
     public static final String URL_ALBUM_SEARCH = "https:\\/\\/api\\.spotify\\.com\\/v1\\/search\\?type=album&q=([^&]+).+";
     // Example: https://api.spotify.com/v1/search?type=album&q=avenged+sevenfold&limit=50
-
-    // Charset Name
-    public static final String UTF8_CHARSET_NAME = "UTF-8";
+    // END REGULAR EXPRESSIONS
 
     // Common Strings
     public static final String INVALID = "INVALID";
