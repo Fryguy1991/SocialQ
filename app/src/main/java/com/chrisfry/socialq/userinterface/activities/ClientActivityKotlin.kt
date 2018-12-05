@@ -155,7 +155,7 @@ abstract class ClientActivityKotlin : BaseActivity() {
     protected fun updateQueue(currentPlayingIndex: Int) {
         if (currentPlayingIndex >= 0) {
             refreshPlaylist()
-            mTrackDisplayAdapter!!.updateAdapter(mPlaylistTracks.subList(currentPlayingIndex, mPlaylist!!.tracks.items.size))
+            mTrackDisplayAdapter!!.updateAdapter(mPlaylistTracks.subList(currentPlayingIndex, mPlaylist!!.tracks.total))
         }
     }
 
