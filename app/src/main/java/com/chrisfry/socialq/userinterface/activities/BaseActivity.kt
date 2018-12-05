@@ -75,10 +75,10 @@ abstract class BaseActivity : AppCompatActivity() {
                         finish()
                     }
                     AuthenticationResponse.Type.EMPTY -> {
-                        Log.e(TAG, "Something weird happened (should not recieve EMPTY")
+                        Log.e(TAG, "Something weird happened (should not receive ${response.type})")
                     }
                     AuthenticationResponse.Type.UNKNOWN -> {
-                        Log.e(TAG, "Something weird happened (should not recieve UNKOWN")
+                        Log.e(TAG, "Something weird happened (should not receive ${response.type})")
                     }
                     else -> {
                         Log.e(TAG, "Received null for authentication response type")

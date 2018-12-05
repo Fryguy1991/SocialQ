@@ -179,7 +179,7 @@ class ClientActivityNearbyDevices : ClientActivityKotlin() {
                     })
                     .addOnFailureListener(object : OnFailureListener {
                         override fun onFailure(p0: Exception) {
-                            Log.d(TAG, "Failed to send a connection request, can't connect")
+                            Log.e(TAG, "Failed to send a connection request, can't connect")
                             Toast.makeText(this@ClientActivityNearbyDevices, getString(R.string.toast_host_connection_error), Toast.LENGTH_SHORT).show()
                             finish()
                         }
