@@ -30,9 +30,4 @@
             android:id="@+id/action_hostFragmentNearby_to_searchFragment"
             app:destination="@id/search_fragment" />
     </fragment>
-    <fragment
-        android:id="@+id/search_fragment"
-        android:name="com.chrisfry.socialq.userinterface.fragments.SearchFragment"
-        android:label="Search"
-        tools:layout="@layout/search_screen" />
 </navigation>

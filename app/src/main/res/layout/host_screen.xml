@@ -45,16 +45,4 @@
         android:layout_height="wrap_content"
         app:constraint_referenced_ids="rv_queue_list_view,btn_play_pause,btn_next" />
     <!-- END HOST LIST ELEMENTS-->
-
-    <!-- Search Fragment -->
-    <!--<fragment-->
-        <!--android:id="@+id/frag_search"-->
-        <!--tools:layout="@layout/search_screen"-->
-        <!--android:name="com.chrisfry.socialq.userinterface.fragments.SearchFragment"-->
-        <!--android:layout_width="0dp"-->
-        <!--android:layout_height="0dp"-->
-        <!--app:layout_constraintTop_toTopOf="parent"-->
-        <!--app:layout_constraintBottom_toBottomOf="parent"-->
-        <!--app:layout_constraintStart_toStartOf="parent"-->
-        <!--app:layout_constraintEnd_toEndOf="parent" />-->
 </androidx.constraintlayout.widget.ConstraintLayout>

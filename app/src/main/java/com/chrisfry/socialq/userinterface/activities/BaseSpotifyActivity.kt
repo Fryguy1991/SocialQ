@@ -42,7 +42,6 @@ class BaseSpotifyActivity : AppCompatActivity(), HostFragmentBase.BaseHostFragme
     private var navHostFragment: NavHostFragment? = null
     private var startFragment: StartFragment? = null
     private var hostFragment: HostFragmentBase? = null
-    private var searchFragment: SearchFragment? = null
 
 
     // Variables needed for passing to a new host queue from start fragment
