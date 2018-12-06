@@ -22,6 +22,8 @@
     <string name="select_base_playlist">Select A Base Playlist</string>
     <string name="fresh_playlist">Start A New Playlist</string>
     <string name="base_playlist">Base Playlist</string>
+    <string name="client_joined">A Client Has Joined</string>
+    <string name="client_disconnected">A Client Has Disconnected</string>
 
     <!-- Close Host Dialog Strings -->
     <string name="close_host_dialog_title">Close Queue?</string>

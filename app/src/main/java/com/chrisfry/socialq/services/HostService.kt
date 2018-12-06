@@ -206,7 +206,7 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
 
             // Notify activity a client disconnected
             if (listener != null) {
-                listener?.showClientConnected()
+                listener?.showClientDisconnected()
             }
             clientEndpoints.remove(endPoint)
         }
@@ -897,7 +897,10 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
         }
 
         override fun failure(spotifyError: SpotifyError?) {
-            Log.e(TAG, "Failed to create playlist. Try again: $spotifyError")
+            if (spotifyError != null) {
+                Log.e(TAG, spotifyError.errorDetails.message)
+            }
+            Log.e(TAG, "Failed to create playlist. Try again")
             createPlaylistForQueue()
             // TODO: Should stop trying after so many failures
         }
@@ -937,7 +940,10 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
         }
 
         override fun failure(spotifyError: SpotifyError?) {
-            Log.e(TAG, "Failed to retrieve user playlists: $spotifyError")
+            if (spotifyError != null) {
+                Log.e(TAG, spotifyError.errorDetails.message)
+            }
+            Log.e(TAG, "Failed to retrieve user playlists")
         }
     }
 
@@ -966,8 +972,9 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
 
         override fun failure(spotifyError: SpotifyError?) {
             if (spotifyError != null) {
-                Log.e(TAG, "Failed to unfollow/change playlist: $spotifyError")
+                Log.e(TAG, spotifyError.errorDetails.message)
             }
+            Log.e(TAG, "Failed to unfollow/change playlist")
         }
     }
 

@@ -206,7 +206,7 @@ class SearchPresenter : SpotifyAccessPresenter(), ISearchPresenter {
         getView()!!.showAllArtistAlbums(selectedArtist!!, fullArtistAlbums, 0)
     }
 
-
+    // START SPOTIFY CALLBACK ITEMS
     private val songsCallback = object : SpotifyCallback<TracksPager>() {
         override fun success(tracksPager: TracksPager?, response: Response?) {
             if (tracksPager != null && response != null) {
@@ -225,8 +225,9 @@ class SearchPresenter : SpotifyAccessPresenter(), ISearchPresenter {
 
         override fun failure(spotifyError: SpotifyError?) {
             if (spotifyError != null) {
-                Log.e(TAG, "Error searching for songs: " + spotifyError.errorDetails)
+                Log.e(TAG, spotifyError.errorDetails.message)
             }
+            Log.e(TAG, "Error searching for songs")
         }
     }
 
@@ -248,8 +249,9 @@ class SearchPresenter : SpotifyAccessPresenter(), ISearchPresenter {
 
         override fun failure(spotifyError: SpotifyError?) {
             if (spotifyError != null) {
-                Log.e(TAG, "Error searching for artists: " + spotifyError.errorDetails)
+                Log.e(TAG, spotifyError.errorDetails.message)
             }
+            Log.e(TAG, "Error searching for artists")
         }
     }
 
@@ -288,8 +290,9 @@ class SearchPresenter : SpotifyAccessPresenter(), ISearchPresenter {
 
         override fun failure(spotifyError: SpotifyError?) {
             if (spotifyError != null) {
-                Log.e(TAG, "Error searching for albums: " + spotifyError.errorDetails)
+                Log.e(TAG, spotifyError.errorDetails.message)
             }
+            Log.e(TAG, "Error searching for albums")
         }
     }
 
@@ -308,8 +311,9 @@ class SearchPresenter : SpotifyAccessPresenter(), ISearchPresenter {
 
         override fun failure(spotifyError: SpotifyError?) {
             if (spotifyError != null) {
-                Log.e(TAG, "Error retrieveing full albums: " + spotifyError.errorDetails)
+                Log.e(TAG, spotifyError.errorDetails.message)
             }
+            Log.e(TAG, "Error retrieving full albums")
         }
     }
 
@@ -342,9 +346,10 @@ class SearchPresenter : SpotifyAccessPresenter(), ISearchPresenter {
 
         override fun failure(spotifyError: SpotifyError?) {
             if (spotifyError != null) {
-                Log.e(TAG, "Error retrieving artist's albums: " + spotifyError.errorDetails)
-                options[SpotifyService.OFFSET] = 0
+                Log.e(TAG, spotifyError.errorDetails.message)
             }
+            Log.e(TAG, "Error retrieving artist's albums")
+            options[SpotifyService.OFFSET] = 0
         }
     }
 
@@ -366,8 +371,9 @@ class SearchPresenter : SpotifyAccessPresenter(), ISearchPresenter {
 
         override fun failure(spotifyError: SpotifyError?) {
             if (spotifyError != null) {
-                Log.e(TAG, "Error retrieving full artist albums: " + spotifyError.errorDetails)
+                Log.e(TAG, spotifyError.errorDetails.message)
             }
+            Log.e(TAG, "Error retrieving full artist albums")
         }
     }
 
@@ -387,11 +393,12 @@ class SearchPresenter : SpotifyAccessPresenter(), ISearchPresenter {
 
         override fun failure(spotifyError: SpotifyError?) {
             if (spotifyError != null) {
-                Log.e(TAG, "Error retrieving artist's top tracks: " + spotifyError.errorDetails)
+                Log.e(TAG, spotifyError.errorDetails.message)
             }
+            Log.e(TAG, "Error retrieving artist's top tracks")
         }
-
     }
+    // END SPOTIFY CALLBACK ITEMS
 
     private fun retrieveFullAlbums(albums: List<Album>) {
         var i = 0
@@ -401,7 +408,7 @@ class SearchPresenter : SpotifyAccessPresenter(), ISearchPresenter {
             albumSearchString += albums[i].id
 
             // Can only load 20 albums at a time (or size of list if it's smaller)
-            if (i % 20 != 19 && i < albums.size -1) {
+            if (i % 20 != 19 && i < albums.size - 1) {
                 albumSearchString += ","
             }
 
