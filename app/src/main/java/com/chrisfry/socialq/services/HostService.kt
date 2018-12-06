@@ -954,7 +954,6 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
 
             Log.d(TAG, "Shutting down player before service closes")
             spotifyPlayer.logout()
-            spotifyPlayer.shutdown()
             try {
                 Log.d(TAG, "Releasing spotify player resource")
                 Spotify.awaitDestroyPlayer(this@HostService, 10000, TimeUnit.MILLISECONDS)
