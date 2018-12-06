@@ -138,8 +138,7 @@ class BaseSpotifyActivity : AppCompatActivity(), HostFragmentBase.BaseHostFragme
             RequestType.SPOTIFY_AUTHENTICATION_REQUEST -> {
                 handleAuthenticationResponse(AuthenticationClient.getResponse(resultCode, data))
             }
-            RequestType.LOCATION_PERMISSION_REQUEST, RequestType.REQUEST_ENABLE_BT, RequestType.REQUEST_DISCOVER_BT,
-            RequestType.SEARCH_REQUEST, RequestType.NONE -> {
+            RequestType.LOCATION_PERMISSION_REQUEST, RequestType.SEARCH_REQUEST, RequestType.NONE -> {
                 // Base activity should do nothing for these requests
             }
         }

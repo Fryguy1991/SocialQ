@@ -59,8 +59,6 @@ public class PlayQueueService extends Service implements ConnectionStateCallback
     private boolean mAudioDeliveryDoneFlag = true;
     // Boolean flag to store if MetaData is incorrect
     private boolean mIncorrectMetaDataFlag = false;
-    // Boolean flag to store when a track has been fully delivered
-    private boolean mTrackDelivered = false;
     // Boolean flag for storing whether the service is bound (to the host activity)
     private boolean mIsBound = false;
     // Boolean flag for if a pause event was requested by the user
@@ -105,7 +103,7 @@ public class PlayQueueService extends Service implements ConnectionStateCallback
             initSpotifyServiceElements(accessToken, playlistId);
         }
 
-        return super.onStartCommand(intent, flags, startId);
+        return START_STICKY;
     }
 
     @Override
@@ -264,7 +262,6 @@ public class PlayQueueService extends Service implements ConnectionStateCallback
             case kSpPlaybackNotifyMetadataChanged:
                 break;
             case kSpPlaybackNotifyTrackDelivered:
-                mTrackDelivered = true;
             case kSpPlaybackNotifyNext:
                 // Track has changed, remove top track from queue list
                 Log.d(TAG, "Player has moved to next track (next/track complete)");

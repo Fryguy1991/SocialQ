@@ -10,6 +10,7 @@
     <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
 
     <application
+        android:name=".userinterface.App"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
@@ -38,7 +39,7 @@
 
         <!-- Activity for Host Screen (Nearby Devices) -->
         <activity
-            android:name="com.chrisfry.socialq.userinterface.activities.HostActivityNearbyDevices"
+            android:name="com.chrisfry.socialq.userinterface.activities.HostActivityKotlin"
             android:label="@string/app_name"
             android:launchMode="singleTop"
             android:screenOrientation="portrait" />
@@ -65,6 +66,10 @@
             android:screenOrientation="portrait"
             android:parentActivityName=".userinterface.activities.HostActivityNearbyDevices"/>
 
+        <!-- Activity for returning Spotify login requests to service -->
+        <activity android:name=".userinterface.activities.AccessTokenReceiverActivity"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar"/>
+
         <!-- Activity for Spotify login (created by Spotify) -->
         <activity
             android:name="com.spotify.sdk.android.authentication.LoginActivity"
@@ -75,7 +80,12 @@
         <!-- Service for playing queue in background -->
         <service
             android:name="com.chrisfry.socialq.services.PlayQueueService"
-            android:description="@string/service_description"
+            android:description="@string/play_queue_service_description"
+            android:exported="false" />
+
+        <!-- Service For Host -->
+        <service android:name=".services.HostService"
+            android:description="@string/host_service_description"
             android:exported="false" />
         <!-- END APPLICATION SERVICES -->
     </application>

@@ -23,12 +23,11 @@ public class AppConstants {
 
     // Intent extra key strings
     public static final String SEARCH_RESULTS_EXTRA_KEY = "search_results_key";
-    public static final String BT_DEVICE_ADDRESS_EXTRA_KEY = "device_address_key";
-    public static final String BT_DEVICE_EXTRA_KEY = "device_key";
     public static final String ND_ENDPOINT_ID_EXTRA_KEY = "endpoint_id_key";
     public static final String SERVICE_PLAYLIST_ID_KEY = "playlist_key";
     public static final String QUEUE_TITLE_KEY = "queue_title_key";
     public static final String FAIR_PLAY_KEY = "fair_play_key";
+    public static final String IS_HOST_KEY = "is_socialq_host_key";
 
     // Message Prefix Strings
     private static final String PLAYLIST_ID_PREFIX = "#PLAYLIST_ID#";
@@ -74,4 +73,5 @@ public class AppConstants {
     // Spotify search limits
     public static final int SPOTIFY_SEARCH_LIMIT = 50;
     public static final int PLAYLIST_LIMIT = 50;
+    public static final int PLAYLIST_TRACK_LIMIT = 100;
 }
