@@ -154,7 +154,7 @@ class BaseSpotifyActivity : AppCompatActivity(), HostFragmentBase.BaseHostFragme
                 Log.d(TAG, "Access token granted")
 
                 // Store when access token expires (response "ExpiresIn" is in seconds, subtract a minute to worry less about timing)
-                val accessExpireTime = System.currentTimeMillis() + (response.expiresIn - 60) * 1000
+                val accessExpireTime = SystemClock.elapsedRealtime() + (response.expiresIn - 60) * 1000
                 AccessModel.setAccess(response.accessToken, accessExpireTime)
 
                 // Start thread responsible for notifying UI thread when new access token is needed
@@ -279,7 +279,7 @@ class BaseSpotifyActivity : AppCompatActivity(), HostFragmentBase.BaseHostFragme
      */
     private inner class AccessRefreshThread internal constructor() : Thread(Runnable {
         while (true) {
-            if (System.currentTimeMillis() >= AccessModel.getAccessExpireTime()) {
+            if (SystemClock.elapsedRealtime() >= AccessModel.getAccessExpireTime()) {
                 Log.d(TAG, "Detected that we need a new access token")
 
                 // Access is no longer valid

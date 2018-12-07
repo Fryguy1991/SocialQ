@@ -329,7 +329,8 @@ open class HostActivityKotlin : BaseActivity(), HostService.HostServiceListener,
     }
 
     override fun initiateView(title: String, songRequests: List<ClientRequestData>, isPlaying: Boolean) {
-        // Re-initializes view if it's rebinding to service
+        Log.d(TAG, "Re-initializing host view")
+
         this.title = title
         mTrackDisplayAdapter.updateAdapter(songRequests)
         if (isPlaying) {

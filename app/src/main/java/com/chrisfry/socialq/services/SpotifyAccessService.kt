@@ -2,6 +2,7 @@ package com.chrisfry.socialq.services
 
 import android.app.Service
 import android.content.Intent
+import android.os.SystemClock
 import android.util.Log
 import com.chrisfry.socialq.business.AppConstants
 import com.chrisfry.socialq.model.AccessModel
@@ -35,7 +36,7 @@ abstract class SpotifyAccessService : Service() {
     protected val playlistTracks = mutableListOf<PlaylistTrack>()
 
     fun accessTokenUpdated() {
-        if (AccessModel.getAccessExpireTime() > System.currentTimeMillis()) {
+        if (AccessModel.getAccessExpireTime() > SystemClock.elapsedRealtime()) {
             startAccessRefreshThread()
             initSpotifyElements(AccessModel.getAccessToken())
         }
@@ -128,7 +129,7 @@ abstract class SpotifyAccessService : Service() {
      */
     private inner class AccessRefreshThread internal constructor() : Thread(Runnable {
         while (true) {
-            if (System.currentTimeMillis() >= AccessModel.getAccessExpireTime()) {
+            if (SystemClock.elapsedRealtime() >= AccessModel.getAccessExpireTime()) {
                 if (isServiceEnding) {
                     Log.d(HostService.TAG, "Service is ending, don't need new access token")
                     break

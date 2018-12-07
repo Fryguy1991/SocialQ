@@ -79,9 +79,9 @@ class AccessTokenReceiverActivity : Activity() {
                         Log.e(TAG, "Not handling request for auth code")
                     }
                     AuthenticationResponse.Type.TOKEN -> {
-                        Log.d(TAG, "Access token granted")
+                        Log.d(TAG, "Access token granted, expires in ${response.expiresIn} seconds")
                         // Calculate when access token expires (response "ExpiresIn" is in seconds, subtract a minute to worry less about timing)
-                        val expireTime = System.currentTimeMillis() + (response.expiresIn - 60) * 1000
+                        val expireTime = SystemClock.elapsedRealtime() + (response.expiresIn - 60) * 1000
 
                         // Set access token and expire time into model
                         AccessModel.setAccess(response.accessToken, expireTime)
