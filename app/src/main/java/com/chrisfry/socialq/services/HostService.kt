@@ -1,11 +1,13 @@
 package com.chrisfry.socialq.services
 
+import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.net.ConnectivityManager
 import android.os.Binder
 import android.os.IBinder
 import android.util.Log
+import androidx.core.app.NotificationCompat
 import com.chrisfry.socialq.R
 import com.chrisfry.socialq.business.AppConstants
 import com.chrisfry.socialq.enums.NearbyDevicesMessage
@@ -14,6 +16,7 @@ import com.chrisfry.socialq.model.AccessModel
 import com.chrisfry.socialq.model.ClientRequestData
 import com.chrisfry.socialq.model.SongRequestData
 import com.chrisfry.socialq.userinterface.App
+import com.chrisfry.socialq.userinterface.activities.HostActivityKotlin
 import com.chrisfry.socialq.utils.ApplicationUtils
 import com.google.android.gms.nearby.Nearby
 import com.google.android.gms.nearby.connection.*
@@ -70,6 +73,8 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
     private var userRequestedPause = false
     // Boolean flag for if the player is active
     private var isPlayerActive = false
+    // Boolean flag for indicating if the player is playing (used for view initiation)
+    private var isPlaying = false
 
     // QUEUE SORTING/FAIR PLAY ELEMENTS
     // Boolean flag to store if queue should be "fair play"
@@ -111,6 +116,19 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
 
             isQueueFairPlay = intent.getBooleanExtra(AppConstants.FAIR_PLAY_KEY, resources.getBoolean(R.bool.fair_play_default))
         }
+
+        // Start service in the foreground
+        val notificationIntent = Intent(this, HostActivityKotlin::class.java)
+        val pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0)
+
+        val notification = NotificationCompat.Builder(this, App.CHANNEL_ID)
+                .setContentTitle(getString(R.string.service_name))
+                .setContentText(queueTitle)
+                .setSmallIcon(R.drawable.notification_icon)
+                .setContentIntent(pendingIntent)
+                .build()
+
+        startForeground(1, notification)
 
         // Request access token from Spotify
         requestAccessToken()
@@ -379,6 +397,7 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
         when (playerEvent) {
             PlayerEvent.kSpPlaybackNotifyPlay -> {
                 Log.d(TAG, "Player has started playing")
+                isPlaying = true
                 notifyPlayStarted()
             }
             PlayerEvent.kSpPlaybackNotifyContextChanged -> {
@@ -386,6 +405,7 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
             PlayerEvent.kSpPlaybackNotifyPause -> {
                 Log.d(TAG, "Player has paused")
                 // If meta data is incorrect we won't actually pause (unless user requested pause)
+                isPlaying = false
                 if (userRequestedPause || !incorrectMetaDataFlag) {
                     notifyPaused()
                     userRequestedPause = false
@@ -530,6 +550,8 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
         fun showClientConnected()
 
         fun showClientDisconnected()
+
+        fun initiateView(title: String, songRequests: List<ClientRequestData>, isPlaying: Boolean)
     }
 
     private fun notifyQueueChanged() {
@@ -866,6 +888,10 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
         if (uri.isNotEmpty() && currentUser != null) {
             handleSongRequest(SongRequestData(uri, currentUser!!))
         }
+    }
+
+    fun requestInitiation() {
+        listener?.initiateView(queueTitle, createDisplayList(playlistTracks.subList(currentPlaylistIndex, playlist.tracks.total)), isPlaying)
     }
 
     override fun playlistRefreshComplete() {

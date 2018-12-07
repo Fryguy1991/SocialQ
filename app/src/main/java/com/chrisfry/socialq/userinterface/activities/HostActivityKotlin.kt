@@ -8,6 +8,7 @@ import android.view.View
 import android.view.WindowManager
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.chrisfry.socialq.R
@@ -27,11 +28,11 @@ open class HostActivityKotlin : BaseActivity(), HostService.HostServiceListener,
     private val TAG = HostActivityKotlin::class.java.name
 
     // UI element references
-    private var mNextButton: View? = null
-    private var mPlayPauseButton: ImageView? = null
+    private lateinit var mNextButton: View
+    private lateinit var mPlayPauseButton: ImageView
 
     // Track list elements
-    private var mQueueList: RecyclerView? = null
+    private lateinit var mQueueList: RecyclerView
     private lateinit var mTrackDisplayAdapter: HostTrackListAdapter
 
     private lateinit var hostService: HostService
@@ -47,10 +48,15 @@ open class HostActivityKotlin : BaseActivity(), HostService.HostServiceListener,
         override fun onServiceConnected(componentName: ComponentName, iBinder: IBinder) {
             Log.d(TAG, "Host service Connected")
             val binder = iBinder as HostService.HostServiceBinder
-
             hostService = binder.getService()
-            hostService.addPlayQueueServiceListener(this@HostActivityKotlin)
             mIsServiceBound = true
+
+            hostService.addPlayQueueServiceListener(this@HostActivityKotlin)
+
+            if (title.isNullOrEmpty()) {
+                hostService.requestInitiation()
+            }
+
         }
 
         override fun onServiceDisconnected(componentName: ComponentName) {
@@ -94,11 +100,11 @@ open class HostActivityKotlin : BaseActivity(), HostService.HostServiceListener,
     }
 
     private fun addListeners() {
-        mNextButton!!.setOnClickListener {
+        mNextButton.setOnClickListener {
             hostService.requestPlayNext()
         }
 
-        mPlayPauseButton!!.setOnClickListener {
+        mPlayPauseButton.setOnClickListener {
             view -> handlePlayPause(view.contentDescription == "queue_playing")
         }
     }
@@ -133,11 +139,11 @@ open class HostActivityKotlin : BaseActivity(), HostService.HostServiceListener,
         // If we can't find a host service to bind to, start the host service then bind
         if (App.hasServiceBeenStarted) {
             Log.d(TAG, "Attempting to bind to host service")
-            bindService(startHostIntent, hostServiceConnection, Context.BIND_AUTO_CREATE)
+            bindService(startHostIntent, hostServiceConnection, Context.BIND_ABOVE_CLIENT)
         } else {
             Log.d(TAG, "Starting and binding to host service")
-            startService(startHostIntent)
-            bindService(startHostIntent, hostServiceConnection, Context.BIND_AUTO_CREATE)
+            ContextCompat.startForegroundService(this, startHostIntent)
+            bindService(startHostIntent, hostServiceConnection, Context.BIND_ABOVE_CLIENT)
         }
     }
 
@@ -234,6 +240,8 @@ open class HostActivityKotlin : BaseActivity(), HostService.HostServiceListener,
     }
 
     override fun onDestroy() {
+        Log.d(TAG, "Destroying host activity")
+
         // Unbind from the PlayQueueService
         if (mIsServiceBound) {
             hostService.removePlayQueueServiceListener()
@@ -252,10 +260,10 @@ open class HostActivityKotlin : BaseActivity(), HostService.HostServiceListener,
 
     private fun setupQueueList() {
         mTrackDisplayAdapter = HostTrackListAdapter(applicationContext)
-        mQueueList!!.adapter = mTrackDisplayAdapter
+        mQueueList.adapter = mTrackDisplayAdapter
         val layoutManager = LinearLayoutManager(this, RecyclerView.VERTICAL, false)
-        mQueueList!!.layoutManager = layoutManager
-        mQueueList!!.addItemDecoration(QueueItemDecoration(applicationContext))
+        mQueueList.layoutManager = layoutManager
+        mQueueList.addItemDecoration(QueueItemDecoration(applicationContext))
     }
 
     private fun handlePlayPause(isPlaying: Boolean) {
@@ -268,20 +276,20 @@ open class HostActivityKotlin : BaseActivity(), HostService.HostServiceListener,
 
     override fun onQueuePause() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            mPlayPauseButton!!.setImageDrawable(resources.getDrawable(R.drawable.play_button, this.theme))
+            mPlayPauseButton.setImageDrawable(resources.getDrawable(R.drawable.play_button, this.theme))
         } else {
-            mPlayPauseButton!!.setImageDrawable(resources.getDrawable(R.drawable.play_button))
+            mPlayPauseButton.setImageDrawable(resources.getDrawable(R.drawable.play_button))
         }
-        mPlayPauseButton!!.contentDescription = "queue_paused"
+        mPlayPauseButton.contentDescription = "queue_paused"
     }
 
     override fun onQueuePlay() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            mPlayPauseButton!!.setImageDrawable(resources.getDrawable(R.drawable.pause_button, this.theme))
+            mPlayPauseButton.setImageDrawable(resources.getDrawable(R.drawable.pause_button, this.theme))
         } else {
-            mPlayPauseButton!!.setImageDrawable(resources.getDrawable(R.drawable.pause_button))
+            mPlayPauseButton.setImageDrawable(resources.getDrawable(R.drawable.pause_button))
         }
-        mPlayPauseButton!!.contentDescription = "queue_playing"
+        mPlayPauseButton.contentDescription = "queue_playing"
     }
 
     override fun onQueueUpdated(songRequests: List<ClientRequestData>) {
@@ -291,15 +299,17 @@ open class HostActivityKotlin : BaseActivity(), HostService.HostServiceListener,
 
     override fun closeHost() {
         stopHostService()
+        val startIntent = Intent(this, StartActivity::class.java)
+        startActivity(startIntent)
         finish()
     }
 
     override fun showClientConnected() {
-        Toast.makeText(this, "A client has joined!", Toast.LENGTH_SHORT).show()
+        Toast.makeText(this, getString(R.string.client_joined), Toast.LENGTH_SHORT).show()
     }
 
     override fun showClientDisconnected() {
-        Toast.makeText(this, "A client has disconnected!", Toast.LENGTH_SHORT).show()
+        Toast.makeText(this, getString(R.string.client_disconnected), Toast.LENGTH_SHORT).show()
     }
 
     /**
@@ -316,5 +326,16 @@ open class HostActivityKotlin : BaseActivity(), HostService.HostServiceListener,
 
     override fun showLoadingScreen() {
         // TODO: Show a loading screen when service is doing long data retrieval
+    }
+
+    override fun initiateView(title: String, songRequests: List<ClientRequestData>, isPlaying: Boolean) {
+        // Re-initializes view if it's rebinding to service
+        this.title = title
+        mTrackDisplayAdapter.updateAdapter(songRequests)
+        if (isPlaying) {
+            onQueuePlay()
+        } else {
+            onQueuePause()
+        }
     }
 }

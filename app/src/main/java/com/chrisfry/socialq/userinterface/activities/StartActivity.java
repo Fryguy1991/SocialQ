@@ -138,6 +138,7 @@ public class StartActivity extends AppCompatActivity {
 
     private void handleClientStart() {
         startActivity(new Intent(StartActivity.this, QueueConnectActivityNearbyDevices.class));
+        finish();
     }
 
     private void handleHostStart() {
@@ -200,6 +201,7 @@ public class StartActivity extends AppCompatActivity {
                 startQueueIntent.putExtra(AppConstants.FAIR_PLAY_KEY, mIsFairPlayChecked);
                 startActivity(startQueueIntent);
                 dialog.dismiss();
+                finish();
             }
         });
         dialogBuilder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {

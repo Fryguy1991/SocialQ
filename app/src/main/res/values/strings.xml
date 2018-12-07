@@ -1,5 +1,6 @@
 <resources>
     <string name="app_name">SocialQ</string>
+    <string name="service_name">SocialQ Service</string>
     <string name="play_queue_service_description">Service that uses SpotifyPlayer to play music and support the SocialQ application.</string>
     <string name="host_service_description">Service used to host a SocialQ</string>
 

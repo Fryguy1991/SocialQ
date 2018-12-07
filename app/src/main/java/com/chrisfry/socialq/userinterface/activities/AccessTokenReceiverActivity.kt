@@ -7,6 +7,7 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.os.*
 import android.util.Log
+import android.view.WindowManager
 import com.chrisfry.socialq.business.AppConstants
 import com.chrisfry.socialq.enums.RequestType
 import com.chrisfry.socialq.model.AccessModel
@@ -30,6 +31,15 @@ class AccessTokenReceiverActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         Log.d(TAG, "Access token retriever activity being created")
         super.onCreate(savedInstanceState)
+
+        // Attempting to give this activity permission to pop up when the phone is locked
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+            setShowWhenLocked(true)
+            setTurnScreenOn(true)
+        } else {
+            this.window.addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED)
+            this.window.addFlags(WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON)
+        }
 
         if (intent.getBooleanExtra(AppConstants.IS_HOST_KEY, true)) {
             accessScopes = arrayOf("user-read-private", "streaming", "playlist-modify-private", "playlist-read-private")
