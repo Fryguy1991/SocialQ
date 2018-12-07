@@ -99,7 +99,7 @@ class ClientActivityNearbyDevices : ClientActivityKotlin() {
 //                when (payloadType) {
 //                    NearbyDevicesMessage.INITIATE_CLIENT -> {
 //                        if (regexMatcher.find()) {
-//                            mHostUserId = regexMatcher.group(1)
+//                            hostUserId = regexMatcher.group(1)
 //                            setupQueuePlaylistOnConnection(regexMatcher.group(2))
 //                            try {
 //                                updateQueue(regexMatcher.group(3).toInt())
@@ -187,7 +187,7 @@ class ClientActivityNearbyDevices : ClientActivityKotlin() {
 //        }
 //    }
 //
-//    override fun disconnectClient() {
+//    override fun requestDisconnect() {
 //        userDisconnect = true
 //        Nearby.getConnectionsClient(this).disconnectFromEndpoint(mHostEndpointId)
 //    }
