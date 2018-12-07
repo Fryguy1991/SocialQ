@@ -43,11 +43,11 @@ public class AppConstants {
 
     // START REGULAR EXPRESSIONS
     // Regex for notifying client queue is updated
-    public static final String UPDATE_QUEUE_REGEX = QUEUE_UPDATE_PREFIX + "(\\S+)";
+    public static final String UPDATE_QUEUE_REGEX = QUEUE_UPDATE_PREFIX + "([0-9]+)";
     // Regex for initiating client
-    public static final String INITIATE_CLIENT_REGEX = HOST_USER_ID_PREFIX + "(\\S+)" + PLAYLIST_ID_PREFIX + "(\\S+)" + QUEUE_UPDATE_PREFIX + "([0-9+])";
+    public static final String INITIATE_CLIENT_REGEX = HOST_USER_ID_PREFIX + "(.+)" + PLAYLIST_ID_PREFIX + "(.+)" + QUEUE_UPDATE_PREFIX + "([0-9]+)";
     // Regex for track request messages (Example: #SONG_REQUEST#spotify:track:6qtg4gz3DhqOHL5BHtSQw8#CLIENT_USER_ID#fry_dev_1
-    public static final String FULL_SONG_REQUEST_REGEX = SONG_REQUEST_PREFIX + "(spotify:track:\\S+)" + CLIENT_USER_ID_PREFIX + "(\\S+)";
+    public static final String FULL_SONG_REQUEST_REGEX = SONG_REQUEST_PREFIX + "(spotify:track:.+)" + CLIENT_USER_ID_PREFIX + "(.+)";
 
     // Spotify URL Regexs
     public static final String URL_TRACK_SEARCH = "https:\\/\\/api.spotify.com\\/v1\\/search\\?type=track&q=([^&]+).+";
