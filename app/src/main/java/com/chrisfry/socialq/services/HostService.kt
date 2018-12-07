@@ -292,7 +292,7 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
 
         if (currentUser == null) {
             Log.d(TAG, "Receiving Spotify access for the first time. Retrieve current user, " +
-                    "create playlist and check for user playlist for base")
+                    "create playlist, check for user playlist for base, and start advertising")
             currentUser = spotifyService.me
             startNearbyAdvertising(queueTitle)
         }
