@@ -2,6 +2,7 @@ package com.chrisfry.socialq.services
 
 import android.app.Service
 import android.content.Intent
+import android.os.Binder
 import android.util.Log
 import com.chrisfry.socialq.business.AppConstants
 import com.chrisfry.socialq.model.AccessModel
@@ -20,6 +21,13 @@ abstract class SpotifyAccessService : Service() {
     companion object {
         val TAG = SpotifyAccessService::class.java.name
     }
+
+    open inner class SpotifyAccessServiceBinder : Binder() {
+        open fun getService(): SpotifyAccessService {
+            return this@SpotifyAccessService
+        }
+    }
+
     // API for retrieve SpotifyService object
     private val spotifyApi = SpotifyApi()
     // Service for adding songs to the queue
@@ -32,6 +40,8 @@ abstract class SpotifyAccessService : Service() {
     protected lateinit var playlist: Playlist
     // Tracks from queue playlist
     protected val playlistTracks = mutableListOf<PlaylistTrack>()
+    // Flag indicating if the service is a host
+    private var isHost = true
 
     fun accessTokenUpdated() {
         if (AccessModel.getAccessExpireTime() > System.currentTimeMillis()) {
@@ -111,12 +121,24 @@ abstract class SpotifyAccessService : Service() {
 
     }
 
-    protected fun requestAccessToken() {
+    protected fun requestHostAccessToken() {
+        isHost = true
         val accessIntent = Intent()
         accessIntent.setClass(applicationContext, AccessTokenReceiverActivity::class.java)
+        accessIntent.putExtra(AppConstants.IS_HOST_KEY, true)
         accessIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
         startActivity(accessIntent)
     }
+
+    protected fun requestClientAccessToken() {
+        isHost = false
+        val accessIntent = Intent()
+        accessIntent.setClass(applicationContext, AccessTokenReceiverActivity::class.java)
+        accessIntent.putExtra(AppConstants.IS_HOST_KEY, false)
+        accessIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        startActivity(accessIntent)
+    }
+
 
     private fun startAccessRefreshThread() {
         AccessRefreshThread().start()
@@ -133,7 +155,11 @@ abstract class SpotifyAccessService : Service() {
                     break
                 } else {
                     Log.d(HostService.TAG, "Detected that we need a new access token")
-                    requestAccessToken()
+                    if (isHost) {
+                        requestHostAccessToken()
+                    } else {
+                        requestClientAccessToken()
+                    }
                     break
                 }
             }

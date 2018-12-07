@@ -1,15 +1,13 @@
 package com.chrisfry.socialq.services
 
 import android.content.Intent
-import android.os.Binder
 import android.os.IBinder
 import android.util.Log
 import com.chrisfry.socialq.R
 import com.chrisfry.socialq.business.AppConstants
 import com.chrisfry.socialq.enums.NearbyDevicesMessage
 import com.chrisfry.socialq.enums.PayloadTransferUpdateStatus
-import com.chrisfry.socialq.model.ClientRequestData
-import com.chrisfry.socialq.userinterface.activities.ClientActivityNearbyDevices
+import com.chrisfry.socialq.userinterface.App
 import com.chrisfry.socialq.utils.ApplicationUtils
 import com.google.android.gms.nearby.Nearby
 import com.google.android.gms.nearby.connection.*
@@ -19,7 +17,9 @@ import kaaes.spotify.webapi.android.SpotifyCallback
 import kaaes.spotify.webapi.android.SpotifyError
 import kaaes.spotify.webapi.android.SpotifyService
 import kaaes.spotify.webapi.android.models.Playlist
-import kaaes.spotify.webapi.android.models.PlaylistSimple
+import kaaes.spotify.webapi.android.models.PlaylistTrack
+import kaaes.spotify.webapi.android.models.Result
+import kaaes.spotify.webapi.android.models.UserPublic
 import retrofit.client.Response
 import java.lang.Exception
 import java.lang.NumberFormatException
@@ -31,15 +31,15 @@ class ClientService : SpotifyAccessService() {
         val TAG = ClientService::class.java.name
     }
 
-    inner class ClientServiceBinder : Binder() {
-        fun getService(): ClientService {
+    inner class ClientServiceBinder : SpotifyAccessServiceBinder() {
+        override fun getService(): ClientService {
             return this@ClientService
         }
     }
 
     // SERVICE ELEMENTS
     // Binder for talking from bound activity to host
-    private val hostServiceBinder = ClientServiceBinder()
+    private val clientServiceBinder = ClientServiceBinder()
     // Flag indicating if the service is bound to an activity
     private var isBound = false
     // Object listening for events from the service
@@ -47,27 +47,58 @@ class ClientService : SpotifyAccessService() {
 
     // NEARBY CONNECTIONS ELEMENTS
     // Variable to hold host endpoint
-    private lateinit var mHostEndpointId: String
+    private var hostEndpointId = ""
     // Flag indicating success of connection to host (used during activity destruction)
-    private var mSuccessfulConnectionFlag = false
+    private var successfulConnectionFlag = false
     // Flag to indicate if the user has initiated the disconnect
     private var userDisconnect = false
+    // Flag to indicate if the host disconnected from the client
+    private var hostDisconnect = false
+    // Flag to indicate if the client is mid-initiation
+    private var isBeingInitiated = false
 
     // SPOTIFY ELEMENTS
-    // Spotify user ID of the host
-    private var mHostUserId: String? = null
     // Cached index for displaying correct track list
     private var cachedPlayingIndex = 0
+    // Reference to client user Spotify account
+    private var clientUser: UserPublic? = null
 
+    // Title of the SocialQ
+    private lateinit var hostQueueTitle: String
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        return super.onStartCommand(intent, flags, startId)
+        Log.d(TAG, "Client service is being started")
+
+        if (intent != null) {
+            // Get name of queue from intent
+            val titleString = intent.getStringExtra(AppConstants.QUEUE_TITLE_KEY)
+            if (titleString.isNullOrEmpty()) {
+                hostQueueTitle = getString(R.string.queue_title_default_value)
+            } else {
+                hostQueueTitle = titleString
+            }
+
+            // Ensure our endpoint is valid and store it
+            val endpointString = intent.getStringExtra(AppConstants.ND_ENDPOINT_ID_EXTRA_KEY)
+            if (endpointString.isNullOrEmpty()) {
+                Log.d(TAG, "Stopping client service due to bad host endpoint ID")
+                stopSelf()
+            } else {
+                hostEndpointId = endpointString
+            }
+        }
+
+        requestClientAccessToken()
+
+        App.hasServiceBeenStarted = true
+
+        return START_NOT_STICKY
     }
 
     override fun onBind(intent: Intent?): IBinder? {
         Log.d(TAG, "Client service is being bound")
         isBound = true
-        return hostServiceBinder
+        return clientServiceBinder
     }
 
     override fun onUnbind(intent: Intent?): Boolean {
@@ -81,19 +112,6 @@ class ClientService : SpotifyAccessService() {
         isBound = true
     }
 
-
-    // Inner interface used to cast listeners for service events
-    interface ClientServiceListener {
-
-        fun onQueueUpdated(songRequests: List<ClientRequestData>)
-
-        fun showLoadingScreen()
-
-        fun showHostDisconnectDialog()
-
-        fun closeClient()
-    }
-
     fun setClientServiceListener(listener: ClientServiceListener) {
         this.listener = listener
     }
@@ -103,25 +121,38 @@ class ClientService : SpotifyAccessService() {
     }
 
     fun sendTrackToHost(uri: String) {
-
+        if (uri.isNotEmpty()) {
+            val requestMessage = buildSongRequestMessage(uri, clientUser!!.id)
+            if (requestMessage.isNotEmpty()) {
+                Log.d(TAG, "Sending track request message to host: $requestMessage")
+                Nearby.getConnectionsClient(this).sendPayload(hostEndpointId, Payload.fromBytes(requestMessage.toByteArray()))
+            }
+        }
     }
 
     fun followPlaylist() {
-
+        spotifyService.followPlaylist(clientUser!!.id, playlist.id, followPlaylistCallback)
     }
 
     override fun playlistRefreshComplete() {
-        listener?.onQueueUpdated(playlistTracks.subList())
+        // This will be the last call of proper client initiation
+        if (isBeingInitiated) {
+            Log.d(TAG, "Finished Client initiation")
+        }
+        isBeingInitiated = false
+        listener?.onQueueUpdated(playlistTracks.subList(cachedPlayingIndex, playlist.tracks.total))
     }
 
+    override fun initSpotifyElements(accessToken: String) {
+        super.initSpotifyElements(accessToken)
 
+        if (clientUser == null) {
+            Log.d(HostService.TAG, "Receiving Spotify access for the first time. Retrieve current user and connect to host")
 
-
-
-
-
-    // COPY OVER NEARBY CLIENT CODE
-
+            clientUser = spotifyService.me
+            connectToHost()
+        }
+    }
 
     private val mConnectionLifecycleCallback = object : ConnectionLifecycleCallback() {
         override fun onConnectionInitiated(endpointId: String, connectionInfo: ConnectionInfo) {
@@ -132,7 +163,7 @@ class ClientService : SpotifyAccessService() {
             when (connectionResolution.status.statusCode) {
                 ConnectionsStatusCodes.STATUS_OK -> {
                     Log.d(TAG, "Connection to host successful!")
-                    mSuccessfulConnectionFlag = true
+                    successfulConnectionFlag = true
                 }
                 ConnectionsStatusCodes.STATUS_CONNECTION_REJECTED -> {
                     Log.d(TAG, "Connection to host rejected")
@@ -147,6 +178,7 @@ class ClientService : SpotifyAccessService() {
 
         override fun onDisconnected(endPoint: String) {
             Log.d(TAG, "Host disconnected from the client")
+            hostDisconnect = true
 
             // If host has disconnected from the client.  Allow the client to follow the playlist
             // If client disconnected from the host they will have already picked if they wanted to
@@ -176,12 +208,14 @@ class ClientService : SpotifyAccessService() {
                 Log.d(TAG, payloadType.toString() + " payload received from host")
                 when (payloadType) {
                     NearbyDevicesMessage.INITIATE_CLIENT -> {
+                        Log.d(TAG, "Started Client initiation")
+                        isBeingInitiated = true
                         if (regexMatcher.find()) {
                             val hostId = regexMatcher.group(1)
                             val playlistId = (regexMatcher.group(2))
 
                             if (hostId.isNotEmpty() && playlistId.isNotEmpty()) {
-                                mHostUserId = hostId
+                                playlistOwnerUserId = hostId
                                 spotifyService.getPlaylist(hostId, playlistId, playlistCallback)
                             }
 
@@ -193,17 +227,23 @@ class ClientService : SpotifyAccessService() {
                             }
                         } else {
                             Log.e(TAG, "Something went wrong. Regex failed matching for $payloadType")
+                            isBeingInitiated = false
                         }
                     }
                     NearbyDevicesMessage.QUEUE_UPDATE -> {
                         // Host is notifying us that the queue has been updated
                         if (regexMatcher.find()) {
                             try {
-                                refreshPlaylist()
+                                cachedPlayingIndex = regexMatcher.group(1).toInt()
+                                // Don't interrupt client initiation
+                                if (!isBeingInitiated) {
+                                    refreshPlaylist()
+                                }
                             } catch (exception: NumberFormatException) {
                                 Log.e(TAG, "Invalid index was sent")
+                                cachedPlayingIndex = -1
                             }
-                        }  else {
+                        } else {
                             Log.e(TAG, "Something went wrong. Regex failed matching for $payloadType")
                         }
                     }
@@ -229,72 +269,54 @@ class ClientService : SpotifyAccessService() {
     }
 
     override fun onDestroy() {
-        Log.d(TAG, "Client nearby activity being destroyed")
+        Log.d(TAG, "Client service is ending")
 
-        if (mSuccessfulConnectionFlag) {
+        if (successfulConnectionFlag) {
             Log.d(TAG, "Disconnecting from host")
             Nearby.getConnectionsClient(this).stopAllEndpoints()
         }
 
+        App.hasServiceBeenStarted = false
         super.onDestroy()
     }
 
-    fun sendTrackToHost(requestMessage: String?) {
-        if (requestMessage != null) {
-            Log.d(TAG, "Sending track request message to host: $requestMessage")
-            Nearby.getConnectionsClient(this).sendPayload(mHostEndpointId, Payload.fromBytes(requestMessage.toByteArray()))
-        }
+    fun connectToHost() {
+        Nearby.getConnectionsClient(this).requestConnection(
+                "SocialQ Client",
+                hostEndpointId,
+                mConnectionLifecycleCallback)
+                .addOnSuccessListener(object : OnSuccessListener<Void> {
+                    override fun onSuccess(p0: Void?) {
+                        Log.d(TAG, "Successfully sent a connection request")
+                    }
+                })
+                .addOnFailureListener(object : OnFailureListener {
+                    override fun onFailure(p0: Exception) {
+                        Log.e(TAG, "Failed to send a connection request, can't connect")
+                        stopSelf()
+                    }
+                })
     }
 
-    override fun connectToHost() {
-        val endpointId = intent.getStringExtra(AppConstants.ND_ENDPOINT_ID_EXTRA_KEY)
-        if (endpointId == null) {
-            Log.d(TAG, "Have no endpoint ID for host connection, can't connect")
-            finish()
-        } else {
-            mHostEndpointId = endpointId
-            Nearby.getConnectionsClient(this).requestConnection(
-                    "SocialQ Client",
-                    endpointId,
-                    mConnectionLifecycleCallback)
-                    .addOnSuccessListener(object : OnSuccessListener<Void> {
-                        override fun onSuccess(p0: Void?) {
-                            Log.d(TAG, "Successfully sent a connection request")
-                        }
-                    })
-                    .addOnFailureListener(object : OnFailureListener {
-                        override fun onFailure(p0: Exception) {
-                            Log.e(TAG, "Failed to send a connection request, can't connect")
-//                            Toast.makeText(this@ClientActivityNearbyDevices, getString(R.string.toast_host_connection_error), Toast.LENGTH_SHORT).show()
-//                            finish()
-                        }
-                    })
-        }
-    }
-
-    override fun disconnectClient() {
+    fun requestDisconnect() {
+        Log.d(TAG, "Disconnecting client from host at user's request")
         userDisconnect = true
-        Nearby.getConnectionsClient(this).disconnectFromEndpoint(mHostEndpointId)
+        Nearby.getConnectionsClient(this).stopAllEndpoints()
+        successfulConnectionFlag = false
+
+        listener?.closeClient()
     }
 
-
-
-    // COPYING OVER USERFUL ACTIVITY CODE
-
-    private fun buildSongRequestMessage(trackUri: String?, userId: String?): String? {
-        if (trackUri != null && userId != null && !trackUri.isEmpty() && !userId.isEmpty()) {
+    private fun buildSongRequestMessage(trackUri: String?, userId: String?): String {
+        if (trackUri.isNullOrEmpty() || userId.isNullOrEmpty()) {
+            Log.d(TAG, "Can't build track request for URI: $trackUri, user ID: $userId")
+            return ""
+        } else {
             return String.format(NearbyDevicesMessage.SONG_REQUEST.messageFormat, trackUri, userId)
         }
-        Log.d(TAG, "Can't build track request for URI: $trackUri, user ID: $userId")
-        return null
     }
 
-
-
-
-
-
-
+    // START SPOTIFY CALLBACK OBJECTS
     // Callback object for getting host playlist
     private val playlistCallback = object : SpotifyCallback<Playlist>() {
         override fun success(playlist: Playlist?, response: Response?) {
@@ -324,7 +346,46 @@ class ClientService : SpotifyAccessService() {
             }
             Log.e(TAG, "Failed to get host playlist")
         }
-
     }
 
+    private val followPlaylistCallback = object : SpotifyCallback<Result>() {
+        override fun success(result: Result?, response: Response?) {
+            Log.d(TAG, "Successfully followed the playlist")
+
+            if (hostDisconnect) {
+                // Followed playlist when host disconnected
+                listener?.closeClient()
+            } else {
+                // Followed playlist on user requested disconnect
+                requestDisconnect()
+            }
+        }
+
+        override fun failure(spotifyError: SpotifyError?) {
+            if (spotifyError != null) {
+                Log.e(TAG, spotifyError.errorDetails.message)
+            }
+            Log.e(TAG, "Failed to follow the playlist")
+            if (hostDisconnect) {
+                // Tried to follow playlist when host disconnected
+                listener?.closeClient()
+            } else {
+                // Tried to follow playlist on user requested disconnect
+                requestDisconnect()
+            }
+        }
+    }
+    // END SPOTIFY CALLBACK OBJECTS
+
+    // Interface used to cast listeners for client service events
+    interface ClientServiceListener {
+
+        fun onQueueUpdated(queueTracks: List<PlaylistTrack>)
+
+        fun showLoadingScreen()
+
+        fun showHostDisconnectDialog()
+
+        fun closeClient()
+    }
 }

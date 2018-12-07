@@ -2,6 +2,7 @@
     <string name="app_name">SocialQ</string>
     <string name="play_queue_service_description">Service that uses SpotifyPlayer to play music and support the SocialQ application.</string>
     <string name="host_service_description">Service used to host a SocialQ</string>
+    <string name="client_service_description">Service used as a client of a SocialQ</string>
 
     <!-- Menu Action Strings -->
     <string name="search_action">search_action</string>

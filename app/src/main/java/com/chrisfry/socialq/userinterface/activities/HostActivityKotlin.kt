@@ -57,7 +57,7 @@ open class HostActivityKotlin : BaseActivity(), HostService.HostServiceListener,
             Log.d(TAG, "Host service disconnected")
             unbindService(this)
             isServiceBound = false
-            finish()
+            launchStartActivityAndFinish()
         }
     }
 
@@ -120,7 +120,7 @@ open class HostActivityKotlin : BaseActivity(), HostService.HostServiceListener,
                 Log.e(TAG, "Host activity should not receive $requestType")
             }
             RequestType.NONE -> {
-                Log.e(TAG, "Unhandled request code")
+                Log.e(TAG, "Unhandled request code: $requestCode")
             }
         }
     }
@@ -291,7 +291,7 @@ open class HostActivityKotlin : BaseActivity(), HostService.HostServiceListener,
 
     override fun closeHost() {
         stopHostService()
-        finish()
+        launchStartActivityAndFinish()
     }
 
     override fun showClientConnected() {

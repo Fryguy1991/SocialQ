@@ -3,9 +3,7 @@ package com.chrisfry.socialq.services
 import android.content.Context
 import android.content.Intent
 import android.net.ConnectivityManager
-import android.os.Binder
 import android.os.IBinder
-import android.security.keystore.UserPresenceUnavailableException
 import android.util.Log
 import com.chrisfry.socialq.R
 import com.chrisfry.socialq.business.AppConstants
@@ -38,8 +36,8 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
         val TAG = HostService::class.java.name
     }
 
-    inner class HostServiceBinder : Binder() {
-        fun getService(): HostService {
+    inner class HostServiceBinder : SpotifyAccessServiceBinder() {
+        override fun getService(): HostService {
             return this@HostService
         }
     }
@@ -116,7 +114,7 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
         }
 
         // Request access token from Spotify
-        requestAccessToken()
+        requestHostAccessToken()
 
         // Let app object know that a service has been started
         App.hasServiceBeenStarted = true

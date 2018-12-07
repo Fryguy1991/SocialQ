@@ -22,4 +22,10 @@ abstract class BaseActivity : AppCompatActivity() {
                 return false
         }
     }
+
+    protected fun launchStartActivityAndFinish() {
+        val startIntent = Intent(this, StartActivity::class.java)
+        startActivity(startIntent)
+        finish()
+    }
 }

@@ -12,6 +12,7 @@ import com.chrisfry.socialq.enums.RequestType
 import com.chrisfry.socialq.model.AccessModel
 import com.chrisfry.socialq.services.ClientService
 import com.chrisfry.socialq.services.HostService
+import com.chrisfry.socialq.services.SpotifyAccessService
 import com.spotify.sdk.android.authentication.AuthenticationClient
 import com.spotify.sdk.android.authentication.AuthenticationRequest
 import com.spotify.sdk.android.authentication.AuthenticationResponse
@@ -26,7 +27,7 @@ class AccessTokenReceiverActivity : Activity() {
     //
     private var isHostFlag: Boolean = true
     private var isBound = false
-    private lateinit var hostService: HostService
+    private lateinit var accessService: SpotifyAccessService
 
     override fun onCreate(savedInstanceState: Bundle?) {
         Log.d(TAG, "Access token retriever activity being created")
@@ -42,10 +43,10 @@ class AccessTokenReceiverActivity : Activity() {
         // Bind to service
         if (isHostFlag) {
             val serviceTokenIntent = Intent(baseContext, HostService::class.java)
-            bindService(serviceTokenIntent, hostConnection, Context.BIND_AUTO_CREATE)
+            bindService(serviceTokenIntent, serviceConnection, Context.BIND_AUTO_CREATE)
         } else {
             val serviceTokenIntent = Intent(baseContext, ClientService::class.java)
-            bindService(serviceTokenIntent, )
+            bindService(serviceTokenIntent, serviceConnection, Context.BIND_AUTO_CREATE)
         }
 
         requestAccessToken()
@@ -80,8 +81,8 @@ class AccessTokenReceiverActivity : Activity() {
 
                         // Notify service access token is updated
                         Log.d(TAG, "Notifying service of new access token and unbind")
-                        hostService.accessTokenUpdated()
-                        unbindService(hostConnection)
+                        accessService.accessTokenUpdated()
+                        unbindService(serviceConnection)
                         isBound = false
                         finish()
                         return
@@ -113,7 +114,7 @@ class AccessTokenReceiverActivity : Activity() {
         }
     }
 
-    private val hostConnection = object : ServiceConnection {
+    private val serviceConnection = object : ServiceConnection {
         override fun onServiceDisconnected(name: ComponentName?) {
             Log.d(TAG, "Service disconnected from access token receiver")
 
@@ -125,25 +126,15 @@ class AccessTokenReceiverActivity : Activity() {
             Log.d(TAG, "Access token receiver activity is bound to service")
 
             isBound = true
-            val binder = service as HostService.HostServiceBinder
-            hostService = binder.getService()
-        }
-    }
-
-    private val clientConnection = object : ServiceConnection {
-        override fun onServiceDisconnected(name: ComponentName?) {
-            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-        }
-
-        override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
-            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+            val binder = service as SpotifyAccessService.SpotifyAccessServiceBinder
+            accessService = binder.getService()
         }
     }
 
     override fun onDestroy() {
         Log.d(TAG, "Access token receiver activity being destroyed")
         if (isBound) {
-            unbindService(hostConnection)
+            unbindService(serviceConnection)
         }
         super.onDestroy()
     }

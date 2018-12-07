@@ -89,6 +89,11 @@
         <service android:name=".services.HostService"
             android:description="@string/host_service_description"
             android:exported="false" />
+
+        <!-- Service For Client -->
+        <service android:name=".services.ClientService"
+            android:description="@string/client_service_description"
+            android:exported="false" />
         <!-- END APPLICATION SERVICES -->
     </application>
 
