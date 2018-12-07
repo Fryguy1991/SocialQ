@@ -19,8 +19,8 @@ import com.chrisfry.socialq.userinterface.adapters.BasicTrackListAdapter
 import com.chrisfry.socialq.userinterface.views.QueueItemDecoration
 import kaaes.spotify.webapi.android.models.PlaylistTrack
 
-open class ClientActivityKotlin : BaseActivity(), ClientService.ClientServiceListener {
-    private val TAG = ClientActivityKotlin::class.java.name
+open class ClientActivity : BaseActivity(), ClientService.ClientServiceListener {
+    private val TAG = ClientActivity::class.java.name
 
     // UI elements for queue display
     private lateinit var queueList: RecyclerView
@@ -75,7 +75,7 @@ open class ClientActivityKotlin : BaseActivity(), ClientService.ClientServiceLis
             val binder = iBinder as ClientService.ClientServiceBinder
 
             clientService = binder.getService()
-            clientService.setClientServiceListener(this@ClientActivityKotlin)
+            clientService.setClientServiceListener(this@ClientActivity)
             isServiceBound = true
         }
 

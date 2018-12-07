@@ -23,9 +23,9 @@ import com.chrisfry.socialq.userinterface.adapters.SelectablePlaylistAdapter
 import com.chrisfry.socialq.userinterface.views.QueueItemDecoration
 import kaaes.spotify.webapi.android.models.PlaylistSimple
 
-open class HostActivityKotlin : BaseActivity(), HostService.HostServiceListener,
+open class HostActivity : BaseActivity(), HostService.HostServiceListener,
         IItemSelectionListener<String> {
-    private val TAG = HostActivityKotlin::class.java.name
+    private val TAG = HostActivity::class.java.name
 
     // UI element references
     private lateinit var nextButton: View
@@ -51,7 +51,7 @@ open class HostActivityKotlin : BaseActivity(), HostService.HostServiceListener,
             hostService = binder.getService()
             isServiceBound = true
 
-            hostService.setPlayQueueServiceListener(this@HostActivityKotlin)
+            hostService.setPlayQueueServiceListener(this@HostActivity)
 
             if (title.isNullOrEmpty()) {
                 hostService.requestInitiation()

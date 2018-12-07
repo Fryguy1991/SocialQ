@@ -15,7 +15,7 @@ import com.chrisfry.socialq.model.AccessModel
 import com.chrisfry.socialq.model.ClientRequestData
 import com.chrisfry.socialq.model.SongRequestData
 import com.chrisfry.socialq.userinterface.App
-import com.chrisfry.socialq.userinterface.activities.HostActivityKotlin
+import com.chrisfry.socialq.userinterface.activities.HostActivity
 import com.chrisfry.socialq.utils.ApplicationUtils
 import com.google.android.gms.nearby.Nearby
 import com.google.android.gms.nearby.connection.*
@@ -119,7 +119,7 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
         }
 
         // Start service in the foreground
-        val notificationIntent = Intent(this, HostActivityKotlin::class.java)
+        val notificationIntent = Intent(this, HostActivity::class.java)
         val pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0)
 
         val notification = NotificationCompat.Builder(this, App.CHANNEL_ID)
