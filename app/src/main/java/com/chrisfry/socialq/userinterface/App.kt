@@ -14,6 +14,12 @@ class App : Application() {
         val CHANNEL_ID = "SocialQServiceChannel"
     }
 
+    override fun onCreate() {
+        super.onCreate()
+
+        createNotificationChannel()
+    }
+
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val serviceChannel = NotificationChannel(
