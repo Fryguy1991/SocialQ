@@ -1,40 +1,40 @@
 package com.chrisfry.socialq.userinterface.activities
 
-import android.content.DialogInterface
-import android.content.Intent
+import android.content.*
 import android.os.Bundle
+import android.os.IBinder
 import android.os.StrictMode
 import android.util.Log
 import android.view.Menu
-import android.view.MenuItem
 import android.widget.CheckBox
 import androidx.appcompat.app.AlertDialog
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.chrisfry.socialq.R
 import com.chrisfry.socialq.business.AppConstants
-import com.chrisfry.socialq.enums.NearbyDevicesMessage
 import com.chrisfry.socialq.enums.RequestType
+import com.chrisfry.socialq.services.ClientService
+import com.chrisfry.socialq.userinterface.App
 import com.chrisfry.socialq.userinterface.adapters.BasicTrackListAdapter
 import com.chrisfry.socialq.userinterface.views.QueueItemDecoration
-import com.spotify.sdk.android.authentication.AuthenticationClient
-import com.spotify.sdk.android.authentication.AuthenticationResponse
+import kaaes.spotify.webapi.android.models.PlaylistTrack
 
-abstract class ClientActivityKotlin : BaseActivity() {
+open class ClientActivityKotlin : BaseActivity(), ClientService.ClientServiceListener {
     private val TAG = ClientActivityKotlin::class.java.name
 
-    // Elements for queue display
-    private var mQueueList: RecyclerView? = null
-    private var mTrackDisplayAdapter: BasicTrackListAdapter? = null
+    // UI elements for queue display
+    private lateinit var queueList: RecyclerView
+    private lateinit var trackDisplayAdapter: BasicTrackListAdapter
 
-    // Spotify API elements
-    protected var mHostUserId: String? = null
+    // Reference to host endpoint ID
+    private var hostEnpointId = ""
+    // Reference to host queue title
+    private var hostQueueTitle = ""
 
-    override fun onNewIntent(intent: Intent) {
-        super.onNewIntent(intent)
-
-        setIntent(intent)
-    }
+    // Reference to client service
+    private lateinit var clientService: ClientService
+    // Flag for detecting if the service is bound
+    private var isServiceBound = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -45,22 +45,82 @@ abstract class ClientActivityKotlin : BaseActivity() {
                 .permitAll().build()
         StrictMode.setThreadPolicy(policy)
 
-        // Set scopes required for client
-        accessScopes = arrayOf("user-read-private")
+        // Get queue title from intent
+        val titleString = intent?.getStringExtra(AppConstants.QUEUE_TITLE_KEY)
+        if (titleString.isNullOrEmpty()) {
+            hostQueueTitle = getString(R.string.queue_title_default_value)
+        } else {
+            hostQueueTitle = titleString
+        }
 
-        Log.d(TAG, "Requesting access token from Spotify")
-        requestNewAccessToken()
+        // Ensure we receive an endpoint before trying to start service
+        val endpointString = intent?.getStringExtra(AppConstants.ND_ENDPOINT_ID_EXTRA_KEY)
+        if (endpointString.isNullOrEmpty()) {
+            Log.e(TAG, "Error, trying to start client with invalid endpointId")
+            launchStartActivityAndFinish()
+        } else {
+            hostEnpointId = endpointString
 
-        initUi()
-        setupQueueList()
+            initUi()
+            setupQueueList()
+
+            startClientService()
+        }
+    }
+
+    // Object for connecting to/from client service
+    private val clientServiceConnection = object : ServiceConnection {
+        override fun onServiceConnected(componentName: ComponentName, iBinder: IBinder) {
+            Log.d(TAG, "Client service Connected")
+            val binder = iBinder as ClientService.ClientServiceBinder
+
+            clientService = binder.getService()
+            clientService.setClientServiceListener(this@ClientActivityKotlin)
+            isServiceBound = true
+        }
+
+        override fun onServiceDisconnected(componentName: ComponentName) {
+            Log.d(TAG, "Client service disconnected")
+            unbindService(this)
+            isServiceBound = false
+            launchStartActivityAndFinish()
+        }
     }
 
     private fun initUi() {
         // Initialize UI elements
-        mQueueList = findViewById(R.id.rv_queue_list_view)
+        queueList = findViewById(R.id.rv_queue_list_view)
 
         // Show queue title as activity title
-        title = intent.getStringExtra(AppConstants.QUEUE_TITLE_KEY)
+        title = hostQueueTitle
+    }
+
+    private fun startClientService() {
+        val startClientIntent = Intent(this, ClientService::class.java)
+        startClientIntent.putExtra(AppConstants.ND_ENDPOINT_ID_EXTRA_KEY, hostEnpointId)
+        startClientIntent.putExtra(AppConstants.QUEUE_TITLE_KEY, hostQueueTitle)
+
+        // If we can't find a client service to bind to, start the client service then bind
+        if (App.hasServiceBeenStarted) {
+            Log.d(TAG, "Attempting to bind to client service")
+            bindService(startClientIntent, clientServiceConnection, Context.BIND_AUTO_CREATE)
+        } else {
+            Log.d(TAG, "Starting and binding to client service")
+            startService(startClientIntent)
+            bindService(startClientIntent, clientServiceConnection, Context.BIND_AUTO_CREATE)
+        }
+    }
+
+    private fun stopClientService() {
+        Log.d(TAG, "Unbinding from and stopping client service")
+
+        if (isServiceBound) {
+            unbindService(clientServiceConnection)
+            isServiceBound = false
+        }
+
+        val stopClientIntent = Intent(this, ClientService::class.java)
+        stopService(stopClientIntent)
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -71,23 +131,20 @@ abstract class ClientActivityKotlin : BaseActivity() {
 
         // Handle request result
         when (requestType) {
-            RequestType.SPOTIFY_AUTHENTICATION_REQUEST -> {
-                val response = AuthenticationClient.getResponse(resultCode, data)
-                if (response.type == AuthenticationResponse.Type.TOKEN) {
-                    if (mHostUserId == null) {
-                        Log.d(TAG, "First access token granted.  Connect to host")
-                        connectToHost()
-                    }
-                }
-            }
             RequestType.SEARCH_REQUEST -> if (resultCode == RESULT_OK) {
                 val trackUri = data!!.getStringExtra(AppConstants.SEARCH_RESULTS_EXTRA_KEY)
-                if (trackUri != null && !trackUri.isEmpty() && !mCurrentUser!!.id!!.isEmpty()) {
+                if (trackUri != null && !trackUri.isEmpty()) {
                     Log.d(TAG, "Client adding track to queue playlist")
-                    sendTrackToHost(buildSongRequestMessage(trackUri, mCurrentUser!!.id))
+                    clientService.sendTrackToHost(trackUri)
                 }
             }
-            else -> Log.e(TAG, "Unhandled request code: $requestCode")
+            RequestType.SPOTIFY_AUTHENTICATION_REQUEST,
+            RequestType.LOCATION_PERMISSION_REQUEST -> {
+                Log.e(TAG, "Client activity should not receive $requestType")
+            }
+            RequestType.NONE -> {
+                Log.e(TAG, "Unhandled request code: $requestCode")
+            }
         }
     }
 
@@ -107,10 +164,10 @@ abstract class ClientActivityKotlin : BaseActivity() {
             // If follow is checked follow playlist with client user
             if (followCheckbox.isChecked) {
                 Log.d(TAG, "User chose to follow the playlist")
-                mSpotifyService.followPlaylist(mCurrentUser!!.id, mPlaylist!!.id)
+                clientService.followPlaylist()
+            } else {
+                clientService.requestDisconnect()
             }
-            disconnectClient()
-            super.onBackPressed()
         }
 
         dialogBuilder.setNegativeButton(R.string.cancel) { dialog, which ->
@@ -122,6 +179,14 @@ abstract class ClientActivityKotlin : BaseActivity() {
     }
 
     override fun onDestroy() {
+        Log.d(TAG, "Client activity is being destroyed")
+
+        if (isServiceBound) {
+            clientService.removeClientServiceListener()
+            unbindService(clientServiceConnection)
+            isServiceBound = false
+        }
+
         super.onDestroy()
     }
 
@@ -131,39 +196,19 @@ abstract class ClientActivityKotlin : BaseActivity() {
         return true
     }
 
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        when (item.itemId) {
-            R.id.search_fragment -> {
-                val searchIntent = Intent(this, SearchActivity::class.java)
-                startActivityForResult(searchIntent, RequestType.SEARCH_REQUEST.requestCode)
-                return true
-            }
-            else ->
-                // Do nothing
-                return false
-        }
-    }
-
     private fun setupQueueList() {
-        mTrackDisplayAdapter = BasicTrackListAdapter()
-        mQueueList!!.adapter = mTrackDisplayAdapter
+        trackDisplayAdapter = BasicTrackListAdapter()
+        queueList.adapter = trackDisplayAdapter
         val layoutManager = LinearLayoutManager(this, RecyclerView.VERTICAL, false)
-        mQueueList!!.layoutManager = layoutManager
-        mQueueList!!.addItemDecoration(QueueItemDecoration(applicationContext))
+        queueList.layoutManager = layoutManager
+        queueList.addItemDecoration(QueueItemDecoration(applicationContext))
     }
 
-    protected fun updateQueue(currentPlayingIndex: Int) {
-        if (currentPlayingIndex >= 0) {
-            refreshPlaylist()
-            mTrackDisplayAdapter!!.updateAdapter(mPlaylistTracks.subList(currentPlayingIndex, mPlaylist!!.tracks.total))
-        }
+    override fun onQueueUpdated(queueTracks: List<PlaylistTrack>) {
+        trackDisplayAdapter.updateAdapter(queueTracks)
     }
 
-    protected fun setupQueuePlaylistOnConnection(playlistId: String) {
-        mPlaylist = mSpotifyService.getPlaylist(mHostUserId, playlistId)
-    }
-
-    protected fun showHostDisconnectedFollowPlaylistDialog() {
+    override fun showHostDisconnectDialog() {
         val dialogBuilder = AlertDialog.Builder(this)
         dialogBuilder.setTitle(R.string.close_client_host_disconnect_dialog_title)
         dialogBuilder.setView(R.layout.host_disconnected_dialog)
@@ -173,34 +218,30 @@ abstract class ClientActivityKotlin : BaseActivity() {
             dialog.dismiss()
 
             // If yes, follow the Spotify playlist
-            mSpotifyService.followPlaylist(mCurrentUser!!.id, mPlaylist!!.id)
+            clientService.followPlaylist()
         }
 
         dialogBuilder.setNegativeButton(R.string.no) { dialog, which ->
             Log.d(TAG, "User chose not to follow the playlist")
             dialog.dismiss()
-            finish()
+            closeClient()
         }
 
-        dialogBuilder.setOnCancelListener(DialogInterface.OnCancelListener {
+        dialogBuilder.setOnCancelListener {
             Log.d(TAG, "User did not complete follow playlist dialog")
-            finish()
-        })
+            closeClient()
+        }
 
         dialogBuilder.create().show()
     }
 
-    protected abstract fun sendTrackToHost(requestMessage: String?)
+    override fun showLoadingScreen() {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
 
-    protected abstract fun connectToHost()
-
-    protected abstract fun disconnectClient()
-
-    private fun buildSongRequestMessage(trackUri: String?, userId: String?): String? {
-        if (trackUri != null && userId != null && !trackUri.isEmpty() && !userId.isEmpty()) {
-            return String.format(NearbyDevicesMessage.SONG_REQUEST.messageFormat, trackUri, userId)
-        }
-        Log.d(TAG, "Can't build track request for URI: $trackUri, user ID: $userId")
-        return null
+    override fun closeClient() {
+        clientService.removeClientServiceListener()
+        stopClientService()
+        launchStartActivityAndFinish()
     }
 }

@@ -4,7 +4,6 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.net.ConnectivityManager
-import android.os.Binder
 import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
@@ -40,8 +39,8 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
         val TAG = HostService::class.java.name
     }
 
-    inner class HostServiceBinder : Binder() {
-        fun getService(): HostService {
+    inner class HostServiceBinder : SpotifyAccessServiceBinder() {
+        override fun getService(): HostService {
             return this@HostService
         }
     }
@@ -90,6 +89,8 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
     private lateinit var queueTitle: String
     // ID of the base playlist to load
     private var basePlaylistId: String = ""
+    // User object of the host's Spotify account
+    private lateinit var hostUser: UserPublic
 
     private val mConnectivityCallback = object : Player.OperationCallback {
         override fun onSuccess() {
@@ -131,7 +132,7 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
         startForeground(1, notification)
 
         // Request access token from Spotify
-        requestAccessToken()
+        requestHostAccessToken()
 
         // Let app object know that a service has been started
         App.hasServiceBeenStarted = true
@@ -170,15 +171,15 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
         return hostServiceBinder
     }
 
+    override fun onUnbind(intent: Intent?): Boolean {
+        Log.d(TAG, "Host service is completely unbound")
+        isBound = false
+        return true
+    }
+
     override fun onRebind(intent: Intent?) {
         Log.d(TAG, "Host service is being rebound")
         isBound = true
-    }
-
-    override fun onUnbind(intent: Intent?): Boolean {
-        Log.d(TAG, "Service is completely unbound")
-        isBound = false
-        return true
     }
 
     override fun onDestroy() {
@@ -290,23 +291,24 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
     override fun initSpotifyElements(accessToken: String) {
         super.initSpotifyElements(accessToken)
 
-        if (currentUser == null) {
+        if (playlistOwnerUserId.isEmpty()) {
             Log.d(TAG, "Receiving Spotify access for the first time. Retrieve current user, " +
-                    "create playlist, check for user playlist for base, and start advertising")
-            currentUser = spotifyService.me
+                    "create playlist and check for user playlist for base")
+            hostUser = spotifyService.me
+            playlistOwnerUserId = hostUser.id
             startNearbyAdvertising(queueTitle)
         }
     }
 
 
     private fun checkIfUserHasPlaylists() {
-        Log.d(TAG, "Pulling playlist data for ${currentUser!!.display_name}")
+        Log.d(TAG, "Pulling playlist data for ${hostUser.display_name}")
 
         val options = HashMap<String, Any>()
         options[SpotifyService.LIMIT] = AppConstants.PLAYLIST_LIMIT
 
-        if (currentUser != null) {
-            spotifyService.getPlaylists(currentUser?.id, options, userPlaylistsCallback)
+        if (playlistOwnerUserId != null) {
+            spotifyService.getPlaylists(playlistOwnerUserId, options, userPlaylistsCallback)
         }
     }
 
@@ -321,11 +323,11 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
     }
 
     private fun initiateNewClient(client: Any) {
-        if (clientEndpoints.contains(client.toString()) && playlist.id != null && currentUser != null && currentUser?.id != null) {
+        if (clientEndpoints.contains(client.toString()) && playlist.id != null&& playlistOwnerUserId.isNotEmpty()) {
             Log.d(TAG, "Sending host ID, playlist id, and current playing index to new client")
             Nearby.getConnectionsClient(this).sendPayload(client.toString(), Payload.fromBytes(
                     String.format(NearbyDevicesMessage.INITIATE_CLIENT.messageFormat,
-                            currentUser?.id,
+                            playlistOwnerUserId,
                             playlist.id,
                             currentPlaylistIndex).toByteArray()))
         }
@@ -579,7 +581,7 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
         }
     }
 
-    fun addPlayQueueServiceListener(listener: HostServiceListener) {
+    fun setPlayQueueServiceListener(listener: HostServiceListener) {
         this.listener = listener
     }
 
@@ -601,14 +603,14 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
         playlistParameters["description"] = "Playlist created by the SocialQ App."
 
         Log.d(TAG, "Creating playlist for the SocialQ")
-        spotifyService.createPlaylist(currentUser?.id, playlistParameters, createPlaylistCallback)
+        spotifyService.createPlaylist(playlistOwnerUserId, playlistParameters, createPlaylistCallback)
     }
 
     private fun loadBasePlaylist(playlistId: String) {
         Log.d(TAG, "Loading base playlist with ID: $playlistId")
 
         wasBasePlaylistLoaded = true
-        val basePlaylist = spotifyService.getPlaylist(currentUser?.id, playlistId)
+        val basePlaylist = spotifyService.getPlaylist(playlistOwnerUserId, playlistId)
 
         // Adding with base user ensure host added tracks are sorted within the base playlist
         val baseUser = UserPublic()
@@ -624,7 +626,7 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
             iterationQueryParameters["offset"] = i
 
             // Retrieve max next 100 tracks
-            val iterationTracks = spotifyService.getPlaylistTracks(currentUser?.id, playlistId, iterationQueryParameters)
+            val iterationTracks = spotifyService.getPlaylistTracks(playlistOwnerUserId, playlistId, iterationQueryParameters)
 
             playlistTracks.addAll(iterationTracks.items)
             i += 100
@@ -661,7 +663,7 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
             bodyParameters["uris"] = urisArray
 
             // Add max 100 tracks to the playlist
-            spotifyService.addTracksToPlaylist(currentUser?.id, playlist.id, queryParameters, bodyParameters)
+            spotifyService.addTracksToPlaylist(playlistOwnerUserId, playlist.id, queryParameters, bodyParameters)
         }
 
         refreshPlaylist()
@@ -715,7 +717,7 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
         val bodyParameters = HashMap<String, Any>()
 
         // Add song to queue playlist
-        spotifyService.addTracksToPlaylist(currentUser?.id, playlist.id, queryParameters, bodyParameters)
+        spotifyService.addTracksToPlaylist(playlistOwnerUserId, playlist.id, queryParameters, bodyParameters)
     }
 
     /**
@@ -838,10 +840,10 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
 
     fun unfollowQueuePlaylist() {
         // Unfollow the playlist created for SocialQ
-        if (currentUser != null) {
+        if (playlistOwnerUserId != null) {
             Log.d(TAG, "Unfollowing playlist created for the SocialQ")
 
-            spotifyService.unfollowPlaylist(currentUser?.id, playlist.id, playlistCloseCallback)
+            spotifyService.unfollowPlaylist(playlistOwnerUserId, playlist.id, playlistCloseCallback)
         }
     }
 
@@ -877,7 +879,7 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
         playlistParameters["name"] = saveName
 
         Log.d(TAG, "Saving playlist as: $saveName")
-        spotifyService.changePlaylistDetails(currentUser!!.id, playlist.id, playlistParameters, playlistCloseCallback)
+        spotifyService.changePlaylistDetails(playlistOwnerUserId, playlist.id, playlistParameters, playlistCloseCallback)
     }
 
     fun noBasePlaylistSelected() {
@@ -885,8 +887,8 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
     }
 
     fun hostRequestSong(uri: String) {
-        if (uri.isNotEmpty() && currentUser != null) {
-            handleSongRequest(SongRequestData(uri, currentUser!!))
+        if (uri.isNotEmpty()) {
+            handleSongRequest(SongRequestData(uri, hostUser))
         }
     }
 
@@ -956,7 +958,7 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
                     options[SpotifyService.LIMIT] = AppConstants.PLAYLIST_LIMIT
                     options[SpotifyService.OFFSET] = currentUserPlaylists.size
 
-                    spotifyService.getPlaylists(currentUser?.id, options, this)
+                    spotifyService.getPlaylists(playlistOwnerUserId, options, this)
                 } else {
                     if (listener != null) {
                         listener?.showBasePlaylistDialog(currentUserPlaylists)
@@ -1015,16 +1017,16 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
         queryParameters["uris"] = shortQueueString
         val bodyParameters = HashMap<String, Any>()
 
-        spotifyService.addTracksToPlaylist(currentUser?.id, playlist.id, queryParameters, bodyParameters)
+        spotifyService.addTracksToPlaylist(playlistOwnerUserId, playlist.id, queryParameters, bodyParameters)
 
         // String for testing fair play (simulate a user name)
         val userId = "fake_user"
         //        String userId = currentUser.id;
 
-        songRequests.add(SongRequestData("spotify:track:0p8fUOBfWtGcaKGiD9drgJ", currentUser!!))
-        songRequests.add(SongRequestData("spotify:track:6qtg4gz3DhqOHL5BHtSQw8", currentUser!!))
-        songRequests.add(SongRequestData("spotify:track:57bgtoPSgt236HzfBOd8kj", currentUser!!))
-        songRequests.add(SongRequestData("spotify:track:7lGh1Dy02c5C0j3tj9AVm3", currentUser!!))
+        songRequests.add(SongRequestData("spotify:track:0p8fUOBfWtGcaKGiD9drgJ", hostUser))
+        songRequests.add(SongRequestData("spotify:track:6qtg4gz3DhqOHL5BHtSQw8", hostUser))
+        songRequests.add(SongRequestData("spotify:track:57bgtoPSgt236HzfBOd8kj", hostUser))
+        songRequests.add(SongRequestData("spotify:track:7lGh1Dy02c5C0j3tj9AVm3", hostUser))
     }
 
     private fun setupLongDemoQueue() {
@@ -1048,27 +1050,27 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
         queryParameters["uris"] = longQueueString
         val bodyParameters = HashMap<String, Any>()
 
-        spotifyService.addTracksToPlaylist(currentUser?.id, playlist.id, queryParameters, bodyParameters)
+        spotifyService.addTracksToPlaylist(playlistOwnerUserId, playlist.id, queryParameters, bodyParameters)
 
 
         // String for testing fair play (simulate a user name)
         //        String userId = "fake_user";
         //        String userId = currentUser.id;
 
-        songRequests.add(SongRequestData("spotify:track:0p8fUOBfWtGcaKGiD9drgJ", currentUser!!))
-        songRequests.add(SongRequestData("spotify:track:6qtg4gz3DhqOHL5BHtSQw8", currentUser!!))
-        songRequests.add(SongRequestData("spotify:track:57bgtoPSgt236HzfBOd8kj", currentUser!!))
-        songRequests.add(SongRequestData("spotify:track:4VbDJMkAX3dWNBdn3KH6Wx", currentUser!!))
-        songRequests.add(SongRequestData("spotify:track:2jnvdMCTvtdVCci3YLqxGY", currentUser!!))
-        songRequests.add(SongRequestData("spotify:track:419qOkEdlmbXS1GRJEMntC", currentUser!!))
-        songRequests.add(SongRequestData("spotify:track:1jvqZQtbBGK5GJCGT615ao", currentUser!!))
-        songRequests.add(SongRequestData("spotify:track:6cG3kY60HMcFqiZN8frkXF", currentUser!!))
-        songRequests.add(SongRequestData("spotify:track:0dqrAmrvQ6fCGNf5T8If5A", currentUser!!))
-        songRequests.add(SongRequestData("spotify:track:0wHNrrefyaeVewm4NxjxrX", currentUser!!))
-        songRequests.add(SongRequestData("spotify:track:1hh4GY1zM7SUAyM3a2ziH5", currentUser!!))
-        songRequests.add(SongRequestData("spotify:track:5Cl9GDb0AyQnppRr6q7ldb", currentUser!!))
-        songRequests.add(SongRequestData("spotify:track:7D180Q77XAEP7atBLmMTgK", currentUser!!))
-        songRequests.add(SongRequestData("spotify:track:2uxL6E8Yq0Psc1V9uBtC4F", currentUser!!))
-        songRequests.add(SongRequestData("spotify:track:7lGh1Dy02c5C0j3tj9AVm3", currentUser!!))
+        songRequests.add(SongRequestData("spotify:track:0p8fUOBfWtGcaKGiD9drgJ", hostUser))
+        songRequests.add(SongRequestData("spotify:track:6qtg4gz3DhqOHL5BHtSQw8", hostUser))
+        songRequests.add(SongRequestData("spotify:track:57bgtoPSgt236HzfBOd8kj", hostUser))
+        songRequests.add(SongRequestData("spotify:track:4VbDJMkAX3dWNBdn3KH6Wx", hostUser))
+        songRequests.add(SongRequestData("spotify:track:2jnvdMCTvtdVCci3YLqxGY", hostUser))
+        songRequests.add(SongRequestData("spotify:track:419qOkEdlmbXS1GRJEMntC", hostUser))
+        songRequests.add(SongRequestData("spotify:track:1jvqZQtbBGK5GJCGT615ao", hostUser))
+        songRequests.add(SongRequestData("spotify:track:6cG3kY60HMcFqiZN8frkXF", hostUser))
+        songRequests.add(SongRequestData("spotify:track:0dqrAmrvQ6fCGNf5T8If5A", hostUser))
+        songRequests.add(SongRequestData("spotify:track:0wHNrrefyaeVewm4NxjxrX", hostUser))
+        songRequests.add(SongRequestData("spotify:track:1hh4GY1zM7SUAyM3a2ziH5", hostUser))
+        songRequests.add(SongRequestData("spotify:track:5Cl9GDb0AyQnppRr6q7ldb", hostUser))
+        songRequests.add(SongRequestData("spotify:track:7D180Q77XAEP7atBLmMTgK", hostUser))
+        songRequests.add(SongRequestData("spotify:track:2uxL6E8Yq0Psc1V9uBtC4F", hostUser))
+        songRequests.add(SongRequestData("spotify:track:7lGh1Dy02c5C0j3tj9AVm3", hostUser))
     }
 }

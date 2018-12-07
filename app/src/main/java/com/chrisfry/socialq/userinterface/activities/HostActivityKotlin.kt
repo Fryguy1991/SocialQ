@@ -28,20 +28,20 @@ open class HostActivityKotlin : BaseActivity(), HostService.HostServiceListener,
     private val TAG = HostActivityKotlin::class.java.name
 
     // UI element references
-    private lateinit var mNextButton: View
-    private lateinit var mPlayPauseButton: ImageView
+    private lateinit var nextButton: View
+    private lateinit var playPauseButton: ImageView
 
     // Track list elements
-    private lateinit var mQueueList: RecyclerView
-    private lateinit var mTrackDisplayAdapter: HostTrackListAdapter
+    private lateinit var queueList: RecyclerView
+    private lateinit var trackDisplayAdapter: HostTrackListAdapter
 
     private lateinit var hostService: HostService
     // Boolean flag to store if queue should be "fair play"
-    private var mIsQueueFairPlay = false
+    private var isQueueFairPlay = false
     // Flag to determine if the service is bound or not
-    private var mIsServiceBound = false
+    private var isServiceBound = false
     // Reference to base playlist dialog
-    private var mBasePlaylistDialog: AlertDialog? = null
+    private var basePlaylistDialog: AlertDialog? = null
 
     // Object for connecting to/from play queue service
     private val hostServiceConnection = object : ServiceConnection {
@@ -49,21 +49,20 @@ open class HostActivityKotlin : BaseActivity(), HostService.HostServiceListener,
             Log.d(TAG, "Host service Connected")
             val binder = iBinder as HostService.HostServiceBinder
             hostService = binder.getService()
-            mIsServiceBound = true
+            isServiceBound = true
 
-            hostService.addPlayQueueServiceListener(this@HostActivityKotlin)
+            hostService.setPlayQueueServiceListener(this@HostActivityKotlin)
 
             if (title.isNullOrEmpty()) {
                 hostService.requestInitiation()
             }
-
         }
 
         override fun onServiceDisconnected(componentName: ComponentName) {
             Log.d(TAG, "Host service disconnected")
             unbindService(this)
-            mIsServiceBound = false
-            finish()
+            isServiceBound = false
+            launchStartActivityAndFinish()
         }
     }
 
@@ -72,7 +71,7 @@ open class HostActivityKotlin : BaseActivity(), HostService.HostServiceListener,
         setContentView(R.layout.host_screen)
 
         // Set fair play flag from intent (or default to app boolean default)
-        mIsQueueFairPlay = intent.getBooleanExtra(AppConstants.FAIR_PLAY_KEY, resources.getBoolean(R.bool.fair_play_default))
+        isQueueFairPlay = intent.getBooleanExtra(AppConstants.FAIR_PLAY_KEY, resources.getBoolean(R.bool.fair_play_default))
 
         initUi()
         addListeners()
@@ -88,9 +87,9 @@ open class HostActivityKotlin : BaseActivity(), HostService.HostServiceListener,
 
     private fun initUi() {
         // Initialize UI elements
-        mNextButton = findViewById(R.id.btn_next)
-        mPlayPauseButton = findViewById(R.id.btn_play_pause)
-        mQueueList = findViewById(R.id.rv_queue_list_view)
+        nextButton = findViewById(R.id.btn_next)
+        playPauseButton = findViewById(R.id.btn_play_pause)
+        queueList = findViewById(R.id.rv_queue_list_view)
 
         // Show queue title as activity title
         title = intent.getStringExtra(AppConstants.QUEUE_TITLE_KEY)
@@ -100,11 +99,11 @@ open class HostActivityKotlin : BaseActivity(), HostService.HostServiceListener,
     }
 
     private fun addListeners() {
-        mNextButton.setOnClickListener {
+        nextButton.setOnClickListener {
             hostService.requestPlayNext()
         }
 
-        mPlayPauseButton.setOnClickListener {
+        playPauseButton.setOnClickListener {
             view -> handlePlayPause(view.contentDescription == "queue_playing")
         }
     }
@@ -126,7 +125,7 @@ open class HostActivityKotlin : BaseActivity(), HostService.HostServiceListener,
                 Log.e(TAG, "Host activity should not receive $requestType")
             }
             RequestType.NONE -> {
-                Log.e(TAG, "Unhandled request code")
+                Log.e(TAG, "Unhandled request code: $requestCode")
             }
         }
     }
@@ -150,9 +149,9 @@ open class HostActivityKotlin : BaseActivity(), HostService.HostServiceListener,
     private fun stopHostService() {
         Log.d(TAG, "Unbinding from and stopping host service")
 
-        if (mIsServiceBound) {
+        if (isServiceBound) {
             unbindService(hostServiceConnection)
-            mIsServiceBound = false
+            isServiceBound = false
         }
 
         val stopHostIntent = Intent(this, HostService::class.java)
@@ -235,18 +234,18 @@ open class HostActivityKotlin : BaseActivity(), HostService.HostServiceListener,
             hostService.noBasePlaylistSelected()
         }
 
-        mBasePlaylistDialog = dialogBuilder.create()
-        mBasePlaylistDialog!!.show()
+        basePlaylistDialog = dialogBuilder.create()
+        basePlaylistDialog!!.show()
     }
 
     override fun onDestroy() {
         Log.d(TAG, "Destroying host activity")
 
         // Unbind from the PlayQueueService
-        if (mIsServiceBound) {
+        if (isServiceBound) {
             hostService.removePlayQueueServiceListener()
             unbindService(hostServiceConnection)
-            mIsServiceBound = false
+            isServiceBound = false
         }
 
         super.onDestroy()
@@ -259,11 +258,11 @@ open class HostActivityKotlin : BaseActivity(), HostService.HostServiceListener,
     }
 
     private fun setupQueueList() {
-        mTrackDisplayAdapter = HostTrackListAdapter(applicationContext)
-        mQueueList.adapter = mTrackDisplayAdapter
+        trackDisplayAdapter = HostTrackListAdapter(applicationContext)
+        queueList.adapter = trackDisplayAdapter
         val layoutManager = LinearLayoutManager(this, RecyclerView.VERTICAL, false)
-        mQueueList.layoutManager = layoutManager
-        mQueueList.addItemDecoration(QueueItemDecoration(applicationContext))
+        queueList.layoutManager = layoutManager
+        queueList.addItemDecoration(QueueItemDecoration(applicationContext))
     }
 
     private fun handlePlayPause(isPlaying: Boolean) {
@@ -276,32 +275,30 @@ open class HostActivityKotlin : BaseActivity(), HostService.HostServiceListener,
 
     override fun onQueuePause() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            mPlayPauseButton.setImageDrawable(resources.getDrawable(R.drawable.play_button, this.theme))
+            playPauseButton.setImageDrawable(resources.getDrawable(R.drawable.play_button, this.theme))
         } else {
-            mPlayPauseButton.setImageDrawable(resources.getDrawable(R.drawable.play_button))
+            playPauseButton.setImageDrawable(resources.getDrawable(R.drawable.play_button))
         }
-        mPlayPauseButton.contentDescription = "queue_paused"
+        playPauseButton.contentDescription = "queue_paused"
     }
 
     override fun onQueuePlay() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            mPlayPauseButton.setImageDrawable(resources.getDrawable(R.drawable.pause_button, this.theme))
+            playPauseButton.setImageDrawable(resources.getDrawable(R.drawable.pause_button, this.theme))
         } else {
-            mPlayPauseButton.setImageDrawable(resources.getDrawable(R.drawable.pause_button))
+            playPauseButton.setImageDrawable(resources.getDrawable(R.drawable.pause_button))
         }
-        mPlayPauseButton.contentDescription = "queue_playing"
+        playPauseButton.contentDescription = "queue_playing"
     }
 
     override fun onQueueUpdated(songRequests: List<ClientRequestData>) {
         // Display updated track list
-        mTrackDisplayAdapter.updateAdapter(songRequests)
+        trackDisplayAdapter.updateAdapter(songRequests)
     }
 
     override fun closeHost() {
         stopHostService()
-        val startIntent = Intent(this, StartActivity::class.java)
-        startActivity(startIntent)
-        finish()
+        launchStartActivityAndFinish()
     }
 
     override fun showClientConnected() {
@@ -318,8 +315,8 @@ open class HostActivityKotlin : BaseActivity(), HostService.HostServiceListener,
      * @param selectedItem - ID of the playlist that was selected
      */
     override fun onItemSelected(selectedItem: String) {
-        if (mBasePlaylistDialog != null && mBasePlaylistDialog!!.isShowing) {
-            mBasePlaylistDialog!!.dismiss()
+        if (basePlaylistDialog != null && basePlaylistDialog!!.isShowing) {
+            basePlaylistDialog!!.dismiss()
             hostService.basePlaylistSelected(selectedItem)
         }
     }
@@ -332,7 +329,7 @@ open class HostActivityKotlin : BaseActivity(), HostService.HostServiceListener,
         Log.d(TAG, "Re-initializing host view")
 
         this.title = title
-        mTrackDisplayAdapter.updateAdapter(songRequests)
+        trackDisplayAdapter.updateAdapter(songRequests)
         if (isPlaying) {
             onQueuePlay()
         } else {

@@ -3,6 +3,7 @@ package com.chrisfry.socialq.services
 import android.app.Service
 import android.content.Intent
 import android.os.SystemClock
+import android.os.Binder
 import android.util.Log
 import com.chrisfry.socialq.business.AppConstants
 import com.chrisfry.socialq.model.AccessModel
@@ -14,7 +15,6 @@ import kaaes.spotify.webapi.android.SpotifyService
 import kaaes.spotify.webapi.android.models.Pager
 import kaaes.spotify.webapi.android.models.Playlist
 import kaaes.spotify.webapi.android.models.PlaylistTrack
-import kaaes.spotify.webapi.android.models.UserPublic
 import retrofit.client.Response
 import java.util.HashMap
 
@@ -22,6 +22,13 @@ abstract class SpotifyAccessService : Service() {
     companion object {
         val TAG = SpotifyAccessService::class.java.name
     }
+
+    open inner class SpotifyAccessServiceBinder : Binder() {
+        open fun getService(): SpotifyAccessService {
+            return this@SpotifyAccessService
+        }
+    }
+
     // API for retrieve SpotifyService object
     private val spotifyApi = SpotifyApi()
     // Service for adding songs to the queue
@@ -29,11 +36,13 @@ abstract class SpotifyAccessService : Service() {
     // Flag for indicating if we actually need a new access token (set to true when shutting down)
     private var isServiceEnding = false
     // User object for host's Spotify account
-    protected var currentUser: UserPublic? = null
+    protected var playlistOwnerUserId: String = ""
     // Playlist object for the queue
     protected lateinit var playlist: Playlist
     // Tracks from queue playlist
     protected val playlistTracks = mutableListOf<PlaylistTrack>()
+    // Flag indicating if the service is a host
+    private var isHost = true
 
     fun accessTokenUpdated() {
         if (AccessModel.getAccessExpireTime() > SystemClock.elapsedRealtime()) {
@@ -51,7 +60,7 @@ abstract class SpotifyAccessService : Service() {
 
     protected fun refreshPlaylist() {
         Log.d(TAG, "Refreshing playlist")
-        spotifyService.getPlaylist(currentUser!!.id, playlist.id, refreshPlaylistCallback)
+        spotifyService.getPlaylist(playlistOwnerUserId, playlist.id, refreshPlaylistCallback)
     }
 
     private val refreshPlaylistCallback = object : SpotifyCallback<Playlist>() {
@@ -69,7 +78,7 @@ abstract class SpotifyAccessService : Service() {
                     options[SpotifyService.OFFSET] = playlistTracks.size
                     options[SpotifyService.LIMIT] = AppConstants.PLAYLIST_TRACK_LIMIT
 
-                    spotifyService.getPlaylistTracks(currentUser!!.id, playlist.id, options, playlistTrackCallback)
+                    spotifyService.getPlaylistTracks(playlistOwnerUserId, playlist.id, options, playlistTrackCallback)
                 } else {
                     Log.d(TAG, "Finished retrieving playlist tracks")
                     playlistRefreshComplete()
@@ -86,7 +95,7 @@ abstract class SpotifyAccessService : Service() {
 
     }
 
-    private val playlistTrackCallback = object : SpotifyCallback<Pager<PlaylistTrack>>() {
+    protected val playlistTrackCallback = object : SpotifyCallback<Pager<PlaylistTrack>>() {
         override fun success(trackPager: Pager<PlaylistTrack>?, response: Response?) {
             if (trackPager != null) {
                 playlistTracks.addAll(trackPager.items)
@@ -96,7 +105,7 @@ abstract class SpotifyAccessService : Service() {
                     val options = HashMap<String, Any>()
                     options[SpotifyService.OFFSET] = playlistTracks.size
 
-                    spotifyService.getPlaylistTracks(currentUser!!.id, playlist.id, options, this)
+                    spotifyService.getPlaylistTracks(playlistOwnerUserId, playlist.id, options, this)
                 } else {
                     Log.d(TAG, "Finished retrieving playlist tracks")
                     playlistRefreshComplete()
@@ -113,12 +122,24 @@ abstract class SpotifyAccessService : Service() {
 
     }
 
-    protected fun requestAccessToken() {
+    protected fun requestHostAccessToken() {
+        isHost = true
         val accessIntent = Intent()
         accessIntent.setClass(applicationContext, AccessTokenReceiverActivity::class.java)
+        accessIntent.putExtra(AppConstants.IS_HOST_KEY, true)
         accessIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
         startActivity(accessIntent)
     }
+
+    protected fun requestClientAccessToken() {
+        isHost = false
+        val accessIntent = Intent()
+        accessIntent.setClass(applicationContext, AccessTokenReceiverActivity::class.java)
+        accessIntent.putExtra(AppConstants.IS_HOST_KEY, false)
+        accessIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        startActivity(accessIntent)
+    }
+
 
     private fun startAccessRefreshThread() {
         AccessRefreshThread().start()
@@ -135,7 +156,11 @@ abstract class SpotifyAccessService : Service() {
                     break
                 } else {
                     Log.d(HostService.TAG, "Detected that we need a new access token")
-                    requestAccessToken()
+                    if (isHost) {
+                        requestHostAccessToken()
+                    } else {
+                        requestClientAccessToken()
+                    }
                     break
                 }
             }
