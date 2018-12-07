@@ -15,17 +15,19 @@ import com.chrisfry.socialq.R
 import com.chrisfry.socialq.business.AppConstants
 import com.chrisfry.socialq.enums.NearbyDevicesMessage
 import com.chrisfry.socialq.enums.RequestType
+import com.chrisfry.socialq.model.ClientRequestData
+import com.chrisfry.socialq.services.ClientService
 import com.chrisfry.socialq.userinterface.adapters.BasicTrackListAdapter
 import com.chrisfry.socialq.userinterface.views.QueueItemDecoration
 import com.spotify.sdk.android.authentication.AuthenticationClient
 import com.spotify.sdk.android.authentication.AuthenticationResponse
 
-abstract class ClientActivityKotlin : BaseActivity() {
+abstract class ClientActivityKotlin : BaseActivity(), ClientService.ClientServiceListener {
     private val TAG = ClientActivityKotlin::class.java.name
 
     // Elements for queue display
-    private var mQueueList: RecyclerView? = null
-    private var mTrackDisplayAdapter: BasicTrackListAdapter? = null
+    private lateinit var mQueueList: RecyclerView
+    private lateinit var mTrackDisplayAdapter: BasicTrackListAdapter
 
     // Spotify API elements
     protected var mHostUserId: String? = null
@@ -44,12 +46,6 @@ abstract class ClientActivityKotlin : BaseActivity() {
         val policy = StrictMode.ThreadPolicy.Builder()
                 .permitAll().build()
         StrictMode.setThreadPolicy(policy)
-
-        // Set scopes required for client
-        accessScopes = arrayOf("user-read-private")
-
-        Log.d(TAG, "Requesting access token from Spotify")
-        requestNewAccessToken()
 
         initUi()
         setupQueueList()
@@ -72,18 +68,19 @@ abstract class ClientActivityKotlin : BaseActivity() {
         // Handle request result
         when (requestType) {
             RequestType.SPOTIFY_AUTHENTICATION_REQUEST -> {
-                val response = AuthenticationClient.getResponse(resultCode, data)
-                if (response.type == AuthenticationResponse.Type.TOKEN) {
-                    if (mHostUserId == null) {
-                        Log.d(TAG, "First access token granted.  Connect to host")
-                        connectToHost()
-                    }
-                }
+//                val response = AuthenticationClient.getResponse(resultCode, data)
+//                if (response.type == AuthenticationResponse.Type.TOKEN) {
+//                    if (mHostUserId == null) {
+//                        Log.d(TAG, "First access token granted.  Connect to host")
+//                        connectToHost()
+//                    }
+//                }
             }
             RequestType.SEARCH_REQUEST -> if (resultCode == RESULT_OK) {
                 val trackUri = data!!.getStringExtra(AppConstants.SEARCH_RESULTS_EXTRA_KEY)
-                if (trackUri != null && !trackUri.isEmpty() && !mCurrentUser!!.id!!.isEmpty()) {
+                if (trackUri != null && !trackUri.isEmpty()) {
                     Log.d(TAG, "Client adding track to queue playlist")
+                    // TODO: SEND URI TO SERVICE
                     sendTrackToHost(buildSongRequestMessage(trackUri, mCurrentUser!!.id))
                 }
             }
@@ -131,19 +128,6 @@ abstract class ClientActivityKotlin : BaseActivity() {
         return true
     }
 
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        when (item.itemId) {
-            R.id.search_fragment -> {
-                val searchIntent = Intent(this, SearchActivity::class.java)
-                startActivityForResult(searchIntent, RequestType.SEARCH_REQUEST.requestCode)
-                return true
-            }
-            else ->
-                // Do nothing
-                return false
-        }
-    }
-
     private fun setupQueueList() {
         mTrackDisplayAdapter = BasicTrackListAdapter()
         mQueueList!!.adapter = mTrackDisplayAdapter
@@ -152,9 +136,9 @@ abstract class ClientActivityKotlin : BaseActivity() {
         mQueueList!!.addItemDecoration(QueueItemDecoration(applicationContext))
     }
 
-    protected fun updateQueue(currentPlayingIndex: Int) {
-        if (currentPlayingIndex >= 0) {
-            refreshPlaylist()
+    override fun onQueueUpdated(songRequests: List<ClientRequestData>) {
+        mTrackDisplayAdapter.
+    }(currentPlayingIndex: Int) {
             mTrackDisplayAdapter!!.updateAdapter(mPlaylistTracks.subList(currentPlayingIndex, mPlaylist!!.tracks.total))
         }
     }
@@ -190,17 +174,5 @@ abstract class ClientActivityKotlin : BaseActivity() {
         dialogBuilder.create().show()
     }
 
-    protected abstract fun sendTrackToHost(requestMessage: String?)
 
-    protected abstract fun connectToHost()
-
-    protected abstract fun disconnectClient()
-
-    private fun buildSongRequestMessage(trackUri: String?, userId: String?): String? {
-        if (trackUri != null && userId != null && !trackUri.isEmpty() && !userId.isEmpty()) {
-            return String.format(NearbyDevicesMessage.SONG_REQUEST.messageFormat, trackUri, userId)
-        }
-        Log.d(TAG, "Can't build track request for URI: $trackUri, user ID: $userId")
-        return null
-    }
 }

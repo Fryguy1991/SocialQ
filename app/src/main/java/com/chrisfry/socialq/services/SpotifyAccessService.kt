@@ -13,7 +13,6 @@ import kaaes.spotify.webapi.android.SpotifyService
 import kaaes.spotify.webapi.android.models.Pager
 import kaaes.spotify.webapi.android.models.Playlist
 import kaaes.spotify.webapi.android.models.PlaylistTrack
-import kaaes.spotify.webapi.android.models.UserPublic
 import retrofit.client.Response
 import java.util.HashMap
 
@@ -28,7 +27,7 @@ abstract class SpotifyAccessService : Service() {
     // Flag for indicating if we actually need a new access token (set to true when shutting down)
     private var isServiceEnding = false
     // User object for host's Spotify account
-    protected var currentUser: UserPublic? = null
+    protected var playlistOwnerUserId: String = ""
     // Playlist object for the queue
     protected lateinit var playlist: Playlist
     // Tracks from queue playlist
@@ -50,7 +49,7 @@ abstract class SpotifyAccessService : Service() {
 
     protected fun refreshPlaylist() {
         Log.d(TAG, "Refreshing playlist")
-        spotifyService.getPlaylist(currentUser!!.id, playlist.id, refreshPlaylistCallback)
+        spotifyService.getPlaylist(playlistOwnerUserId, playlist.id, refreshPlaylistCallback)
     }
 
     private val refreshPlaylistCallback = object : SpotifyCallback<Playlist>() {
@@ -68,7 +67,7 @@ abstract class SpotifyAccessService : Service() {
                     options[SpotifyService.OFFSET] = playlistTracks.size
                     options[SpotifyService.LIMIT] = AppConstants.PLAYLIST_TRACK_LIMIT
 
-                    spotifyService.getPlaylistTracks(currentUser!!.id, playlist.id, options, playlistTrackCallback)
+                    spotifyService.getPlaylistTracks(playlistOwnerUserId, playlist.id, options, playlistTrackCallback)
                 } else {
                     Log.d(TAG, "Finished retrieving playlist tracks")
                     playlistRefreshComplete()
@@ -85,7 +84,7 @@ abstract class SpotifyAccessService : Service() {
 
     }
 
-    private val playlistTrackCallback = object : SpotifyCallback<Pager<PlaylistTrack>>() {
+    protected val playlistTrackCallback = object : SpotifyCallback<Pager<PlaylistTrack>>() {
         override fun success(trackPager: Pager<PlaylistTrack>?, response: Response?) {
             if (trackPager != null) {
                 playlistTracks.addAll(trackPager.items)
@@ -95,7 +94,7 @@ abstract class SpotifyAccessService : Service() {
                     val options = HashMap<String, Any>()
                     options[SpotifyService.OFFSET] = playlistTracks.size
 
-                    spotifyService.getPlaylistTracks(currentUser!!.id, playlist.id, options, this)
+                    spotifyService.getPlaylistTracks(playlistOwnerUserId, playlist.id, options, this)
                 } else {
                     Log.d(TAG, "Finished retrieving playlist tracks")
                     playlistRefreshComplete()

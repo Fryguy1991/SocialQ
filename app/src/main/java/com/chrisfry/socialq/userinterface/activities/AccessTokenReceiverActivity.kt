@@ -10,6 +10,7 @@ import android.util.Log
 import com.chrisfry.socialq.business.AppConstants
 import com.chrisfry.socialq.enums.RequestType
 import com.chrisfry.socialq.model.AccessModel
+import com.chrisfry.socialq.services.ClientService
 import com.chrisfry.socialq.services.HostService
 import com.spotify.sdk.android.authentication.AuthenticationClient
 import com.spotify.sdk.android.authentication.AuthenticationRequest
@@ -43,7 +44,8 @@ class AccessTokenReceiverActivity : Activity() {
             val serviceTokenIntent = Intent(baseContext, HostService::class.java)
             bindService(serviceTokenIntent, hostConnection, Context.BIND_AUTO_CREATE)
         } else {
-            // TODO: client service as well
+            val serviceTokenIntent = Intent(baseContext, ClientService::class.java)
+            bindService(serviceTokenIntent, )
         }
 
         requestAccessToken()
@@ -125,6 +127,16 @@ class AccessTokenReceiverActivity : Activity() {
             isBound = true
             val binder = service as HostService.HostServiceBinder
             hostService = binder.getService()
+        }
+    }
+
+    private val clientConnection = object : ServiceConnection {
+        override fun onServiceDisconnected(name: ComponentName?) {
+            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        }
+
+        override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
+            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
         }
     }
 
