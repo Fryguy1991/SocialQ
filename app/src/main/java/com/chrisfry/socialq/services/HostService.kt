@@ -561,7 +561,7 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
         }
     }
 
-    fun addPlayQueueServiceListener(listener: HostServiceListener) {
+    fun setPlayQueueServiceListener(listener: HostServiceListener) {
         this.listener = listener
     }
 
