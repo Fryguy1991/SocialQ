@@ -224,9 +224,7 @@ class SearchPresenter : SpotifyAccessPresenter(), ISearchPresenter {
         }
 
         override fun failure(spotifyError: SpotifyError?) {
-            if (spotifyError != null) {
-                Log.e(TAG, spotifyError.errorDetails.message)
-            }
+            Log.e(TAG, spotifyError?.errorDetails?.message)
             Log.e(TAG, "Error searching for songs")
         }
     }
@@ -248,9 +246,7 @@ class SearchPresenter : SpotifyAccessPresenter(), ISearchPresenter {
         }
 
         override fun failure(spotifyError: SpotifyError?) {
-            if (spotifyError != null) {
-                Log.e(TAG, spotifyError.errorDetails.message)
-            }
+            Log.e(TAG, spotifyError?.errorDetails?.message)
             Log.e(TAG, "Error searching for artists")
         }
     }
@@ -289,9 +285,7 @@ class SearchPresenter : SpotifyAccessPresenter(), ISearchPresenter {
         }
 
         override fun failure(spotifyError: SpotifyError?) {
-            if (spotifyError != null) {
-                Log.e(TAG, spotifyError.errorDetails.message)
-            }
+            Log.e(TAG, spotifyError?.errorDetails?.message)
             Log.e(TAG, "Error searching for albums")
         }
     }
@@ -310,9 +304,7 @@ class SearchPresenter : SpotifyAccessPresenter(), ISearchPresenter {
         }
 
         override fun failure(spotifyError: SpotifyError?) {
-            if (spotifyError != null) {
-                Log.e(TAG, spotifyError.errorDetails.message)
-            }
+            Log.e(TAG, spotifyError?.errorDetails?.message)
             Log.e(TAG, "Error retrieving full albums")
         }
     }
@@ -345,9 +337,7 @@ class SearchPresenter : SpotifyAccessPresenter(), ISearchPresenter {
         }
 
         override fun failure(spotifyError: SpotifyError?) {
-            if (spotifyError != null) {
-                Log.e(TAG, spotifyError.errorDetails.message)
-            }
+            Log.e(TAG, spotifyError?.errorDetails?.message)
             Log.e(TAG, "Error retrieving artist's albums")
             options[SpotifyService.OFFSET] = 0
         }
@@ -370,9 +360,7 @@ class SearchPresenter : SpotifyAccessPresenter(), ISearchPresenter {
         }
 
         override fun failure(spotifyError: SpotifyError?) {
-            if (spotifyError != null) {
-                Log.e(TAG, spotifyError.errorDetails.message)
-            }
+            Log.e(TAG, spotifyError?.errorDetails?.message)
             Log.e(TAG, "Error retrieving full artist albums")
         }
     }
@@ -392,9 +380,7 @@ class SearchPresenter : SpotifyAccessPresenter(), ISearchPresenter {
         }
 
         override fun failure(spotifyError: SpotifyError?) {
-            if (spotifyError != null) {
-                Log.e(TAG, spotifyError.errorDetails.message)
-            }
+            Log.e(TAG, spotifyError?.errorDetails?.message)
             Log.e(TAG, "Error retrieving artist's top tracks")
         }
     }
