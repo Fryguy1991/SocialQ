@@ -8,6 +8,7 @@ import android.util.Log
 import android.view.Menu
 import android.widget.CheckBox
 import androidx.appcompat.app.AlertDialog
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.chrisfry.socialq.R
@@ -55,17 +56,20 @@ open class ClientActivity : BaseActivity(), ClientService.ClientServiceListener 
 
         // Ensure we receive an endpoint before trying to start service
         val endpointString = intent?.getStringExtra(AppConstants.ND_ENDPOINT_ID_EXTRA_KEY)
-        if (endpointString.isNullOrEmpty()) {
+        if (!App.hasServiceBeenStarted && endpointString.isNullOrEmpty()) {
             Log.e(TAG, "Error, trying to start client with invalid endpointId")
             launchStartActivityAndFinish()
-        } else {
-            hostEnpointId = endpointString
-
-            initUi()
-            setupQueueList()
-
-            startClientService()
+            return
         }
+
+        if (!endpointString.isNullOrEmpty()) {
+            hostEnpointId = endpointString
+        }
+
+        initUi()
+        setupQueueList()
+
+        startClientService()
     }
 
     // Object for connecting to/from client service
@@ -77,6 +81,10 @@ open class ClientActivity : BaseActivity(), ClientService.ClientServiceListener 
             clientService = binder.getService()
             clientService.setClientServiceListener(this@ClientActivity)
             isServiceBound = true
+
+            if (hostEnpointId.isNullOrEmpty()) {
+                clientService.requestInitiation()
+            }
         }
 
         override fun onServiceDisconnected(componentName: ComponentName) {
@@ -106,7 +114,7 @@ open class ClientActivity : BaseActivity(), ClientService.ClientServiceListener 
             bindService(startClientIntent, clientServiceConnection, Context.BIND_AUTO_CREATE)
         } else {
             Log.d(TAG, "Starting and binding to client service")
-            startService(startClientIntent)
+            ContextCompat.startForegroundService(this, startClientIntent)
             bindService(startClientIntent, clientServiceConnection, Context.BIND_AUTO_CREATE)
         }
     }
@@ -237,6 +245,11 @@ open class ClientActivity : BaseActivity(), ClientService.ClientServiceListener 
 
     override fun showLoadingScreen() {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    override fun initiateView(queueTitle: String, trackList: List<PlaylistTrack>) {
+        trackDisplayAdapter.updateAdapter(trackList)
+        title = queueTitle
     }
 
     override fun closeClient() {

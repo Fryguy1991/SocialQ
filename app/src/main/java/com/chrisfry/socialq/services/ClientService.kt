@@ -1,13 +1,16 @@
 package com.chrisfry.socialq.services
 
+import android.app.PendingIntent
 import android.content.Intent
 import android.os.IBinder
 import android.util.Log
+import androidx.core.app.NotificationCompat
 import com.chrisfry.socialq.R
 import com.chrisfry.socialq.business.AppConstants
 import com.chrisfry.socialq.enums.NearbyDevicesMessage
 import com.chrisfry.socialq.enums.PayloadTransferUpdateStatus
 import com.chrisfry.socialq.userinterface.App
+import com.chrisfry.socialq.userinterface.activities.ClientActivity
 import com.chrisfry.socialq.utils.ApplicationUtils
 import com.google.android.gms.nearby.Nearby
 import com.google.android.gms.nearby.connection.*
@@ -87,6 +90,19 @@ class ClientService : SpotifyAccessService() {
                 hostEndpointId = endpointString
             }
         }
+
+        // Start service in the foreground
+        val notificationIntent = Intent(this, ClientActivity::class.java)
+        val pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0)
+
+        val notification = NotificationCompat.Builder(this, App.CHANNEL_ID)
+                .setContentTitle(getString(R.string.service_name))
+                .setContentText(String.format(getString(R.string.client_notification_content_text), hostQueueTitle))
+                .setSmallIcon(R.drawable.notification_icon)
+                .setContentIntent(pendingIntent)
+                .build()
+
+        startForeground(AppConstants.CLIENT_SERVICE_ID, notification)
 
         requestClientAccessToken()
 
@@ -307,6 +323,12 @@ class ClientService : SpotifyAccessService() {
         listener?.closeClient()
     }
 
+    fun requestInitiation() {
+        Log.d(TAG, "View has been recreated. Requesting initiation")
+
+        listener?.initiateView(hostQueueTitle, playlistTracks.subList(cachedPlayingIndex, playlist.tracks.total) )
+    }
+
     private fun buildSongRequestMessage(trackUri: String?, userId: String?): String {
         if (trackUri.isNullOrEmpty() || userId.isNullOrEmpty()) {
             Log.d(TAG, "Can't build track request for URI: $trackUri, user ID: $userId")
@@ -387,5 +409,7 @@ class ClientService : SpotifyAccessService() {
         fun showHostDisconnectDialog()
 
         fun closeClient()
+
+        fun initiateView(queueTitle: String, trackList: List<PlaylistTrack>)
     }
 }

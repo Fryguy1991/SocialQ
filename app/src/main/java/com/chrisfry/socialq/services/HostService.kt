@@ -124,12 +124,12 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
 
         val notification = NotificationCompat.Builder(this, App.CHANNEL_ID)
                 .setContentTitle(getString(R.string.service_name))
-                .setContentText(queueTitle)
+                .setContentText(String.format(getString(R.string.host_notification_content_text), queueTitle))
                 .setSmallIcon(R.drawable.notification_icon)
                 .setContentIntent(pendingIntent)
                 .build()
 
-        startForeground(1, notification)
+        startForeground(AppConstants.HOST_SERVICE_ID, notification)
 
         // Request access token from Spotify
         requestHostAccessToken()

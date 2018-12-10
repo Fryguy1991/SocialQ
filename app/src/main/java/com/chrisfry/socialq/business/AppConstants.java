@@ -74,4 +74,8 @@ public class AppConstants {
     public static final int SPOTIFY_SEARCH_LIMIT = 50;
     public static final int PLAYLIST_LIMIT = 50;
     public static final int PLAYLIST_TRACK_LIMIT = 100;
+
+    // Service IDs
+    public static final int HOST_SERVICE_ID = 1;
+    public static final int CLIENT_SERVICE_ID = 2;
 }
