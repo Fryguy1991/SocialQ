@@ -138,6 +138,7 @@ public class StartActivity extends AppCompatActivity {
 
     private void handleClientStart() {
         startActivity(new Intent(StartActivity.this, QueueConnectActivityNearbyDevices.class));
+        finish();
     }
 
     private void handleHostStart() {
@@ -195,11 +196,12 @@ public class StartActivity extends AppCompatActivity {
                     mQueueTitle = getResources().getString(R.string.queue_title_default_value);
                 }
 
-                Intent startQueueIntent = new Intent(StartActivity.this, HostActivityNearbyDevices.class);
+                Intent startQueueIntent = new Intent(StartActivity.this, HostActivity.class);
                 startQueueIntent.putExtra(AppConstants.QUEUE_TITLE_KEY, mQueueTitle);
                 startQueueIntent.putExtra(AppConstants.FAIR_PLAY_KEY, mIsFairPlayChecked);
                 startActivity(startQueueIntent);
                 dialog.dismiss();
+                finish();
             }
         });
         dialogBuilder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {

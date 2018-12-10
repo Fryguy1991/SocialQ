@@ -6,3 +6,5 @@
 .DS_Store
 /build
 /captures
+/.idea/assetWizardSettings.xml
+/.idea/misc.xml

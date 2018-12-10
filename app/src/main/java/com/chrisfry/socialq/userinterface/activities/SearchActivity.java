@@ -8,6 +8,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
+import android.os.SystemClock;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -164,7 +165,7 @@ public class SearchActivity extends AppCompatActivity implements ISearchView, IS
         getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING);
 
         String accessToken = AccessModel.getAccessToken();
-        if (accessToken == null || System.currentTimeMillis() > AccessModel.getAccessExpireTime()) {
+        if (accessToken == null || SystemClock.elapsedRealtime() > AccessModel.getAccessExpireTime()) {
             Log.d(TAG, "Invalid Access Token");
             Toast.makeText(this, "Invalid Access Token", Toast.LENGTH_LONG).show();
             finish();

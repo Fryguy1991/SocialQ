@@ -3,9 +3,7 @@ package com.chrisfry.socialq.enums
 enum class RequestType(val requestCode: Int) {
     SEARCH_REQUEST(1000),
     SPOTIFY_AUTHENTICATION_REQUEST(1001),
-    REQUEST_ENABLE_BT(1002),
-    REQUEST_DISCOVER_BT(1003),
-    LOCATION_PERMISSION_REQUEST(1004),
+    LOCATION_PERMISSION_REQUEST(1002),
     NONE(-1);
 
     companion object {

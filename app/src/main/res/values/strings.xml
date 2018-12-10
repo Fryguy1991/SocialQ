@@ -1,6 +1,13 @@
 <resources>
     <string name="app_name">SocialQ</string>
-    <string name="service_description">Service that uses SpotifyPlayer to play music and support the SocialQ application.</string>
+    <string name="service_name">SocialQ</string>
+    <string name="play_queue_service_description">Service that uses SpotifyPlayer to play music and support the SocialQ application.</string>
+    <string name="host_service_description">Service used to host a SocialQ</string>
+    <string name="client_service_description">Service used as a client of a SocialQ</string>
+
+    <!-- Notification Strings -->
+    <string name="host_notification_content_text">Hosting \"%1$s\"</string>
+    <string name="client_notification_content_text">Connected to \"%1$s\"</string>
 
     <!-- Menu Action Strings -->
     <string name="search_action">search_action</string>
@@ -21,6 +28,8 @@
     <string name="select_base_playlist">Select A Base Playlist</string>
     <string name="fresh_playlist">Start A New Playlist</string>
     <string name="base_playlist">Base Playlist</string>
+    <string name="client_joined">A Client Has Joined</string>
+    <string name="client_disconnected">A Client Has Disconnected</string>
 
     <!-- Close Host Dialog Strings -->
     <string name="close_host_dialog_title">Close Queue?</string>

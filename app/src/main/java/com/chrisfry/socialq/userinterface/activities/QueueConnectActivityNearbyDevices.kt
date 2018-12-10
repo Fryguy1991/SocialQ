@@ -71,7 +71,7 @@ class QueueConnectActivityNearbyDevices : QueueConnectActivity(), NearbyDevicesA
     override fun connectToQueue() {
         Nearby.getConnectionsClient(this).stopDiscovery()
         if (queueToJoinEndpointId.isNotEmpty()) {
-            val clientIntent = Intent(this, ClientActivityNearbyDevices::class.java)
+            val clientIntent = Intent(this, ClientActivity::class.java)
             clientIntent.putExtra(AppConstants.ND_ENDPOINT_ID_EXTRA_KEY, queueToJoinEndpointId)
             clientIntent.putExtra(AppConstants.QUEUE_TITLE_KEY, queueToJoinName)
             startActivity(clientIntent)
