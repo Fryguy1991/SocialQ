@@ -1,0 +1,518 @@
+12-06 19:47:18.155 7914-7914/com.chrisfry.socialq D/SpotifyAuthHandler: start
+12-06 19:47:18.760 7914-7914/com.chrisfry.socialq D/com.spotify.sdk.android.authentication.LoginActivity: Response: token
+12-06 19:47:18.760 7914-7914/com.chrisfry.socialq D/SpotifyAuthHandler: stop
+12-06 19:47:18.892 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.userinterface.activities.StartActivity: Closing StartActivity
+12-06 19:47:18.925 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.userinterface.activities.AccessTokenReceiverActivity: Access token granted
+12-06 19:47:18.925 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.userinterface.activities.AccessTokenReceiverActivity: Notifying service of new access token and unbind
+12-06 19:47:18.926 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.SpotifyAccessService: Initializing Spotify elements
+12-06 19:47:18.926 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: Receiving Spotify access for the first time. Retrieve current user, create playlist and check for user playlist for base
+12-06 19:47:18.928 7914-7914/com.chrisfry.socialq D/Retrofit: ---> HTTP GET https://api.spotify.com/v1/me
+12-06 19:47:19.047 7914-7914/com.chrisfry.socialq D/Retrofit: <--- HTTP 200 https://api.spotify.com/v1/me (119ms)
+12-06 19:47:19.154 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.userinterface.activities.AccessTokenReceiverActivity: Access token receiver activity being destroyed
+12-06 19:47:19.167 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: Successfully advertising the host
+12-06 19:47:19.167 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: Pulling playlist data for fry_dev_1
+12-06 19:47:19.174 7914-14496/com.chrisfry.socialq D/Retrofit: ---> HTTP GET https://api.spotify.com/v1/users/fry_dev_1/playlists?limit=50
+12-06 19:47:21.261 7914-14496/com.chrisfry.socialq D/Retrofit: <--- HTTP 200 https://api.spotify.com/v1/users/fry_dev_1/playlists?limit=50 (2087ms)
+12-06 19:47:21.354 7914-14496/com.chrisfry.socialq D/Retrofit: ---> HTTP GET https://api.spotify.com/v1/users/fry_dev_1/playlists?offset=50&limit=50
+12-06 19:47:21.486 7914-14496/com.chrisfry.socialq D/Retrofit: <--- HTTP 200 https://api.spotify.com/v1/users/fry_dev_1/playlists?offset=50&limit=50 (132ms)
+12-06 19:47:21.564 7914-14496/com.chrisfry.socialq D/Retrofit: ---> HTTP GET https://api.spotify.com/v1/users/fry_dev_1/playlists?offset=100&limit=50
+12-06 19:47:21.917 7914-14496/com.chrisfry.socialq D/Retrofit: <--- HTTP 200 https://api.spotify.com/v1/users/fry_dev_1/playlists?offset=100&limit=50 (353ms)
+12-06 19:47:22.230 7914-7924/com.chrisfry.socialq I/art: Background sticky concurrent mark sweep GC freed 90752(4MB) AllocSpace objects, 0(0B) LOS objects, 9% free, 43MB/48MB, paused 888us total 100.316ms
+12-06 19:47:30.405 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: Creating playlist for the SocialQ
+12-06 19:47:30.413 7914-14496/com.chrisfry.socialq D/Retrofit: ---> HTTP POST https://api.spotify.com/v1/users/fry_dev_1/playlists
+12-06 19:47:30.544 7914-14496/com.chrisfry.socialq D/Retrofit: <--- HTTP 201 https://api.spotify.com/v1/users/fry_dev_1/playlists (131ms)
+12-06 19:47:30.587 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: Successfully created playlist for queue
+12-06 19:47:30.587 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: Loading base playlist with ID: 1SxXJpwyei31vz5pat6BWf
+12-06 19:47:30.593 7914-7914/com.chrisfry.socialq D/Retrofit: ---> HTTP GET https://api.spotify.com/v1/users/fry_dev_1/playlists/1SxXJpwyei31vz5pat6BWf
+12-06 19:47:30.907 7914-7914/com.chrisfry.socialq D/Retrofit: <--- HTTP 200 https://api.spotify.com/v1/users/fry_dev_1/playlists/1SxXJpwyei31vz5pat6BWf (314ms)
+12-06 19:47:31.642 7914-7914/com.chrisfry.socialq D/Retrofit: ---> HTTP GET https://api.spotify.com/v1/users/fry_dev_1/playlists/1SxXJpwyei31vz5pat6BWf/tracks?offset=0
+12-06 19:47:31.748 7914-7914/com.chrisfry.socialq D/Retrofit: <--- HTTP 200 https://api.spotify.com/v1/users/fry_dev_1/playlists/1SxXJpwyei31vz5pat6BWf/tracks?offset=0 (105ms)
+12-06 19:47:32.438 7914-7914/com.chrisfry.socialq D/Retrofit: ---> HTTP GET https://api.spotify.com/v1/users/fry_dev_1/playlists/1SxXJpwyei31vz5pat6BWf/tracks?offset=100
+12-06 19:47:32.515 7914-7924/com.chrisfry.socialq I/art: Background partial concurrent mark sweep GC freed 855289(16MB) AllocSpace objects, 15(932KB) LOS objects, 33% free, 31MB/47MB, paused 860us total 155.751ms
+12-06 19:47:32.564 7914-7914/com.chrisfry.socialq D/Retrofit: <--- HTTP 200 https://api.spotify.com/v1/users/fry_dev_1/playlists/1SxXJpwyei31vz5pat6BWf/tracks?offset=100 (125ms)
+12-06 19:47:33.264 7914-7914/com.chrisfry.socialq D/Retrofit: ---> HTTP POST https://api.spotify.com/v1/users/fry_dev_1/playlists/4EhCdkqqhg45ytWYI3otN1/tracks
+12-06 19:47:33.364 7914-7914/com.chrisfry.socialq D/Retrofit: <--- HTTP 201 https://api.spotify.com/v1/users/fry_dev_1/playlists/4EhCdkqqhg45ytWYI3otN1/tracks (99ms)
+12-06 19:47:33.374 7914-7914/com.chrisfry.socialq D/Retrofit: ---> HTTP POST https://api.spotify.com/v1/users/fry_dev_1/playlists/4EhCdkqqhg45ytWYI3otN1/tracks
+12-06 19:47:33.872 7914-7914/com.chrisfry.socialq D/Retrofit: <--- HTTP 201 https://api.spotify.com/v1/users/fry_dev_1/playlists/4EhCdkqqhg45ytWYI3otN1/tracks (497ms)
+12-06 19:47:33.874 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.SpotifyAccessService: Refreshing playlist
+12-06 19:47:33.876 7914-14496/com.chrisfry.socialq D/Retrofit: ---> HTTP GET https://api.spotify.com/v1/users/fry_dev_1/playlists/4EhCdkqqhg45ytWYI3otN1
+12-06 19:47:33.899 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: Player initialized
+12-06 19:47:33.943 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: Success!
+12-06 19:47:33.974 7914-14496/com.chrisfry.socialq D/Retrofit: <--- HTTP 200 https://api.spotify.com/v1/users/fry_dev_1/playlists/4EhCdkqqhg45ytWYI3otN1 (97ms)
+12-06 19:47:34.311 7914-14705/com.chrisfry.socialq E/SpotifySDKNative: Unknown connection error of type '5' received
+12-06 19:47:34.312 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: Logged In! Player can be used
+12-06 19:47:34.693 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.SpotifyAccessService: Successfully retrieved playlist
+12-06 19:47:34.696 7914-14496/com.chrisfry.socialq D/Retrofit: ---> HTTP GET https://api.spotify.com/v1/users/fry_dev_1/playlists/4EhCdkqqhg45ytWYI3otN1/tracks?limit=100&offset=100
+12-06 19:47:35.071 7914-14496/com.chrisfry.socialq D/Retrofit: <--- HTTP 200 https://api.spotify.com/v1/users/fry_dev_1/playlists/4EhCdkqqhg45ytWYI3otN1/tracks?limit=100&offset=100 (374ms)
+12-06 19:47:35.837 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.SpotifyAccessService: Finished retrieving playlist tracks
+12-06 19:47:38.178 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: PLAY REQUEST
+12-06 19:47:38.178 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: Audio previously finished.
+    Starting playlist from index: 0
+12-06 19:47:38.192 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyBecameActive
+12-06 19:47:38.192 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: Player is active
+12-06 19:47:38.192 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: Great Success!
+12-06 19:47:38.248 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyMetadataChanged
+12-06 19:47:38.332 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyMetadataChanged
+12-06 19:47:38.332 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyMetadataChanged
+12-06 19:47:38.333 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyContextChanged
+12-06 19:47:38.727 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyTrackChanged
+12-06 19:47:38.728 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: META DATA:
+    Finished/Skipped: null
+    Now Playing : Sell Out
+    Next Track: Still Breathing
+12-06 19:47:38.888 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackEventAudioFlush
+12-06 19:47:38.888 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyPlay
+12-06 19:47:38.888 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: Player has started playing
+12-06 19:47:49.125 7914-14753/com.chrisfry.socialq W/AudioTrack: dead IAudioTrack, PCM, creating a new one from obtainBuffer()
+12-06 19:51:25.543 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyTrackDelivered
+12-06 19:51:25.543 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: Player has moved to next track (next/track complete)
+12-06 19:51:25.564 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyTrackChanged
+12-06 19:51:25.564 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: META DATA:
+    Finished/Skipped: Sell Out
+    Now Playing : Still Breathing
+    Next Track: Always
+12-06 19:51:25.598 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyMetadataChanged
+12-06 19:55:10.213 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyTrackDelivered
+12-06 19:55:10.213 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: Player has moved to next track (next/track complete)
+12-06 19:55:10.304 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyMetadataChanged
+12-06 19:55:10.566 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyTrackChanged
+12-06 19:55:10.566 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: META DATA:
+    Finished/Skipped: Still Breathing
+    Now Playing : Always
+    Next Track: Save Tonight
+12-06 19:59:27.855 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyTrackDelivered
+12-06 19:59:27.855 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: Player has moved to next track (next/track complete)
+12-06 19:59:27.859 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyTrackChanged
+12-06 19:59:27.859 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: META DATA:
+    Finished/Skipped: Always
+    Now Playing : Save Tonight
+    Next Track: Believer
+12-06 19:59:27.896 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyMetadataChanged
+12-06 20:03:27.066 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyTrackDelivered
+12-06 20:03:27.066 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: Player has moved to next track (next/track complete)
+12-06 20:03:27.198 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyMetadataChanged
+12-06 20:03:27.345 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyTrackChanged
+12-06 20:03:27.345 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: META DATA:
+    Finished/Skipped: Save Tonight
+    Now Playing : Believer
+    Next Track: Welcome To The Jungle
+12-06 20:06:16.001 7914-14705/com.chrisfry.socialq E/SpotifySDKNative: Unknown connection error of type '3' received
+12-06 20:06:16.015 7914-7914/com.chrisfry.socialq E/com.chrisfry.socialq.services.HostService: ERROR: Temporary Error
+12-06 20:06:16.529 7914-7914/com.chrisfry.socialq E/com.chrisfry.socialq.services.HostService: ERROR: Temporary Error
+12-06 20:06:17.769 7914-7914/com.chrisfry.socialq E/com.chrisfry.socialq.services.HostService: ERROR: Temporary Error
+12-06 20:06:25.180 7914-14753/com.chrisfry.socialq W/AudioTrack: releaseBuffer() track 0x9e92f080 disabled due to previous underrun, restarting
+12-06 20:06:25.344 7914-14705/com.chrisfry.socialq E/SpotifySDKNative: Unknown connection error of type '4' received
+12-06 20:06:25.419 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyMetadataChanged
+12-06 20:06:35.105 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyTrackDelivered
+12-06 20:06:35.105 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: Player has moved to next track (next/track complete)
+12-06 20:06:35.108 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyTrackChanged
+12-06 20:06:35.108 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: META DATA:
+    Finished/Skipped: Believer
+    Now Playing : Welcome To The Jungle
+    Next Track: Love Drunk
+12-06 20:06:35.157 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyMetadataChanged
+12-06 20:11:08.717 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyTrackDelivered
+12-06 20:11:08.717 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: Player has moved to next track (next/track complete)
+12-06 20:11:08.719 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyTrackChanged
+12-06 20:11:08.719 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: META DATA:
+    Finished/Skipped: Welcome To The Jungle
+    Now Playing : Love Drunk
+    Next Track: Glycerine
+12-06 20:11:08.768 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyMetadataChanged
+12-06 20:14:55.448 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyTrackDelivered
+12-06 20:14:55.448 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: Player has moved to next track (next/track complete)
+12-06 20:14:55.522 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyMetadataChanged
+12-06 20:14:55.615 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyTrackChanged
+12-06 20:14:55.615 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: META DATA:
+    Finished/Skipped: Love Drunk
+    Now Playing : Glycerine
+    Next Track: I Need Never Get Old
+12-06 20:19:21.919 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyTrackDelivered
+12-06 20:19:21.919 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: Player has moved to next track (next/track complete)
+12-06 20:19:21.922 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyTrackChanged
+12-06 20:19:21.922 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: META DATA:
+    Finished/Skipped: Glycerine
+    Now Playing : I Need Never Get Old
+    Next Track: Feel Good Inc
+12-06 20:19:21.969 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyMetadataChanged
+12-06 20:23:35.651 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyTrackDelivered
+12-06 20:23:35.651 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: Player has moved to next track (next/track complete)
+12-06 20:23:35.723 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyMetadataChanged
+12-06 20:23:35.822 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyTrackChanged
+12-06 20:23:35.822 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: META DATA:
+    Finished/Skipped: I Need Never Get Old
+    Now Playing : Feel Good Inc
+    Next Track: You're Gonna Go Far, Kid
+12-06 20:27:18.301 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyTrackDelivered
+12-06 20:27:18.301 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: Player has moved to next track (next/track complete)
+12-06 20:27:18.302 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyTrackChanged
+12-06 20:27:18.303 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: META DATA:
+    Finished/Skipped: Feel Good Inc
+    Now Playing : You're Gonna Go Far, Kid
+    Next Track: Alive
+12-06 20:27:18.351 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyMetadataChanged
+12-06 20:30:16.114 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyTrackDelivered
+12-06 20:30:16.114 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: Player has moved to next track (next/track complete)
+12-06 20:30:16.220 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyMetadataChanged
+12-06 20:30:16.279 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyTrackChanged
+12-06 20:30:16.279 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: META DATA:
+    Finished/Skipped: You're Gonna Go Far, Kid
+    Now Playing : Alive
+    Next Track: Girl's Not Grey
+12-06 20:35:57.047 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyTrackDelivered
+12-06 20:35:57.047 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: Player has moved to next track (next/track complete)
+12-06 20:35:57.049 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyTrackChanged
+12-06 20:35:57.049 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: META DATA:
+    Finished/Skipped: Alive
+    Now Playing : Girl's Not Grey
+    Next Track: December
+12-06 20:35:57.097 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyMetadataChanged
+12-06 20:39:07.588 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyTrackDelivered
+12-06 20:39:07.588 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: Player has moved to next track (next/track complete)
+12-06 20:39:07.659 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyMetadataChanged
+12-06 20:39:07.839 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyTrackChanged
+12-06 20:39:07.839 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: META DATA:
+    Finished/Skipped: Girl's Not Grey
+    Now Playing : December
+    Next Track: Anna Sun
+12-06 20:43:52.568 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyTrackDelivered
+12-06 20:43:52.568 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: Player has moved to next track (next/track complete)
+12-06 20:43:52.572 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyTrackChanged
+12-06 20:43:52.572 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: META DATA:
+    Finished/Skipped: December
+    Now Playing : Anna Sun
+    Next Track: Smells Like Teen Spirit
+12-06 20:43:52.619 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyMetadataChanged
+12-06 20:46:18.925 7914-14494/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: Detected that we need a new access token
+12-06 20:46:18.948 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.userinterface.activities.AccessTokenReceiverActivity: Access token retriever activity being created
+12-06 20:46:18.963 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.userinterface.activities.AccessTokenReceiverActivity: Access token receiver activity is bound to service
+12-06 20:46:19.004 7914-7914/com.chrisfry.socialq D/com.spotify.sdk.android.authentication.LoginActivity: https://accounts.spotify.com/authorize?client_id=0fab62a3895a4fa3aae14bc3e46bc59c&response_type=token&redirect_uri=fryredirect%3A%2F%2Fcallback&show_dialog=false&utm_source=spotify-sdk&utm_medium=android-sdk&utm_campaign=android-sdk&scope=user-read-private%20streaming%20playlist-modify-private%20playlist-read-private
+12-06 20:46:19.004 7914-7914/com.chrisfry.socialq D/SpotifyAuthHandler: start
+12-06 20:47:07.070 7914-7924/com.chrisfry.socialq I/art: Background sticky concurrent mark sweep GC freed 189942(13MB) AllocSpace objects, 0(0B) LOS objects, 25% free, 39MB/53MB, paused 450us total 109.673ms
+12-06 20:49:13.945 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyTrackDelivered
+12-06 20:49:13.945 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: Player has moved to next track (next/track complete)
+12-06 20:49:13.958 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyTrackChanged
+12-06 20:49:13.958 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: META DATA:
+    Finished/Skipped: Anna Sun
+    Now Playing : Smells Like Teen Spirit
+    Next Track: S.O.B.
+12-06 20:49:14.029 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyMetadataChanged
+12-06 20:54:15.803 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyTrackDelivered
+12-06 20:54:15.803 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: Player has moved to next track (next/track complete)
+12-06 20:54:15.805 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyTrackChanged
+12-06 20:54:15.805 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: META DATA:
+    Finished/Skipped: Smells Like Teen Spirit
+    Now Playing : S.O.B.
+    Next Track: Says She Loves Me
+12-06 20:54:15.893 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyMetadataChanged
+12-06 20:54:20.465 7914-7924/com.chrisfry.socialq I/art: Background sticky concurrent mark sweep GC freed 157438(12MB) AllocSpace objects, 0(0B) LOS objects, 22% free, 40MB/53MB, paused 2.496ms total 105.502ms
+12-06 20:57:10.674 7914-7924/com.chrisfry.socialq I/art: Background sticky concurrent mark sweep GC freed 151738(11MB) AllocSpace objects, 0(0B) LOS objects, 22% free, 41MB/53MB, paused 12.855ms total 76.587ms
+12-06 20:58:23.385 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyTrackDelivered
+12-06 20:58:23.385 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: Player has moved to next track (next/track complete)
+12-06 20:58:23.466 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyMetadataChanged
+12-06 20:58:23.626 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyTrackChanged
+12-06 20:58:23.626 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: META DATA:
+    Finished/Skipped: S.O.B.
+    Now Playing : Says She Loves Me
+    Next Track: Learn to Fly
+12-06 21:02:02.656 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyTrackDelivered
+12-06 21:02:02.656 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: Player has moved to next track (next/track complete)
+12-06 21:02:02.677 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyTrackChanged
+12-06 21:02:02.677 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: META DATA:
+    Finished/Skipped: Says She Loves Me
+    Now Playing : Learn to Fly
+    Next Track: Jerk It Out
+12-06 21:02:02.707 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyMetadataChanged
+12-06 21:05:57.964 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyTrackDelivered
+12-06 21:05:57.964 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: Player has moved to next track (next/track complete)
+12-06 21:05:58.031 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyMetadataChanged
+12-06 21:05:58.269 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyTrackChanged
+12-06 21:05:58.269 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: META DATA:
+    Finished/Skipped: Learn to Fly
+    Now Playing : Jerk It Out
+    Next Track: Knock Knock
+12-06 21:09:13.606 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyTrackDelivered
+12-06 21:09:13.606 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: Player has moved to next track (next/track complete)
+12-06 21:09:13.608 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyTrackChanged
+12-06 21:09:13.608 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: META DATA:
+    Finished/Skipped: Jerk It Out
+    Now Playing : Knock Knock
+    Next Track: Can't Hold Us - feat. Ray Dalton
+12-06 21:09:13.654 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyMetadataChanged
+12-06 21:12:25.021 7914-7924/com.chrisfry.socialq I/art: Background sticky concurrent mark sweep GC freed 116149(9MB) AllocSpace objects, 0(0B) LOS objects, 17% free, 43MB/53MB, paused 8.486ms total 55.520ms
+12-06 21:12:36.438 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyTrackDelivered
+12-06 21:12:36.438 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: Player has moved to next track (next/track complete)
+12-06 21:12:36.508 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyMetadataChanged
+12-06 21:12:36.637 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyTrackChanged
+12-06 21:12:36.638 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: META DATA:
+    Finished/Skipped: Knock Knock
+    Now Playing : Can't Hold Us - feat. Ray Dalton
+    Next Track: Your Love
+12-06 21:15:28.210 7914-7924/com.chrisfry.socialq I/art: Background sticky concurrent mark sweep GC freed 112732(8MB) AllocSpace objects, 0(0B) LOS objects, 16% free, 44MB/53MB, paused 8.969ms total 86.459ms
+12-06 21:16:54.760 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyTrackDelivered
+12-06 21:16:54.760 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: Player has moved to next track (next/track complete)
+12-06 21:16:54.761 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyTrackChanged
+12-06 21:16:54.761 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: META DATA:
+    Finished/Skipped: Can't Hold Us - feat. Ray Dalton
+    Now Playing : Your Love
+    Next Track: Run-Around
+12-06 21:16:54.906 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyMetadataChanged
+12-06 21:17:17.346 7914-7924/com.chrisfry.socialq I/art: Background sticky concurrent mark sweep GC freed 108828(8MB) AllocSpace objects, 0(0B) LOS objects, 15% free, 44MB/53MB, paused 9.055ms total 97.446ms
+12-06 21:18:15.888 7914-7924/com.chrisfry.socialq I/art: Background partial concurrent mark sweep GC freed 162996(9MB) AllocSpace objects, 1(16KB) LOS objects, 26% free, 43MB/59MB, paused 1.242ms total 149.823ms
+12-06 21:20:31.174 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyTrackDelivered
+12-06 21:20:31.174 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: Player has moved to next track (next/track complete)
+12-06 21:20:31.237 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyMetadataChanged
+12-06 21:20:31.457 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyTrackChanged
+12-06 21:20:31.457 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: META DATA:
+    Finished/Skipped: Your Love
+    Now Playing : Run-Around
+    Next Track: My Type
+12-06 21:25:11.270 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyTrackDelivered
+12-06 21:25:11.270 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: Player has moved to next track (next/track complete)
+12-06 21:25:11.284 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyTrackChanged
+12-06 21:25:11.284 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: META DATA:
+    Finished/Skipped: Run-Around
+    Now Playing : My Type
+    Next Track: Something To Believe In
+12-06 21:25:11.317 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyMetadataChanged
+12-06 21:28:36.079 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyTrackDelivered
+12-06 21:28:36.079 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: Player has moved to next track (next/track complete)
+12-06 21:28:36.157 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyMetadataChanged
+12-06 21:28:36.377 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyTrackChanged
+12-06 21:28:36.377 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: META DATA:
+    Finished/Skipped: My Type
+    Now Playing : Something To Believe In
+    Next Track: Black Dog
+12-06 21:32:24.526 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyTrackDelivered
+12-06 21:32:24.526 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: Player has moved to next track (next/track complete)
+12-06 21:32:24.528 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyTrackChanged
+12-06 21:32:24.528 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: META DATA:
+    Finished/Skipped: Something To Believe In
+    Now Playing : Black Dog
+    Next Track: Sweet Disaster
+12-06 21:32:24.658 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyMetadataChanged
+12-06 21:35:12.324 7914-7924/com.chrisfry.socialq I/art: Background sticky concurrent mark sweep GC freed 171087(13MB) AllocSpace objects, 0(0B) LOS objects, 21% free, 46MB/59MB, paused 462us total 108.093ms
+12-06 21:37:19.976 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyTrackDelivered
+12-06 21:37:19.976 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: Player has moved to next track (next/track complete)
+12-06 21:37:19.992 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyTrackChanged
+12-06 21:37:19.992 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: META DATA:
+    Finished/Skipped: Black Dog
+    Now Playing : Sweet Disaster
+    Next Track: Dirty Little Secret
+12-06 21:37:20.134 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyMetadataChanged
+12-06 21:40:45.125 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyTrackDelivered
+12-06 21:40:45.125 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: Player has moved to next track (next/track complete)
+12-06 21:40:45.219 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyMetadataChanged
+12-06 21:40:45.320 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyTrackChanged
+12-06 21:40:45.320 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: META DATA:
+    Finished/Skipped: Sweet Disaster
+    Now Playing : Dirty Little Secret
+    Next Track: Rebel Yell
+12-06 21:40:55.080 7914-7924/com.chrisfry.socialq I/art: Background sticky concurrent mark sweep GC freed 158652(12MB) AllocSpace objects, 0(0B) LOS objects, 20% free, 47MB/59MB, paused 5.328ms total 72.423ms
+12-06 21:42:21.147 7914-7924/com.chrisfry.socialq I/art: Background sticky concurrent mark sweep GC freed 157745(11MB) AllocSpace objects, 0(0B) LOS objects, 19% free, 47MB/59MB, paused 466us total 102.626ms
+12-06 21:43:58.758 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyTrackDelivered
+12-06 21:43:58.758 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: Player has moved to next track (next/track complete)
+12-06 21:43:58.760 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyTrackChanged
+12-06 21:43:58.760 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: META DATA:
+    Finished/Skipped: Dirty Little Secret
+    Now Playing : Rebel Yell
+    Next Track: Take Me Out
+12-06 21:43:58.800 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyMetadataChanged
+12-06 21:48:47.295 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyTrackDelivered
+12-06 21:48:47.295 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: Player has moved to next track (next/track complete)
+12-06 21:48:47.304 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyTrackChanged
+12-06 21:48:47.304 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: META DATA:
+    Finished/Skipped: Rebel Yell
+    Now Playing : Take Me Out
+    Next Track: The One Moment
+12-06 21:48:47.338 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyMetadataChanged
+12-06 21:52:44.303 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyTrackDelivered
+12-06 21:52:44.303 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: Player has moved to next track (next/track complete)
+12-06 21:52:44.378 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyMetadataChanged
+12-06 21:52:44.565 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyTrackChanged
+12-06 21:52:44.565 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: META DATA:
+    Finished/Skipped: Take Me Out
+    Now Playing : The One Moment
+    Next Track: Downtown (feat. Melle Mel, Grandmaster Caz, Kool Moe Dee & Eric
+12-06 21:56:28.153 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyTrackDelivered
+12-06 21:56:28.153 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: Player has moved to next track (next/track complete)
+12-06 21:56:28.160 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyTrackChanged
+12-06 21:56:28.160 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: META DATA:
+    Finished/Skipped: The One Moment
+    Now Playing : Downtown (feat. Melle Mel, Grandmaster Caz, Kool Moe Dee & Eric
+    Next Track: Ain't No Rest for the Wicked
+12-06 21:56:28.204 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyMetadataChanged
+12-06 22:01:20.738 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyTrackDelivered
+12-06 22:01:20.738 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: Player has moved to next track (next/track complete)
+12-06 22:01:20.752 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyTrackChanged
+12-06 22:01:20.752 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: META DATA:
+    Finished/Skipped: Downtown (feat. Melle Mel, Grandmaster Caz, Kool Moe Dee & Eric
+    Now Playing : Ain't No Rest for the Wicked
+    Next Track: Young Folks
+12-06 22:01:20.804 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyMetadataChanged
+12-06 22:04:16.232 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyTrackDelivered
+12-06 22:04:16.232 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: Player has moved to next track (next/track complete)
+12-06 22:04:16.293 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyMetadataChanged
+12-06 22:04:16.397 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyTrackChanged
+12-06 22:04:16.397 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: META DATA:
+    Finished/Skipped: Ain't No Rest for the Wicked
+    Now Playing : Young Folks
+    Next Track: Riptide
+12-06 22:08:48.024 7914-7924/com.chrisfry.socialq I/art: Background partial concurrent mark sweep GC freed 167499(8MB) AllocSpace objects, 2(256KB) LOS objects, 23% free, 50MB/66MB, paused 520us total 218.735ms
+12-06 22:08:55.289 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyTrackDelivered
+12-06 22:08:55.289 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: Player has moved to next track (next/track complete)
+12-06 22:08:55.291 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyTrackChanged
+12-06 22:08:55.291 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: META DATA:
+    Finished/Skipped: Young Folks
+    Now Playing : Riptide
+    Next Track: Flirtin' with Disaster
+12-06 22:08:55.334 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyMetadataChanged
+12-06 22:12:19.537 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyTrackDelivered
+12-06 22:12:19.537 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: Player has moved to next track (next/track complete)
+12-06 22:12:20.104 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyMetadataChanged
+12-06 22:12:20.220 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyTrackChanged
+12-06 22:12:20.220 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: META DATA:
+    Finished/Skipped: Riptide
+    Now Playing : Flirtin' with Disaster
+    Next Track: Dreaming
+12-06 22:17:18.785 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyTrackDelivered
+12-06 22:17:18.785 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: Player has moved to next track (next/track complete)
+12-06 22:17:18.797 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyTrackChanged
+12-06 22:17:18.797 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: META DATA:
+    Finished/Skipped: Flirtin' with Disaster
+    Now Playing : Dreaming
+    Next Track: I Don't Want to Be
+12-06 22:17:18.827 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyMetadataChanged
+12-06 22:20:55.001 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyTrackDelivered
+12-06 22:20:55.006 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: Player has moved to next track (next/track complete)
+12-06 22:20:55.074 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyMetadataChanged
+12-06 22:20:55.326 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyTrackChanged
+12-06 22:20:55.326 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: META DATA:
+    Finished/Skipped: Dreaming
+    Now Playing : I Don't Want to Be
+    Next Track: Donald Trump
+12-06 22:24:19.115 7914-7924/com.chrisfry.socialq I/art: Background sticky concurrent mark sweep GC freed 182483(13MB) AllocSpace objects, 0(0B) LOS objects, 20% free, 53MB/66MB, paused 496us total 108.275ms
+12-06 22:24:32.786 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyTrackDelivered
+12-06 22:24:32.786 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: Player has moved to next track (next/track complete)
+12-06 22:24:32.800 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyTrackChanged
+12-06 22:24:32.801 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: META DATA:
+    Finished/Skipped: I Don't Want to Be
+    Now Playing : Donald Trump
+    Next Track: Cardiac Arrest
+12-06 22:24:32.818 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyMetadataChanged
+12-06 22:27:18.634 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyTrackDelivered
+12-06 22:27:18.634 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: Player has moved to next track (next/track complete)
+12-06 22:27:18.711 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyMetadataChanged
+12-06 22:27:18.960 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyTrackChanged
+12-06 22:27:18.960 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: META DATA:
+    Finished/Skipped: Donald Trump
+    Now Playing : Cardiac Arrest
+    Next Track: Flavor Of The Weak
+12-06 22:30:21.179 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyTrackDelivered
+12-06 22:30:21.179 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: Player has moved to next track (next/track complete)
+12-06 22:30:21.180 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyTrackChanged
+12-06 22:30:21.180 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: META DATA:
+    Finished/Skipped: Cardiac Arrest
+    Now Playing : Flavor Of The Weak
+    Next Track: Takin' Care Of Business
+12-06 22:30:21.228 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyMetadataChanged
+12-06 22:33:29.997 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyTrackDelivered
+12-06 22:33:29.997 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: Player has moved to next track (next/track complete)
+12-06 22:33:30.065 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyMetadataChanged
+12-06 22:33:30.202 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyTrackChanged
+12-06 22:33:30.202 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: META DATA:
+    Finished/Skipped: Flavor Of The Weak
+    Now Playing : Takin' Care Of Business
+    Next Track: Family (Blended Babies Remix) [feat. Vic Mensa]
+12-06 22:38:11.403 7914-7914/com.chrisfry.socialq D/com.spotify.sdk.android.authentication.LoginActivity: Response: token
+12-06 22:38:11.403 7914-7914/com.chrisfry.socialq D/SpotifyAuthHandler: stop
+12-06 22:38:11.423 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.userinterface.activities.AccessTokenReceiverActivity: Access token granted
+12-06 22:38:11.423 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.userinterface.activities.AccessTokenReceiverActivity: Notifying service of new access token and unbind
+12-06 22:38:11.427 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.SpotifyAccessService: Initializing Spotify elements
+12-06 22:38:11.628 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.userinterface.activities.AccessTokenReceiverActivity: Access token receiver activity being destroyed
+12-06 22:38:19.901 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyTrackDelivered
+12-06 22:38:19.901 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: Player has moved to next track (next/track complete)
+12-06 22:38:19.905 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyTrackChanged
+12-06 22:38:19.905 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: META DATA:
+    Finished/Skipped: Takin' Care Of Business
+    Now Playing : Family (Blended Babies Remix) [feat. Vic Mensa]
+    Next Track: Something Good Can Work
+12-06 22:38:20.050 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyMetadataChanged
+12-06 22:39:27.764 7914-7924/com.chrisfry.socialq I/art: Background sticky concurrent mark sweep GC freed 18902(2MB) AllocSpace objects, 0(0B) LOS objects, 3% free, 64MB/66MB, paused 919us total 254.854ms
+12-06 22:39:28.566 7914-7924/com.chrisfry.socialq I/art: Background partial concurrent mark sweep GC freed 64254(2021KB) AllocSpace objects, 0(0B) LOS objects, 19% free, 64MB/80MB, paused 1.796ms total 164.988ms
+12-06 22:40:07.115 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: Established connection with a client (7l04), initiate client
+12-06 22:40:07.125 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: Sending host ID, playlist id, and current playing index to new client
+12-06 22:40:07.169 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: Payload Transfer to/from 7l04 has status IN_PROGRESS
+12-06 22:40:07.169 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: Payload Transfer to/from 7l04 has status SUCCESS
+12-06 22:40:33.144 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: Host received a payload
+12-06 22:40:33.144 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: Payload is type SONG_REQUEST
+12-06 22:40:33.149 7914-7914/com.chrisfry.socialq D/Retrofit: ---> HTTP GET https://api.spotify.com/v1/users/121596386
+12-06 22:40:33.351 7914-7914/com.chrisfry.socialq D/Retrofit: <--- HTTP 200 https://api.spotify.com/v1/users/121596386 (202ms)
+12-06 22:40:33.355 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: Received request for URI: spotify:track:1Ysc1uDZtf430TGavoS1j4, from User ID: 121596386
+12-06 22:40:33.356 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: Adding new track at playlist index: 44
+12-06 22:40:33.357 7914-7914/com.chrisfry.socialq D/Retrofit: ---> HTTP POST https://api.spotify.com/v1/users/fry_dev_1/playlists/4EhCdkqqhg45ytWYI3otN1/tracks?uris=spotify%3Atrack%3A1Ysc1uDZtf430TGavoS1j4&position=44
+12-06 22:40:33.664 7914-7914/com.chrisfry.socialq D/Retrofit: <--- HTTP 201 https://api.spotify.com/v1/users/fry_dev_1/playlists/4EhCdkqqhg45ytWYI3otN1/tracks?uris=spotify%3Atrack%3A1Ysc1uDZtf430TGavoS1j4&position=44 (307ms)
+12-06 22:40:33.666 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.SpotifyAccessService: Refreshing playlist
+12-06 22:40:33.666 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: Payload Transfer to/from 7l04 has status IN_PROGRESS
+12-06 22:40:33.666 7914-14496/com.chrisfry.socialq D/Retrofit: ---> HTTP GET https://api.spotify.com/v1/users/fry_dev_1/playlists/4EhCdkqqhg45ytWYI3otN1
+12-06 22:40:33.666 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: Payload Transfer to/from 7l04 has status SUCCESS
+12-06 22:40:33.679 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: Great Success!
+12-06 22:40:33.722 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyMetadataChanged
+12-06 22:40:33.759 7914-14496/com.chrisfry.socialq D/Retrofit: <--- HTTP 200 https://api.spotify.com/v1/users/fry_dev_1/playlists/4EhCdkqqhg45ytWYI3otN1 (92ms)
+12-06 22:40:34.363 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.SpotifyAccessService: Successfully retrieved playlist
+12-06 22:40:34.364 7914-14496/com.chrisfry.socialq D/Retrofit: ---> HTTP GET https://api.spotify.com/v1/users/fry_dev_1/playlists/4EhCdkqqhg45ytWYI3otN1/tracks?limit=100&offset=100
+12-06 22:40:34.486 7914-14496/com.chrisfry.socialq D/Retrofit: <--- HTTP 200 https://api.spotify.com/v1/users/fry_dev_1/playlists/4EhCdkqqhg45ytWYI3otN1/tracks?limit=100&offset=100 (122ms)
+12-06 22:40:35.033 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.SpotifyAccessService: Finished retrieving playlist tracks
+12-06 22:40:35.211 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: Payload Transfer to/from 7l04 has status IN_PROGRESS
+12-06 22:40:35.211 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: Payload Transfer to/from 7l04 has status SUCCESS
+12-06 22:40:39.386 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: Client 7l04 disconnected
+12-06 22:41:26.073 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyTrackDelivered
+12-06 22:41:26.074 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: Player has moved to next track (next/track complete)
+12-06 22:41:26.074 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: Skipping queued placeholder, don't update index or notify we're skipping
+12-06 22:41:26.084 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyNext
+12-06 22:41:26.084 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: Player has moved to next track (next/track complete)
+12-06 22:41:26.086 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: Great Success!
+12-06 22:41:26.208 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyMetadataChanged
+12-06 22:41:26.264 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyTrackChanged
+12-06 22:41:26.264 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: META DATA:
+    Finished/Skipped: Family (Blended Babies Remix) [feat. Vic Mensa]
+    Now Playing : Professional Rapper (feat. Snoop Dogg)
+    Next Track: Professional Rapper (feat. Snoop Dogg)
+12-06 22:41:26.275 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackEventAudioFlush
+12-06 22:41:26.302 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyMetadataChanged
+12-06 22:41:26.388 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyMetadataChanged
+12-06 22:47:19.295 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyTrackDelivered
+12-06 22:47:19.295 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: Player has moved to next track (next/track complete)
+12-06 22:47:19.315 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyTrackChanged
+12-06 22:47:19.315 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: META DATA:
+    Finished/Skipped: Professional Rapper (feat. Snoop Dogg)
+    Now Playing : Something Good Can Work
+    Next Track: Drive
+12-06 22:47:19.344 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyMetadataChanged
+12-06 22:49:42.210 7914-7920/com.chrisfry.socialq I/art: Debugger is active
+12-06 22:49:45.141 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: PAUSE REQUEST
+12-06 22:49:45.155 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyPause
+12-06 22:49:45.155 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: Player has paused
+12-06 22:49:45.165 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: Great Success!
+12-06 22:49:47.804 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: PLAY REQUEST
+12-06 22:49:47.804 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: Resuming player
+12-06 22:49:47.841 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: Great Success!
+12-06 22:49:47.841 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyPlay
+12-06 22:49:47.841 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: Player has started playing
+12-06 22:49:52.467 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: PAUSE REQUEST
+12-06 22:49:52.488 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyPause
+12-06 22:49:52.488 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: Player has paused
+12-06 22:49:52.488 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: Great Success!
+12-06 22:49:55.132 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: PLAY REQUEST
+12-06 22:49:55.132 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: Resuming player
+12-06 22:49:55.168 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: Great Success!
+12-06 22:49:55.168 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyPlay
+12-06 22:49:55.168 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: Player has started playing
+12-06 22:50:08.781 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyTrackDelivered
+12-06 22:50:08.781 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: Player has moved to next track (next/track complete)
+12-06 22:50:09.769 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyMetadataChanged
+12-06 22:50:09.771 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: New playback event: kSpPlaybackNotifyTrackChanged
+12-06 22:50:09.772 7914-7914/com.chrisfry.socialq D/com.chrisfry.socialq.services.HostService: META DATA:
+    Finished/Skipped: Something Good Can Work
+    Now Playing : Drive
+    Next Track: Baba O'Riley
