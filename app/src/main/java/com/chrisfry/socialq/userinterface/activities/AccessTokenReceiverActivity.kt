@@ -25,7 +25,6 @@ class AccessTokenReceiverActivity : Activity() {
 
     // Access token scopes to request from Spotify
     private lateinit var accessScopes: Array<String>
-    //
     private var isHostFlag: Boolean = true
     private var isBound = false
     private lateinit var accessService: SpotifyAccessService
@@ -42,6 +41,7 @@ class AccessTokenReceiverActivity : Activity() {
             this.window.addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED)
             this.window.addFlags(WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON)
         }
+        this.window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
         if (intent.getBooleanExtra(AppConstants.IS_HOST_KEY, true)) {
             accessScopes = arrayOf("user-read-private", "streaming", "playlist-modify-private", "playlist-read-private")
