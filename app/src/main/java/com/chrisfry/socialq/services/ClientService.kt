@@ -2,6 +2,7 @@ package com.chrisfry.socialq.services
 
 import android.app.PendingIntent
 import android.content.Intent
+import android.os.Build
 import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
@@ -95,11 +96,18 @@ class ClientService : SpotifyAccessService() {
         val notificationIntent = Intent(this, ClientActivity::class.java)
         val pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0)
 
+        val colorResInt = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            getColor(R.color.Active_Button_Color)
+        } else {
+            resources.getColor(R.color.Active_Button_Color)
+        }
+
         val notification = NotificationCompat.Builder(this, App.CHANNEL_ID)
                 .setContentTitle(getString(R.string.service_name))
                 .setContentText(String.format(getString(R.string.client_notification_content_text), hostQueueTitle))
                 .setSmallIcon(R.drawable.notification_icon)
                 .setContentIntent(pendingIntent)
+                .setColor(colorResInt)
                 .build()
 
         startForeground(AppConstants.CLIENT_SERVICE_ID, notification)

@@ -4,6 +4,7 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.net.ConnectivityManager
+import android.os.Build
 import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
@@ -118,6 +119,12 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
             isQueueFairPlay = intent.getBooleanExtra(AppConstants.FAIR_PLAY_KEY, resources.getBoolean(R.bool.fair_play_default))
         }
 
+        val colorResInt = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            getColor(R.color.Active_Button_Color)
+        } else {
+            resources.getColor(R.color.Active_Button_Color)
+        }
+
         // Start service in the foreground
         val notificationIntent = Intent(this, HostActivity::class.java)
         val pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0)
@@ -127,6 +134,7 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
                 .setContentText(String.format(getString(R.string.host_notification_content_text), queueTitle))
                 .setSmallIcon(R.drawable.notification_icon)
                 .setContentIntent(pendingIntent)
+                .setColor(colorResInt)
                 .build()
 
         startForeground(AppConstants.HOST_SERVICE_ID, notification)
