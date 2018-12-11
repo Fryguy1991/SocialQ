@@ -167,7 +167,7 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
                 })
                 .addOnFailureListener(object : OnFailureListener {
                     override fun onFailure(p0: Exception) {
-                        Log.d(TAG, "Failed to start advertising the host")
+                        Log.e(TAG, "Failed to start advertising the host")
                         stopSelf()
                     }
                 })
