@@ -139,8 +139,8 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
 
         startForeground(AppConstants.HOST_SERVICE_ID, notification)
 
-        // Request access token from Spotify
-        requestHostAccessToken()
+        // Request authorization code for Spotify
+        requestHostAuthorization()
 
         // Let app object know that a service has been started
         App.hasServiceBeenStarted = true

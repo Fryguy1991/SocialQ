@@ -44,7 +44,7 @@ class AccessTokenReceiverActivity : Activity() {
         this.window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
         if (intent.getBooleanExtra(AppConstants.IS_HOST_KEY, true)) {
-            accessScopes = arrayOf("user-read-private", "streaming", "playlist-modify-private", "playlist-read-private")
+            accessScopes = arrayOf("user-read-private", "streaming", "playlist-modify-private", "playlist-modify-public", "playlist-read-private")
         } else {
             isHostFlag = false
             accessScopes = arrayOf("user-read-private")
@@ -59,13 +59,13 @@ class AccessTokenReceiverActivity : Activity() {
             bindService(serviceTokenIntent, serviceConnection, Context.BIND_AUTO_CREATE)
         }
 
-        requestAccessToken()
+        requestAuthorization()
     }
 
-    private fun requestAccessToken() {
+    private fun requestAuthorization() {
         val builder = AuthenticationRequest.Builder(
                 AppConstants.CLIENT_ID,
-                AuthenticationResponse.Type.TOKEN,
+                AuthenticationResponse.Type.CODE,
                 AppConstants.REDIRECT_URI)
         builder.setScopes(accessScopes)
         val request = builder.build()
@@ -79,10 +79,20 @@ class AccessTokenReceiverActivity : Activity() {
                 val response = AuthenticationClient.getResponse(resultCode, data)
                 when (response.type) {
                     AuthenticationResponse.Type.CODE -> {
-                        Log.e(TAG, "Not handling request for auth code")
+                        Log.d(TAG, "Authorization code granted")
+
+                        // Store authorization code
+                        AccessModel.setAuthorizationCode(response.code)
+
+                        Log.d(TAG, "Notifying service we received authorization")
+                        accessService.authCodeReceived()
+                        unbindService(serviceConnection)
+                        isBound = false
+                        finish()
+                        return
                     }
                     AuthenticationResponse.Type.TOKEN -> {
-                        Log.d(TAG, "Access token granted, expires in ${response.expiresIn} seconds")
+                        Log.e(TAG, "Should be retrieving access tokens from backend server")
                         // Calculate when access token expires (response "ExpiresIn" is in seconds, subtract a minute to worry less about timing)
                         val expireTime = SystemClock.elapsedRealtime() + (response.expiresIn - 60) * 1000
 
@@ -111,8 +121,8 @@ class AccessTokenReceiverActivity : Activity() {
                     }
                 }
                 Log.e(TAG, "Trying again to get access token")
-                requestAccessToken()
-                // TODO: Should put a limit on this so it doesn't hold up app for long
+                requestAuthorization()
+                // TODO: POSSIBLE INFINITE LOOP! Should put a limit on this so it doesn't hold up app for long
             }
             RequestType.SEARCH_REQUEST,
             RequestType.LOCATION_PERMISSION_REQUEST -> {
