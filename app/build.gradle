@@ -95,4 +95,7 @@ dependencies {
 
     // Android-KTX
     implementation "androidx.core:core-ktx:1.0.1"
+
+    // OkHttp
+    implementation 'com.squareup.okhttp3:okhttp:3.12.0'
 }

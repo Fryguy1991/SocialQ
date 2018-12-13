@@ -15,6 +15,9 @@ import kaaes.spotify.webapi.android.SpotifyService
 import kaaes.spotify.webapi.android.models.Pager
 import kaaes.spotify.webapi.android.models.Playlist
 import kaaes.spotify.webapi.android.models.PlaylistTrack
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import org.json.JSONObject
 import retrofit.client.Response
 import java.util.HashMap
 
@@ -48,6 +51,42 @@ abstract class SpotifyAccessService : Service() {
         if (AccessModel.getAccessExpireTime() > SystemClock.elapsedRealtime()) {
             startAccessRefreshThread()
             initSpotifyElements(AccessModel.getAccessToken())
+        }
+    }
+
+    fun authCodeReceived() {
+        if (AccessModel.getAuthorizationCode().isNullOrEmpty()) {
+            Log.e(TAG, "Error invalid authorization code")
+        } else {
+            Log.d(TAG, "Have authorization code. Request access/refresh tokens")
+            val client = OkHttpClient()
+            val request = Request.Builder().url("http://54.86.80.241/" + AccessModel.getAuthorizationCode()).build()
+
+            val response = client.newCall(request).execute()
+            val responseString = response.body()?.string()
+
+            if (response.isSuccessful && !responseString.isNullOrEmpty()) {
+                val bodyJson = JSONObject(responseString).getJSONObject(AppConstants.JSON_BODY_KEY)
+
+                val accessToken = bodyJson.getString(AppConstants.JSON_ACCESS_TOKEN_KEY)
+                val refreshToken = bodyJson.getString(AppConstants.JSON_REFRESH_TOEKN_KEY)
+                val expiresIn = bodyJson.getInt(AppConstants.JSON_EXPIRES_IN_KEY)
+
+                Log.d(TAG, "Received authorization:\nAccess Token: $accessToken\nRefresh Token: $refreshToken\nExpires In: $expiresIn seconds")
+
+                // Store refresh token
+                AccessModel.setRefreshToken(refreshToken)
+
+                // Calculate when access token expires (response "ExpiresIn" is in seconds, subtract a minute to worry less about timing)
+                val expireTime = SystemClock.elapsedRealtime() + (expiresIn - 60) * 1000
+                // Set access token and expire time into model
+                AccessModel.setAccess(accessToken, expireTime)
+
+                startAccessRefreshThread()
+                initSpotifyElements(accessToken)
+            } else {
+                Log.e(TAG, "Response was unsuccessful or response string was null")
+            }
         }
     }
 
@@ -122,7 +161,7 @@ abstract class SpotifyAccessService : Service() {
 
     }
 
-    protected fun requestHostAccessToken() {
+    protected fun requestHostAuthorization() {
         isHost = true
         val accessIntent = Intent()
         accessIntent.setClass(applicationContext, AccessTokenReceiverActivity::class.java)
@@ -131,13 +170,46 @@ abstract class SpotifyAccessService : Service() {
         startActivity(accessIntent)
     }
 
-    protected fun requestClientAccessToken() {
+    protected fun requestClientAuthorization() {
         isHost = false
         val accessIntent = Intent()
         accessIntent.setClass(applicationContext, AccessTokenReceiverActivity::class.java)
         accessIntent.putExtra(AppConstants.IS_HOST_KEY, false)
         accessIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
         startActivity(accessIntent)
+    }
+
+    private fun refreshAccessToken() {
+        if (AccessModel.getRefreshToken().isNullOrEmpty()) {
+            Log.e(TAG, "Error invalid refresh token")
+        } else {
+            Log.d(TAG, "Request new access token")
+            // TODO: Should be able to support requesting multiple AWS instances
+            val client = OkHttpClient()
+            val request = Request.Builder().url("http://54.86.80.241/" + AccessModel.getRefreshToken()).build()
+
+            val response = client.newCall(request).execute()
+            val responseString = response.body()?.string()
+
+            if (response.isSuccessful && !responseString.isNullOrEmpty()) {
+                val bodyJson = JSONObject(responseString).getJSONObject(AppConstants.JSON_BODY_KEY)
+
+                val accessToken = bodyJson.getString(AppConstants.JSON_ACCESS_TOKEN_KEY)
+                val expiresIn = bodyJson.getInt(AppConstants.JSON_EXPIRES_IN_KEY)
+
+                Log.d(TAG, "Received new access token:\nAccess Token: $accessToken\nExpires In: $expiresIn seconds")
+
+                // Calculate when access token expires (response "ExpiresIn" is in seconds, subtract a minute to worry less about timing)
+                val expireTime = SystemClock.elapsedRealtime() + (expiresIn - 60) * 1000
+                // Set access token and expire time into model
+                AccessModel.setAccess(accessToken, expireTime)
+
+                startAccessRefreshThread()
+                initSpotifyElements(accessToken)
+            } else {
+                Log.e(TAG, "Response was unsuccessful or response string was null")
+            }
+        }
     }
 
 
@@ -156,11 +228,7 @@ abstract class SpotifyAccessService : Service() {
                     break
                 } else {
                     Log.d(HostService.TAG, "Detected that we need a new access token")
-                    if (isHost) {
-                        requestHostAccessToken()
-                    } else {
-                        requestClientAccessToken()
-                    }
+                    refreshAccessToken()
                     break
                 }
             }
