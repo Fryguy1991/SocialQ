@@ -10,10 +10,6 @@
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <uses-permission android:name="android.permission.WAKE_LOCK"/>
-    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
 
     <application
         android:name=".userinterface.App"
@@ -99,9 +95,6 @@
         <service android:name=".services.ClientService"
             android:description="@string/client_service_description"
             android:exported="false" />
-
-        <!-- Service for AWS -->
-        <service android:name="org.eclipse.paho.android.service.MqttService" />
         <!-- END APPLICATION SERVICES -->
     </application>
 
