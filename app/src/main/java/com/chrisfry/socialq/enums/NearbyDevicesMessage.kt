@@ -6,5 +6,6 @@ enum class NearbyDevicesMessage (val regex: String, val messageFormat: String) {
     QUEUE_UPDATE(AppConstants.UPDATE_QUEUE_REGEX, AppConstants.QUEUE_UPDATE_MESSAGE_FORMAT),
     SONG_REQUEST(AppConstants.FULL_SONG_REQUEST_REGEX, AppConstants.SONG_REQUEST_MESSAGE_FORMAT),
     INITIATE_CLIENT(AppConstants.INITIATE_CLIENT_REGEX, AppConstants.INITIATE_CLIENT_MESSAGE_FORMAT),
+    HOST_DISCONNECTING(AppConstants.HOST_DISCONNECT_MESSAGE, AppConstants.HOST_DISCONNECT_MESSAGE),
     INVALID(AppConstants.INVALID, AppConstants.INVALID)
 }

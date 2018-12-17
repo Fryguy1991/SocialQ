@@ -60,6 +60,8 @@ class ClientService : SpotifyAccessService() {
     private var hostDisconnect = false
     // Flag to indicate if the client is mid-initiation
     private var isBeingInitiated = false
+    // Count to indicate how many times we've retried reconnecting to the host endpoint
+    private var reconnectCount = 0
 
     // SPOTIFY ELEMENTS
     // Cached index for displaying correct track list
@@ -190,28 +192,44 @@ class ClientService : SpotifyAccessService() {
                 ConnectionsStatusCodes.STATUS_OK -> {
                     Log.d(TAG, "Connection to host successful!")
                     successfulConnectionFlag = true
+                    reconnectCount = 0
                 }
                 ConnectionsStatusCodes.STATUS_CONNECTION_REJECTED -> {
                     Log.d(TAG, "Connection to host rejected")
                     stopSelf()
                 }
                 ConnectionsStatusCodes.STATUS_ERROR -> {
-                    Log.d(TAG, "Error connecting to host")
-                    stopSelf()
+                    if (reconnectCount >= 3) {
+                        Log.d(TAG, "Error connecting to host")
+                        if (successfulConnectionFlag) {
+                            hostDisconnect = true
+                            listener?.showHostDisconnectDialog()
+                        } else {
+                            stopSelf()
+                        }
+                    } else {
+                        Log.d(TAG, "Reattempting connection to host")
+                        reconnectCount++
+                        connectToHost()
+                    }
                 }
             }
         }
 
         override fun onDisconnected(endPoint: String) {
-            Log.d(TAG, "Host disconnected from the client")
-            hostDisconnect = true
+            Log.d(TAG, "Lost connection with host")
+
+            if (!hostDisconnect) {
+                Log.d(TAG, "Attempting to reconnect to the host")
+                connectToHost()
+            }
 
             // If host has disconnected from the client.  Allow the client to follow the playlist
             // If client disconnected from the host they will have already picked if they wanted to
             // follow the playlist
-            if (!userDisconnect) {
-                listener?.showHostDisconnectDialog()
-            }
+//            if (!userDisconnect) {
+//                listener?.showHostDisconnectDialog()
+//            }
         }
     }
 
@@ -273,6 +291,11 @@ class ClientService : SpotifyAccessService() {
                             Log.e(TAG, "Something went wrong. Regex failed matching for $payloadType")
                         }
                     }
+                    NearbyDevicesMessage.HOST_DISCONNECTING -> {
+                        Log.d(TAG, "Host has indicated that it is shutting down")
+                        hostDisconnect = true
+                        listener?.showHostDisconnectDialog()
+                    }
                     NearbyDevicesMessage.SONG_REQUEST -> {
                         // Should not receive this case as the client
                         Log.e(TAG, "Clients should not receive song request messages")
@@ -317,9 +340,15 @@ class ClientService : SpotifyAccessService() {
                     }
                 })
                 .addOnFailureListener(object : OnFailureListener {
-                    override fun onFailure(p0: Exception) {
+                    override fun onFailure(exception: Exception) {
                         Log.e(TAG, "Failed to send a connection request, can't connect")
-                        stopSelf()
+                        Log.e(TAG, exception.message)
+                        if (successfulConnectionFlag) {
+                            hostDisconnect = true
+                            listener?.showHostDisconnectDialog()
+                        } else {
+                            stopSelf()
+                        }
                     }
                 })
     }
@@ -337,6 +366,10 @@ class ClientService : SpotifyAccessService() {
         Log.d(TAG, "View has been recreated. Requesting initiation")
 
         listener?.initiateView(hostQueueTitle, playlistTracks.subList(cachedPlayingIndex, playlist.tracks.total) )
+
+        if (hostDisconnect) {
+            listener?.showHostDisconnectDialog()
+        }
     }
 
     private fun buildSongRequestMessage(trackUri: String?, userId: String?): String {

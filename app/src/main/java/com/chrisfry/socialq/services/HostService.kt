@@ -264,8 +264,10 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
                             Log.e(TAG, "Error retrieving data from client song request")
                         }
                     }
-                    NearbyDevicesMessage.QUEUE_UPDATE, NearbyDevicesMessage.INITIATE_CLIENT -> {
-                        Log.e(TAG, "Hosts should not receive update queue or initiate client messages")
+                    NearbyDevicesMessage.QUEUE_UPDATE,
+                    NearbyDevicesMessage.INITIATE_CLIENT,
+                    NearbyDevicesMessage.HOST_DISCONNECTING-> {
+                        Log.e(TAG, "Hosts should not receive $payloadType messages")
                     }
                     NearbyDevicesMessage.INVALID -> {
                         Log.e(TAG, "Invalid payload was sent to host")
@@ -330,6 +332,13 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
                         Payload.fromBytes(String.format(NearbyDevicesMessage.QUEUE_UPDATE.messageFormat,
                                 currentPlaylistIndex.toString()).toByteArray()))
             }
+        }
+    }
+
+    private fun notifyClientsHostDisconnecting() {
+        for (endpoint: String in clientEndpoints) {
+            Nearby.getConnectionsClient(this).sendPayload(endpoint,
+                    Payload.fromBytes(AppConstants.HOST_DISCONNECT_MESSAGE.toByteArray()))
         }
     }
 
@@ -443,6 +452,7 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
                         songRequests.removeAt(0)
                     }
                     currentPlaylistIndex++
+                    Log.d(TAG, "UPDATING CURRENT PLAYING INDEX TO: $currentPlaylistIndex")
                     notifyQueueChanged()
                 }
             }
@@ -986,6 +996,8 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
         override fun success(result: Result?, response: Response?) {
             Log.d(TAG, "Successfully unfollowed/changed playlist")
 
+            Log.d(TAG, "Notifying connected clients we are shutting down")
+            notifyClientsHostDisconnecting()
 
             Log.d(TAG, "Shutting down player before service closes")
             spotifyPlayer.logout()
