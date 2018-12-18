@@ -90,6 +90,11 @@ abstract class SpotifyAccessService : Service() {
         }
     }
 
+    fun authFailed() {
+        Log.e(TAG, "Authorization failed. Shutting down service")
+        stopSelf()
+    }
+
     protected open fun initSpotifyElements(accessToken: String) {
         Log.d(TAG, "Initializing Spotify elements")
 

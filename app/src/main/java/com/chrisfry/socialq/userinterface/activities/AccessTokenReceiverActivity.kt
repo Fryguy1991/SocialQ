@@ -8,6 +8,8 @@ import android.content.ServiceConnection
 import android.os.*
 import android.util.Log
 import android.view.WindowManager
+import android.widget.Toast
+import com.chrisfry.socialq.R
 import com.chrisfry.socialq.business.AppConstants
 import com.chrisfry.socialq.enums.RequestType
 import com.chrisfry.socialq.model.AccessModel
@@ -25,9 +27,14 @@ class AccessTokenReceiverActivity : Activity() {
 
     // Access token scopes to request from Spotify
     private lateinit var accessScopes: Array<String>
+    // Flag for if we're requesting host permissions
     private var isHostFlag: Boolean = true
+    // Flag for if we're bound to the service
     private var isBound = false
+    // Reference to the service to return an authorization code to
     private lateinit var accessService: SpotifyAccessService
+    // Number of attempts we've attempted to retrieve an access token
+    private var retryCount = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         Log.d(TAG, "Access token retriever activity being created")
@@ -120,9 +127,16 @@ class AccessTokenReceiverActivity : Activity() {
                         Log.e(TAG, "Something went wrong. Not handling response type: ${response.type}")
                     }
                 }
-                Log.e(TAG, "Trying again to get access token")
-                requestAuthorization()
-                // TODO: POSSIBLE INFINITE LOOP! Should put a limit on this so it doesn't hold up app for long
+                if (retryCount < 3) {
+                    Log.e(TAG, "Trying again to get access token")
+                    retryCount++
+                    requestAuthorization()
+                } else {
+                    Log.e(TAG, "Reached maximum number of auth attempts")
+                    Toast.makeText(this, R.string.toast_authentication_error_client, Toast.LENGTH_LONG).show()
+                    accessService.authFailed()
+                    unbindService(serviceConnection)
+                }
             }
             RequestType.SEARCH_REQUEST,
             RequestType.LOCATION_PERMISSION_REQUEST -> {
