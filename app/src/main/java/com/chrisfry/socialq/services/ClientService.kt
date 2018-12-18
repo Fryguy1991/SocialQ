@@ -54,8 +54,6 @@ class ClientService : SpotifyAccessService() {
     private var hostEndpointId = ""
     // Flag indicating success of connection to host (used during activity destruction)
     private var successfulConnectionFlag = false
-    // Flag to indicate if the user has initiated the disconnect
-    private var userDisconnect = false
     // Flag to indicate if the host disconnected from the client
     private var hostDisconnect = false
     // Flag to indicate if the client is mid-initiation
@@ -200,7 +198,7 @@ class ClientService : SpotifyAccessService() {
                 }
                 ConnectionsStatusCodes.STATUS_ERROR -> {
                     if (reconnectCount >= 3) {
-                        Log.d(TAG, "Error connecting to host")
+                        Log.e(TAG, "Error connecting to host")
                         if (successfulConnectionFlag) {
                             hostDisconnect = true
                             listener?.showHostDisconnectDialog()
@@ -217,19 +215,11 @@ class ClientService : SpotifyAccessService() {
         }
 
         override fun onDisconnected(endPoint: String) {
-            Log.d(TAG, "Lost connection with host")
-
+            // If host has not indicated it is shutting down attempt to reconnect
             if (!hostDisconnect) {
-                Log.d(TAG, "Attempting to reconnect to the host")
+                Log.e(TAG, "Lost connection with host. Attempting to reconnect")
                 connectToHost()
             }
-
-            // If host has disconnected from the client.  Allow the client to follow the playlist
-            // If client disconnected from the host they will have already picked if they wanted to
-            // follow the playlist
-//            if (!userDisconnect) {
-//                listener?.showHostDisconnectDialog()
-//            }
         }
     }
 
@@ -355,7 +345,6 @@ class ClientService : SpotifyAccessService() {
 
     fun requestDisconnect() {
         Log.d(TAG, "Disconnecting client from host at user's request")
-        userDisconnect = true
         Nearby.getConnectionsClient(this).stopAllEndpoints()
         successfulConnectionFlag = false
 
