@@ -306,7 +306,7 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
             playlistOwnerUserId = hostUser.id
             startNearbyAdvertising(queueTitle)
         } else {
-            // Update player's access token
+            Log.d(TAG, "Updating player's access token")
             spotifyPlayer.login(accessToken)
         }
     }
