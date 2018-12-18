@@ -40,6 +40,7 @@ public class AppConstants {
     public static final String SONG_REQUEST_MESSAGE_FORMAT = SONG_REQUEST_PREFIX + "%1$s" + CLIENT_USER_ID_PREFIX + "%2$s";
     public static final String INITIATE_CLIENT_MESSAGE_FORMAT = HOST_USER_ID_PREFIX + "%1$s" + PLAYLIST_ID_PREFIX + "%2$s" + QUEUE_UPDATE_PREFIX + "%3$s";
     public static final String QUEUE_UPDATE_MESSAGE_FORMAT = QUEUE_UPDATE_PREFIX + "%1$s";
+    public static final String HOST_DISCONNECT_MESSAGE = "#HOST_DISCONNECT#";
 
     // START REGULAR EXPRESSIONS
     // Regex for notifying client queue is updated
