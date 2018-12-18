@@ -8,6 +8,7 @@ import android.os.Build
 import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
 import com.chrisfry.socialq.R
 import com.chrisfry.socialq.business.AppConstants
 import com.chrisfry.socialq.enums.NearbyDevicesMessage
@@ -53,6 +54,8 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
     private var isBound = false
     // Object listening for events from the service
     private var listener: HostServiceListener? = null
+    // Builder for foreground notification
+    private lateinit var notificationBuilder: NotificationCompat.Builder
 
     // NEARBY CONNECTION ELEMENTS
     // List of the client endpoints that are currently connected to the host service
@@ -129,15 +132,14 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
         val notificationIntent = Intent(this, HostActivity::class.java)
         val pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0)
 
-        val notification = NotificationCompat.Builder(this, App.CHANNEL_ID)
-                .setContentTitle(getString(R.string.service_name))
-                .setContentText(String.format(getString(R.string.host_notification_content_text), queueTitle))
+         notificationBuilder = NotificationCompat.Builder(this, App.CHANNEL_ID)
+                .setContentTitle(String.format(getString(R.string.host_notification_content_text), queueTitle))
                 .setSmallIcon(R.drawable.notification_icon)
                 .setContentIntent(pendingIntent)
                 .setColor(colorResInt)
-                .build()
+                .setOnlyAlertOnce(true)
 
-        startForeground(AppConstants.HOST_SERVICE_ID, notification)
+        startForeground(AppConstants.HOST_SERVICE_ID, notificationBuilder.build())
 
         // Request authorization code for Spotify
         requestHostAuthorization()
@@ -433,7 +435,19 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
                     userRequestedPause = false
                 }
             }
-            PlayerEvent.kSpPlaybackNotifyTrackChanged -> logMetaData()
+            PlayerEvent.kSpPlaybackNotifyTrackChanged -> {
+                logMetaData()
+
+                val metaData = spotifyPlayer.metadata
+                if (metaData != null) {
+                    var trackString = ""
+                    if (metaData.currentTrack?.name != null) {
+                        Log.d(TAG, "Updating notification")
+                        trackString = metaData.currentTrack.name
+                    }
+                    NotificationManagerCompat.from(baseContext).notify(AppConstants.HOST_SERVICE_ID, notificationBuilder.setContentText(trackString).build())
+                }
+            }
             PlayerEvent.kSpPlaybackNotifyMetadataChanged -> {
             }
             PlayerEvent.kSpPlaybackNotifyTrackDelivered,
