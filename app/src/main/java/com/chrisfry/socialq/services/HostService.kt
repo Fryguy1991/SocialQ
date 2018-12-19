@@ -1,12 +1,15 @@
 package com.chrisfry.socialq.services
 
 import android.app.PendingIntent
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.net.ConnectivityManager
 import android.os.Build
 import android.os.IBinder
 import android.util.Log
+import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.chrisfry.socialq.R
@@ -54,8 +57,14 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
     private var isBound = false
     // Object listening for events from the service
     private var listener: HostServiceListener? = null
+
+    // NOTIFICATION ELEMENTS
     // Builder for foreground notification
     private lateinit var notificationBuilder: NotificationCompat.Builder
+    // Reference to notification layouts
+    private lateinit var notificationLayout: RemoteViews
+    private lateinit var notificationLayoutExpanded: RemoteViews
+
 
     // NEARBY CONNECTION ELEMENTS
     // List of the client endpoints that are currently connected to the host service
@@ -106,6 +115,33 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
         }
     }
 
+    private val broadcastReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            val action = intent?.action
+            if (!action.isNullOrEmpty()) {
+                when (action) {
+                    AppConstants.ACTION_REQUEST_PLAY -> {
+                        Log.i(TAG, "Received broadcast for PLAY from notification")
+                        requestPlay()
+                    }
+                    AppConstants.ACTION_REQUEST_NEXT -> {
+                        Log.i(TAG, "Received broadcast for NEXT from notification")
+                        requestPlayNext()
+                    }
+                    AppConstants.ACTION_REQUEST_PAUSE -> {
+                        Log.i(TAG, "Received broadcast for PAUSE from notification")
+                        requestPause()
+                    }
+                    else -> {
+                        Log.w(TAG, "Not handling action: $action")
+                    }
+                }
+            } else {
+                Log.e(TAG, "Action was null or empty")
+            }
+        }
+    }
+
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         Log.d(TAG, "Host service is being started")
 
@@ -128,16 +164,45 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
             resources.getColor(R.color.Active_Button_Color)
         }
 
+        // Register to local broadcast manager (for handling notification actions)
+        baseContext.registerReceiver(broadcastReceiver, IntentFilter(AppConstants.ACTION_REQUEST_PLAY))
+        baseContext.registerReceiver(broadcastReceiver, IntentFilter(AppConstants.ACTION_REQUEST_NEXT))
+        baseContext.registerReceiver(broadcastReceiver, IntentFilter(AppConstants.ACTION_REQUEST_PAUSE))
+
         // Start service in the foreground
         val notificationIntent = Intent(this, HostActivity::class.java)
         val pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0)
 
-        notificationBuilder = NotificationCompat.Builder(this, App.CHANNEL_ID)
-                .setContentTitle(String.format(getString(R.string.host_notification_content_text), queueTitle))
-                .setSmallIcon(R.drawable.notification_icon)
-                .setContentIntent(pendingIntent)
-                .setColor(colorResInt)
-                .setOnlyAlertOnce(true)
+        // Get the layouts to use in the custom notification
+        notificationLayout = RemoteViews(packageName, R.layout.host_notification_small)
+        notificationLayoutExpanded = RemoteViews(packageName, R.layout.host_notification_large)
+
+        setupNotificationLListeners(notificationLayout, notificationLayoutExpanded)
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            notificationBuilder = NotificationCompat.Builder(this, App.CHANNEL_ID)
+                    .setContentTitle(String.format(getString(R.string.host_notification_content_text), queueTitle))
+                    .setSmallIcon(R.drawable.notification_icon)
+                    .setContentIntent(pendingIntent)
+                    .setColor(colorResInt)
+                    .setOnlyAlertOnce(true)
+                    .setStyle(androidx.media.app.NotificationCompat.DecoratedMediaCustomViewStyle())
+                    .setCustomContentView(notificationLayout)
+                    .setCustomBigContentView(notificationLayoutExpanded)
+                    .setShowWhen(false)
+        } else {
+            notificationBuilder = NotificationCompat.Builder(this, App.CHANNEL_ID)
+                    .setContentTitle(String.format(getString(R.string.host_notification_content_text), queueTitle))
+                    .setSmallIcon(R.drawable.notification_icon)
+                    .setContentIntent(pendingIntent)
+                    .setColor(colorResInt)
+                    .setOnlyAlertOnce(true)
+                    .setCustomContentView(notificationLayout)
+                    .setCustomBigContentView(notificationLayoutExpanded)
+                    .setShowWhen(false)
+                    .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+        }
+
 
         startForeground(AppConstants.HOST_SERVICE_ID, notificationBuilder.build())
 
@@ -148,6 +213,20 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
         App.hasServiceBeenStarted = true
 
         return START_NOT_STICKY
+    }
+
+    private fun setupNotificationLListeners(large: RemoteViews, small: RemoteViews) {
+        // TODO: Figure out how to use EXPLICIT intents so we're broadcasting ONLY to this app
+        val playIntent = Intent(AppConstants.ACTION_REQUEST_PLAY)
+        val nextIntent = Intent(AppConstants.ACTION_REQUEST_NEXT)
+        val playPendingIntent = PendingIntent.getBroadcast(baseContext, 0, playIntent, 0)
+        val nextPendingIntent = PendingIntent.getBroadcast(baseContext, 0, nextIntent, 0)
+
+        large.setOnClickPendingIntent(R.id.btn_notification_play_button, playPendingIntent)
+        large.setOnClickPendingIntent(R.id.btn_notification_next_button, nextPendingIntent)
+
+        small.setOnClickPendingIntent(R.id.btn_notification_play_button, playPendingIntent)
+        small.setOnClickPendingIntent(R.id.btn_notification_next_button, nextPendingIntent)
     }
 
     private fun startNearbyAdvertising(queueTitle: String) {
@@ -203,6 +282,9 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
 
         // Let app know that the service has ended
         App.hasServiceBeenStarted = false
+
+        // Unregister from local broadcast manager
+        baseContext.unregisterReceiver(broadcastReceiver)
 
         super.onDestroy()
     }

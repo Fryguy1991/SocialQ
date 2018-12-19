@@ -88,4 +88,9 @@ public class AppConstants {
 
     // Spotify Parameters
     public static final String PARAM_FROM_TOKEN = "from_token";
+
+    // Notification Pending Intent Request Codes
+    public static final String ACTION_REQUEST_PLAY = "socialq_notification_play";
+    public static final String ACTION_REQUEST_PAUSE = "socialq_notification_pause";
+    public static final String ACTION_REQUEST_NEXT = "socialq_notification_next";
 }
