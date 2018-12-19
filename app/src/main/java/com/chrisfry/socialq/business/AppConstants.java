@@ -85,4 +85,7 @@ public class AppConstants {
     public static final String JSON_ACCESS_TOKEN_KEY = "access_token";
     public static final String JSON_REFRESH_TOEKN_KEY = "refresh_token";
     public static final String JSON_EXPIRES_IN_KEY = "expires_in";
+
+    // Spotify Parameters
+    public static final String PARAM_FROM_TOKEN = "from_token";
 }

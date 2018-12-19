@@ -132,7 +132,7 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
         val notificationIntent = Intent(this, HostActivity::class.java)
         val pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0)
 
-         notificationBuilder = NotificationCompat.Builder(this, App.CHANNEL_ID)
+        notificationBuilder = NotificationCompat.Builder(this, App.CHANNEL_ID)
                 .setContentTitle(String.format(getString(R.string.host_notification_content_text), queueTitle))
                 .setSmallIcon(R.drawable.notification_icon)
                 .setContentIntent(pendingIntent)
@@ -268,7 +268,7 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
                     }
                     NearbyDevicesMessage.QUEUE_UPDATE,
                     NearbyDevicesMessage.INITIATE_CLIENT,
-                    NearbyDevicesMessage.HOST_DISCONNECTING-> {
+                    NearbyDevicesMessage.HOST_DISCONNECTING -> {
                         Log.e(TAG, "Hosts should not receive $payloadType messages")
                     }
                     NearbyDevicesMessage.INVALID -> {
@@ -345,7 +345,7 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
     }
 
     private fun initiateNewClient(client: Any) {
-        if (clientEndpoints.contains(client.toString()) && playlist.id != null&& playlistOwnerUserId.isNotEmpty()) {
+        if (clientEndpoints.contains(client.toString()) && playlist.id != null && playlistOwnerUserId.isNotEmpty()) {
             Log.d(TAG, "Sending host ID, playlist id, and current playing index to new client")
             Nearby.getConnectionsClient(this).sendPayload(client.toString(), Payload.fromBytes(
                     String.format(NearbyDevicesMessage.INITIATE_CLIENT.messageFormat,
@@ -380,11 +380,11 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
         Log.d(TAG, "PLAY REQUEST")
         if (spotifyPlayer.playbackState != null) {
             if (audioDeliveryDoneFlag) {
-                if (currentPlaylistIndex < playlist.tracks.total) {
+                if (currentPlaylistIndex < playlistTracks.size) {
                     // If audio has previously been completed (or never started)
                     // start the playlist at the current index
                     Log.d(TAG, "Audio previously finished.\nStarting playlist from index: $currentPlaylistIndex")
-                    spotifyPlayer.playUri(this, playlist.uri, currentPlaylistIndex, 1)
+                    spotifyPlayer.playUri(this, playlist.uri, currentPlaylistIndex, 0)
                     audioDeliveryDoneFlag = false
                     incorrectMetaDataFlag = false
                 } else {
@@ -449,6 +449,7 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
                 }
             }
             PlayerEvent.kSpPlaybackNotifyMetadataChanged -> {
+                logMetaData()
             }
             PlayerEvent.kSpPlaybackNotifyTrackDelivered,
             PlayerEvent.kSpPlaybackNotifyNext -> {
@@ -507,7 +508,7 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
         if (metadata.nextTrack != null) {
             nextTrack = metadata.nextTrack.name
         }
-        Log.d(TAG, "META DATA:\nFinished/Skipped: " + previousTrack
+        Log.i(TAG, "META DATA:\nFinished/Skipped: " + previousTrack
                 + "\nNow Playing : " + currentTrack
                 + "\nNext Track: " + nextTrack)
     }
@@ -593,7 +594,7 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
 
     private fun notifyQueueChanged() {
         if (listener != null) {
-            listener?.onQueueUpdated(createDisplayList(playlistTracks.subList(currentPlaylistIndex, playlist.tracks.total)))
+            listener?.onQueueUpdated(createDisplayList(playlistTracks.subList(currentPlaylistIndex, playlistTracks.size)))
         }
         notifyClientsQueueUpdated()
     }
@@ -658,12 +659,19 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
         var i = 0
         while (i < basePlaylist.tracks.total) {
             val iterationQueryParameters = HashMap<String, Any>()
-            iterationQueryParameters["offset"] = i
+            iterationQueryParameters[SpotifyService.OFFSET] = i
+            iterationQueryParameters[SpotifyService.MARKET] = AppConstants.PARAM_FROM_TOKEN
 
             // Retrieve max next 100 tracks
             val iterationTracks = spotifyService.getPlaylistTracks(playlistOwnerUserId, playlistId, iterationQueryParameters)
 
-            playlistTracks.addAll(iterationTracks.items)
+            // Ensure tracks are playable in our market and not local before adding
+            for (track in iterationTracks.items) {
+                if (track.track.is_playable && !track.is_local) {
+                    playlistTracks.add(track)
+                }
+            }
+
             i += 100
         }
 
@@ -685,13 +693,10 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
                     break
                 }
                 val track = shuffledTracks.removeAt(0)
-                // Can't add local tracks (local to playlist owner's device)
-                if (!track.is_local) {
-                    val requestData = SongRequestData(track.track.uri, baseUser)
-                    songRequests.add(requestData)
+                val requestData = SongRequestData(track.track.uri, baseUser)
+                songRequests.add(requestData)
 
-                    urisArray.add(track.track.uri)
-                }
+                urisArray.add(track.track.uri)
             }
             val queryParameters = HashMap<String, Any>()
             val bodyParameters = HashMap<String, Any>()
@@ -928,7 +933,7 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
     }
 
     fun requestInitiation() {
-        listener?.initiateView(queueTitle, createDisplayList(playlistTracks.subList(currentPlaylistIndex, playlist.tracks.total)), isPlaying)
+        listener?.initiateView(queueTitle, createDisplayList(playlistTracks.subList(currentPlaylistIndex, playlistTracks.size)), isPlaying)
     }
 
     override fun playlistRefreshComplete() {
@@ -960,7 +965,7 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
         }
 
         override fun failure(spotifyError: SpotifyError?) {
-            Log.e(TAG, spotifyError?.errorDetails?.message)
+            Log.e(TAG, spotifyError?.errorDetails?.message.toString())
             Log.e(TAG, "Failed to create playlist. Try again")
             createPlaylistForQueue()
             // TODO: Should stop trying after so many failures
@@ -1001,7 +1006,7 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
         }
 
         override fun failure(spotifyError: SpotifyError?) {
-            Log.e(TAG, spotifyError?.errorDetails?.message)
+            Log.e(TAG, spotifyError?.errorDetails?.message.toString())
             Log.e(TAG, "Failed to retrieve user playlists")
         }
     }
@@ -1031,7 +1036,7 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
         }
 
         override fun failure(spotifyError: SpotifyError?) {
-            Log.e(TAG, spotifyError?.errorDetails?.message)
+            Log.e(TAG, spotifyError?.errorDetails?.message.toString())
             Log.e(TAG, "Failed to unfollow/change playlist")
         }
     }

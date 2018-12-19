@@ -19,7 +19,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONObject
 import retrofit.client.Response
-import java.util.HashMap
+import kotlin.collections.HashMap
 
 abstract class SpotifyAccessService : Service() {
     companion object {
@@ -104,7 +104,9 @@ abstract class SpotifyAccessService : Service() {
 
     protected fun refreshPlaylist() {
         Log.d(TAG, "Refreshing playlist")
-        spotifyService.getPlaylist(playlistOwnerUserId, playlist.id, refreshPlaylistCallback)
+        val options = HashMap<String, Any>()
+        options[SpotifyService.MARKET] = AppConstants.PARAM_FROM_TOKEN
+        spotifyService.getPlaylist(playlistOwnerUserId, playlist.id, options, refreshPlaylistCallback)
     }
 
     private val refreshPlaylistCallback = object : SpotifyCallback<Playlist>() {
@@ -116,7 +118,7 @@ abstract class SpotifyAccessService : Service() {
                 playlistTracks.clear()
                 playlistTracks.addAll(playlist.tracks.items)
 
-                if (playlistTracks.size < playlist.tracks.total) {
+                if (playlist.tracks.offset + playlist.tracks.items.size < playlist.tracks.total) {
                     // Need to pull more tracks
                     val options = HashMap<String, Any>()
                     options[SpotifyService.OFFSET] = playlistTracks.size
@@ -144,7 +146,7 @@ abstract class SpotifyAccessService : Service() {
             if (trackPager != null) {
                 playlistTracks.addAll(trackPager.items)
 
-                if (playlistTracks.size < trackPager.total) {
+                if (trackPager.offset + trackPager.items.size < trackPager.total) {
                     Log.d(TAG, "Successfully retrieved some playlist tracks")
                     val options = HashMap<String, Any>()
                     options[SpotifyService.OFFSET] = playlistTracks.size
