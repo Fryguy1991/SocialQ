@@ -46,18 +46,18 @@
         android:layout_width="match_parent"
         android:layout_height="@dimen/notification_button_height"
         android:orientation="horizontal">
-        <Button
+        <ImageView
             android:id="@+id/btn_notification_play_button"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
-            android:background="@drawable/notification_play_button"/>
+            android:src="@drawable/notification_play_button"/>
 
-        <Button
+        <ImageView
             android:id="@+id/btn_notification_next_button"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
-            android:background="@drawable/notification_next_button"/>
+            android:src="@drawable/notification_next_button"/>
     </LinearLayout>
 </LinearLayout>
