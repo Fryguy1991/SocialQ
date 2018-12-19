@@ -1,0 +1,319 @@
+12-18 12:25:54.786 8246-8246/StartActivity: Launching host dialog
+12-18 12:26:02.748 8246-8246/HostActivity: Starting and binding to host service
+12-18 12:26:02.809 8246-8246/HostService: Host service is being started
+12-18 12:26:02.828 8246-8246/HostService: Host service is being bound
+12-18 12:26:02.863 8246-8246/HostActivity: Host service Connected
+12-18 12:26:02.866 8246-8246/AccessTokenReceiverActivity: Access token retriever activity being created
+12-18 12:26:02.884 8246-8246/AccessTokenReceiverActivity: Access token receiver activity is bound to service
+12-18 12:26:02.938 8246-8246/com.spotify.sdk.android.authentication.LoginActivity: https://accounts.spotify.com/authorize?client_id=0fab62a3895a4fa3aae14bc3e46bc59c&response_type=code&redirect_uri=fryredirect%3A%2F%2Fcallback&show_dialog=false&utm_source=spotify-sdk&utm_medium=android-sdk&utm_campaign=android-sdk&scope=user-read-private%20streaming%20playlist-modify-private%20playlist-modify-public%20playlist-read-private
+12-18 12:26:02.938 8246-8246/SpotifyAuthHandler: start
+12-18 12:26:03.310 8246-8246/com.spotify.sdk.android.authentication.LoginActivity: Response: code
+12-18 12:26:03.310 8246-8246/SpotifyAuthHandler: stop
+12-18 12:26:03.367 8246-8246/AccessTokenReceiverActivity: Authorization code granted
+12-18 12:26:03.368 8246-8246/AccessTokenReceiverActivity: Notifying service we received authorization
+12-18 12:26:03.368 8246-8246/SpotifyAccessService: Have authorization code. Request access/refresh tokens
+12-18 12:26:03.646 8246-8246/SpotifyAccessService: Received authorization:
+    Access Token: BQDkKSR8AgfsEk0DYk8aN_wRA8mw6ni5IlAuwOdi_e8cJeGB1By99S4YVKG1kbkSI-qVJcyIJ0-RUhtaBcn2MXuEO3NptShIzbUAFDIl4n3gy-F1N2wyNtYh03O3fYAFGb-ZcOJIwTkg7Dk7Clt80-U6-lnN6msy3BQ_6AooTnjkVGSR1Vg3L9nhR9Kae1fYQKEE_ikyQHQwZdx8b4W_9tkKrGDTmTPFPV2hWxUSlQ
+    Refresh Token: AQDz0wO5Blg9n7ziotPCNwqOHqhroFqffMYGg_nPEkytP-GqihZ3CRmCE0TMClplutkaC_OBDQu4K1oz6UELI-gb1CsHU3id9Q36HZRoViLoa03ql259xh39quxfschtaCtKdA
+    Expires In: 3600 seconds
+12-18 12:26:03.647 8246-8246/SpotifyAccessService: Initializing Spotify elements
+12-18 12:26:03.647 8246-8246/HostService: Receiving Spotify access for the first time. Retrieve current user, create playlist and check for user playlist for base
+12-18 12:26:03.655 8246-8246/Retrofit: ---> HTTP GET https://api.spotify.com/v1/me
+12-18 12:26:03.702 8246-8246/Retrofit: <--- HTTP 200 https://api.spotify.com/v1/me (46ms)
+12-18 12:26:03.737 8246-8246/StartActivity: Closing StartActivity
+12-18 12:26:03.849 8246-8246/HostService: Successfully advertising the host
+12-18 12:26:03.849 8246-8246/HostService: Pulling playlist data for fry_dev_1
+12-18 12:26:03.852 8246-8246/AccessTokenReceiverActivity: Access token receiver activity being destroyed
+12-18 12:26:03.856 8246-9582/Retrofit: ---> HTTP GET https://api.spotify.com/v1/users/fry_dev_1/playlists?limit=50
+12-18 12:26:03.984 8246-9582/Retrofit: <--- HTTP 200 https://api.spotify.com/v1/users/fry_dev_1/playlists?limit=50 (127ms)
+12-18 12:26:04.118 8246-9582/Retrofit: ---> HTTP GET https://api.spotify.com/v1/users/fry_dev_1/playlists?offset=50&limit=50
+12-18 12:26:04.340 8246-9582/Retrofit: <--- HTTP 200 https://api.spotify.com/v1/users/fry_dev_1/playlists?offset=50&limit=50 (221ms)
+12-18 12:26:04.417 8246-9582/Retrofit: ---> HTTP GET https://api.spotify.com/v1/users/fry_dev_1/playlists?offset=100&limit=50
+12-18 12:26:04.671 8246-9582/Retrofit: <--- HTTP 200 https://api.spotify.com/v1/users/fry_dev_1/playlists?offset=100&limit=50 (253ms)
+12-18 12:26:13.285 8246-8246/HostService: Creating playlist for the SocialQ
+12-18 12:26:13.292 8246-9582/Retrofit: ---> HTTP POST https://api.spotify.com/v1/users/fry_dev_1/playlists
+12-18 12:26:13.402 8246-9582/Retrofit: <--- HTTP 201 https://api.spotify.com/v1/users/fry_dev_1/playlists (109ms)
+12-18 12:26:13.452 8246-8246/HostService: Successfully created playlist for queue
+12-18 12:26:13.452 8246-8246/HostService: Loading base playlist with ID: 06zlzHsR0FoMuBXEs0F8do
+12-18 12:26:13.455 8246-8246/Retrofit: ---> HTTP GET https://api.spotify.com/v1/users/fry_dev_1/playlists/06zlzHsR0FoMuBXEs0F8do
+12-18 12:26:13.525 8246-8246/Retrofit: <--- HTTP 200 https://api.spotify.com/v1/users/fry_dev_1/playlists/06zlzHsR0FoMuBXEs0F8do (70ms)
+12-18 12:26:13.784 8246-8246/Retrofit: ---> HTTP GET https://api.spotify.com/v1/users/fry_dev_1/playlists/06zlzHsR0FoMuBXEs0F8do/tracks?offset=0
+12-18 12:26:13.887 8246-8246/Retrofit: <--- HTTP 200 https://api.spotify.com/v1/users/fry_dev_1/playlists/06zlzHsR0FoMuBXEs0F8do/tracks?offset=0 (103ms)
+12-18 12:26:14.180 8246-8246/Retrofit: ---> HTTP POST https://api.spotify.com/v1/users/fry_dev_1/playlists/5x8zTIC5f3KswrjTQkTqfb/tracks
+12-18 12:26:14.268 8246-8246/Retrofit: <--- HTTP 201 https://api.spotify.com/v1/users/fry_dev_1/playlists/5x8zTIC5f3KswrjTQkTqfb/tracks (87ms)
+12-18 12:26:14.270 8246-8246/SpotifyAccessService: Refreshing playlist
+12-18 12:26:14.272 8246-9582/Retrofit: ---> HTTP GET https://api.spotify.com/v1/users/fry_dev_1/playlists/5x8zTIC5f3KswrjTQkTqfb
+12-18 12:26:14.287 8246-8246/HostService: Player initialized
+12-18 12:26:14.300 8246-8246/HostService: Success!
+12-18 12:26:14.354 8246-9582/Retrofit: <--- HTTP 200 https://api.spotify.com/v1/users/fry_dev_1/playlists/5x8zTIC5f3KswrjTQkTqfb (81ms)
+12-18 12:26:14.631 8246-9682/E/SpotifySDKNative: Unknown connection error of type '5' received
+12-18 12:26:14.632 8246-8246/HostService: Logged In! Player can be used
+12-18 12:26:14.643 8246-8246/SpotifyAccessService: Successfully retrieved playlist
+12-18 12:26:14.643 8246-8246/SpotifyAccessService: Finished retrieving playlist tracks
+12-18 12:26:18.904 8246-8246/HostService: PLAY REQUEST
+12-18 12:26:18.904 8246-8246/HostService: Audio previously finished.
+    Starting playlist from index: 0
+12-18 12:26:18.918 8246-8246/HostService: New playback event: kSpPlaybackNotifyBecameActive
+12-18 12:26:18.918 8246-8246/HostService: Player is active
+12-18 12:26:18.918 8246-8246/HostService: Great Success!
+12-18 12:26:18.967 8246-8246/HostService: New playback event: kSpPlaybackNotifyMetadataChanged
+12-18 12:26:19.096 8246-8246/HostService: New playback event: kSpPlaybackNotifyMetadataChanged
+12-18 12:26:19.096 8246-8246/HostService: New playback event: kSpPlaybackNotifyMetadataChanged
+12-18 12:26:19.096 8246-8246/HostService: New playback event: kSpPlaybackNotifyContextChanged
+12-18 12:26:19.405 8246-8246/HostService: New playback event: kSpPlaybackNotifyTrackChanged
+12-18 12:26:19.405 8246-8246/HostService: META DATA:
+    Finished/Skipped: null
+    Now Playing : Spiderwebs
+    Next Track: Don't Fear The Reaper (Blue Öyster Cult cover)
+12-18 12:26:19.405 8246-8246/HostService: Updating notification
+12-18 12:26:19.486 8246-8246/HostService: New playback event: kSpPlaybackEventAudioFlush
+12-18 12:26:19.486 8246-8246/HostService: New playback event: kSpPlaybackNotifyPlay
+12-18 12:26:19.486 8246-8246/HostService: Player has started playing
+12-18 12:29:22.415 8246-8246/HostService: New playback event: kSpPlaybackNotifyTrackDelivered
+12-18 12:29:22.415 8246-8246/HostService: Player has moved to next track (next/track complete)
+12-18 12:29:22.415 8246-8246/HostService: UPDATING CURRENT PLAYING INDEX TO: 1
+12-18 12:29:22.601 8246-8246/HostService: New playback event: kSpPlaybackNotifyTrackChanged
+12-18 12:29:22.601 8246-8246/HostService: META DATA:
+    Finished/Skipped: Spiderwebs
+    Now Playing : Don't Fear The Reaper (Blue Öyster Cult cover)
+    Next Track: All Star
+12-18 12:29:22.601 8246-8246/HostService: Updating notification
+12-18 12:29:22.606 8246-8246/HostService: New playback event: kSpPlaybackNotifyMetadataChanged
+12-18 12:33:42.391 8246-8246/HostService: New playback event: kSpPlaybackNotifyTrackDelivered
+12-18 12:33:42.391 8246-8246/HostService: Player has moved to next track (next/track complete)
+12-18 12:33:42.391 8246-8246/HostService: UPDATING CURRENT PLAYING INDEX TO: 2
+12-18 12:33:42.570 8246-8246/HostService: New playback event: kSpPlaybackNotifyTrackChanged
+12-18 12:33:42.570 8246-8246/HostService: META DATA:
+    Finished/Skipped: Don't Fear The Reaper (Blue Öyster Cult cover)
+    Now Playing : All Star
+    Next Track: 99 Red Balloons
+12-18 12:33:42.570 8246-8246/HostService: Updating notification
+12-18 12:33:42.587 8246-8246/HostService: New playback event: kSpPlaybackNotifyMetadataChanged
+12-18 12:37:02.249 8246-8246/HostService: New playback event: kSpPlaybackNotifyTrackDelivered
+12-18 12:37:02.249 8246-8246/HostService: Player has moved to next track (next/track complete)
+12-18 12:37:02.249 8246-8246/HostService: UPDATING CURRENT PLAYING INDEX TO: 3
+12-18 12:37:02.425 8246-8246/HostService: New playback event: kSpPlaybackNotifyMetadataChanged
+12-18 12:37:02.425 8246-8246/HostService: New playback event: kSpPlaybackNotifyTrackChanged
+12-18 12:37:02.425 8246-8246/HostService: META DATA:
+    Finished/Skipped: All Star
+    Now Playing : 99 Red Balloons
+    Next Track: (I'm Gonna Be) 500 Miles
+12-18 12:37:02.425 8246-8246/HostService: Updating notification
+12-18 12:40:56.553 8246-8246/HostService: New playback event: kSpPlaybackNotifyTrackDelivered
+12-18 12:40:56.553 8246-8246/HostService: Player has moved to next track (next/track complete)
+12-18 12:40:56.554 8246-8246/HostService: UPDATING CURRENT PLAYING INDEX TO: 4
+12-18 12:40:56.729 8246-8246/HostService: New playback event: kSpPlaybackNotifyTrackChanged
+12-18 12:40:56.729 8246-8246/HostService: META DATA:
+    Finished/Skipped: 99 Red Balloons
+    Now Playing : (I'm Gonna Be) 500 Miles
+    Next Track: Up up and Away
+12-18 12:40:56.730 8246-8246/HostService: Updating notification
+12-18 12:40:56.737 8246-8246/HostService: New playback event: kSpPlaybackNotifyMetadataChanged
+12-18 12:45:08.772 8246-8246/HostService: New playback event: kSpPlaybackNotifyTrackDelivered
+12-18 12:45:08.772 8246-8246/HostService: Player has moved to next track (next/track complete)
+12-18 12:45:08.773 8246-8246/HostService: UPDATING CURRENT PLAYING INDEX TO: 5
+12-18 12:45:08.844 8246-8246/HostService: New playback event: kSpPlaybackNotifyMetadataChanged
+12-18 12:45:09.053 8246-8246/HostService: New playback event: kSpPlaybackNotifyTrackChanged
+12-18 12:45:09.053 8246-8246/HostService: META DATA:
+    Finished/Skipped: (I'm Gonna Be) 500 Miles
+    Now Playing : Up up and Away
+    Next Track: Absolutely (Story of a Girl)
+12-18 12:45:09.053 8246-8246/HostService: Updating notification
+12-18 12:48:32.963 8246-8246/HostService: New playback event: kSpPlaybackNotifyTrackDelivered
+12-18 12:48:32.963 8246-8246/HostService: Player has moved to next track (next/track complete)
+12-18 12:48:32.963 8246-8246/HostService: UPDATING CURRENT PLAYING INDEX TO: 6
+12-18 12:48:32.963 8246-8246/HostService: New playback event: kSpPlaybackNotifyTrackChanged
+12-18 12:48:32.963 8246-8246/HostService: META DATA:
+    Finished/Skipped: Up up and Away
+    Now Playing : Absolutely (Story of a Girl)
+    Next Track: Take Me Home Tonight (Eddie Money cover)
+12-18 12:48:32.963 8246-8246/HostService: Updating notification
+12-18 12:48:33.015 8246-8246/HostService: New playback event: kSpPlaybackNotifyMetadataChanged
+12-18 12:51:28.771 8246-8246/HostService: New playback event: kSpPlaybackNotifyTrackDelivered
+12-18 12:51:28.771 8246-8246/HostService: Player has moved to next track (next/track complete)
+12-18 12:51:28.772 8246-8246/HostService: UPDATING CURRENT PLAYING INDEX TO: 7
+12-18 12:51:28.772 8246-8246/HostService: New playback event: kSpPlaybackNotifyTrackChanged
+12-18 12:51:28.772 8246-8246/HostService: META DATA:
+    Finished/Skipped: Absolutely (Story of a Girl)
+    Now Playing : Take Me Home Tonight (Eddie Money cover)
+    Next Track: Video Killed The Radio Star
+12-18 12:51:28.772 8246-8246/HostService: Updating notification
+12-18 12:51:28.823 8246-8246/HostService: New playback event: kSpPlaybackNotifyMetadataChanged
+12-18 12:55:03.864 8246-8246/HostService: New playback event: kSpPlaybackNotifyTrackDelivered
+12-18 12:55:03.864 8246-8246/HostService: Player has moved to next track (next/track complete)
+12-18 12:55:03.864 8246-8246/HostService: UPDATING CURRENT PLAYING INDEX TO: 8
+12-18 12:55:03.937 8246-8246/HostService: New playback event: kSpPlaybackNotifyMetadataChanged
+12-18 12:55:04.141 8246-8246/HostService: New playback event: kSpPlaybackNotifyTrackChanged
+12-18 12:55:04.141 8246-8246/HostService: META DATA:
+    Finished/Skipped: Take Me Home Tonight (Eddie Money cover)
+    Now Playing : Video Killed The Radio Star
+    Next Track: Take On Me
+12-18 12:55:04.141 8246-8246/HostService: Updating notification
+12-18 12:57:34.469 8246-8246/HostService: New playback event: kSpPlaybackNotifyTrackDelivered
+12-18 12:57:34.469 8246-8246/HostService: Player has moved to next track (next/track complete)
+12-18 12:57:34.470 8246-8246/HostService: UPDATING CURRENT PLAYING INDEX TO: 9
+12-18 12:57:34.472 8246-8246/HostService: New playback event: kSpPlaybackNotifyTrackChanged
+12-18 12:57:34.472 8246-8246/HostService: META DATA:
+    Finished/Skipped: Video Killed The Radio Star
+    Now Playing : Take On Me
+    Next Track: Overrated - Everything Is
+12-18 12:57:34.472 8246-8246/HostService: Updating notification
+12-18 12:57:34.522 8246-8246/HostService: New playback event: kSpPlaybackNotifyMetadataChanged
+12-18 13:00:53.747 8246-8246/HostService: New playback event: kSpPlaybackNotifyTrackDelivered
+12-18 13:00:53.747 8246-8246/HostService: Player has moved to next track (next/track complete)
+12-18 13:00:53.747 8246-8246/HostService: UPDATING CURRENT PLAYING INDEX TO: 10
+12-18 13:00:53.815 8246-8246/HostService: New playback event: kSpPlaybackNotifyMetadataChanged
+12-18 13:00:53.970 8246-8246/HostService: New playback event: kSpPlaybackNotifyTrackChanged
+12-18 13:00:53.970 8246-8246/HostService: META DATA:
+    Finished/Skipped: Take On Me
+    Now Playing : Overrated - Everything Is
+    Next Track: And I Ran
+12-18 13:00:53.970 8246-8246/HostService: Updating notification
+12-18 13:04:04.062 8246-8246/HostService: New playback event: kSpPlaybackNotifyTrackDelivered
+12-18 13:04:04.062 8246-8246/HostService: Player has moved to next track (next/track complete)
+12-18 13:04:04.063 8246-8246/HostService: UPDATING CURRENT PLAYING INDEX TO: 11
+12-18 13:04:04.063 8246-8246/HostService: New playback event: kSpPlaybackNotifyTrackChanged
+12-18 13:04:04.063 8246-8246/HostService: META DATA:
+    Finished/Skipped: Overrated - Everything Is
+    Now Playing : And I Ran
+    Next Track: King Of Wishful Thinking
+12-18 13:04:04.063 8246-8246/HostService: Updating notification
+12-18 13:04:04.116 8246-8246/HostService: New playback event: kSpPlaybackNotifyMetadataChanged
+12-18 13:08:03.868 8246-9682/E/SpotifySDKNative: Unknown connection error of type '3' received
+12-18 13:08:03.876 8246-8246/E/com.chrisfry.socialq.services.HostService: ERROR: Temporary Error
+12-18 13:08:04.379 8246-8246/E/com.chrisfry.socialq.services.HostService: ERROR: Temporary Error
+12-18 13:08:05.638 8246-8246/E/com.chrisfry.socialq.services.HostService: ERROR: Temporary Error
+12-18 13:08:08.194 8246-9682/E/SpotifySDKNative: Unknown connection error of type '4' received
+12-18 13:08:08.280 8246-8246/HostService: New playback event: kSpPlaybackNotifyMetadataChanged
+12-18 13:08:29.183 8246-8246/HostService: New playback event: kSpPlaybackNotifyTrackDelivered
+12-18 13:08:29.183 8246-8246/HostService: Player has moved to next track (next/track complete)
+12-18 13:08:29.183 8246-8246/HostService: UPDATING CURRENT PLAYING INDEX TO: 12
+12-18 13:08:29.237 8246-8246/HostService: New playback event: kSpPlaybackNotifyTrackChanged
+12-18 13:08:29.237 8246-8246/HostService: META DATA:
+    Finished/Skipped: And I Ran
+    Now Playing : King Of Wishful Thinking
+    Next Track: She's so High
+12-18 13:08:29.237 8246-8246/HostService: Updating notification
+12-18 13:08:29.269 8246-8246/HostService: New playback event: kSpPlaybackNotifyMetadataChanged
+12-18 13:12:09.809 8246-8246/HostService: New playback event: kSpPlaybackNotifyTrackDelivered
+12-18 13:12:09.809 8246-8246/HostService: Player has moved to next track (next/track complete)
+12-18 13:12:09.809 8246-8246/HostService: UPDATING CURRENT PLAYING INDEX TO: 13
+12-18 13:12:09.810 8246-8246/HostService: New playback event: kSpPlaybackNotifyTrackChanged
+12-18 13:12:09.810 8246-8246/HostService: META DATA:
+    Finished/Skipped: King Of Wishful Thinking
+    Now Playing : She's so High
+    Next Track: Roll to Me
+12-18 13:12:09.810 8246-8246/HostService: Updating notification
+12-18 13:12:09.867 8246-8246/HostService: New playback event: kSpPlaybackNotifyMetadataChanged
+12-18 13:15:29.794 8246-8246/HostService: New playback event: kSpPlaybackNotifyTrackDelivered
+12-18 13:15:29.794 8246-8246/HostService: Player has moved to next track (next/track complete)
+12-18 13:15:29.794 8246-8246/HostService: UPDATING CURRENT PLAYING INDEX TO: 14
+12-18 13:15:29.860 8246-8246/HostService: New playback event: kSpPlaybackNotifyMetadataChanged
+12-18 13:15:29.998 8246-8246/HostService: New playback event: kSpPlaybackNotifyTrackChanged
+12-18 13:15:29.998 8246-8246/HostService: META DATA:
+    Finished/Skipped: She's so High
+    Now Playing : Roll to Me
+    Next Track: Fortunate Son
+12-18 13:15:29.998 8246-8246/HostService: Updating notification
+12-18 13:17:55.932 8246-8246/HostService: New playback event: kSpPlaybackNotifyTrackDelivered
+12-18 13:17:55.932 8246-8246/HostService: Player has moved to next track (next/track complete)
+12-18 13:17:55.932 8246-8246/HostService: UPDATING CURRENT PLAYING INDEX TO: 15
+12-18 13:17:55.934 8246-8246/HostService: New playback event: kSpPlaybackNotifyTrackChanged
+12-18 13:17:55.934 8246-8246/HostService: META DATA:
+    Finished/Skipped: Roll to Me
+    Now Playing : Fortunate Son
+    Next Track: Kiss Me
+12-18 13:17:55.934 8246-8246/HostService: Updating notification
+12-18 13:17:55.999 8246-8246/HostService: New playback event: kSpPlaybackNotifyMetadataChanged
+12-18 13:20:34.804 8246-8246/HostService: New playback event: kSpPlaybackNotifyTrackDelivered
+12-18 13:20:34.804 8246-8246/HostService: Player has moved to next track (next/track complete)
+12-18 13:20:34.805 8246-8246/HostService: UPDATING CURRENT PLAYING INDEX TO: 16
+12-18 13:20:34.805 8246-8246/HostService: New playback event: kSpPlaybackNotifyTrackChanged
+12-18 13:20:34.805 8246-8246/HostService: META DATA:
+    Finished/Skipped: Fortunate Son
+    Now Playing : Kiss Me
+    Next Track: Over My Head (The Fray cover)
+12-18 13:20:34.805 8246-8246/HostService: Updating notification
+12-18 13:20:34.857 8246-8246/HostService: New playback event: kSpPlaybackNotifyMetadataChanged
+12-18 13:23:29.984 8246-8246/HostService: New playback event: kSpPlaybackNotifyTrackDelivered
+12-18 13:23:29.985 8246-8246/HostService: Player has moved to next track (next/track complete)
+12-18 13:23:29.985 8246-8246/HostService: UPDATING CURRENT PLAYING INDEX TO: 17
+12-18 13:23:30.040 8246-8246/HostService: New playback event: kSpPlaybackNotifyTrackChanged
+12-18 13:23:30.040 8246-8246/HostService: META DATA:
+    Finished/Skipped: Kiss Me
+    Now Playing : Over My Head (The Fray cover)
+    Next Track: Kids In America
+12-18 13:23:30.040 8246-8246/HostService: Updating notification
+12-18 13:23:30.089 8246-8246/HostService: New playback event: kSpPlaybackNotifyMetadataChanged
+12-18 13:25:03.646 8246-9574/HostService: Detected that we need a new access token
+12-18 13:25:03.646 8246-9574/SpotifyAccessService: Request new access token
+12-18 13:25:03.960 8246-9574/SpotifyAccessService: Received new access token:
+    Access Token: BQD46iONdrLua97qDw9gnKtJRS1l5-GkvwLOQ1bYVQlh64GtjlfZ7iW98Iak6uDgaTicq2dp9Z5XrqfOmDlvkwtn1tnnMLRniMt3ExS4zLqxGbf_YXVN3zbwGPSsVvlR-JsurlJEmpeAdbhWjahbLTD_nofztnd35z-NQPEs_FxJ0qAgO6x3jcp37NJrkYLaiL5BmyO7AQDHgAIthc90r_pHeCvarufYp7N4HCnWDEq-XLY
+    Expires In: 3600 seconds
+12-18 13:25:03.960 8246-9574/SpotifyAccessService: Initializing Spotify elements
+12-18 13:25:03.960 8246-9574/HostService: Updating player's access token
+12-18 13:25:38.707 8246-8256/I/art: Background partial concurrent mark sweep GC freed 141165(5MB) AllocSpace objects, 11(520KB) LOS objects, 31% free, 35MB/51MB, paused 595us total 108.731ms
+12-18 13:27:01.138 8246-8246/HostService: New playback event: kSpPlaybackNotifyTrackDelivered
+12-18 13:27:01.139 8246-8246/HostService: Player has moved to next track (next/track complete)
+12-18 13:27:01.139 8246-8246/HostService: UPDATING CURRENT PLAYING INDEX TO: 18
+12-18 13:27:01.140 8246-8246/HostService: New playback event: kSpPlaybackNotifyTrackChanged
+12-18 13:27:01.140 8246-8246/HostService: META DATA:
+    Finished/Skipped: Over My Head (The Fray cover)
+    Now Playing : Kids In America
+    Next Track: More Than A Feeling (Boston Cover)
+12-18 13:27:01.140 8246-8246/HostService: Updating notification
+12-18 13:27:01.319 8246-8246/HostService: New playback event: kSpPlaybackNotifyMetadataChanged
+12-18 13:30:06.513 8246-8246/HostService: New playback event: kSpPlaybackNotifyTrackDelivered
+12-18 13:30:06.513 8246-8246/HostService: Player has moved to next track (next/track complete)
+12-18 13:30:06.513 8246-8246/HostService: UPDATING CURRENT PLAYING INDEX TO: 19
+12-18 13:30:06.571 8246-8246/HostService: New playback event: kSpPlaybackNotifyTrackChanged
+12-18 13:30:06.571 8246-8246/HostService: META DATA:
+    Finished/Skipped: Kids In America
+    Now Playing : More Than A Feeling (Boston Cover)
+    Next Track: Brown Eyed Girl
+12-18 13:30:06.571 8246-8246/HostService: Updating notification
+12-18 13:30:06.605 8246-8246/HostService: New playback event: kSpPlaybackNotifyMetadataChanged
+12-18 13:32:50.487 8246-8246/HostService: New playback event: kSpPlaybackNotifyTrackDelivered
+12-18 13:32:50.487 8246-8246/HostService: Player has moved to next track (next/track complete)
+12-18 13:32:50.487 8246-8246/HostService: UPDATING CURRENT PLAYING INDEX TO: 20
+12-18 13:32:50.489 8246-8246/HostService: New playback event: kSpPlaybackNotifyTrackChanged
+12-18 13:32:50.489 8246-8246/HostService: META DATA:
+    Finished/Skipped: More Than A Feeling (Boston Cover)
+    Now Playing : Brown Eyed Girl
+    Next Track: Iris
+12-18 13:32:50.489 8246-8246/HostService: Updating notification
+12-18 13:32:51.005 8246-8246/HostService: New playback event: kSpPlaybackNotifyMetadataChanged
+12-18 13:35:55.338 8246-8246/HostService: New playback event: kSpPlaybackNotifyTrackDelivered
+12-18 13:35:55.338 8246-8246/HostService: Player has moved to next track (next/track complete)
+12-18 13:35:55.338 8246-8246/HostService: UPDATING CURRENT PLAYING INDEX TO: 21
+12-18 13:35:55.410 8246-8246/HostService: New playback event: kSpPlaybackNotifyMetadataChanged
+12-18 13:35:55.706 8246-8246/HostService: New playback event: kSpPlaybackNotifyTrackChanged
+12-18 13:35:55.706 8246-8246/HostService: META DATA:
+    Finished/Skipped: Brown Eyed Girl
+    Now Playing : Iris
+    Next Track: Don't You (Forget About Me)
+12-18 13:35:55.706 8246-8246/HostService: Updating notification
+12-18 13:39:11.122 8246-8246/HostService: New playback event: kSpPlaybackNotifyTrackDelivered
+12-18 13:39:11.124 8246-8246/HostService: Player has moved to next track (next/track complete)
+12-18 13:39:11.124 8246-8246/HostService: UPDATING CURRENT PLAYING INDEX TO: 22
+12-18 13:39:11.125 8246-8246/HostService: New playback event: kSpPlaybackNotifyTrackChanged
+12-18 13:39:11.125 8246-8246/HostService: META DATA:
+    Finished/Skipped: Iris
+    Now Playing : Don't You (Forget About Me)
+    Next Track: It's A Long Way To The Top (If You Wanna Rock 'n' Roll)
+12-18 13:39:11.125 8246-8246/HostService: Updating notification
+12-18 13:39:11.200 8246-8246/HostService: New playback event: kSpPlaybackNotifyMetadataChanged
+12-18 13:40:25.332 8246-8246/HostService: PAUSE REQUEST
+12-18 13:40:25.352 8246-8246/HostService: New playback event: kSpPlaybackNotifyPause
+12-18 13:40:25.353 8246-8246/HostService: Player has paused
+12-18 13:40:25.359 8246-8246/HostService: Great Success!
+12-18 13:40:33.362 8246-8256/I/art: Background sticky concurrent mark sweep GC freed 146517(11MB) AllocSpace objects, 0(0B) LOS objects, 23% free, 39MB/51MB, paused 1.879ms total 101.632ms
+12-18 13:43:30.106 8246-8246/HostService: PLAY REQUEST
+12-18 13:43:30.106 8246-8246/HostService: Resuming player
+12-18 13:43:30.131 8246-8246/HostService: Great Success!
+12-18 13:43:30.131 8246-8246/HostService: New playback event: kSpPlaybackNotifyPlay
+12-18 13:43:30.131 8246-8246/HostService: Player has started playing
+12-18 13:43:47.392 8246-8246/HostService: PAUSE REQUEST
+12-18 13:43:47.411 8246-8246/HostService: New playback event: kSpPlaybackNotifyPause
+12-18 13:43:47.411 8246-8246/HostService: Player has paused
+12-18 13:43:47.412 8246-8246/HostService: Great Success!
