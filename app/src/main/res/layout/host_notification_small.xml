@@ -22,7 +22,9 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:layout_marginTop="@dimen/default_margin"
-            android:layout_marginEnd="@dimen/default_margin"/>
+            android:layout_marginEnd="@dimen/default_margin"
+            android:maxLines="1"
+            android:ellipsize="end"/>
 
         <TextView
             android:id="@+id/tv_notification_artist_name"
@@ -30,7 +32,9 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:layout_marginBottom="@dimen/default_margin"
-            android:layout_marginEnd="@dimen/default_margin"/>
+            android:layout_marginEnd="@dimen/default_margin"
+            android:maxLines="1"
+            android:ellipsize="end"/>
 
     </LinearLayout>
 

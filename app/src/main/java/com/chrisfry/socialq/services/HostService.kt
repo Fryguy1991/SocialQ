@@ -5,13 +5,17 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.graphics.Bitmap
 import android.net.ConnectivityManager
 import android.os.Build
 import android.os.IBinder
 import android.util.Log
 import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
-import androidx.core.app.NotificationManagerCompat
+import com.bumptech.glide.Glide
+import com.bumptech.glide.request.RequestOptions
+import com.bumptech.glide.request.target.SimpleTarget
+import com.bumptech.glide.request.transition.Transition
 import com.chrisfry.socialq.R
 import com.chrisfry.socialq.business.AppConstants
 import com.chrisfry.socialq.enums.NearbyDevicesMessage
@@ -22,6 +26,7 @@ import com.chrisfry.socialq.model.SongRequestData
 import com.chrisfry.socialq.userinterface.App
 import com.chrisfry.socialq.userinterface.activities.HostActivity
 import com.chrisfry.socialq.utils.ApplicationUtils
+import com.chrisfry.socialq.utils.DisplayUtils
 import com.google.android.gms.nearby.Nearby
 import com.google.android.gms.nearby.connection.*
 import com.google.android.gms.tasks.OnFailureListener
@@ -391,6 +396,7 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
             hostUser = spotifyService.me
             playlistOwnerUserId = hostUser.id
             startNearbyAdvertising(queueTitle)
+            initPlayer(AccessModel.getAccessToken())
         } else {
             Log.d(TAG, "Updating player's access token")
             spotifyPlayer.login(accessToken)
@@ -519,16 +525,6 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
             }
             PlayerEvent.kSpPlaybackNotifyTrackChanged -> {
                 logMetaData()
-
-                val metaData = spotifyPlayer.metadata
-                if (metaData != null) {
-                    var trackString = ""
-                    if (metaData.currentTrack?.name != null) {
-                        Log.d(TAG, "Updating notification")
-                        trackString = metaData.currentTrack.name
-                    }
-                    NotificationManagerCompat.from(baseContext).notify(AppConstants.HOST_SERVICE_ID, notificationBuilder.setContentText(trackString).build())
-                }
             }
             PlayerEvent.kSpPlaybackNotifyMetadataChanged -> {
                 logMetaData()
@@ -551,6 +547,9 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
                     currentPlaylistIndex++
                     Log.d(TAG, "UPDATING CURRENT PLAYING INDEX TO: $currentPlaylistIndex")
                     notifyQueueChanged()
+
+                    Log.d(TAG, "Updating notification")
+                    showTrackInNotification(playlistTracks[currentPlaylistIndex].track)
                 }
             }
             PlayerEvent.kSpPlaybackNotifyAudioDeliveryDone -> {
@@ -1039,7 +1038,6 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
                     loadBasePlaylist(basePlaylistId)
                     basePlaylistId = ""
                 }
-                initPlayer(AccessModel.getAccessToken())
                 return
             }
             Log.e(TAG, "Created playlist returned null. Try again")
@@ -1051,6 +1049,39 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
             Log.e(TAG, "Failed to create playlist. Try again")
             createPlaylistForQueue()
             // TODO: Should stop trying after so many failures
+        }
+    }
+
+    private fun showTrackInNotification(trackToShow: Track) {
+        notificationLayout.setTextViewText(R.id.tv_notification_track_name, trackToShow.name)
+        notificationLayoutExpanded.setTextViewText(R.id.tv_notification_track_name, trackToShow.name)
+
+        notificationLayout.setTextViewText(R.id.tv_notification_artist_name, DisplayUtils.getTrackArtistString(trackToShow))
+        notificationLayoutExpanded.setTextViewText(R.id.tv_notification_artist_name, DisplayUtils.getTrackArtistString(trackToShow))
+
+        val target = object : SimpleTarget<Bitmap>() {
+            override fun onResourceReady(resource: Bitmap, transition: Transition<in Bitmap>?) {
+                notificationLayout.setImageViewBitmap(R.id.iv_notification_album_art, resource)
+                notificationLayoutExpanded.setImageViewBitmap(R.id.iv_notification_album_art, resource)
+            }
+        }
+
+        if (trackToShow.album.images.size > 0) {
+            val placeholder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                getColor(R.color.Transparent)
+            } else {
+                resources.getColor(R.color.Transparent)
+            }
+
+            // Clear previous image
+            notificationLayout.setImageViewResource(R.id.iv_notification_album_art, placeholder)
+            notificationLayoutExpanded.setImageViewResource(R.id.iv_notification_album_art, placeholder)
+
+            Glide.with(baseContext)
+                    .asBitmap()
+                    .load(trackToShow.album.images[0].url)
+                    .apply(RequestOptions().placeholder(R.color.Transparent).error(R.color.BurntOrange))
+                    .into(target)
         }
     }
 
