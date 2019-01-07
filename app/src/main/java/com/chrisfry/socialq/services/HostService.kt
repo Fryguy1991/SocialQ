@@ -1,11 +1,13 @@
 package com.chrisfry.socialq.services
 
+import android.app.Notification
+import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.net.ConnectivityManager
 import android.os.Build
 import android.os.IBinder
@@ -14,8 +16,7 @@ import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
-import com.bumptech.glide.request.target.SimpleTarget
-import com.bumptech.glide.request.transition.Transition
+import com.bumptech.glide.request.target.NotificationTarget
 import com.chrisfry.socialq.R
 import com.chrisfry.socialq.business.AppConstants
 import com.chrisfry.socialq.enums.NearbyDevicesMessage
@@ -38,7 +39,9 @@ import kaaes.spotify.webapi.android.SpotifyError
 import kaaes.spotify.webapi.android.SpotifyService
 import kaaes.spotify.webapi.android.models.*
 import retrofit.client.Response
+import java.io.IOException
 import java.lang.Exception
+import java.net.URL
 import java.util.*
 import java.util.concurrent.TimeUnit
 import java.util.regex.Pattern
@@ -64,12 +67,13 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
     private var listener: HostServiceListener? = null
 
     // NOTIFICATION ELEMENTS
+    // Reference to notification manager
+    private lateinit var notificationManager: NotificationManager
     // Builder for foreground notification
-    private lateinit var notificationBuilder: NotificationCompat.Builder
+    private lateinit var notificationBuilder: Any
     // Reference to notification layouts
     private lateinit var notificationLayout: RemoteViews
     private lateinit var notificationLayoutExpanded: RemoteViews
-
 
     // NEARBY CONNECTION ELEMENTS
     // List of the client endpoints that are currently connected to the host service
@@ -178,29 +182,30 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
         val notificationIntent = Intent(this, HostActivity::class.java)
         val pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0)
 
-        // Get the layouts to use in the custom notification
-        notificationLayout = RemoteViews(packageName, R.layout.host_notification_small)
-        notificationLayoutExpanded = RemoteViews(packageName, R.layout.host_notification_large)
+        notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
-        setupNotificationLListeners(notificationLayout, notificationLayoutExpanded)
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            notificationBuilder = NotificationCompat.Builder(this, App.CHANNEL_ID)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            notificationBuilder = Notification.Builder(this, App.CHANNEL_ID)
                     .setContentTitle(String.format(getString(R.string.host_notification_content_text), queueTitle))
                     .setSmallIcon(R.drawable.notification_icon)
                     .setContentIntent(pendingIntent)
-                    .setColor(colorResInt)
+                    .setColorized(true)
                     .setOnlyAlertOnce(true)
-                    .setStyle(androidx.media.app.NotificationCompat.DecoratedMediaCustomViewStyle())
-                    .setCustomContentView(notificationLayout)
-                    .setCustomBigContentView(notificationLayoutExpanded)
+                    .setStyle(Notification.MediaStyle())
                     .setShowWhen(false)
         } else {
+            // Get the layouts to use in the custom notification
+            notificationLayout = RemoteViews(packageName, R.layout.host_notification_small)
+            notificationLayoutExpanded = RemoteViews(packageName, R.layout.host_notification_large)
+
+            setupNotificationListeners(notificationLayout, notificationLayoutExpanded)
+
             notificationBuilder = NotificationCompat.Builder(this, App.CHANNEL_ID)
                     .setContentTitle(String.format(getString(R.string.host_notification_content_text), queueTitle))
                     .setSmallIcon(R.drawable.notification_icon)
                     .setContentIntent(pendingIntent)
                     .setColor(colorResInt)
+                    .setColorized(true)
                     .setOnlyAlertOnce(true)
                     .setCustomContentView(notificationLayout)
                     .setCustomBigContentView(notificationLayoutExpanded)
@@ -208,8 +213,18 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
                     .setPriority(NotificationCompat.PRIORITY_DEFAULT)
         }
 
-
-        startForeground(AppConstants.HOST_SERVICE_ID, notificationBuilder.build())
+        val builder = notificationBuilder
+        when (builder) {
+            is NotificationCompat.Builder -> {
+                startForeground(AppConstants.HOST_SERVICE_ID, builder.build())
+            }
+            is Notification.Builder -> {
+                startForeground(AppConstants.HOST_SERVICE_ID, builder.build())
+            }
+            else -> {
+                Log.e(TAG, "Must have failed to create notification builder")
+            }
+        }
 
         // Request authorization code for Spotify
         requestHostAuthorization()
@@ -220,7 +235,7 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
         return START_NOT_STICKY
     }
 
-    private fun setupNotificationLListeners(large: RemoteViews, small: RemoteViews) {
+    private fun setupNotificationListeners(large: RemoteViews, small: RemoteViews) {
         // TODO: Figure out how to use EXPLICIT intents so we're broadcasting ONLY to this app
         val playIntent = Intent(AppConstants.ACTION_REQUEST_PLAY)
         val nextIntent = Intent(AppConstants.ACTION_REQUEST_NEXT)
@@ -748,7 +763,7 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
 
             // Ensure tracks are playable in our market and not local before adding
             for (track in iterationTracks.items) {
-                if (track.track.is_playable && !track.is_local) {
+                if (track.track.is_playable != null && track.track.is_playable && !track.is_local) {
                     playlistTracks.add(track)
                 }
             }
@@ -1021,10 +1036,56 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
         notifyQueueChanged()
     }
 
-    // END HOST ACTIVITY KOTLIN COPY CODE
+    private fun showTrackInNotification(trackToShow: Track) {
+        val builder = notificationBuilder
+        when (builder) {
+            is NotificationCompat.Builder -> {
+                val updatedNotification = builder.build()
+                notificationLayout.setTextViewText(R.id.tv_notification_track_name, trackToShow.name)
+                notificationLayoutExpanded.setTextViewText(R.id.tv_notification_track_name, trackToShow.name)
 
+                notificationLayout.setTextViewText(R.id.tv_notification_artist_name, DisplayUtils.getTrackArtistString(trackToShow))
+                notificationLayoutExpanded.setTextViewText(R.id.tv_notification_artist_name, DisplayUtils.getTrackArtistString(trackToShow))
 
-    // SPOTIFY SERVICE CALLBACKS
+                val smallTarget = NotificationTarget(baseContext, R.id.iv_notification_album_art, notificationLayout, updatedNotification, AppConstants.HOST_SERVICE_ID)
+                val largeTarget = NotificationTarget(baseContext, R.id.iv_notification_album_art, notificationLayoutExpanded, updatedNotification, AppConstants.HOST_SERVICE_ID)
+
+                if (trackToShow.album.images.size > 0) {
+                    Glide.with(baseContext)
+                            .asBitmap()
+                            .load(trackToShow.album.images[0].url)
+                            .apply(RequestOptions().placeholder(R.color.Transparent).error(R.color.BurntOrange))
+                            .into(smallTarget)
+
+                    Glide.with(baseContext)
+                            .asBitmap()
+                            .load(trackToShow.album.images[0].url)
+                            .apply(RequestOptions().placeholder(R.color.Transparent).error(R.color.BurntOrange))
+                            .into(largeTarget)
+                }
+                notificationManager.notify(AppConstants.HOST_SERVICE_ID, updatedNotification)
+            }
+            is Notification.Builder -> {
+                builder.setContentTitle(trackToShow.name)
+                builder.setContentText(DisplayUtils.getTrackArtistString(trackToShow))
+
+                if (trackToShow.album.images.size > 0) {
+                    try {
+                        val url = URL(trackToShow.album.images[0].url)
+                        val image = BitmapFactory.decodeStream(url.openConnection().getInputStream())
+                        builder.setLargeIcon(image)
+                    } catch (exception: IOException) {
+                        Log.e(TAG, "Error retrieving image bitmap: ${exception.message.toString()}")
+                        System.out.println(exception)
+                    }
+                }
+                notificationManager.notify(AppConstants.HOST_SERVICE_ID, builder.build())
+            }
+            else -> {
+                Log.e(TAG, "Invalid notification builder")
+            }
+        }
+    }
 
     // Callback for creating playlist
     private val createPlaylistCallback = object : SpotifyCallback<Playlist>() {
@@ -1049,39 +1110,6 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
             Log.e(TAG, "Failed to create playlist. Try again")
             createPlaylistForQueue()
             // TODO: Should stop trying after so many failures
-        }
-    }
-
-    private fun showTrackInNotification(trackToShow: Track) {
-        notificationLayout.setTextViewText(R.id.tv_notification_track_name, trackToShow.name)
-        notificationLayoutExpanded.setTextViewText(R.id.tv_notification_track_name, trackToShow.name)
-
-        notificationLayout.setTextViewText(R.id.tv_notification_artist_name, DisplayUtils.getTrackArtistString(trackToShow))
-        notificationLayoutExpanded.setTextViewText(R.id.tv_notification_artist_name, DisplayUtils.getTrackArtistString(trackToShow))
-
-        val target = object : SimpleTarget<Bitmap>() {
-            override fun onResourceReady(resource: Bitmap, transition: Transition<in Bitmap>?) {
-                notificationLayout.setImageViewBitmap(R.id.iv_notification_album_art, resource)
-                notificationLayoutExpanded.setImageViewBitmap(R.id.iv_notification_album_art, resource)
-            }
-        }
-
-        if (trackToShow.album.images.size > 0) {
-            val placeholder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                getColor(R.color.Transparent)
-            } else {
-                resources.getColor(R.color.Transparent)
-            }
-
-            // Clear previous image
-            notificationLayout.setImageViewResource(R.id.iv_notification_album_art, placeholder)
-            notificationLayoutExpanded.setImageViewResource(R.id.iv_notification_album_art, placeholder)
-
-            Glide.with(baseContext)
-                    .asBitmap()
-                    .load(trackToShow.album.images[0].url)
-                    .apply(RequestOptions().placeholder(R.color.Transparent).error(R.color.BurntOrange))
-                    .into(target)
         }
     }
 
