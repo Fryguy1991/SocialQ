@@ -138,7 +138,6 @@ abstract class SpotifyAccessService : Service() {
             }
             Log.e(TAG, "Failed to retrieve playlist")
         }
-
     }
 
     protected val playlistTrackCallback = object : SpotifyCallback<Pager<PlaylistTrack>>() {
@@ -165,7 +164,6 @@ abstract class SpotifyAccessService : Service() {
             }
             Log.e(TAG, "Failed to retrieve playlist tracks")
         }
-
     }
 
     protected fun requestHostAuthorization() {

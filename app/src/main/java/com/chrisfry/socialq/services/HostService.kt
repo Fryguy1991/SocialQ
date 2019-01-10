@@ -1,6 +1,5 @@
 package com.chrisfry.socialq.services
 
-import android.app.Notification
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.BroadcastReceiver
@@ -9,14 +8,13 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.graphics.BitmapFactory
 import android.net.ConnectivityManager
-import android.os.Build
 import android.os.IBinder
+import android.support.v4.media.MediaMetadataCompat
+import android.support.v4.media.session.MediaSessionCompat
+import android.support.v4.media.session.PlaybackStateCompat
 import android.util.Log
 import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
-import com.bumptech.glide.Glide
-import com.bumptech.glide.request.RequestOptions
-import com.bumptech.glide.request.target.NotificationTarget
 import com.chrisfry.socialq.R
 import com.chrisfry.socialq.business.AppConstants
 import com.chrisfry.socialq.enums.NearbyDevicesMessage
@@ -70,10 +68,17 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
     // Reference to notification manager
     private lateinit var notificationManager: NotificationManager
     // Builder for foreground notification
-    private lateinit var notificationBuilder: Any
+    private lateinit var notificationBuilder: NotificationCompat.Builder
     // Reference to notification layouts
     private lateinit var notificationLayout: RemoteViews
     private lateinit var notificationLayoutExpanded: RemoteViews
+    // Reference to media session
+    private lateinit var mediaSession: MediaSessionCompat
+    // Reference to meta data builder
+    private val metaDataBuilder = MediaMetadataCompat.Builder()
+    // Reference to playback state and it's builder
+    private lateinit var playbackState: PlaybackStateCompat
+    private val playbackStateBuilder = PlaybackStateCompat.Builder()
 
     // NEARBY CONNECTION ELEMENTS
     // List of the client endpoints that are currently connected to the host service
@@ -167,12 +172,6 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
             isQueueFairPlay = intent.getBooleanExtra(AppConstants.FAIR_PLAY_KEY, resources.getBoolean(R.bool.fair_play_default))
         }
 
-        val colorResInt = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            getColor(R.color.Active_Button_Color)
-        } else {
-            resources.getColor(R.color.Active_Button_Color)
-        }
-
         // Register to local broadcast manager (for handling notification actions)
         baseContext.registerReceiver(broadcastReceiver, IntentFilter(AppConstants.ACTION_REQUEST_PLAY))
         baseContext.registerReceiver(broadcastReceiver, IntentFilter(AppConstants.ACTION_REQUEST_NEXT))
@@ -184,46 +183,29 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
 
         notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            notificationBuilder = Notification.Builder(this, App.CHANNEL_ID)
-                    .setContentTitle(String.format(getString(R.string.host_notification_content_text), queueTitle))
-                    .setSmallIcon(R.drawable.notification_icon)
-                    .setContentIntent(pendingIntent)
-                    .setColorized(true)
-                    .setOnlyAlertOnce(true)
-                    .setStyle(Notification.MediaStyle())
-                    .setShowWhen(false)
-        } else {
-            // Get the layouts to use in the custom notification
-            notificationLayout = RemoteViews(packageName, R.layout.host_notification_small)
-            notificationLayoutExpanded = RemoteViews(packageName, R.layout.host_notification_large)
+        // Initialize playback state and media session
+        playbackState = playbackStateBuilder.build()
+        mediaSession = MediaSessionCompat(baseContext, AppConstants.HOST_MEDIA_SESSION_TAG)
+        mediaSession.setPlaybackState(playbackState)
 
-            setupNotificationListeners(notificationLayout, notificationLayoutExpanded)
-
+        // Build notification and start foreground service
+        val token = mediaSession.sessionToken
+        if (token != null) {
             notificationBuilder = NotificationCompat.Builder(this, App.CHANNEL_ID)
                     .setContentTitle(String.format(getString(R.string.host_notification_content_text), queueTitle))
                     .setSmallIcon(R.drawable.notification_icon)
                     .setContentIntent(pendingIntent)
-                    .setColor(colorResInt)
                     .setColorized(true)
                     .setOnlyAlertOnce(true)
-                    .setCustomContentView(notificationLayout)
-                    .setCustomBigContentView(notificationLayoutExpanded)
+                    .setStyle(androidx.media.app.NotificationCompat.MediaStyle().setMediaSession(token))
                     .setShowWhen(false)
-                    .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-        }
 
-        val builder = notificationBuilder
-        when (builder) {
-            is NotificationCompat.Builder -> {
-                startForeground(AppConstants.HOST_SERVICE_ID, builder.build())
-            }
-            is Notification.Builder -> {
-                startForeground(AppConstants.HOST_SERVICE_ID, builder.build())
-            }
-            else -> {
-                Log.e(TAG, "Must have failed to create notification builder")
-            }
+            startForeground(AppConstants.HOST_SERVICE_ID, notificationBuilder.build())
+        } else {
+            Log.e(TAG, "Something went wrong initializing the media session")
+
+            stopSelf()
+            return START_NOT_STICKY
         }
 
         // Request authorization code for Spotify
@@ -524,6 +506,11 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
         when (playerEvent) {
             PlayerEvent.kSpPlaybackNotifyPlay -> {
                 Log.d(TAG, "Player has started playing")
+
+                // Update session playback state
+                mediaSession.setPlaybackState(playbackStateBuilder
+                        .setState(PlaybackStateCompat.STATE_PLAYING, PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN, 1F)
+                        .build())
                 isPlaying = true
                 notifyPlayStarted()
             }
@@ -531,6 +518,12 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
             }
             PlayerEvent.kSpPlaybackNotifyPause -> {
                 Log.d(TAG, "Player has paused")
+
+                // Update session playback state
+                mediaSession.setPlaybackState(playbackStateBuilder
+                        .setState(PlaybackStateCompat.STATE_PAUSED, PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN, 0F)
+                        .build())
+
                 // If meta data is incorrect we won't actually pause (unless user requested pause)
                 isPlaying = false
                 if (userRequestedPause || !incorrectMetaDataFlag) {
@@ -1037,54 +1030,36 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
     }
 
     private fun showTrackInNotification(trackToShow: Track) {
-        val builder = notificationBuilder
-        when (builder) {
-            is NotificationCompat.Builder -> {
-                val updatedNotification = builder.build()
-                notificationLayout.setTextViewText(R.id.tv_notification_track_name, trackToShow.name)
-                notificationLayoutExpanded.setTextViewText(R.id.tv_notification_track_name, trackToShow.name)
+        // Update metadata for media session
+        metaDataBuilder.putString(MediaMetadataCompat.METADATA_KEY_ALBUM, trackToShow.album?.name)
+        metaDataBuilder.putString(MediaMetadataCompat.METADATA_KEY_TITLE, trackToShow.name)
+        metaDataBuilder.putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_TITLE, trackToShow.name)
+        metaDataBuilder.putString(MediaMetadataCompat.METADATA_KEY_ARTIST, DisplayUtils.getTrackArtistString(trackToShow))
 
-                notificationLayout.setTextViewText(R.id.tv_notification_artist_name, DisplayUtils.getTrackArtistString(trackToShow))
-                notificationLayoutExpanded.setTextViewText(R.id.tv_notification_artist_name, DisplayUtils.getTrackArtistString(trackToShow))
+        // Attempt to update album art in notification and metadata
+        if (trackToShow.album.images.size > 0) {
+            try {
+                val url = URL(trackToShow.album.images[0].url)
+                // Retrieve album art bitmap
+                val albumArtBitmap = BitmapFactory.decodeStream(url.openConnection().getInputStream())
 
-                val smallTarget = NotificationTarget(baseContext, R.id.iv_notification_album_art, notificationLayout, updatedNotification, AppConstants.HOST_SERVICE_ID)
-                val largeTarget = NotificationTarget(baseContext, R.id.iv_notification_album_art, notificationLayoutExpanded, updatedNotification, AppConstants.HOST_SERVICE_ID)
-
-                if (trackToShow.album.images.size > 0) {
-                    Glide.with(baseContext)
-                            .asBitmap()
-                            .load(trackToShow.album.images[0].url)
-                            .apply(RequestOptions().placeholder(R.color.Transparent).error(R.color.BurntOrange))
-                            .into(smallTarget)
-
-                    Glide.with(baseContext)
-                            .asBitmap()
-                            .load(trackToShow.album.images[0].url)
-                            .apply(RequestOptions().placeholder(R.color.Transparent).error(R.color.BurntOrange))
-                            .into(largeTarget)
-                }
-                notificationManager.notify(AppConstants.HOST_SERVICE_ID, updatedNotification)
-            }
-            is Notification.Builder -> {
-                builder.setContentTitle(trackToShow.name)
-                builder.setContentText(DisplayUtils.getTrackArtistString(trackToShow))
-
-                if (trackToShow.album.images.size > 0) {
-                    try {
-                        val url = URL(trackToShow.album.images[0].url)
-                        val image = BitmapFactory.decodeStream(url.openConnection().getInputStream())
-                        builder.setLargeIcon(image)
-                    } catch (exception: IOException) {
-                        Log.e(TAG, "Error retrieving image bitmap: ${exception.message.toString()}")
-                        System.out.println(exception)
-                    }
-                }
-                notificationManager.notify(AppConstants.HOST_SERVICE_ID, builder.build())
-            }
-            else -> {
-                Log.e(TAG, "Invalid notification builder")
+                // Set bitmap data for lock screen display
+                metaDataBuilder.putBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART, albumArtBitmap)
+                // Set bitmap data for notification
+                notificationBuilder.setLargeIcon(albumArtBitmap)
+            } catch (exception: IOException) {
+                Log.e(TAG, "Error retrieving image bitmap: ${exception.message.toString()}")
+                System.out.println(exception)
             }
         }
+        mediaSession.setMetadata(metaDataBuilder.build())
+
+        // Update notification data
+        notificationBuilder.setContentTitle(trackToShow.name)
+        notificationBuilder.setContentText(DisplayUtils.getTrackArtistString(trackToShow))
+
+        // Display updated notification
+        notificationManager.notify(AppConstants.HOST_SERVICE_ID, notificationBuilder.build())
     }
 
     // Callback for creating playlist
