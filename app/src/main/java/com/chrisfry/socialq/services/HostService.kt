@@ -217,20 +217,6 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
         return START_NOT_STICKY
     }
 
-    private fun setupNotificationListeners(large: RemoteViews, small: RemoteViews) {
-        // TODO: Figure out how to use EXPLICIT intents so we're broadcasting ONLY to this app
-        val playIntent = Intent(AppConstants.ACTION_REQUEST_PLAY)
-        val nextIntent = Intent(AppConstants.ACTION_REQUEST_NEXT)
-        val playPendingIntent = PendingIntent.getBroadcast(baseContext, 0, playIntent, 0)
-        val nextPendingIntent = PendingIntent.getBroadcast(baseContext, 0, nextIntent, 0)
-
-        large.setOnClickPendingIntent(R.id.btn_notification_play_button, playPendingIntent)
-        large.setOnClickPendingIntent(R.id.btn_notification_next_button, nextPendingIntent)
-
-        small.setOnClickPendingIntent(R.id.btn_notification_play_button, playPendingIntent)
-        small.setOnClickPendingIntent(R.id.btn_notification_next_button, nextPendingIntent)
-    }
-
     private fun startNearbyAdvertising(queueTitle: String) {
         // Create advertising options (strategy)
         val options = AdvertisingOptions.Builder().setStrategy(Strategy.P2P_STAR).build()
@@ -439,9 +425,6 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
                             currentPlaylistIndex).toByteArray()))
         }
     }
-
-
-    // COPYING IN PLAY QUEUE SERVICE CODE
 
     private fun initPlayer(accessToken: String) {
         // Setup Spotify player
@@ -714,11 +697,6 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
         this.listener = null
     }
 
-    // END COPYING IN PLAYQUEUESERVICE
-
-
-    // COPYING METHODS FROM HOSTACTIVITYKOTLIN
-
     private fun createPlaylistForQueue() {
         // Create body parameters for new playlist
         val playlistParameters = HashMap<String, Any>()
@@ -798,7 +776,7 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
         refreshPlaylist()
     }
 
-    protected fun handleSongRequest(songRequest: SongRequestData?) {
+    private fun handleSongRequest(songRequest: SongRequestData?) {
         if (songRequest != null && !songRequest.uri.isEmpty()) {
             Log.d(TAG, "Received request for URI: " + songRequest.uri + ", from User ID: " + songRequest.user.id)
 
@@ -1156,7 +1134,6 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
             Log.e(TAG, "Failed to unfollow/change playlist")
         }
     }
-
 
     private fun setupShortDemoQueue() {
         val shortQueueString = "spotify:track:0p8fUOBfWtGcaKGiD9drgJ," +
