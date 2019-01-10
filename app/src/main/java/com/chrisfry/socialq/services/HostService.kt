@@ -2,10 +2,8 @@ package com.chrisfry.socialq.services
 
 import android.app.NotificationManager
 import android.app.PendingIntent
-import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
 import android.graphics.BitmapFactory
 import android.net.ConnectivityManager
 import android.os.IBinder
@@ -119,7 +117,8 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
     // User object of the host's Spotify account
     private lateinit var hostUser: UserPublic
 
-    private val mConnectivityCallback = object : Player.OperationCallback {
+    // Callback for successful/failed player connection
+    private val connectivityCallback = object : Player.OperationCallback {
         override fun onSuccess() {
             Log.d(TAG, "Success!")
         }
@@ -129,31 +128,26 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
         }
     }
 
-    private val broadcastReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context?, intent: Intent?) {
-            val action = intent?.action
-            if (!action.isNullOrEmpty()) {
-                when (action) {
-                    AppConstants.ACTION_REQUEST_PLAY -> {
-                        Log.i(TAG, "Received broadcast for PLAY from notification")
-                        requestPlay()
-                    }
-                    AppConstants.ACTION_REQUEST_NEXT -> {
-                        Log.i(TAG, "Received broadcast for NEXT from notification")
-                        requestPlayNext()
-                    }
-                    AppConstants.ACTION_REQUEST_PAUSE -> {
-                        Log.i(TAG, "Received broadcast for PAUSE from notification")
-                        requestPause()
-                    }
-                    else -> {
-                        Log.w(TAG, "Not handling action: $action")
-                    }
-                }
-            } else {
-                Log.e(TAG, "Action was null or empty")
-            }
+    // Callback for media session calls (ex: media buttons)
+    private val mediaSessionCallback = object : MediaSessionCompat.Callback() {
+        override fun onPlay() {
+            requestPlay()
         }
+
+        override fun onSkipToNext() {
+            requestPlayNext()
+        }
+
+        override fun onPause() {
+            requestPause()
+        }
+
+        // TODO: May need this method for earlier versions of Android
+//        override fun onMediaButtonEvent(mediaButtonEvent: Intent?): Boolean {
+//            if (mediaButtonEvent != null) {
+//            }
+//            return false
+//        }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -172,20 +166,25 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
             isQueueFairPlay = intent.getBooleanExtra(AppConstants.FAIR_PLAY_KEY, resources.getBoolean(R.bool.fair_play_default))
         }
 
-        // Register to local broadcast manager (for handling notification actions)
-        baseContext.registerReceiver(broadcastReceiver, IntentFilter(AppConstants.ACTION_REQUEST_PLAY))
-        baseContext.registerReceiver(broadcastReceiver, IntentFilter(AppConstants.ACTION_REQUEST_NEXT))
-        baseContext.registerReceiver(broadcastReceiver, IntentFilter(AppConstants.ACTION_REQUEST_PAUSE))
-
         // Start service in the foreground
         val notificationIntent = Intent(this, HostActivity::class.java)
         val pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0)
 
         notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
-        // Initialize playback state and media session
-        playbackState = playbackStateBuilder.build()
+        // Initialize playback state, allow play, pause and next
+        playbackState = playbackStateBuilder
+                .setActions(PlaybackStateCompat.ACTION_PLAY_PAUSE
+                        or PlaybackStateCompat.ACTION_SKIP_TO_NEXT
+                        or PlaybackStateCompat.ACTION_PLAY
+                        or PlaybackStateCompat.ACTION_PAUSE)
+                .build()
+
+        // Initialize media session
         mediaSession = MediaSessionCompat(baseContext, AppConstants.HOST_MEDIA_SESSION_TAG)
+        mediaSession.isActive = true
+        mediaSession.setFlags(MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS)
+        mediaSession.setCallback(mediaSessionCallback)
         mediaSession.setPlaybackState(playbackState)
 
         // Build notification and start foreground service
@@ -270,9 +269,6 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
 
         // Let app know that the service has ended
         App.hasServiceBeenStarted = false
-
-        // Unregister from local broadcast manager
-        baseContext.unregisterReceiver(broadcastReceiver)
 
         super.onDestroy()
     }
@@ -432,7 +428,7 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
         spotifyPlayer = Spotify.getPlayer(playerConfig, this, object : SpotifyPlayer.InitializationObserver {
             override fun onInitialized(player: SpotifyPlayer) {
                 Log.d(TAG, "Player initialized")
-                player.setConnectivityStatus(mConnectivityCallback,
+                player.setConnectivityStatus(connectivityCallback,
                         getNetworkConnectivity(this@HostService))
                 player.addConnectionStateCallback(this@HostService)
                 player.addNotificationCallback(this@HostService)
@@ -540,7 +536,11 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
                     notifyQueueChanged()
 
                     Log.d(TAG, "Updating notification")
-                    showTrackInNotification(playlistTracks[currentPlaylistIndex].track)
+                    if (currentPlaylistIndex < playlistTracks.size) {
+                        showTrackInNotification(playlistTracks[currentPlaylistIndex].track)
+                    } else {
+                        // TODO: Don't show track info anymore in notification/session metadata
+                    }
                 }
             }
             PlayerEvent.kSpPlaybackNotifyAudioDeliveryDone -> {
