@@ -13,8 +13,7 @@ abstract class BaseActivity : AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.search_fragment -> {
-                val searchIntent = Intent(this, SearchActivity::class.java)
-                startActivityForResult(searchIntent, RequestType.SEARCH_REQUEST.requestCode)
+                startSearchActivity()
                 return true
             }
             else ->
@@ -27,5 +26,10 @@ abstract class BaseActivity : AppCompatActivity() {
         val startIntent = Intent(this, StartActivity::class.java)
         startActivity(startIntent)
         finish()
+    }
+
+    protected fun startSearchActivity() {
+        val searchIntent = Intent(this, SearchActivity::class.java)
+        startActivityForResult(searchIntent, RequestType.SEARCH_REQUEST.requestCode)
     }
 }

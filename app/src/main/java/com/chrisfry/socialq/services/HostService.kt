@@ -195,7 +195,7 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
                         // Setup media style with media session token and displaying actions in compact view
                         val mediaStyle = androidx.media.app.NotificationCompat.MediaStyle()
                         mediaStyle.setMediaSession(token)
-                        mediaStyle.setShowActionsInCompactView(0, 1)
+                        mediaStyle.setShowActionsInCompactView(1, 2)
 
                         // Build foreground notification
                         notificationBuilder = NotificationCompat.Builder(this, App.CHANNEL_ID)
@@ -208,7 +208,7 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
                                 .setShowWhen(false)
 
                         // Add actions to notification builder
-                        addPlayNextToNotificationBuilder()
+                        addActionsToNotificationBuilder(false)
                         // Start service in the foreground
                         startForeground(AppConstants.HOST_SERVICE_ID, notificationBuilder.build())
                     } else {
@@ -245,11 +245,23 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
     }
 
     /**
-     * Adds play and next button to notification builder, clears current actions from builder
+     * Adds action icons to notification builder, also removes existing icons
+     *
+     * @param isPlaying: Whether the Spotify player is currently playing or not
      */
-    private fun addPlayNextToNotificationBuilder() {
+    private fun addActionsToNotificationBuilder(isPlaying: Boolean) {
         // Remove actions from notification builder
         notificationBuilder.mActions.clear()
+
+        val searchIntent = Intent(this, HostActivity::class.java)
+        searchIntent.action = AppConstants.ACTION_NOTIFICATION_SEARCH
+
+        // Intent for starting search
+        val searchPendingIntent = PendingIntent.getActivity(
+                this,
+                0,
+                searchIntent,
+                0)
 
         // Intent for toggling play/pause
         val playPausePendingIntent = PendingIntent.getService(
@@ -265,34 +277,16 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
                 Intent(this, HostService::class.java).setAction(AppConstants.ACTION_REQUEST_NEXT),
                 0)
 
-        notificationBuilder
-                .addAction(R.mipmap.ic_media_play, AppConstants.ACTION_REQUEST_PLAY, playPausePendingIntent)
-                .addAction(R.mipmap.ic_media_next, AppConstants.ACTION_REQUEST_NEXT, skipPendingIntent)
-    }
-
-    /**
-     * Adds pause and next button to notification builder, clear current actions from builder
-     */
-    private fun addPauseNextToNotificationBuilder() {
-        // Remove actions from notification builder
-        notificationBuilder.mActions.clear()
-
-        // Intent for toggling play/pause
-        val playPausePendingIntent = PendingIntent.getService(
-                this,
-                0,
-                Intent(this, HostService::class.java).setAction(AppConstants.ACTION_REQUEST_PLAY_PAUSE),
-                0)
-
-        // Intent for skipping
-        val skipPendingIntent = PendingIntent.getService(
-                this,
-                0,
-                Intent(this, HostService::class.java).setAction(AppConstants.ACTION_REQUEST_NEXT),
-                0)
+        // Determine if we need the play or pause icon
+        val playPauseResourceId = if (isPlaying) {
+            R.mipmap.ic_media_pause
+        } else {
+            R.mipmap.ic_media_play
+        }
 
         notificationBuilder
-                .addAction(R.mipmap.ic_media_pause, AppConstants.ACTION_REQUEST_PLAY, playPausePendingIntent)
+                .addAction(R.mipmap.search_icon_white, AppConstants.ACTION_NOTIFICATION_SEARCH, searchPendingIntent)
+                .addAction(playPauseResourceId, AppConstants.ACTION_REQUEST_PLAY_PAUSE, playPausePendingIntent)
                 .addAction(R.mipmap.ic_media_next, AppConstants.ACTION_REQUEST_NEXT, skipPendingIntent)
     }
 
@@ -574,8 +568,8 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
                         .setState(PlaybackStateCompat.STATE_PLAYING, PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN, 1F)
                         .build())
 
-                // Update notification builder with pause and next buttons
-                addPauseNextToNotificationBuilder()
+                // Update notification builder action buttons for playing
+                addActionsToNotificationBuilder(true)
                 notificationManager.notify(AppConstants.HOST_SERVICE_ID, notificationBuilder.build())
 
                 isPlaying = true
@@ -591,8 +585,8 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
                         .setState(PlaybackStateCompat.STATE_PAUSED, PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN, 0F)
                         .build())
 
-                // Update notification builder with play and next buttons
-                addPlayNextToNotificationBuilder()
+                // Update notification builder with action buttons for paused
+                addActionsToNotificationBuilder(false)
                 notificationManager.notify(AppConstants.HOST_SERVICE_ID, notificationBuilder.build())
 
                 // If meta data is incorrect we won't actually pause (unless user requested pause)

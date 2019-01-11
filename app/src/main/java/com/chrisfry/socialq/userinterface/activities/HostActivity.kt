@@ -66,6 +66,19 @@ open class HostActivity : BaseActivity(), HostService.HostServiceListener,
         }
     }
 
+    override fun onNewIntent(intent: Intent?) {
+        super.onNewIntent(intent)
+
+        if (intent != null) {
+            when (intent.action) {
+                AppConstants.ACTION_NOTIFICATION_SEARCH -> {
+                    // If receiving a notification search request start search activity
+                    startSearchActivity()
+                }
+            }
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.host_screen)
