@@ -395,7 +395,7 @@ class ClientService : SpotifyAccessService() {
         }
 
         override fun failure(spotifyError: SpotifyError?) {
-            Log.e(TAG, spotifyError?.errorDetails?.message)
+            Log.e(TAG, spotifyError?.errorDetails?.message.toString())
             Log.e(TAG, "Failed to get host playlist")
         }
     }
@@ -414,7 +414,7 @@ class ClientService : SpotifyAccessService() {
         }
 
         override fun failure(spotifyError: SpotifyError?) {
-            Log.e(TAG, spotifyError?.errorDetails?.message)
+            Log.e(TAG, spotifyError?.errorDetails?.message.toString())
             Log.e(TAG, "Failed to follow the playlist")
             if (hostDisconnect) {
                 // Tried to follow playlist when host disconnected

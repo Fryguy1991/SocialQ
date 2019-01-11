@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item
-        android:drawable="@drawable/circle_button"/>
+        android:drawable="@drawable/rectangle_button"/>
     <item
         android:drawable="@mipmap/ic_media_play"
-        android:left="10dp"
-        android:right="10dp"
-        android:top="10dp"
-        android:bottom="10dp"
+        android:left="7dp"
+        android:right="7dp"
+        android:top="7dp"
+        android:bottom="7dp"
         android:gravity="center"/>
 
 </layer-list>

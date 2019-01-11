@@ -1,12 +1,17 @@
 package com.chrisfry.socialq.services
 
+import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.graphics.BitmapFactory
 import android.net.ConnectivityManager
-import android.os.Build
 import android.os.IBinder
+import android.support.v4.media.MediaMetadataCompat
+import android.support.v4.media.session.MediaSessionCompat
+import android.support.v4.media.session.PlaybackStateCompat
 import android.util.Log
+import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
 import com.chrisfry.socialq.R
 import com.chrisfry.socialq.business.AppConstants
@@ -18,6 +23,7 @@ import com.chrisfry.socialq.model.SongRequestData
 import com.chrisfry.socialq.userinterface.App
 import com.chrisfry.socialq.userinterface.activities.HostActivity
 import com.chrisfry.socialq.utils.ApplicationUtils
+import com.chrisfry.socialq.utils.DisplayUtils
 import com.google.android.gms.nearby.Nearby
 import com.google.android.gms.nearby.connection.*
 import com.google.android.gms.tasks.OnFailureListener
@@ -29,7 +35,9 @@ import kaaes.spotify.webapi.android.SpotifyError
 import kaaes.spotify.webapi.android.SpotifyService
 import kaaes.spotify.webapi.android.models.*
 import retrofit.client.Response
+import java.io.IOException
 import java.lang.Exception
+import java.net.URL
 import java.util.*
 import java.util.concurrent.TimeUnit
 import java.util.regex.Pattern
@@ -53,6 +61,22 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
     private var isBound = false
     // Object listening for events from the service
     private var listener: HostServiceListener? = null
+
+    // NOTIFICATION ELEMENTS
+    // Reference to notification manager
+    private lateinit var notificationManager: NotificationManager
+    // Builder for foreground notification
+    private lateinit var notificationBuilder: NotificationCompat.Builder
+    // Reference to notification layouts
+    private lateinit var notificationLayout: RemoteViews
+    private lateinit var notificationLayoutExpanded: RemoteViews
+    // Reference to media session
+    private lateinit var mediaSession: MediaSessionCompat
+    // Reference to meta data builder
+    private val metaDataBuilder = MediaMetadataCompat.Builder()
+    // Reference to playback state and it's builder
+    private lateinit var playbackState: PlaybackStateCompat
+    private val playbackStateBuilder = PlaybackStateCompat.Builder()
 
     // NEARBY CONNECTION ELEMENTS
     // List of the client endpoints that are currently connected to the host service
@@ -93,7 +117,8 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
     // User object of the host's Spotify account
     private lateinit var hostUser: UserPublic
 
-    private val mConnectivityCallback = object : Player.OperationCallback {
+    // Callback for successful/failed player connection
+    private val connectivityCallback = object : Player.OperationCallback {
         override fun onSuccess() {
             Log.d(TAG, "Success!")
         }
@@ -103,49 +128,172 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
         }
     }
 
+    // Callback for media session calls (ex: media buttons)
+    private val mediaSessionCallback = object : MediaSessionCompat.Callback() {
+        override fun onPlay() {
+            requestPlay()
+        }
+
+        override fun onSkipToNext() {
+            requestPlayNext()
+        }
+
+        override fun onPause() {
+            requestPause()
+        }
+
+        // TODO: May need this method for earlier versions of Android
+//        override fun onMediaButtonEvent(mediaButtonEvent: Intent?): Boolean {
+//            if (mediaButtonEvent != null) {
+//            }
+//            return false
+//        }
+    }
+
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        Log.d(TAG, "Host service is being started")
-
-        // Set defaults for queue settings
-        queueTitle = getString(R.string.queue_title_default_value)
-        isQueueFairPlay = resources.getBoolean(R.bool.fair_play_default)
-
-        // If intent is not null we can check it for storage of queue settings
         if (intent != null) {
-            if (intent.getStringExtra(AppConstants.QUEUE_TITLE_KEY) != null) {
-                queueTitle = intent.getStringExtra(AppConstants.QUEUE_TITLE_KEY)
+            when (intent.action) {
+                null -> {
+                    Log.d(TAG, "Host service is being started")
+
+                    // Set default for queue title
+                    queueTitle = getString(R.string.queue_title_default_value)
+
+                    // Check intent for storage of queue settings
+                    if (intent.getStringExtra(AppConstants.QUEUE_TITLE_KEY) != null) {
+                        queueTitle = intent.getStringExtra(AppConstants.QUEUE_TITLE_KEY)
+                    }
+                    isQueueFairPlay = intent.getBooleanExtra(AppConstants.FAIR_PLAY_KEY, resources.getBoolean(R.bool.fair_play_default))
+
+                    notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
+                    // Initialize playback state, allow play, pause, play/pause toggle and next
+                    playbackState = playbackStateBuilder
+                            .setActions(PlaybackStateCompat.ACTION_PLAY_PAUSE
+                                    or PlaybackStateCompat.ACTION_SKIP_TO_NEXT
+                                    or PlaybackStateCompat.ACTION_PLAY
+                                    or PlaybackStateCompat.ACTION_PAUSE)
+                            .build()
+
+                    // Initialize media session
+                    mediaSession = MediaSessionCompat(baseContext, AppConstants.HOST_MEDIA_SESSION_TAG)
+                    mediaSession.isActive = true
+                    mediaSession.setFlags(MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS)
+                    mediaSession.setCallback(mediaSessionCallback)
+                    mediaSession.setPlaybackState(playbackState)
+
+                    // Build notification and start foreground service
+                    val token = mediaSession.sessionToken
+                    if (token != null) {
+                        // Create intent for touching foreground notification
+                        val pendingIntent = PendingIntent.getActivity(
+                                this,
+                                0,
+                                Intent(this, HostActivity::class.java),
+                                0)
+
+                        // Setup media style with media session token and displaying actions in compact view
+                        val mediaStyle = androidx.media.app.NotificationCompat.MediaStyle()
+                        mediaStyle.setMediaSession(token)
+                        mediaStyle.setShowActionsInCompactView(0, 1)
+
+                        // Build foreground notification
+                        notificationBuilder = NotificationCompat.Builder(this, App.CHANNEL_ID)
+                                .setContentTitle(String.format(getString(R.string.host_notification_content_text), queueTitle))
+                                .setSmallIcon(R.drawable.notification_icon)
+                                .setContentIntent(pendingIntent)
+                                .setColorized(true)
+                                .setOnlyAlertOnce(true)
+                                .setStyle(mediaStyle)
+                                .setShowWhen(false)
+
+                        // Add actions to notification builder
+                        addPlayNextToNotificationBuilder()
+                        // Start service in the foreground
+                        startForeground(AppConstants.HOST_SERVICE_ID, notificationBuilder.build())
+                    } else {
+                        Log.e(TAG, "Something went wrong initializing the media session")
+
+                        stopSelf()
+                        return START_NOT_STICKY
+                    }
+
+                    // Request authorization code for Spotify
+                    requestHostAuthorization()
+
+                    // Let app object know that a service has been started
+                    App.hasServiceBeenStarted = true
+                }
+                AppConstants.ACTION_REQUEST_PLAY_PAUSE -> {
+                    if (spotifyPlayer.playbackState.isPlaying) {
+                        requestPause()
+                    } else {
+                        requestPlay()
+                    }
+                }
+                AppConstants.ACTION_REQUEST_NEXT -> {
+                    requestPlayNext()
+                }
+                else -> {
+                    Log.e(TAG, "Not handling action: ${intent.action}")
+                }
             }
-
-            isQueueFairPlay = intent.getBooleanExtra(AppConstants.FAIR_PLAY_KEY, resources.getBoolean(R.bool.fair_play_default))
-        }
-
-        val colorResInt = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            getColor(R.color.Active_Button_Color)
         } else {
-            resources.getColor(R.color.Active_Button_Color)
+            Log.e(TAG, "Intent for onStartCommand was null")
         }
-
-        // Start service in the foreground
-        val notificationIntent = Intent(this, HostActivity::class.java)
-        val pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0)
-
-        val notification = NotificationCompat.Builder(this, App.CHANNEL_ID)
-                .setContentTitle(getString(R.string.service_name))
-                .setContentText(String.format(getString(R.string.host_notification_content_text), queueTitle))
-                .setSmallIcon(R.drawable.notification_icon)
-                .setContentIntent(pendingIntent)
-                .setColor(colorResInt)
-                .build()
-
-        startForeground(AppConstants.HOST_SERVICE_ID, notification)
-
-        // Request authorization code for Spotify
-        requestHostAuthorization()
-
-        // Let app object know that a service has been started
-        App.hasServiceBeenStarted = true
-
         return START_NOT_STICKY
+    }
+
+    /**
+     * Adds play and next button to notification builder, clears current actions from builder
+     */
+    private fun addPlayNextToNotificationBuilder() {
+        // Remove actions from notification builder
+        notificationBuilder.mActions.clear()
+
+        // Intent for toggling play/pause
+        val playPausePendingIntent = PendingIntent.getService(
+                this,
+                0,
+                Intent(this, HostService::class.java).setAction(AppConstants.ACTION_REQUEST_PLAY_PAUSE),
+                0)
+
+        // Intent for skipping
+        val skipPendingIntent = PendingIntent.getService(
+                this,
+                0,
+                Intent(this, HostService::class.java).setAction(AppConstants.ACTION_REQUEST_NEXT),
+                0)
+
+        notificationBuilder
+                .addAction(R.mipmap.ic_media_play, AppConstants.ACTION_REQUEST_PLAY, playPausePendingIntent)
+                .addAction(R.mipmap.ic_media_next, AppConstants.ACTION_REQUEST_NEXT, skipPendingIntent)
+    }
+
+    /**
+     * Adds pause and next button to notification builder, clear current actions from builder
+     */
+    private fun addPauseNextToNotificationBuilder() {
+        // Remove actions from notification builder
+        notificationBuilder.mActions.clear()
+
+        // Intent for toggling play/pause
+        val playPausePendingIntent = PendingIntent.getService(
+                this,
+                0,
+                Intent(this, HostService::class.java).setAction(AppConstants.ACTION_REQUEST_PLAY_PAUSE),
+                0)
+
+        // Intent for skipping
+        val skipPendingIntent = PendingIntent.getService(
+                this,
+                0,
+                Intent(this, HostService::class.java).setAction(AppConstants.ACTION_REQUEST_NEXT),
+                0)
+
+        notificationBuilder
+                .addAction(R.mipmap.ic_media_pause, AppConstants.ACTION_REQUEST_PLAY, playPausePendingIntent)
+                .addAction(R.mipmap.ic_media_next, AppConstants.ACTION_REQUEST_NEXT, skipPendingIntent)
     }
 
     private fun startNearbyAdvertising(queueTitle: String) {
@@ -192,6 +340,9 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
 
     override fun onDestroy() {
         Log.d(TAG, "Host service is ending")
+
+        // Ensure media session is released before closing service
+        mediaSession.release()
 
         // Stop advertising and alert clients we have disconnected
         if (successfulAdvertisingFlag) {
@@ -266,7 +417,7 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
                     }
                     NearbyDevicesMessage.QUEUE_UPDATE,
                     NearbyDevicesMessage.INITIATE_CLIENT,
-                    NearbyDevicesMessage.HOST_DISCONNECTING-> {
+                    NearbyDevicesMessage.HOST_DISCONNECTING -> {
                         Log.e(TAG, "Hosts should not receive $payloadType messages")
                     }
                     NearbyDevicesMessage.INVALID -> {
@@ -307,6 +458,7 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
             hostUser = spotifyService.me
             playlistOwnerUserId = hostUser.id
             startNearbyAdvertising(queueTitle)
+            initPlayer(AccessModel.getAccessToken())
         } else {
             Log.d(TAG, "Updating player's access token")
             spotifyPlayer.login(accessToken)
@@ -343,7 +495,7 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
     }
 
     private fun initiateNewClient(client: Any) {
-        if (clientEndpoints.contains(client.toString()) && playlist.id != null&& playlistOwnerUserId.isNotEmpty()) {
+        if (clientEndpoints.contains(client.toString()) && playlist.id != null && playlistOwnerUserId.isNotEmpty()) {
             Log.d(TAG, "Sending host ID, playlist id, and current playing index to new client")
             Nearby.getConnectionsClient(this).sendPayload(client.toString(), Payload.fromBytes(
                     String.format(NearbyDevicesMessage.INITIATE_CLIENT.messageFormat,
@@ -353,16 +505,13 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
         }
     }
 
-
-    // COPYING IN PLAY QUEUE SERVICE CODE
-
     private fun initPlayer(accessToken: String) {
         // Setup Spotify player
         val playerConfig = Config(this, accessToken, AppConstants.CLIENT_ID)
         spotifyPlayer = Spotify.getPlayer(playerConfig, this, object : SpotifyPlayer.InitializationObserver {
             override fun onInitialized(player: SpotifyPlayer) {
                 Log.d(TAG, "Player initialized")
-                player.setConnectivityStatus(mConnectivityCallback,
+                player.setConnectivityStatus(connectivityCallback,
                         getNetworkConnectivity(this@HostService))
                 player.addConnectionStateCallback(this@HostService)
                 player.addNotificationCallback(this@HostService)
@@ -378,11 +527,11 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
         Log.d(TAG, "PLAY REQUEST")
         if (spotifyPlayer.playbackState != null) {
             if (audioDeliveryDoneFlag) {
-                if (currentPlaylistIndex < playlist.tracks.total) {
+                if (currentPlaylistIndex < playlistTracks.size) {
                     // If audio has previously been completed (or never started)
                     // start the playlist at the current index
                     Log.d(TAG, "Audio previously finished.\nStarting playlist from index: $currentPlaylistIndex")
-                    spotifyPlayer.playUri(this, playlist.uri, currentPlaylistIndex, 1)
+                    spotifyPlayer.playUri(this, playlist.uri, currentPlaylistIndex, 0)
                     audioDeliveryDoneFlag = false
                     incorrectMetaDataFlag = false
                 } else {
@@ -419,6 +568,16 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
         when (playerEvent) {
             PlayerEvent.kSpPlaybackNotifyPlay -> {
                 Log.d(TAG, "Player has started playing")
+
+                // Update session playback state
+                mediaSession.setPlaybackState(playbackStateBuilder
+                        .setState(PlaybackStateCompat.STATE_PLAYING, PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN, 1F)
+                        .build())
+
+                // Update notification builder with pause and next buttons
+                addPauseNextToNotificationBuilder()
+                notificationManager.notify(AppConstants.HOST_SERVICE_ID, notificationBuilder.build())
+
                 isPlaying = true
                 notifyPlayStarted()
             }
@@ -426,6 +585,16 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
             }
             PlayerEvent.kSpPlaybackNotifyPause -> {
                 Log.d(TAG, "Player has paused")
+
+                // Update session playback state
+                mediaSession.setPlaybackState(playbackStateBuilder
+                        .setState(PlaybackStateCompat.STATE_PAUSED, PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN, 0F)
+                        .build())
+
+                // Update notification builder with play and next buttons
+                addPlayNextToNotificationBuilder()
+                notificationManager.notify(AppConstants.HOST_SERVICE_ID, notificationBuilder.build())
+
                 // If meta data is incorrect we won't actually pause (unless user requested pause)
                 isPlaying = false
                 if (userRequestedPause || !incorrectMetaDataFlag) {
@@ -433,8 +602,11 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
                     userRequestedPause = false
                 }
             }
-            PlayerEvent.kSpPlaybackNotifyTrackChanged -> logMetaData()
+            PlayerEvent.kSpPlaybackNotifyTrackChanged -> {
+                logMetaData()
+            }
             PlayerEvent.kSpPlaybackNotifyMetadataChanged -> {
+                logMetaData()
             }
             PlayerEvent.kSpPlaybackNotifyTrackDelivered,
             PlayerEvent.kSpPlaybackNotifyNext -> {
@@ -454,6 +626,13 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
                     currentPlaylistIndex++
                     Log.d(TAG, "UPDATING CURRENT PLAYING INDEX TO: $currentPlaylistIndex")
                     notifyQueueChanged()
+
+                    Log.d(TAG, "Updating notification")
+                    if (currentPlaylistIndex < playlistTracks.size) {
+                        showTrackInNotification(playlistTracks[currentPlaylistIndex].track)
+                    } else {
+                        // TODO: Don't show track info anymore in notification/session metadata
+                    }
                 }
             }
             PlayerEvent.kSpPlaybackNotifyAudioDeliveryDone -> {
@@ -493,7 +672,7 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
         if (metadata.nextTrack != null) {
             nextTrack = metadata.nextTrack.name
         }
-        Log.d(TAG, "META DATA:\nFinished/Skipped: " + previousTrack
+        Log.i(TAG, "META DATA:\nFinished/Skipped: " + previousTrack
                 + "\nNow Playing : " + currentTrack
                 + "\nNext Track: " + nextTrack)
     }
@@ -579,7 +758,7 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
 
     private fun notifyQueueChanged() {
         if (listener != null) {
-            listener?.onQueueUpdated(createDisplayList(playlistTracks.subList(currentPlaylistIndex, playlist.tracks.total)))
+            listener?.onQueueUpdated(createDisplayList(playlistTracks.subList(currentPlaylistIndex, playlistTracks.size)))
         }
         notifyClientsQueueUpdated()
     }
@@ -610,11 +789,6 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
         this.listener = null
     }
 
-    // END COPYING IN PLAYQUEUESERVICE
-
-
-    // COPYING METHODS FROM HOSTACTIVITYKOTLIN
-
     private fun createPlaylistForQueue() {
         // Create body parameters for new playlist
         val playlistParameters = HashMap<String, Any>()
@@ -644,12 +818,19 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
         var i = 0
         while (i < basePlaylist.tracks.total) {
             val iterationQueryParameters = HashMap<String, Any>()
-            iterationQueryParameters["offset"] = i
+            iterationQueryParameters[SpotifyService.OFFSET] = i
+            iterationQueryParameters[SpotifyService.MARKET] = AppConstants.PARAM_FROM_TOKEN
 
             // Retrieve max next 100 tracks
             val iterationTracks = spotifyService.getPlaylistTracks(playlistOwnerUserId, playlistId, iterationQueryParameters)
 
-            playlistTracks.addAll(iterationTracks.items)
+            // Ensure tracks are playable in our market and not local before adding
+            for (track in iterationTracks.items) {
+                if (track.track.is_playable != null && track.track.is_playable && !track.is_local) {
+                    playlistTracks.add(track)
+                }
+            }
+
             i += 100
         }
 
@@ -671,13 +852,10 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
                     break
                 }
                 val track = shuffledTracks.removeAt(0)
-                // Can't add local tracks (local to playlist owner's device)
-                if (!track.is_local) {
-                    val requestData = SongRequestData(track.track.uri, baseUser)
-                    songRequests.add(requestData)
+                val requestData = SongRequestData(track.track.uri, baseUser)
+                songRequests.add(requestData)
 
-                    urisArray.add(track.track.uri)
-                }
+                urisArray.add(track.track.uri)
             }
             val queryParameters = HashMap<String, Any>()
             val bodyParameters = HashMap<String, Any>()
@@ -690,7 +868,7 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
         refreshPlaylist()
     }
 
-    protected fun handleSongRequest(songRequest: SongRequestData?) {
+    private fun handleSongRequest(songRequest: SongRequestData?) {
         if (songRequest != null && !songRequest.uri.isEmpty()) {
             Log.d(TAG, "Received request for URI: " + songRequest.uri + ", from User ID: " + songRequest.user.id)
 
@@ -914,17 +1092,45 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
     }
 
     fun requestInitiation() {
-        listener?.initiateView(queueTitle, createDisplayList(playlistTracks.subList(currentPlaylistIndex, playlist.tracks.total)), isPlaying)
+        listener?.initiateView(queueTitle, createDisplayList(playlistTracks.subList(currentPlaylistIndex, playlistTracks.size)), isPlaying)
     }
 
     override fun playlistRefreshComplete() {
         notifyQueueChanged()
     }
 
-    // END HOST ACTIVITY KOTLIN COPY CODE
+    private fun showTrackInNotification(trackToShow: Track) {
+        // Update metadata for media session
+        metaDataBuilder.putString(MediaMetadataCompat.METADATA_KEY_ALBUM, trackToShow.album?.name)
+        metaDataBuilder.putString(MediaMetadataCompat.METADATA_KEY_TITLE, trackToShow.name)
+        metaDataBuilder.putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_TITLE, trackToShow.name)
+        metaDataBuilder.putString(MediaMetadataCompat.METADATA_KEY_ARTIST, DisplayUtils.getTrackArtistString(trackToShow))
 
+        // Attempt to update album art in notification and metadata
+        if (trackToShow.album.images.size > 0) {
+            try {
+                val url = URL(trackToShow.album.images[0].url)
+                // Retrieve album art bitmap
+                val albumArtBitmap = BitmapFactory.decodeStream(url.openConnection().getInputStream())
 
-    // SPOTIFY SERVICE CALLBACKS
+                // Set bitmap data for lock screen display
+                metaDataBuilder.putBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART, albumArtBitmap)
+                // Set bitmap data for notification
+                notificationBuilder.setLargeIcon(albumArtBitmap)
+            } catch (exception: IOException) {
+                Log.e(TAG, "Error retrieving image bitmap: ${exception.message.toString()}")
+                System.out.println(exception)
+            }
+        }
+        mediaSession.setMetadata(metaDataBuilder.build())
+
+        // Update notification data
+        notificationBuilder.setContentTitle(trackToShow.name)
+        notificationBuilder.setContentText(DisplayUtils.getTrackArtistString(trackToShow))
+
+        // Display updated notification
+        notificationManager.notify(AppConstants.HOST_SERVICE_ID, notificationBuilder.build())
+    }
 
     // Callback for creating playlist
     private val createPlaylistCallback = object : SpotifyCallback<Playlist>() {
@@ -938,7 +1144,6 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
                     loadBasePlaylist(basePlaylistId)
                     basePlaylistId = ""
                 }
-                initPlayer(AccessModel.getAccessToken())
                 return
             }
             Log.e(TAG, "Created playlist returned null. Try again")
@@ -946,7 +1151,7 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
         }
 
         override fun failure(spotifyError: SpotifyError?) {
-            Log.e(TAG, spotifyError?.errorDetails?.message)
+            Log.e(TAG, spotifyError?.errorDetails?.message.toString())
             Log.e(TAG, "Failed to create playlist. Try again")
             createPlaylistForQueue()
             // TODO: Should stop trying after so many failures
@@ -987,7 +1192,7 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
         }
 
         override fun failure(spotifyError: SpotifyError?) {
-            Log.e(TAG, spotifyError?.errorDetails?.message)
+            Log.e(TAG, spotifyError?.errorDetails?.message.toString())
             Log.e(TAG, "Failed to retrieve user playlists")
         }
     }
@@ -1017,11 +1222,10 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
         }
 
         override fun failure(spotifyError: SpotifyError?) {
-            Log.e(TAG, spotifyError?.errorDetails?.message)
+            Log.e(TAG, spotifyError?.errorDetails?.message.toString())
             Log.e(TAG, "Failed to unfollow/change playlist")
         }
     }
-
 
     private fun setupShortDemoQueue() {
         val shortQueueString = "spotify:track:0p8fUOBfWtGcaKGiD9drgJ," +

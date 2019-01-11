@@ -18,6 +18,9 @@ public class AppConstants {
     // Redirect URI
     public static final String REDIRECT_URI = "fryredirect://callback";
 
+    // Tag for host media session
+    public static final String HOST_MEDIA_SESSION_TAG = "socialq_media_session";
+
     // Constant name for base user id
     public static final String BASE_USER_ID = "social_queue_base_user";
 
@@ -85,4 +88,13 @@ public class AppConstants {
     public static final String JSON_ACCESS_TOKEN_KEY = "access_token";
     public static final String JSON_REFRESH_TOEKN_KEY = "refresh_token";
     public static final String JSON_EXPIRES_IN_KEY = "expires_in";
+
+    // Spotify Parameters
+    public static final String PARAM_FROM_TOKEN = "from_token";
+
+    // Notification Pending Intent Request Codes
+    public static final String ACTION_REQUEST_PLAY = "socialq_notification_play";
+    public static final String ACTION_REQUEST_PAUSE = "socialq_notification_pause";
+    public static final String ACTION_REQUEST_NEXT = "socialq_notification_next";
+    public static final String ACTION_REQUEST_PLAY_PAUSE = "socialq_notification_play_pause";
 }

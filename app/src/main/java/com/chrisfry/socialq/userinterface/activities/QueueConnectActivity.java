@@ -1,6 +1,7 @@
 package com.chrisfry.socialq.userinterface.activities;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -25,6 +26,13 @@ public abstract class QueueConnectActivity extends Activity implements View.OnCl
         super.onResume();
 
         mQueueJoinButton.setEnabled(false);
+    }
+
+    @Override
+    public void onBackPressed() {
+        Intent startIntent = new Intent(this, StartActivity.class);
+        startActivity(startIntent);
+        super.onBackPressed();
     }
 
     @Override
