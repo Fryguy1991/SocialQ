@@ -96,4 +96,5 @@ public class AppConstants {
     public static final String ACTION_REQUEST_PLAY = "socialq_notification_play";
     public static final String ACTION_REQUEST_PAUSE = "socialq_notification_pause";
     public static final String ACTION_REQUEST_NEXT = "socialq_notification_next";
+    public static final String ACTION_REQUEST_PLAY_PAUSE = "socialq_notification_play_pause";
 }

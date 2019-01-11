@@ -151,68 +151,110 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        Log.d(TAG, "Host service is being started")
-
-        // Set defaults for queue settings
-        queueTitle = getString(R.string.queue_title_default_value)
-        isQueueFairPlay = resources.getBoolean(R.bool.fair_play_default)
-
-        // If intent is not null we can check it for storage of queue settings
         if (intent != null) {
-            if (intent.getStringExtra(AppConstants.QUEUE_TITLE_KEY) != null) {
-                queueTitle = intent.getStringExtra(AppConstants.QUEUE_TITLE_KEY)
+            when (intent.action) {
+                null -> {
+                    Log.d(TAG, "Host service is being started")
+
+                    // Set default for queue title
+                    queueTitle = getString(R.string.queue_title_default_value)
+
+                    // Check intent for storage of queue settings
+                    if (intent.getStringExtra(AppConstants.QUEUE_TITLE_KEY) != null) {
+                        queueTitle = intent.getStringExtra(AppConstants.QUEUE_TITLE_KEY)
+                    }
+                    isQueueFairPlay = intent.getBooleanExtra(AppConstants.FAIR_PLAY_KEY, resources.getBoolean(R.bool.fair_play_default))
+
+                    notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
+                    // Initialize playback state, allow play, pause, play/pause toggle and next
+                    playbackState = playbackStateBuilder
+                            .setActions(PlaybackStateCompat.ACTION_PLAY_PAUSE
+                                    or PlaybackStateCompat.ACTION_SKIP_TO_NEXT
+                                    or PlaybackStateCompat.ACTION_PLAY
+                                    or PlaybackStateCompat.ACTION_PAUSE)
+                            .build()
+
+                    // Initialize media session
+                    mediaSession = MediaSessionCompat(baseContext, AppConstants.HOST_MEDIA_SESSION_TAG)
+                    mediaSession.isActive = true
+                    mediaSession.setFlags(MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS)
+                    mediaSession.setCallback(mediaSessionCallback)
+                    mediaSession.setPlaybackState(playbackState)
+
+                    // Build notification and start foreground service
+                    val token = mediaSession.sessionToken
+                    if (token != null) {
+                        // Create intent for touching foreground notification
+                        val pendingIntent = PendingIntent.getActivity(
+                                this,
+                                0,
+                                Intent(this, HostActivity::class.java),
+                                0)
+
+                        // Intent for toggling play/pause
+                        val playPausePendingIntent = PendingIntent.getService(
+                                this,
+                                0,
+                                Intent(this, HostService::class.java).setAction(AppConstants.ACTION_REQUEST_PLAY_PAUSE),
+                                0)
+
+                        // Intent for skipping
+                        val skipPendingIntent = PendingIntent.getService(
+                                this,
+                                0,
+                                Intent(this, HostService::class.java).setAction(AppConstants.ACTION_REQUEST_NEXT),
+                                0)
+
+                        // Setup media style with media session token and displaying actions in compact view
+                        val mediaStyle = androidx.media.app.NotificationCompat.MediaStyle()
+                        mediaStyle.setMediaSession(token)
+                        mediaStyle.setShowActionsInCompactView(0, 1)
+
+                        // Build foreground notification
+                        notificationBuilder = NotificationCompat.Builder(this, App.CHANNEL_ID)
+                                .setContentTitle(String.format(getString(R.string.host_notification_content_text), queueTitle))
+                                .setSmallIcon(R.drawable.notification_icon)
+                                .setContentIntent(pendingIntent)
+                                .setColorized(true)
+                                .setOnlyAlertOnce(true)
+                                .setStyle(mediaStyle)
+                                .setShowWhen(false)
+                                .addAction(R.mipmap.ic_media_play, AppConstants.ACTION_REQUEST_PLAY, playPausePendingIntent)
+                                .addAction(R.mipmap.ic_media_next, AppConstants.ACTION_REQUEST_NEXT, skipPendingIntent)
+
+                        // Start service in the foreground
+                        startForeground(AppConstants.HOST_SERVICE_ID, notificationBuilder.build())
+                    } else {
+                        Log.e(TAG, "Something went wrong initializing the media session")
+
+                        stopSelf()
+                        return START_NOT_STICKY
+                    }
+
+                    // Request authorization code for Spotify
+                    requestHostAuthorization()
+
+                    // Let app object know that a service has been started
+                    App.hasServiceBeenStarted = true
+                }
+                AppConstants.ACTION_REQUEST_PLAY_PAUSE -> {
+                    if (spotifyPlayer.playbackState.isPlaying) {
+                        requestPause()
+                    } else {
+                        requestPlay()
+                    }
+                }
+                AppConstants.ACTION_REQUEST_NEXT -> {
+                    requestPlayNext()
+                }
+                else -> {
+                    Log.e(TAG, "Not handling action: ${intent.action}")
+                }
             }
-
-            isQueueFairPlay = intent.getBooleanExtra(AppConstants.FAIR_PLAY_KEY, resources.getBoolean(R.bool.fair_play_default))
-        }
-
-        // Start service in the foreground
-        val notificationIntent = Intent(this, HostActivity::class.java)
-        val pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0)
-
-        notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-
-        // Initialize playback state, allow play, pause and next
-        playbackState = playbackStateBuilder
-                .setActions(PlaybackStateCompat.ACTION_PLAY_PAUSE
-                        or PlaybackStateCompat.ACTION_SKIP_TO_NEXT
-                        or PlaybackStateCompat.ACTION_PLAY
-                        or PlaybackStateCompat.ACTION_PAUSE)
-                .build()
-
-        // Initialize media session
-        mediaSession = MediaSessionCompat(baseContext, AppConstants.HOST_MEDIA_SESSION_TAG)
-        mediaSession.isActive = true
-        mediaSession.setFlags(MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS)
-        mediaSession.setCallback(mediaSessionCallback)
-        mediaSession.setPlaybackState(playbackState)
-
-        // Build notification and start foreground service
-        val token = mediaSession.sessionToken
-        if (token != null) {
-            notificationBuilder = NotificationCompat.Builder(this, App.CHANNEL_ID)
-                    .setContentTitle(String.format(getString(R.string.host_notification_content_text), queueTitle))
-                    .setSmallIcon(R.drawable.notification_icon)
-                    .setContentIntent(pendingIntent)
-                    .setColorized(true)
-                    .setOnlyAlertOnce(true)
-                    .setStyle(androidx.media.app.NotificationCompat.MediaStyle().setMediaSession(token))
-                    .setShowWhen(false)
-
-            startForeground(AppConstants.HOST_SERVICE_ID, notificationBuilder.build())
         } else {
-            Log.e(TAG, "Something went wrong initializing the media session")
-
-            stopSelf()
-            return START_NOT_STICKY
+            Log.e(TAG, "Intent for onStartCommand was null")
         }
-
-        // Request authorization code for Spotify
-        requestHostAuthorization()
-
-        // Let app object know that a service has been started
-        App.hasServiceBeenStarted = true
-
         return START_NOT_STICKY
     }
 
@@ -260,6 +302,9 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
 
     override fun onDestroy() {
         Log.d(TAG, "Host service is ending")
+
+        // Ensure media session is released before closing service
+        mediaSession.release()
 
         // Stop advertising and alert clients we have disconnected
         if (successfulAdvertisingFlag) {
