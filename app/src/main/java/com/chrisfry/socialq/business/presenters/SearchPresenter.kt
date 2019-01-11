@@ -78,7 +78,7 @@ class SearchPresenter : SpotifyAccessPresenter(), ISearchPresenter {
 
         if (searchTerm.isEmpty()) {
             clearSearchResults()
-            getView()!!.showEmptyBaseView()
+            getView()?.showEmptyBaseView()
         } else {
             spotifyService.searchAlbums(searchTerm, options, albumsCallback)
             spotifyService.searchTracks(searchTerm, options, songsCallback)
@@ -91,13 +91,13 @@ class SearchPresenter : SpotifyAccessPresenter(), ISearchPresenter {
             BASE -> {
                 Log.d(TAG, "Close search view")
 
-                getView()!!.closeSearchView()
+                getView()?.closeSearchView()
             }
             ALL_SONGS -> {
                 Log.d(TAG, "Returning to base view from view all songs")
                 navStep = BASE
 
-                getView()!!.showBaseResultsView()
+                getView()?.showBaseResultsView()
             }
             ARTIST -> {
                 selectedArtist = null
@@ -107,49 +107,49 @@ class SearchPresenter : SpotifyAccessPresenter(), ISearchPresenter {
                     Log.d(TAG, "Returning to all artists from artist")
                     navStep = ALL_ARTISTS
                     allArtistFlag = false
-                    getView()!!.showAllArtists(baseArtistResults, cachedArtistPosition)
+                    getView()?.showAllArtists(baseArtistResults, cachedArtistPosition)
                     cachedArtistPosition = 0
                 } else {
                     Log.d(TAG, "Returning to base from artist")
                     navStep = BASE
-                    getView()!!.showBaseResultsView()
-                    getView()!!.showBaseSongResults(baseSongResults)
-                    getView()!!.showBaseArtistResults(baseArtistResults)
-                    getView()!!.showBaseAlbumResults(baseAlbumResults)
+                    getView()?.showBaseResultsView()
+                    getView()?.showBaseSongResults(baseSongResults)
+                    getView()?.showBaseArtistResults(baseArtistResults)
+                    getView()?.showBaseAlbumResults(baseAlbumResults)
                 }
             }
             ALL_ARTISTS -> {
                 Log.d(TAG, "Returning to base view from view all artists")
                 navStep = BASE
                 allArtistFlag = false
-                getView()!!.showBaseResultsView()
-                getView()!!.showBaseSongResults(baseSongResults)
-                getView()!!.showBaseArtistResults(baseArtistResults)
-                getView()!!.showBaseAlbumResults(baseAlbumResults)
+                getView()?.showBaseResultsView()
+                getView()?.showBaseSongResults(baseSongResults)
+                getView()?.showBaseArtistResults(baseArtistResults)
+                getView()?.showBaseAlbumResults(baseAlbumResults)
             }
             ALBUM -> {
                 when {
                     allArtistAlbumFlag -> {
                         Log.d(TAG, "Returning to all artist albums from album")
                         navStep = ALL_ALBUMS
-                        getView()!!.showAllArtistAlbums(selectedArtist!!, fullArtistAlbums, cachedAlbumPosition)
+                        getView()?.showAllArtistAlbums(selectedArtist!!, fullArtistAlbums, cachedAlbumPosition)
                         cachedAlbumPosition = 0
                     }
                     allAlbumFlag -> {
                         Log.d(TAG, "Returning to all albums from album")
                         navStep = ALL_ALBUMS
-                        getView()!!.showAllAlbums(baseAlbumResults, cachedAlbumPosition)
+                        getView()?.showAllAlbums(baseAlbumResults, cachedAlbumPosition)
                         cachedAlbumPosition = 0
                     }
                     artistSelectedFlag -> {
                         Log.d(TAG, "Returning to artist from album")
                         navStep = ARTIST
-                        getView()!!.returnToArtist(selectedArtist!!)
+                        getView()?.returnToArtist(selectedArtist!!)
                     }
                     else -> {
                         Log.d(TAG, "Returning to base from album")
                         navStep = BASE
-                        getView()!!.showBaseResultsView()
+                        getView()?.showBaseResultsView()
                     }
                 }
             }
@@ -158,12 +158,12 @@ class SearchPresenter : SpotifyAccessPresenter(), ISearchPresenter {
                     Log.d(TAG, "Returning to artist from artist albums")
                     navStep = ARTIST
                     allArtistAlbumFlag = false
-                    getView()!!.returnToArtist(selectedArtist!!)
+                    getView()?.returnToArtist(selectedArtist!!)
                 } else {
                     Log.d(TAG, "Returning to base from all albums")
                     navStep = BASE
                     allAlbumFlag = false
-                    getView()!!.showBaseResultsView()
+                    getView()?.showBaseResultsView()
                 }
             }
         }
@@ -186,25 +186,25 @@ class SearchPresenter : SpotifyAccessPresenter(), ISearchPresenter {
 
     override fun viewAllSongsRequest() {
         navStep = ALL_SONGS
-        getView()!!.showAllSongs(baseSongResults)
+        getView()?.showAllSongs(baseSongResults)
     }
 
     override fun viewAllArtistsRequest() {
         navStep = ALL_ARTISTS
         allArtistFlag = true
-        getView()!!.showAllArtists(baseArtistResults, 0)
+        getView()?.showAllArtists(baseArtistResults, 0)
     }
 
     override fun viewAllAlbumsRequest() {
         navStep = ALL_ALBUMS
         allAlbumFlag = true
-        getView()!!.showAllAlbums(baseAlbumResults, 0)
+        getView()?.showAllAlbums(baseAlbumResults, 0)
     }
 
     override fun viewALlArtistAlbumsRequest() {
         navStep = ALL_ALBUMS
         allArtistAlbumFlag = true
-        getView()!!.showAllArtistAlbums(selectedArtist!!, fullArtistAlbums, 0)
+        getView()?.showAllArtistAlbums(selectedArtist!!, fullArtistAlbums, 0)
     }
 
     // START SPOTIFY CALLBACK ITEMS
@@ -218,7 +218,7 @@ class SearchPresenter : SpotifyAccessPresenter(), ISearchPresenter {
                     baseSongResults = tracksPager.tracks.items
 
                     if (!checkIfNoResults()) {
-                        getView()!!.showBaseSongResults(baseSongResults)
+                        getView()?.showBaseSongResults(baseSongResults)
                     }
                 }
             }
@@ -240,7 +240,7 @@ class SearchPresenter : SpotifyAccessPresenter(), ISearchPresenter {
                     baseArtistResults = artistsPager.artists.items
 
                     if (!checkIfNoResults()) {
-                        getView()!!.showBaseArtistResults(baseArtistResults)
+                        getView()?.showBaseArtistResults(baseArtistResults)
                     }
                 }
             }
@@ -278,7 +278,7 @@ class SearchPresenter : SpotifyAccessPresenter(), ISearchPresenter {
                     } else {
                         baseAlbumResults.clear()
                         if (!checkIfNoResults()) {
-                            getView()!!.showBaseAlbumResults(baseAlbumResults)
+                            getView()?.showBaseAlbumResults(baseAlbumResults)
                         }
                     }
                 }
@@ -299,7 +299,7 @@ class SearchPresenter : SpotifyAccessPresenter(), ISearchPresenter {
                 baseAlbumResults = albums.albums
 
                 if (!checkIfNoResults()) {
-                    getView()!!.showBaseAlbumResults(baseAlbumResults)
+                    getView()?.showBaseAlbumResults(baseAlbumResults)
                 }
             }
         }
@@ -352,7 +352,7 @@ class SearchPresenter : SpotifyAccessPresenter(), ISearchPresenter {
                 if (fullArtistAlbums.size == cachedAlbumCount) {
                     Log.d(TAG, "Finished retrieving full albums for ${selectedArtist!!.name}")
                     if (artistTopTrackRetrievalComplete) {
-                        getView()!!.showArtist(selectedArtist!!, artistTopTracks, fullArtistAlbums)
+                        getView()?.showArtist(selectedArtist!!, artistTopTracks, fullArtistAlbums)
                     }
                 } else {
                     Log.d(TAG, "Successfully retrieved some full albums for ${selectedArtist!!.name}")
@@ -375,7 +375,7 @@ class SearchPresenter : SpotifyAccessPresenter(), ISearchPresenter {
                 artistTopTracks = tracks.tracks
 
                 if (artistFullAlbumRetrievalComplete) {
-                    getView()!!.showArtist(selectedArtist!!, artistTopTracks, artistAlbums)
+                    getView()?.showArtist(selectedArtist!!, artistTopTracks, artistAlbums)
                 }
             }
         }
@@ -437,7 +437,7 @@ class SearchPresenter : SpotifyAccessPresenter(), ISearchPresenter {
     private fun checkIfNoResults(): Boolean {
         if (songSearchComplete && artistSearchComplete && albumSearchComplete) {
             if (baseSongResults.isEmpty() && baseArtistResults.isEmpty() && baseAlbumResults.isEmpty()) {
-                getView()!!.showNoResultsView(cachedSearchTerm)
+                getView()?.showNoResultsView(cachedSearchTerm)
                 return true
             }
         }
@@ -450,7 +450,7 @@ class SearchPresenter : SpotifyAccessPresenter(), ISearchPresenter {
             ALL_SONGS,
             ARTIST,
             ALBUM -> {
-                getView()!!.sendTrackToHost(uri)
+                getView()?.sendTrackToHost(uri)
             }
             ALL_ARTISTS,
             ALL_ALBUMS -> {
@@ -526,7 +526,7 @@ class SearchPresenter : SpotifyAccessPresenter(), ISearchPresenter {
                     if (uri == album.uri) {
                         Log.d(TAG, "Selected ${album.name}")
                         navStep = ALBUM
-                        getView()!!.showAlbum(album)
+                        getView()?.showAlbum(album)
                         return
                     }
                 }
@@ -540,7 +540,7 @@ class SearchPresenter : SpotifyAccessPresenter(), ISearchPresenter {
                             Log.d(TAG, "Selected ${fullArtistAlbums[position].name} from artist albums")
                             navStep = ALBUM
                             cachedAlbumPosition = position
-                            getView()!!.showAlbum(fullArtistAlbums[position])
+                            getView()?.showAlbum(fullArtistAlbums[position])
                         } else {
                             Log.e(TAG, "Invalid album index")
                         }
@@ -550,7 +550,7 @@ class SearchPresenter : SpotifyAccessPresenter(), ISearchPresenter {
                             Log.d(TAG, "Selected ${baseAlbumResults[position].name} from all albums")
                             navStep = ALBUM
                             cachedAlbumPosition = position
-                            getView()!!.showAlbum(baseAlbumResults[position])
+                            getView()?.showAlbum(baseAlbumResults[position])
                         } else {
                             Log.e(TAG, "Invalid album index")
                         }
@@ -571,7 +571,7 @@ class SearchPresenter : SpotifyAccessPresenter(), ISearchPresenter {
                     if (uri == album.uri) {
                         Log.d(TAG, "Selected ${album.name} from artist")
                         navStep = ALBUM
-                        getView()!!.showAlbum(album)
+                        getView()?.showAlbum(album)
                         return
                     }
                 }
