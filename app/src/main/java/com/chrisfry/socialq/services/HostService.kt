@@ -247,7 +247,7 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
     /**
      * Adds play and next button to notification builder, clears current actions from builder
      */
-    private fun addPlayNextToNotificationBuilder(){
+    private fun addPlayNextToNotificationBuilder() {
         // Remove actions from notification builder
         notificationBuilder.mActions.clear()
 
