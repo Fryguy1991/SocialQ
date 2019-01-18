@@ -7,7 +7,7 @@ apply plugin: 'com.github.dcendents.android-maven'
 
 def supportLibraryVersion = '28.0.0'
 def daggerVersion = '2.17'
-def butterKnifeVersion = '9.0.0-rc1'
+def butterKnifeVersion = '10.0.0'
 def navVersion = '1.0.0-alpha07'
 
 android {
@@ -27,6 +27,10 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
 }
 
 repositories {
@@ -43,13 +47,14 @@ dependencies {
     implementation 'com.spotify.android:auth:1.1.0'
     // This library handles music playback
     implementation 'com.spotify.sdk:spotify-player-24-noconnect-2.20b@aar'
+
     //Spotify WebAPI Android wrapper
 //    implementation 'com.github.kaaes:spotify-web-api-android:0.4.1'
     // Pull my own version of Spotify web api wrapper
     implementation 'com.github.Fryguy1991:spotify-web-api-android:0.4.1'
 
     // Nearby Connections API
-    implementation "com.google.android.gms:play-services-nearby:16.0.0"
+    implementation 'com.google.android.gms:play-services-nearby:16.0.0'
 
     // Butterknife elements
     implementation "com.jakewharton:butterknife:$butterKnifeVersion"
@@ -61,10 +66,10 @@ dependencies {
     implementation 'androidx.browser:browser:1.0.0'
     implementation 'androidx.media:media:1.0.0'
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
-    implementation 'com.google.android.material:material:1.1.0-alpha01'
+    implementation 'com.google.android.material:material:1.1.0-alpha02'
 
     // Constraint Layout
-    implementation 'androidx.constraintlayout:constraintlayout:2.0.0-alpha2'
+    implementation 'androidx.constraintlayout:constraintlayout:2.0.0-alpha3'
 
     // Dagger elements
     implementation "com.google.dagger:dagger:$daggerVersion"
@@ -74,7 +79,7 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
 
     // GSON
-    implementation "com.google.code.gson:gson:2.8.5"
+    implementation 'com.google.code.gson:gson:2.8.5'
 
     // Latest Spotify remote SDK
     api project(':spotify-app-remote')
@@ -91,10 +96,10 @@ dependencies {
     // Nav Architecture
     implementation "android.arch.navigation:navigation-fragment-ktx:$navVersion"
     implementation "android.arch.navigation:navigation-ui-ktx:$navVersion"
-    androidTestImplementation "android.arch.navigation:navigation-testing-ktx:1.0.0-alpha06"
+    androidTestImplementation 'android.arch.navigation:navigation-testing-ktx:1.0.0-alpha06'
 
     // Android-KTX
-    implementation "androidx.core:core-ktx:1.0.1"
+    implementation 'androidx.core:core-ktx:1.0.1'
 
     // OkHttp
     implementation 'com.squareup.okhttp3:okhttp:3.12.0'
