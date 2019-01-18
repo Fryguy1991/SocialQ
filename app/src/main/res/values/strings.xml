@@ -8,6 +8,8 @@
     <!-- Notification Strings -->
     <string name="host_notification_content_text">Hosting \"%1$s\"</string>
     <string name="client_notification_content_text">Connected to \"%1$s\"</string>
+    <string name="client_notification_title_pre_n">SocialQ - Connected to \"%1$s\"</string>
+    <string name="client_notification_title_n_plus">Connected to \"%1$s\"</string>
 
     <!-- Menu Action Strings -->
     <string name="search_action">search_action</string>
