@@ -34,6 +34,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import butterknife.BindViews;
 import butterknife.ButterKnife;
+import butterknife.ViewCollections;
 import kaaes.spotify.webapi.android.models.Album;
 import kaaes.spotify.webapi.android.models.Artist;
 import kaaes.spotify.webapi.android.models.Track;
@@ -369,8 +370,8 @@ public class SearchActivity extends AppCompatActivity implements ISearchView, IS
 
     @Override
     public void showBaseResultsView() {
-        ButterKnife.apply(mAlbumDisplayViews, DisplayUtils.GONE);
-        ButterKnife.apply(mArtistDisplayViews, DisplayUtils.GONE);
+        ViewCollections.run(mAlbumDisplayViews, DisplayUtils.GONE);
+        ViewCollections.run(mArtistDisplayViews, DisplayUtils.GONE);
         mNoResultsText.setVisibility(View.GONE);
         mSearchEditText.setVisibility(View.VISIBLE);
         mResultsScrollView.setVisibility(View.VISIBLE);
@@ -409,7 +410,7 @@ public class SearchActivity extends AppCompatActivity implements ISearchView, IS
             showBaseResultsView();
         } else {
             // If we have no results hide all song views
-            ButterKnife.apply(mAllSongViews, DisplayUtils.GONE);
+            ViewCollections.run(mAllSongViews, DisplayUtils.GONE);
         }
     }
 
@@ -441,7 +442,7 @@ public class SearchActivity extends AppCompatActivity implements ISearchView, IS
 
             showBaseResultsView();
         } else {
-            ButterKnife.apply(mAllArtistViews, DisplayUtils.GONE);
+            ViewCollections.run(mAllArtistViews, DisplayUtils.GONE);
         }
     }
 
@@ -474,7 +475,7 @@ public class SearchActivity extends AppCompatActivity implements ISearchView, IS
 
             showBaseResultsView();
         } else {
-            ButterKnife.apply(mAllAlbumViews, DisplayUtils.GONE);
+            ViewCollections.run(mAllAlbumViews, DisplayUtils.GONE);
         }
     }
 
@@ -508,8 +509,8 @@ public class SearchActivity extends AppCompatActivity implements ISearchView, IS
         mArtistImage.setImageResource(R.color.Transparent);
         mSearchEditText.setVisibility(View.GONE);
         mResultsScrollView.setVisibility(View.GONE);
-        ButterKnife.apply(mBaseDisplayViews, DisplayUtils.GONE);
-        ButterKnife.apply(mArtistDisplayViews, DisplayUtils.GONE);
+        ViewCollections.run(mBaseDisplayViews, DisplayUtils.GONE);
+        ViewCollections.run(mArtistDisplayViews, DisplayUtils.GONE);
         setupRecyclerViewWithGrid();
         mResultsList.setAdapter(mArtistCardAdapter);
         mArtistCardAdapter.updateAdapter(artistList);
@@ -523,7 +524,7 @@ public class SearchActivity extends AppCompatActivity implements ISearchView, IS
         mAlbumImage.setImageResource(R.color.Transparent);
         mSearchEditText.setVisibility(View.GONE);
         mResultsScrollView.setVisibility(View.GONE);
-        ButterKnife.apply(mAlbumDisplayViews, DisplayUtils.GONE);
+        ViewCollections.run(mAlbumDisplayViews, DisplayUtils.GONE);
         setupRecyclerViewWithGrid();
         mResultsList.setAdapter(mAlbumCardAdapter);
         mAlbumCardAdapter.setDisplayArtistFlag(true);
@@ -542,7 +543,7 @@ public class SearchActivity extends AppCompatActivity implements ISearchView, IS
 
     @Override
     public void showAlbum(@NotNull Album album) {
-        ButterKnife.apply(mAlbumDisplayViews, DisplayUtils.VISIBLE);
+        ViewCollections.run(mAlbumDisplayViews, DisplayUtils.VISIBLE);
         if (album.images.size() > 0) {
             Glide.with(this).load(album.images.get(0).url).into(mAlbumImage);
         } else {
@@ -562,9 +563,9 @@ public class SearchActivity extends AppCompatActivity implements ISearchView, IS
         mResultsScrollView.scrollTo(0, 0);
         mSearchEditText.setVisibility(View.GONE);
         mResultsScrollView.setVisibility(View.VISIBLE);
-        ButterKnife.apply(mBaseDisplayViews, DisplayUtils.GONE);
-        ButterKnife.apply(mAlbumDisplayViews, DisplayUtils.GONE);
-        ButterKnife.apply(mArtistDisplayViews, DisplayUtils.VISIBLE);
+        ViewCollections.run(mBaseDisplayViews, DisplayUtils.GONE);
+        ViewCollections.run(mAlbumDisplayViews, DisplayUtils.GONE);
+        ViewCollections.run(mArtistDisplayViews, DisplayUtils.VISIBLE);
 
         if (artist.images.size() > 0) {
             Glide.with(getBaseContext()).load(artist.images.get(0).url).into(mArtistImage);
@@ -586,7 +587,7 @@ public class SearchActivity extends AppCompatActivity implements ISearchView, IS
                 i++;
             }
         } else {
-            ButterKnife.apply(mTopTrackViews, DisplayUtils.GONE);
+            ViewCollections.run(mTopTrackViews, DisplayUtils.GONE);
         }
         setTitle(artist.name);
 
@@ -611,13 +612,13 @@ public class SearchActivity extends AppCompatActivity implements ISearchView, IS
             }
             mViewAllArtistAlbums.setVisibility(albums.size() > mArtistAlbumItemViews.size() ? View.VISIBLE : View.GONE);
         } else {
-            ButterKnife.apply(mArtistAlbumViews, DisplayUtils.GONE);
+            ViewCollections.run(mArtistAlbumViews, DisplayUtils.GONE);
         }
     }
 
     @Override
     public void returnToArtist(@NotNull Artist artist) {
-        ButterKnife.apply(mAlbumDisplayViews, DisplayUtils.GONE);
+        ViewCollections.run(mAlbumDisplayViews, DisplayUtils.GONE);
         mResultsScrollView.setVisibility(View.VISIBLE);
         setTitle(artist.name);
     }
