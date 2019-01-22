@@ -18,8 +18,9 @@ public class AppConstants {
     // Redirect URI
     public static final String REDIRECT_URI = "fryredirect://callback";
 
-    // Tag for host media session
-    public static final String HOST_MEDIA_SESSION_TAG = "socialq_media_session";
+    // Tags for media session
+    public static final String HOST_MEDIA_SESSION_TAG = "socialq_host_media_session";
+    public static final String CLIENT_MEDIA_SESSION_TAG = "socialq_client_media_session";
 
     // Constant name for base user id
     public static final String BASE_USER_ID = "social_queue_base_user";

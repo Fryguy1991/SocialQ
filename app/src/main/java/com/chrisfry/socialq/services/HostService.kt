@@ -68,17 +68,6 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
     private var listener: HostServiceListener? = null
 
     // NOTIFICATION ELEMENTS
-    // Reference to notification manager
-    private lateinit var notificationManager: NotificationManager
-    // Builder for foreground notification
-    private lateinit var notificationBuilder: NotificationCompat.Builder
-    // Reference to notification layouts
-    private lateinit var notificationLayout: RemoteViews
-    private lateinit var notificationLayoutExpanded: RemoteViews
-    // Reference to media session
-    private lateinit var mediaSession: MediaSessionCompat
-    // Reference to meta data builder
-    private val metaDataBuilder = MediaMetadataCompat.Builder()
     // Reference to playback state and it's builder
     private lateinit var playbackState: PlaybackStateCompat
     private val playbackStateBuilder = PlaybackStateCompat.Builder()
@@ -345,9 +334,6 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
 
     override fun onDestroy() {
         Log.d(TAG, "Host service is ending")
-
-        // Ensure media session is released before closing service
-        mediaSession.release()
 
         // Stop advertising and alert clients we have disconnected
         if (successfulAdvertisingFlag) {
@@ -724,7 +710,7 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
 
                     Log.d(TAG, "Updating notification")
                     if (currentPlaylistIndex < playlistTracks.size) {
-                        showTrackInNotification(playlistTracks[currentPlaylistIndex].track)
+                        showTrackInNotification(playlistTracks[currentPlaylistIndex].track, true)
                     } else {
                         // TODO: Don't show track info anymore in notification/session metadata
                     }
@@ -1192,39 +1178,6 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
 
     override fun playlistRefreshComplete() {
         notifyQueueChanged()
-    }
-
-    private fun showTrackInNotification(trackToShow: Track) {
-        // Update metadata for media session
-        metaDataBuilder.putString(MediaMetadataCompat.METADATA_KEY_ALBUM, trackToShow.album?.name)
-        metaDataBuilder.putString(MediaMetadataCompat.METADATA_KEY_TITLE, trackToShow.name)
-        metaDataBuilder.putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_TITLE, trackToShow.name)
-        metaDataBuilder.putString(MediaMetadataCompat.METADATA_KEY_ARTIST, DisplayUtils.getTrackArtistString(trackToShow))
-
-        // Attempt to update album art in notification and metadata
-        if (trackToShow.album.images.size > 0) {
-            try {
-                val url = URL(trackToShow.album.images[0].url)
-                // Retrieve album art bitmap
-                val albumArtBitmap = BitmapFactory.decodeStream(url.openConnection().getInputStream())
-
-                // Set bitmap data for lock screen display
-                metaDataBuilder.putBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART, albumArtBitmap)
-                // Set bitmap data for notification
-                notificationBuilder.setLargeIcon(albumArtBitmap)
-            } catch (exception: IOException) {
-                Log.e(TAG, "Error retrieving image bitmap: ${exception.message.toString()}")
-                System.out.println(exception)
-            }
-        }
-        mediaSession.setMetadata(metaDataBuilder.build())
-
-        // Update notification data
-        notificationBuilder.setContentTitle(trackToShow.name)
-        notificationBuilder.setContentText(DisplayUtils.getTrackArtistString(trackToShow))
-
-        // Display updated notification
-        notificationManager.notify(AppConstants.HOST_SERVICE_ID, notificationBuilder.build())
     }
 
     // Callback for creating playlist
