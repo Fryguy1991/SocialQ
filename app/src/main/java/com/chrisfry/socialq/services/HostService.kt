@@ -726,7 +726,7 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
                     if (currentPlaylistIndex < playlistTracks.size) {
                         showTrackInNotification(playlistTracks[currentPlaylistIndex].track)
                     } else {
-                        // TODO: Don't show track info anymore in notification/session metadata
+                        clearTrackInfoFromNotification()
                     }
                 }
             }
@@ -1222,6 +1222,25 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
         // Update notification data
         notificationBuilder.setContentTitle(trackToShow.name)
         notificationBuilder.setContentText(DisplayUtils.getTrackArtistString(trackToShow))
+
+        // Display updated notification
+        notificationManager.notify(AppConstants.HOST_SERVICE_ID, notificationBuilder.build())
+    }
+
+    private fun clearTrackInfoFromNotification() {
+        // TODO: Ensure this method is doing what we want it to
+        mediaSession.setMetadata(null)
+
+        // Update session playback state
+        mediaSession.setPlaybackState(playbackStateBuilder
+                .setState(PlaybackStateCompat.STATE_STOPPED, PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN, 0F)
+                .build())
+
+        notificationBuilder.mActions.clear()
+
+        // Update notification data
+        notificationBuilder.setContentTitle(String.format(getString(R.string.host_notification_content_text), queueTitle))
+        notificationBuilder.setContentText("")
 
         // Display updated notification
         notificationManager.notify(AppConstants.HOST_SERVICE_ID, notificationBuilder.build())
