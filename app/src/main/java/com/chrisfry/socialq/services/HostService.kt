@@ -71,6 +71,8 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
     // Reference to playback state and it's builder
     private lateinit var playbackState: PlaybackStateCompat
     private val playbackStateBuilder = PlaybackStateCompat.Builder()
+    // Reference to notification style
+    private val mediaStyle = androidx.media.app.NotificationCompat.MediaStyle()
 
     // NEARBY CONNECTION ELEMENTS
     // List of the client endpoints that are currently connected to the host service
@@ -193,9 +195,7 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
                                 0)
 
                         // Setup media style with media session token and displaying actions in compact view
-                        val mediaStyle = androidx.media.app.NotificationCompat.MediaStyle()
                         mediaStyle.setMediaSession(token)
-                        mediaStyle.setShowActionsInCompactView(1, 2)
 
                         // Build foreground notification
                         notificationBuilder = NotificationCompat.Builder(this, App.CHANNEL_ID)
@@ -204,11 +204,8 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
                                 .setContentIntent(pendingIntent)
                                 .setColorized(true)
                                 .setOnlyAlertOnce(true)
-                                .setStyle(mediaStyle)
                                 .setShowWhen(false)
 
-                        // Add actions to notification builder
-                        addActionsToNotificationBuilder(false)
                         // Start service in the foreground
                         startForeground(AppConstants.HOST_SERVICE_ID, notificationBuilder.build())
                     } else {
@@ -288,6 +285,10 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
                 .addAction(R.mipmap.search_icon_white, AppConstants.ACTION_NOTIFICATION_SEARCH, searchPendingIntent)
                 .addAction(playPauseResourceId, AppConstants.ACTION_REQUEST_PLAY_PAUSE, playPausePendingIntent)
                 .addAction(R.mipmap.ic_media_next, AppConstants.ACTION_REQUEST_NEXT, skipPendingIntent)
+
+        // Display play/pause and next in compat view
+        val style = mediaStyle.setShowActionsInCompactView(1, 2)
+        notificationBuilder.setStyle(style)
     }
 
     private fun startNearbyAdvertising(queueTitle: String) {
@@ -672,9 +673,11 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
                         .setState(PlaybackStateCompat.STATE_PAUSED, PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN, 0F)
                         .build())
 
-                // Update notification builder with action buttons for paused
-                addActionsToNotificationBuilder(false)
-                notificationManager.notify(AppConstants.HOST_SERVICE_ID, notificationBuilder.build())
+                // Update notification builder with action buttons for paused if we're paused with tracks remaining
+                if (currentPlaylistIndex < playlistTracks.size) {
+                    addActionsToNotificationBuilder(false)
+                    notificationManager.notify(AppConstants.HOST_SERVICE_ID, notificationBuilder.build())
+                }
 
                 // If meta data is incorrect we won't actually pause (unless user requested pause)
                 isPlaying = false
@@ -1194,6 +1197,8 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
         // Update notification data
         notificationBuilder.setContentTitle(String.format(getString(R.string.host_notification_content_text), queueTitle))
         notificationBuilder.setContentText("")
+        notificationBuilder.setLargeIcon(null)
+        notificationBuilder.setStyle(null)
 
         // Display updated notification
         notificationManager.notify(AppConstants.HOST_SERVICE_ID, notificationBuilder.build())

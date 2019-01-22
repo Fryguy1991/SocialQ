@@ -303,7 +303,6 @@ class ClientService : SpotifyAccessService() {
                                 // Don't interrupt client initiation
                                 if (!isBeingInitiated) {
                                     refreshPlaylist()
-                                    showTrackInNotification(playlistTracks[cachedPlayingIndex].track, false)
                                 }
                             } catch (exception: NumberFormatException) {
                                 Log.e(TAG, "Invalid index was sent")
