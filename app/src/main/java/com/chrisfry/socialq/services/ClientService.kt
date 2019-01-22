@@ -1,9 +1,12 @@
 package com.chrisfry.socialq.services
 
+import android.app.NotificationManager
 import android.app.PendingIntent
+import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.IBinder
+import android.support.v4.media.session.MediaSessionCompat
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.chrisfry.socialq.R
@@ -20,10 +23,7 @@ import com.google.android.gms.tasks.OnSuccessListener
 import kaaes.spotify.webapi.android.SpotifyCallback
 import kaaes.spotify.webapi.android.SpotifyError
 import kaaes.spotify.webapi.android.SpotifyService
-import kaaes.spotify.webapi.android.models.Playlist
-import kaaes.spotify.webapi.android.models.PlaylistTrack
-import kaaes.spotify.webapi.android.models.Result
-import kaaes.spotify.webapi.android.models.UserPublic
+import kaaes.spotify.webapi.android.models.*
 import retrofit.client.Response
 import java.lang.Exception
 import java.lang.NumberFormatException
@@ -92,31 +92,60 @@ class ClientService : SpotifyAccessService() {
             }
         }
 
-        // Start service in the foreground
-        val notificationIntent = Intent(this, ClientActivity::class.java)
-        val pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0)
+        notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
-        val colorResInt = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            getColor(R.color.Active_Button_Color)
+        // Create media session so Android colorizes based on album art
+        mediaSession = MediaSessionCompat(baseContext, AppConstants.CLIENT_MEDIA_SESSION_TAG)
+        mediaSession.isActive = true
+
+        val token = mediaSession.sessionToken
+        if (token != null) {
+
+            // Create intent/pending intent for returning to application when touching notification
+            val notificationIntent = Intent(this, ClientActivity::class.java)
+            val pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0)
+
+            val colorResInt = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                getColor(R.color.Active_Button_Color)
+            } else {
+                resources.getColor(R.color.Active_Button_Color)
+            }
+
+
+            val subtext = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                String.format(getString(R.string.client_notification_title_n_plus, hostQueueTitle))
+            } else {
+                String.format(getString(R.string.client_notification_title_pre_n, hostQueueTitle))
+            }
+
+            //TODO: This style may not be the best for older versions of Android
+            val mediaStyle = androidx.media.app.NotificationCompat.MediaStyle()
+            mediaStyle.setMediaSession(token)
+
+            notificationBuilder = NotificationCompat.Builder(this, App.CHANNEL_ID)
+                    .setSubText(subtext)
+                    .setSmallIcon(R.drawable.notification_icon)
+                    .setContentIntent(pendingIntent)
+                    .setColor(colorResInt)
+                    .setColorized(true)
+                    .setShowWhen(false)
+                    .setOnlyAlertOnce(true)
+                    .setStyle(mediaStyle)
+                    .setCategory(NotificationCompat.CATEGORY_SERVICE)
+
+            // Start service in the foreground
+            startForeground(AppConstants.CLIENT_SERVICE_ID, notificationBuilder.build())
+
+            // Request authorization code for Spotify
+            requestClientAuthorization()
+
+            // Let app object know that a service has been started
+            App.hasServiceBeenStarted = true
         } else {
-            resources.getColor(R.color.Active_Button_Color)
+            Log.e(TAG, "Something went wrong initializing the media session")
+
+            stopSelf()
         }
-
-        val notification = NotificationCompat.Builder(this, App.CHANNEL_ID)
-                .setContentTitle(getString(R.string.service_name))
-                .setContentText(String.format(getString(R.string.client_notification_content_text), hostQueueTitle))
-                .setSmallIcon(R.drawable.notification_icon)
-                .setContentIntent(pendingIntent)
-                .setColor(colorResInt)
-                .build()
-
-        startForeground(AppConstants.CLIENT_SERVICE_ID, notification)
-
-        // Request authorization code for Spotify
-        requestClientAuthorization()
-
-        // Let app object know that a service has been started
-        App.hasServiceBeenStarted = true
 
         return START_NOT_STICKY
     }
@@ -167,6 +196,8 @@ class ClientService : SpotifyAccessService() {
         }
         isBeingInitiated = false
         listener?.onQueueUpdated(playlistTracks.subList(cachedPlayingIndex, playlist.tracks.total))
+
+        showTrackInNotification(playlistTracks[cachedPlayingIndex].track, false)
     }
 
     override fun initSpotifyElements(accessToken: String) {
@@ -272,6 +303,7 @@ class ClientService : SpotifyAccessService() {
                                 // Don't interrupt client initiation
                                 if (!isBeingInitiated) {
                                     refreshPlaylist()
+                                    showTrackInNotification(playlistTracks[cachedPlayingIndex].track, false)
                                 }
                             } catch (exception: NumberFormatException) {
                                 Log.e(TAG, "Invalid index was sent")
@@ -304,7 +336,6 @@ class ClientService : SpotifyAccessService() {
             val status = PayloadTransferUpdateStatus.getStatusFromConstant(payloadTransferUpdate.status)
             Log.d(TAG, "Payload Transfer to/from $endpointId has status $status")
         }
-
     }
 
     override fun onDestroy() {

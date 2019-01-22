@@ -1,13 +1,19 @@
 package com.chrisfry.socialq.services
 
+import android.app.NotificationManager
 import android.app.Service
 import android.content.Intent
+import android.graphics.BitmapFactory
 import android.os.SystemClock
 import android.os.Binder
+import android.support.v4.media.MediaMetadataCompat
+import android.support.v4.media.session.MediaSessionCompat
 import android.util.Log
+import androidx.core.app.NotificationCompat
 import com.chrisfry.socialq.business.AppConstants
 import com.chrisfry.socialq.model.AccessModel
 import com.chrisfry.socialq.userinterface.activities.AccessTokenReceiverActivity
+import com.chrisfry.socialq.utils.DisplayUtils
 import kaaes.spotify.webapi.android.SpotifyApi
 import kaaes.spotify.webapi.android.SpotifyCallback
 import kaaes.spotify.webapi.android.SpotifyError
@@ -15,10 +21,13 @@ import kaaes.spotify.webapi.android.SpotifyService
 import kaaes.spotify.webapi.android.models.Pager
 import kaaes.spotify.webapi.android.models.Playlist
 import kaaes.spotify.webapi.android.models.PlaylistTrack
+import kaaes.spotify.webapi.android.models.Track
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONObject
 import retrofit.client.Response
+import java.io.IOException
+import java.net.URL
 import kotlin.collections.HashMap
 
 abstract class SpotifyAccessService : Service() {
@@ -46,6 +55,16 @@ abstract class SpotifyAccessService : Service() {
     protected val playlistTracks = mutableListOf<PlaylistTrack>()
     // Flag indicating if the service is a host
     private var isHost = true
+
+    // NOTIFICATION ELEMENTS
+    // Reference to notification manager
+    protected lateinit var notificationManager: NotificationManager
+    // Builder for foreground notification
+    protected lateinit var notificationBuilder: NotificationCompat.Builder
+    // Reference to media session
+    protected lateinit var mediaSession: MediaSessionCompat
+    // Reference to meta data builder
+    protected val metaDataBuilder = MediaMetadataCompat.Builder()
 
     fun accessTokenUpdated() {
         if (AccessModel.getAccessExpireTime() > SystemClock.elapsedRealtime()) {
@@ -217,6 +236,47 @@ abstract class SpotifyAccessService : Service() {
         }
     }
 
+    /**
+     * Sets up metadata for displaying a track in the service notification and updates that notification.
+     * WARNING: Notification manager and builder need to be setup by child class before using this method.
+     */
+    protected fun showTrackInNotification(trackToShow: Track, serviceIsHost: Boolean) {
+        // Update metadata for media session
+        metaDataBuilder.putString(MediaMetadataCompat.METADATA_KEY_ALBUM, trackToShow.album?.name)
+        metaDataBuilder.putString(MediaMetadataCompat.METADATA_KEY_TITLE, trackToShow.name)
+        metaDataBuilder.putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_TITLE, trackToShow.name)
+        metaDataBuilder.putString(MediaMetadataCompat.METADATA_KEY_ARTIST, DisplayUtils.getTrackArtistString(trackToShow))
+
+        // Attempt to update album art in notification and metadata
+        if (trackToShow.album.images.size > 0) {
+            try {
+                val url = URL(trackToShow.album.images[0].url)
+                // Retrieve album art bitmap
+                val albumArtBitmap = BitmapFactory.decodeStream(url.openConnection().getInputStream())
+
+                // Set bitmap data for lock screen display
+                metaDataBuilder.putBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART, albumArtBitmap)
+                // Set bitmap data for notification
+                notificationBuilder.setLargeIcon(albumArtBitmap)
+            } catch (exception: IOException) {
+                Log.e(TAG, "Error retrieving image bitmap: ${exception.message.toString()}")
+                System.out.println(exception)
+            }
+        }
+        mediaSession.setMetadata(metaDataBuilder.build())
+
+        // Update notification data
+        notificationBuilder.setContentTitle(trackToShow.name)
+        notificationBuilder.setContentText(DisplayUtils.getTrackArtistString(trackToShow))
+
+        val notificationId = when (serviceIsHost) {
+            true -> AppConstants.HOST_SERVICE_ID
+            false -> AppConstants.CLIENT_SERVICE_ID
+        }
+
+        // Display updated notification
+        notificationManager.notify(notificationId, notificationBuilder.build())
+    }
 
     private fun startAccessRefreshThread() {
         AccessRefreshThread().start()
@@ -241,6 +301,9 @@ abstract class SpotifyAccessService : Service() {
     })
 
     override fun onDestroy() {
+        // Ensure media session is released
+        mediaSession.release()
+
         isServiceEnding = true
 
         // Clear access model. Should fire our access refresh thread (which won't due anything due to the flag change above)
