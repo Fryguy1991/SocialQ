@@ -5,7 +5,11 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.graphics.BitmapFactory
+import android.media.AudioAttributes
+import android.media.AudioFocusRequest
+import android.media.AudioManager
 import android.net.ConnectivityManager
+import android.os.Build
 import android.os.IBinder
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaSessionCompat
@@ -43,7 +47,8 @@ import java.util.concurrent.TimeUnit
 import java.util.regex.Pattern
 
 class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.NotificationCallback,
-        Player.OperationCallback {
+        Player.OperationCallback, AudioManager.OnAudioFocusChangeListener {
+
     companion object {
         val TAG = HostService::class.java.name
     }
@@ -84,7 +89,13 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
     // Flag indicating success of advertising (used during activity destruction)
     private var successfulAdvertisingFlag = false
 
-    // PLAYER ELEMENTS
+    // AUDIO ELEMENTS
+    // Reference to system audio manager
+    private lateinit var audioManager: AudioManager
+    // Flag to resume playback when audio focus is returned
+    private var resumeOnAudioFocus = false
+    // Reference to current audio focus state
+    private var audioFocusState = -1
     // Member player object used for playing audio
     private lateinit var spotifyPlayer: SpotifyPlayer
     // Integer to keep track of song index in the queue
@@ -443,6 +454,47 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
         return SongRequestData("", UserPublic())
     }
 
+    override fun onAudioFocusChange(focusChange: Int) {
+        audioFocusState = focusChange
+
+        when (focusChange) {
+            AudioManager.AUDIOFOCUS_GAIN -> {
+                Log.d(TAG, "Gained audio focus")
+
+                // If flagged to resume audio, request play
+                if (resumeOnAudioFocus) {
+                    requestPlay()
+                    resumeOnAudioFocus = false
+                }
+            }
+            AudioManager.AUDIOFOCUS_LOSS -> {
+                Log.d(TAG, "Lost audio focus, pause playback")
+
+                // If we're currently playing audio, pause
+                if (spotifyPlayer.playbackState.isPlaying) {
+                    requestPause()
+                }
+            }
+            AudioManager.AUDIOFOCUS_LOSS_TRANSIENT -> {
+                Log.d(TAG, "Lost audio focus, focus should return, pause playback")
+
+                // If we're currently playing audio, flag to resume when we regain audio focus and pause
+                if (spotifyPlayer.playbackState.isPlaying) {
+                    resumeOnAudioFocus = true
+                    requestPause()
+                }
+            }
+            AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK -> {
+                Log.d(TAG, "Lost audio focus, should lower volume")
+
+                //TODO: Lower player volume
+            }
+            else -> {
+                Log.e(TAG, "Not handling this case")
+            }
+        }
+    }
+
     override fun initSpotifyElements(accessToken: String) {
         super.initSpotifyElements(accessToken)
 
@@ -505,6 +557,10 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
         spotifyPlayer = Spotify.getPlayer(playerConfig, this, object : SpotifyPlayer.InitializationObserver {
             override fun onInitialized(player: SpotifyPlayer) {
                 Log.d(TAG, "Player initialized")
+
+                // Retrieve audio manager for managing audio focus
+                audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
+
                 player.setConnectivityStatus(connectivityCallback,
                         getNetworkConnectivity(this@HostService))
                 player.addConnectionStateCallback(this@HostService)
@@ -519,6 +575,20 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
 
     fun requestPlay() {
         Log.d(TAG, "PLAY REQUEST")
+        if (audioFocusState == AudioManager.AUDIOFOCUS_GAIN) {
+            handlePlay()
+        } else {
+            if (requestAudioFocus()) {
+                // We have audio focus, request play
+                handlePlay()
+            } else {
+                // If we did not receive audio focus, flag to start playing when audio focus is gained
+                resumeOnAudioFocus = true
+            }
+        }
+    }
+
+    private fun handlePlay() {
         if (spotifyPlayer.playbackState != null) {
             if (audioDeliveryDoneFlag) {
                 if (currentPlaylistIndex < playlistTracks.size) {
@@ -538,6 +608,34 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
                 }
             }
         }
+    }
+
+    private fun requestAudioFocus() : Boolean {
+        Log.d(TAG, "Sending audio focus request")
+
+        var audioFocusResult = -1
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val playbackAttributes = AudioAttributes.Builder()
+                    .setUsage(AudioAttributes.USAGE_MEDIA)
+                    .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                    .build()
+            val request = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
+                    .setAudioAttributes(playbackAttributes)
+                    .setAcceptsDelayedFocusGain(true)
+                    .setOnAudioFocusChangeListener(this)
+                    .build()
+            audioFocusResult = audioManager.requestAudioFocus(request)
+        } else {
+            audioFocusResult = audioManager.requestAudioFocus(this, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN)
+        }
+
+        if (audioFocusResult == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
+            Log.d(TAG, "Audio focus was granted")
+        } else {
+            Log.d(TAG, "Audio focus was NOT granted")
+        }
+
+        return audioFocusResult == AudioManager.AUDIOFOCUS_REQUEST_GRANTED
     }
 
     fun requestPause() {
@@ -562,6 +660,9 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
         when (playerEvent) {
             PlayerEvent.kSpPlaybackNotifyPlay -> {
                 Log.d(TAG, "Player has started playing")
+
+                // Started/resumed playing, reset flag for resume audio on focus
+                resumeOnAudioFocus = false
 
                 // Update session playback state
                 mediaSession.setPlaybackState(playbackStateBuilder
