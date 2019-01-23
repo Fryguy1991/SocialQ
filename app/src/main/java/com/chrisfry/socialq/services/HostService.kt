@@ -4,18 +4,15 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import android.graphics.BitmapFactory
 import android.media.AudioAttributes
 import android.media.AudioFocusRequest
 import android.media.AudioManager
 import android.net.ConnectivityManager
 import android.os.Build
 import android.os.IBinder
-import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
 import android.util.Log
-import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
 import com.chrisfry.socialq.R
 import com.chrisfry.socialq.business.AppConstants
@@ -27,7 +24,6 @@ import com.chrisfry.socialq.model.SongRequestData
 import com.chrisfry.socialq.userinterface.App
 import com.chrisfry.socialq.userinterface.activities.HostActivity
 import com.chrisfry.socialq.utils.ApplicationUtils
-import com.chrisfry.socialq.utils.DisplayUtils
 import com.google.android.gms.nearby.Nearby
 import com.google.android.gms.nearby.connection.*
 import com.google.android.gms.tasks.OnFailureListener
@@ -39,9 +35,7 @@ import kaaes.spotify.webapi.android.SpotifyError
 import kaaes.spotify.webapi.android.SpotifyService
 import kaaes.spotify.webapi.android.models.*
 import retrofit.client.Response
-import java.io.IOException
 import java.lang.Exception
-import java.net.URL
 import java.util.*
 import java.util.concurrent.TimeUnit
 import java.util.regex.Pattern
@@ -410,9 +404,10 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
                             Log.e(TAG, "Error retrieving data from client song request")
                         }
                     }
-                    NearbyDevicesMessage.QUEUE_UPDATE,
+                    NearbyDevicesMessage.CURRENTLY_PLAYING_UPDATE,
                     NearbyDevicesMessage.INITIATE_CLIENT,
-                    NearbyDevicesMessage.HOST_DISCONNECTING -> {
+                    NearbyDevicesMessage.HOST_DISCONNECTING,
+                    NearbyDevicesMessage.NEW_TRACK_ADDED-> {
                         Log.e(TAG, "Hosts should not receive $payloadType messages")
                     }
                     NearbyDevicesMessage.INVALID -> {
@@ -517,8 +512,18 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
         if (currentPlaylistIndex >= 0) {
             for (endpointId: String in clientEndpoints) {
                 Nearby.getConnectionsClient(this).sendPayload(endpointId,
-                        Payload.fromBytes(String.format(NearbyDevicesMessage.QUEUE_UPDATE.messageFormat,
+                        Payload.fromBytes(String.format(NearbyDevicesMessage.CURRENTLY_PLAYING_UPDATE.messageFormat,
                                 currentPlaylistIndex.toString()).toByteArray()))
+            }
+        }
+    }
+
+    private fun notifyClientsTrackWasAdded(newTrackIndex: Int) {
+        if (newTrackIndex > 0) {
+            for (endpointId: String in clientEndpoints) {
+                Nearby.getConnectionsClient(this).sendPayload(endpointId,
+                        Payload.fromBytes(String.format(NearbyDevicesMessage.NEW_TRACK_ADDED.messageFormat,
+                                newTrackIndex.toString()).toByteArray()))
             }
         }
     }
@@ -1204,6 +1209,14 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
 
     override fun playlistRefreshComplete() {
         notifyQueueChanged()
+    }
+
+    override fun newTrackRetrievalComplete(newTrackIndex: Int) {
+        if (listener != null) {
+            listener?.onQueueUpdated(createDisplayList(playlistTracks.subList(currentPlaylistIndex, playlistTracks.size)))
+        }
+
+        notifyClientsTrackWasAdded(newTrackIndex)
     }
 
     private fun clearTrackInfoFromNotification() {

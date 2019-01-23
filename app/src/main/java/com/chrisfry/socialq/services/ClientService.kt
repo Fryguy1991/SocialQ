@@ -204,6 +204,10 @@ class ClientService : SpotifyAccessService() {
         }
     }
 
+    override fun newTrackRetrievalComplete(newTrackIndex: Int) {
+        listener?.onQueueUpdated(playlistTracks.subList(cachedPlayingIndex, playlist.tracks.total))
+    }
+
     override fun initSpotifyElements(accessToken: String) {
         super.initSpotifyElements(accessToken)
 
@@ -299,18 +303,47 @@ class ClientService : SpotifyAccessService() {
                             isBeingInitiated = false
                         }
                     }
-                    NearbyDevicesMessage.QUEUE_UPDATE -> {
-                        // Host is notifying us that the queue has been updated
+                    NearbyDevicesMessage.CURRENTLY_PLAYING_UPDATE -> {
+                        // Host is notifying us that the currently playing index has changed
                         if (regexMatcher.find()) {
                             try {
                                 cachedPlayingIndex = regexMatcher.group(1).toInt()
                                 // Don't interrupt client initiation
                                 if (!isBeingInitiated) {
-                                    refreshPlaylist()
+                                    listener?.onQueueUpdated(playlistTracks.subList(cachedPlayingIndex, playlist.tracks.total))
+
+                                    if (cachedPlayingIndex < 0 || cachedPlayingIndex > playlistTracks.size) {
+                                        Log.e(TAG, "Invalid index was sent")
+                                    } else if (cachedPlayingIndex == playlistTracks.size) {
+                                        // TODO: Clear track info from notification
+                                    } else {
+                                        showTrackInNotification(playlistTracks[cachedPlayingIndex].track, false)
+                                    }
                                 }
                             } catch (exception: NumberFormatException) {
                                 Log.e(TAG, "Invalid index was sent")
                                 cachedPlayingIndex = -1
+                            }
+                        } else {
+                            Log.e(TAG, "Something went wrong. Regex failed matching for $payloadType")
+                        }
+                    }
+                    NearbyDevicesMessage.NEW_TRACK_ADDED -> {
+                        // Host is notifying us that a new track has been added
+                        if (regexMatcher.find()) {
+                            try {
+                                val newTrackIndex = regexMatcher.group(1).toInt()
+                                // Don't interrupt client initiation
+                                if (!isBeingInitiated) {
+                                    if (newTrackIndex < 0 || newTrackIndex > playlistTracks.size) {
+                                        Log.e(TAG, "Invalid index was sent")
+                                    } else {
+                                        // Pull new track for display
+                                        pullNewTrack(newTrackIndex)
+                                    }
+                                }
+                            } catch (exception: NumberFormatException) {
+                                Log.e(TAG, "Invalid index was sent")
                             }
                         } else {
                             Log.e(TAG, "Something went wrong. Regex failed matching for $payloadType")

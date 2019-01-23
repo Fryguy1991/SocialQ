@@ -145,16 +145,14 @@ abstract class SpotifyAccessService : Service() {
         override fun success(pager: Pager<PlaylistTrack>?, response: Response?) {
             if (pager != null) {
                 playlistTracks.add(pager.offset, pager.items[0])
-                playlistRefreshComplete()
+                newTrackRetrievalComplete(pager.offset)
             } else {
                 Log.e(TAG, "Pager was null when retrieving newly added track")
             }
         }
 
         override fun failure(spotifyError: SpotifyError?) {
-            if (spotifyError != null) {
-                Log.e(TAG, spotifyError.errorDetails.message)
-            }
+            Log.e(TAG, spotifyError?.errorDetails?.message.toString())
             Log.e(TAG, "Failed to retrieve newly added track")
         }
     }
@@ -183,9 +181,7 @@ abstract class SpotifyAccessService : Service() {
         }
 
         override fun failure(spotifyError: SpotifyError?) {
-            if (spotifyError != null) {
-                Log.e(TAG, spotifyError.errorDetails.message)
-            }
+            Log.e(TAG, spotifyError?.errorDetails?.message.toString())
             Log.e(TAG, "Failed to retrieve playlist")
         }
     }
@@ -209,9 +205,7 @@ abstract class SpotifyAccessService : Service() {
         }
 
         override fun failure(spotifyError: SpotifyError?) {
-            if (spotifyError != null) {
-                Log.e(TAG, spotifyError.errorDetails.message)
-            }
+            Log.e(TAG, spotifyError?.errorDetails?.message.toString())
             Log.e(TAG, "Failed to retrieve playlist tracks")
         }
     }
@@ -343,4 +337,6 @@ abstract class SpotifyAccessService : Service() {
     }
 
     abstract fun playlistRefreshComplete()
+
+    abstract fun newTrackRetrievalComplete(newTrackIndex: Int)
 }

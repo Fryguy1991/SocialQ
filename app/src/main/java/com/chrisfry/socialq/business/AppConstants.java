@@ -35,24 +35,28 @@ public class AppConstants {
 
     // Message Prefix Strings
     private static final String PLAYLIST_ID_PREFIX = "#PLAYLIST_ID#";
-    private static final String QUEUE_UPDATE_PREFIX = "#QUEUE_UPDATED#";
+    private static final String CURRENTLY_PLAYING_UPDATE_PREFIX = "#CURRENTLY_PLAYING#";
     private static final String SONG_REQUEST_PREFIX = "#SONG_REQUEST#";
     private static final String HOST_USER_ID_PREFIX = "#HOST_USER_ID#";
     private static final String CLIENT_USER_ID_PREFIX = "#CLIENT_USER_ID#";
+    private static final String NEW_SONG_ADDED_PREFIX = "#NEW_SONG_ADDED#";
 
-    // Message Format String
+    // Message Format Strings
     public static final String SONG_REQUEST_MESSAGE_FORMAT = SONG_REQUEST_PREFIX + "%1$s" + CLIENT_USER_ID_PREFIX + "%2$s";
-    public static final String INITIATE_CLIENT_MESSAGE_FORMAT = HOST_USER_ID_PREFIX + "%1$s" + PLAYLIST_ID_PREFIX + "%2$s" + QUEUE_UPDATE_PREFIX + "%3$s";
-    public static final String QUEUE_UPDATE_MESSAGE_FORMAT = QUEUE_UPDATE_PREFIX + "%1$s";
+    public static final String INITIATE_CLIENT_MESSAGE_FORMAT = HOST_USER_ID_PREFIX + "%1$s" + PLAYLIST_ID_PREFIX + "%2$s" + CURRENTLY_PLAYING_UPDATE_PREFIX + "%3$s";
+    public static final String CURRENTLY_PLAYING_UPDATE_MESSAGE_FORMAT = CURRENTLY_PLAYING_UPDATE_PREFIX + "%1$s";
     public static final String HOST_DISCONNECT_MESSAGE = "#HOST_DISCONNECT#";
+    public static final String NEW_SONG_ADDED_MESSAGE_FORMAT = NEW_SONG_ADDED_PREFIX + "%1$s";
 
     // START REGULAR EXPRESSIONS
-    // Regex for notifying client queue is updated
-    public static final String UPDATE_QUEUE_REGEX = QUEUE_UPDATE_PREFIX + "([0-9]+)";
+    // Regex for notifying clients of the currently playing playlist index
+    public static final String CURRENTLY_PLAYING_UPDATE_REGEX = CURRENTLY_PLAYING_UPDATE_PREFIX + "([0-9]+)";
     // Regex for initiating client
-    public static final String INITIATE_CLIENT_REGEX = HOST_USER_ID_PREFIX + "(.+)" + PLAYLIST_ID_PREFIX + "(.+)" + QUEUE_UPDATE_PREFIX + "([0-9]+)";
+    public static final String INITIATE_CLIENT_REGEX = HOST_USER_ID_PREFIX + "(.+)" + PLAYLIST_ID_PREFIX + "(.+)" + CURRENTLY_PLAYING_UPDATE_PREFIX + "([0-9]+)";
     // Regex for track request messages (Example: #SONG_REQUEST#spotify:track:6qtg4gz3DhqOHL5BHtSQw8#CLIENT_USER_ID#fry_dev_1
     public static final String FULL_SONG_REQUEST_REGEX = SONG_REQUEST_PREFIX + "(spotify:track:.+)" + CLIENT_USER_ID_PREFIX + "(.+)";
+    // Regex for notifying clients that a track was added to the queue (match group is index of track that was added)
+    public static final String NEW_SONG_ADDED_REGEX = NEW_SONG_ADDED_PREFIX + "([0-9]+)";
 
     // Spotify URL Regexs
     public static final String URL_TRACK_SEARCH = "https:\\/\\/api.spotify.com\\/v1\\/search\\?type=track&q=([^&]+).+";
