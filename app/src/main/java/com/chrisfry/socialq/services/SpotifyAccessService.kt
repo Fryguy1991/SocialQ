@@ -123,9 +123,40 @@ abstract class SpotifyAccessService : Service() {
 
     protected fun refreshPlaylist() {
         Log.d(TAG, "Refreshing playlist")
+
         val options = HashMap<String, Any>()
         options[SpotifyService.MARKET] = AppConstants.PARAM_FROM_TOKEN
+
         spotifyService.getPlaylist(playlistOwnerUserId, playlist.id, options, refreshPlaylistCallback)
+    }
+
+    protected fun pullNewTrack(newTrackIndex: Int) {
+        Log.d(TAG, "Pulling newly added track")
+
+        val options = HashMap<String, Any>()
+        options[SpotifyService.MARKET] = AppConstants.PARAM_FROM_TOKEN
+        options[SpotifyService.LIMIT] = 1
+        options[SpotifyService.OFFSET] = newTrackIndex
+
+        spotifyService.getPlaylistTracks(playlistOwnerUserId, playlist.id, options, newTrackCallback)
+    }
+
+    private val newTrackCallback = object : SpotifyCallback<Pager<PlaylistTrack>>() {
+        override fun success(pager: Pager<PlaylistTrack>?, response: Response?) {
+            if (pager != null) {
+                playlistTracks.add(pager.offset, pager.items[0])
+                playlistRefreshComplete()
+            } else {
+                Log.e(TAG, "Pager was null when retrieving newly added track")
+            }
+        }
+
+        override fun failure(spotifyError: SpotifyError?) {
+            if (spotifyError != null) {
+                Log.e(TAG, spotifyError.errorDetails.message)
+            }
+            Log.e(TAG, "Failed to retrieve newly added track")
+        }
     }
 
     private val refreshPlaylistCallback = object : SpotifyCallback<Playlist>() {

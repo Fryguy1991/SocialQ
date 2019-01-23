@@ -109,6 +109,8 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
     private val songRequests = mutableListOf<SongRequestData>()
     // Flag for storing if a base playlist has been loaded
     private var wasBasePlaylistLoaded = false
+    // Cached value for newly added track index
+    private var newTrackIndex = -1
 
     // List of user's playlist
     private val currentUserPlaylists = mutableListOf<PlaylistSimple>()
@@ -248,6 +250,7 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
      */
     private fun addActionsToNotificationBuilder(isPlaying: Boolean) {
         // Remove actions from notification builder
+        @Suppress("RestrictedApi")
         notificationBuilder.mActions.clear()
 
         val searchIntent = Intent(this, HostActivity::class.java)
@@ -967,12 +970,20 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
                 willNextSongBeWrong = addNewTrack(songRequest)
             }
 
-            if (willNextSongBeWrong) {
+            // If already flagged for skip don't queue again, player seems to fix it's playlist position
+            // when the original song queued is skipped (may not match the true "next" song)
+            if (willNextSongBeWrong && !incorrectMetaDataFlag) {
                 // If we changed the next track notify service next track will be incorrect
                 incorrectMetaDataFlag = true
                 spotifyPlayer.queue(this, songRequest.uri)
             }
-            refreshPlaylist()
+
+            if (newTrackIndex < 0 || newTrackIndex > playlistTracks.size) {
+                Log.e(TAG, "Something went wrong, new track index is invalid")
+            } else {
+                pullNewTrack(newTrackIndex)
+                newTrackIndex = -1
+            }
         }
     }
 
@@ -1092,6 +1103,9 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
 
             return injectTrackToPosition(newTrackPosition, songRequest)
         } else {
+            // Cache new track index
+            newTrackIndex = playlistTracks.size
+
             addTrackToPlaylist(songRequest.uri)
             return songRequests.size == 2
         }
@@ -1099,6 +1113,9 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
 
     private fun injectTrackToPosition(newTrackPosition: Int, songRequest: SongRequestData): Boolean {
         if (newTrackPosition == songRequests.size) {
+            // Cache new track index
+            newTrackIndex = playlistTracks.size
+
             // No base playlist track found add track to end of playlist
             Log.d(TAG, "Adding track to end of playlist")
             addTrackToPlaylist(songRequest.uri)
@@ -1107,6 +1124,9 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
         } else if (newTrackPosition > songRequests.size) {
             // Should not be possible
             Log.e(TAG, "INVALID NEW TRACK POSITION INDEX")
+
+            // Cache new track index (as invalid)
+            newTrackIndex = -1
             return false
         } else {
             // If new track position is not equal or greater than song request size we need to move it
@@ -1115,6 +1135,9 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
 
             Log.d(TAG, "Adding new track at playlist index: " + (newTrackPosition + currentPlaylistIndex))
             addTrackToPlaylistPosition(songRequest.uri, newTrackPosition + currentPlaylistIndex)
+
+            // Cache new track index
+            newTrackIndex = newTrackPosition + currentPlaylistIndex
 
             // Return true if we're moving the added track to the "next" position
             return newTrackPosition == 1
@@ -1192,6 +1215,7 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
                 .setState(PlaybackStateCompat.STATE_STOPPED, PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN, 0F)
                 .build())
 
+        @Suppress("RestrictedApi")
         notificationBuilder.mActions.clear()
 
         // Update notification data

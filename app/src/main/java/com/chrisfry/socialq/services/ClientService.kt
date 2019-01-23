@@ -197,7 +197,11 @@ class ClientService : SpotifyAccessService() {
         isBeingInitiated = false
         listener?.onQueueUpdated(playlistTracks.subList(cachedPlayingIndex, playlist.tracks.total))
 
-        showTrackInNotification(playlistTracks[cachedPlayingIndex].track, false)
+        if (cachedPlayingIndex < playlistTracks.size) {
+            showTrackInNotification(playlistTracks[cachedPlayingIndex].track, false)
+        } else {
+            // TODO: Remove track information from the notification
+        }
     }
 
     override fun initSpotifyElements(accessToken: String) {
