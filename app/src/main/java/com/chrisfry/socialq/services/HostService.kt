@@ -1229,7 +1229,6 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
     }
 
     private fun clearTrackInfoFromNotification() {
-        // TODO: Ensure this method is doing what we want it to
         mediaSession.setMetadata(null)
 
         // Update session playback state
