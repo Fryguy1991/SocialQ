@@ -14,5 +14,5 @@ interface ISearchPresenter : ISpotifyAccessPresenter {
 
     fun viewAllAlbumsRequest()
 
-    fun viewALlArtistAlbumsRequest()
+    fun viewAllArtistAlbumsRequest()
 }

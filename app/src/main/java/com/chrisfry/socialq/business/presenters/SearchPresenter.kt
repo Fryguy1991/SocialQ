@@ -201,7 +201,7 @@ class SearchPresenter : SpotifyAccessPresenter(), ISearchPresenter {
         getView()?.showAllAlbums(baseAlbumResults, 0)
     }
 
-    override fun viewALlArtistAlbumsRequest() {
+    override fun viewAllArtistAlbumsRequest() {
         navStep = ALL_ALBUMS
         allArtistAlbumFlag = true
         getView()?.showAllArtistAlbums(selectedArtist!!, fullArtistAlbums, 0)
