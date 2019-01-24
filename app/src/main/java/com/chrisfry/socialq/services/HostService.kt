@@ -519,7 +519,7 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
     }
 
     private fun notifyClientsTrackWasAdded(newTrackIndex: Int) {
-        if (newTrackIndex > 0) {
+        if (newTrackIndex >= 0) {
             for (endpointId: String in clientEndpoints) {
                 Nearby.getConnectionsClient(this).sendPayload(endpointId,
                         Payload.fromBytes(String.format(NearbyDevicesMessage.NEW_TRACK_ADDED.messageFormat,
@@ -1208,12 +1208,21 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
     }
 
     override fun playlistRefreshComplete() {
+        if (playlistTracks.size > 0) {
+            addActionsToNotificationBuilder(false)
+            showTrackInNotification(playlistTracks[0].track, true)
+        }
         notifyQueueChanged()
     }
 
     override fun newTrackRetrievalComplete(newTrackIndex: Int) {
         if (listener != null) {
             listener?.onQueueUpdated(createDisplayList(playlistTracks.subList(currentPlaylistIndex, playlistTracks.size)))
+        }
+
+        if (playlistTracks.size - currentPlaylistIndex == 1) {
+            addActionsToNotificationBuilder(false)
+            showTrackInNotification(playlistTracks[currentPlaylistIndex].track, true)
         }
 
         notifyClientsTrackWasAdded(newTrackIndex)

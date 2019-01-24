@@ -144,6 +144,8 @@ abstract class SpotifyAccessService : Service() {
     private val newTrackCallback = object : SpotifyCallback<Pager<PlaylistTrack>>() {
         override fun success(pager: Pager<PlaylistTrack>?, response: Response?) {
             if (pager != null) {
+                Log.d(TAG, "Successfully pulled newly added track")
+
                 playlistTracks.add(pager.offset, pager.items[0])
                 newTrackRetrievalComplete(pager.offset)
             } else {
