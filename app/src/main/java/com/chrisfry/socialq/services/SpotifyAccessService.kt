@@ -10,6 +10,7 @@ import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaSessionCompat
 import android.util.Log
 import androidx.core.app.NotificationCompat
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.chrisfry.socialq.business.AppConstants
 import com.chrisfry.socialq.model.AccessModel
 import com.chrisfry.socialq.userinterface.activities.AccessTokenReceiverActivity
@@ -257,6 +258,11 @@ abstract class SpotifyAccessService : Service() {
 
                 startAccessRefreshThread()
                 initSpotifyElements(accessToken)
+
+                // Broadcast that the access code has been updated
+                Log.d(TAG, "Broadcasting that access token has been updated")
+                val accessRefreshIntent = Intent(AppConstants.BR_INTENT_ACCESS_TOKEN_UPDATED)
+                LocalBroadcastManager.getInstance(this).sendBroadcast(accessRefreshIntent)
             } else {
                 Log.e(TAG, "Response was unsuccessful or response string was null")
             }

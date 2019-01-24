@@ -1,6 +1,9 @@
 package com.chrisfry.socialq.userinterface.activities;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -29,6 +32,7 @@ import com.bumptech.glide.Glide;
 import com.chrisfry.socialq.business.AppConstants;
 import com.chrisfry.socialq.R;
 
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -149,6 +153,24 @@ public class SearchActivity extends AppCompatActivity implements ISearchView, IS
         }
     };
 
+    // Receiver for registered broadcasts
+    private BroadcastReceiver mSearchBroadcastReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            // For now only action is access code update
+            if (intent != null && intent.getAction() != null) {
+                switch (intent.getAction()) {
+                    case AppConstants.BR_INTENT_ACCESS_TOKEN_UPDATED:
+                        Log.d(TAG, "Received broadcast that access token was updated, notifying presenter");
+                        presenter.receiveNewAccessToken(AccessModel.getAccessToken());
+                        break;
+                    default:
+                        Log.e(TAG, "Not expecting to receive " + intent.getAction());
+                }
+            }
+        }
+    };
+
     private void sendHandlerMessage(int msgWhat) {
         Message message = mHandler.obtainMessage();
         message.what = msgWhat;
@@ -183,6 +205,17 @@ public class SearchActivity extends AppCompatActivity implements ISearchView, IS
         addListeners();
         initAdapters();
         presenter.attach(this);
+
+        // Register to receive notifications when access token has been updated
+        LocalBroadcastManager.getInstance(this).registerReceiver(mSearchBroadcastReceiver, new IntentFilter(AppConstants.BR_INTENT_ACCESS_TOKEN_UPDATED));
+    }
+
+    @Override
+    protected void onDestroy() {
+        // Unregister broadcast receiver
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(mSearchBroadcastReceiver);
+
+        super.onDestroy();
     }
 
     @Override
@@ -233,7 +266,7 @@ public class SearchActivity extends AppCompatActivity implements ISearchView, IS
         mViewAllArtistAlbums.setOnClickListener(this);
 
         // Add listeners to artist top track items
-        for(TextViewWithUri view : mTopTrackItemViews) {
+        for (TextViewWithUri view : mTopTrackItemViews) {
             view.setListener(this);
         }
 
@@ -348,7 +381,7 @@ public class SearchActivity extends AppCompatActivity implements ISearchView, IS
             case R.id.tv_see_all_artist_albums:
                 Log.d(TAG, "User wants to see all artist albums");
 
-                presenter.viewALlArtistAlbumsRequest();
+                presenter.viewAllArtistAlbumsRequest();
                 break;
         }
     }
