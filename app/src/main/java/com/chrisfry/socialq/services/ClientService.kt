@@ -69,6 +69,11 @@ class ClientService : SpotifyAccessService() {
 
     // Title of the SocialQ
     private lateinit var hostQueueTitle: String
+    // Notification subtext content
+    private lateinit var notificationSubtext: String
+
+    // Media notification style object
+    private val mediaStyle = androidx.media.app.NotificationCompat.MediaStyle()
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         Log.d(TAG, "Client service is being started")
@@ -112,25 +117,20 @@ class ClientService : SpotifyAccessService() {
             }
 
 
-            val subtext = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                String.format(getString(R.string.client_notification_title_n_plus, hostQueueTitle))
-            } else {
-                String.format(getString(R.string.client_notification_title_pre_n, hostQueueTitle))
-            }
+            notificationSubtext = String.format(getString(R.string.client_notification_title_n_plus, hostQueueTitle))
 
             //TODO: This style may not be the best for older versions of Android
-            val mediaStyle = androidx.media.app.NotificationCompat.MediaStyle()
             mediaStyle.setMediaSession(token)
 
             notificationBuilder = NotificationCompat.Builder(this, App.CHANNEL_ID)
-                    .setSubText(subtext)
+                    .setContentTitle(getString(R.string.app_name))
+                    .setContentText(notificationSubtext)
                     .setSmallIcon(R.drawable.notification_icon)
                     .setContentIntent(pendingIntent)
                     .setColor(colorResInt)
                     .setColorized(true)
                     .setShowWhen(false)
                     .setOnlyAlertOnce(true)
-                    .setStyle(mediaStyle)
                     .setCategory(NotificationCompat.CATEGORY_SERVICE)
 
             // Start service in the foreground
@@ -195,9 +195,41 @@ class ClientService : SpotifyAccessService() {
             Log.d(TAG, "Finished Client initiation")
         }
         isBeingInitiated = false
-        listener?.onQueueUpdated(playlistTracks.subList(cachedPlayingIndex, playlist.tracks.total))
+        listener?.onQueueUpdated(playlistTracks.subList(cachedPlayingIndex, playlistTracks.size))
 
-        showTrackInNotification(playlistTracks[cachedPlayingIndex].track, false)
+        if (cachedPlayingIndex < playlistTracks.size) {
+            notificationBuilder.setStyle(mediaStyle)
+            notificationBuilder.setSubText(notificationSubtext)
+            showTrackInNotification(playlistTracks[cachedPlayingIndex].track, false)
+        } else {
+            clearTrackInfoFromNotification()
+        }
+    }
+
+    override fun newTrackRetrievalComplete(newTrackIndex: Int) {
+        listener?.onQueueUpdated(playlistTracks.subList(cachedPlayingIndex, playlistTracks.size))
+
+        if (playlistTracks.size - cachedPlayingIndex == 1) {
+            notificationBuilder.setStyle(mediaStyle)
+            notificationBuilder.setSubText(notificationSubtext)
+            showTrackInNotification(playlistTracks[cachedPlayingIndex].track, false)
+        }
+    }
+
+    private fun clearTrackInfoFromNotification() {
+        mediaSession.setMetadata(null)
+
+        @Suppress("RestrictedApi")
+        notificationBuilder.mActions.clear()
+
+        notificationBuilder.setContentTitle(getString(R.string.app_name))
+        notificationBuilder.setContentText(notificationSubtext)
+        notificationBuilder.setSubText("")
+        notificationBuilder.setLargeIcon(null)
+        notificationBuilder.setStyle(null)
+
+        // Display updated notification
+        notificationManager.notify(AppConstants.CLIENT_SERVICE_ID, notificationBuilder.build())
     }
 
     override fun initSpotifyElements(accessToken: String) {
@@ -295,18 +327,47 @@ class ClientService : SpotifyAccessService() {
                             isBeingInitiated = false
                         }
                     }
-                    NearbyDevicesMessage.QUEUE_UPDATE -> {
-                        // Host is notifying us that the queue has been updated
+                    NearbyDevicesMessage.CURRENTLY_PLAYING_UPDATE -> {
+                        // Host is notifying us that the currently playing index has changed
                         if (regexMatcher.find()) {
                             try {
                                 cachedPlayingIndex = regexMatcher.group(1).toInt()
                                 // Don't interrupt client initiation
                                 if (!isBeingInitiated) {
-                                    refreshPlaylist()
+                                    listener?.onQueueUpdated(playlistTracks.subList(cachedPlayingIndex, playlistTracks.size))
+
+                                    if (cachedPlayingIndex < 0 || cachedPlayingIndex > playlistTracks.size) {
+                                        Log.e(TAG, "Invalid index was sent")
+                                    } else if (cachedPlayingIndex == playlistTracks.size) {
+                                        clearTrackInfoFromNotification()
+                                    } else {
+                                        showTrackInNotification(playlistTracks[cachedPlayingIndex].track, false)
+                                    }
                                 }
                             } catch (exception: NumberFormatException) {
                                 Log.e(TAG, "Invalid index was sent")
                                 cachedPlayingIndex = -1
+                            }
+                        } else {
+                            Log.e(TAG, "Something went wrong. Regex failed matching for $payloadType")
+                        }
+                    }
+                    NearbyDevicesMessage.NEW_TRACK_ADDED -> {
+                        // Host is notifying us that a new track has been added
+                        if (regexMatcher.find()) {
+                            try {
+                                val newTrackIndex = regexMatcher.group(1).toInt()
+                                // Don't interrupt client initiation
+                                if (!isBeingInitiated) {
+                                    if (newTrackIndex < 0 || newTrackIndex > playlistTracks.size) {
+                                        Log.e(TAG, "Invalid index was sent")
+                                    } else {
+                                        // Pull new track for display
+                                        pullNewTrack(newTrackIndex)
+                                    }
+                                }
+                            } catch (exception: NumberFormatException) {
+                                Log.e(TAG, "Invalid index was sent")
                             }
                         } else {
                             Log.e(TAG, "Something went wrong. Regex failed matching for $payloadType")
@@ -384,7 +445,7 @@ class ClientService : SpotifyAccessService() {
     fun requestInitiation() {
         Log.d(TAG, "View has been recreated. Requesting initiation")
 
-        listener?.initiateView(hostQueueTitle, playlistTracks.subList(cachedPlayingIndex, playlist.tracks.total) )
+        listener?.initiateView(hostQueueTitle, playlistTracks.subList(cachedPlayingIndex, playlistTracks.size) )
 
         if (hostDisconnect) {
             listener?.showHostDisconnectDialog()

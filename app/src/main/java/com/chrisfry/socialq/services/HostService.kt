@@ -4,18 +4,15 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import android.graphics.BitmapFactory
 import android.media.AudioAttributes
 import android.media.AudioFocusRequest
 import android.media.AudioManager
 import android.net.ConnectivityManager
 import android.os.Build
 import android.os.IBinder
-import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
 import android.util.Log
-import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
 import com.chrisfry.socialq.R
 import com.chrisfry.socialq.business.AppConstants
@@ -27,7 +24,6 @@ import com.chrisfry.socialq.model.SongRequestData
 import com.chrisfry.socialq.userinterface.App
 import com.chrisfry.socialq.userinterface.activities.HostActivity
 import com.chrisfry.socialq.utils.ApplicationUtils
-import com.chrisfry.socialq.utils.DisplayUtils
 import com.google.android.gms.nearby.Nearby
 import com.google.android.gms.nearby.connection.*
 import com.google.android.gms.tasks.OnFailureListener
@@ -39,9 +35,7 @@ import kaaes.spotify.webapi.android.SpotifyError
 import kaaes.spotify.webapi.android.SpotifyService
 import kaaes.spotify.webapi.android.models.*
 import retrofit.client.Response
-import java.io.IOException
 import java.lang.Exception
-import java.net.URL
 import java.util.*
 import java.util.concurrent.TimeUnit
 import java.util.regex.Pattern
@@ -109,6 +103,8 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
     private val songRequests = mutableListOf<SongRequestData>()
     // Flag for storing if a base playlist has been loaded
     private var wasBasePlaylistLoaded = false
+    // Cached value for newly added track index
+    private var newTrackIndex = -1
 
     // List of user's playlist
     private val currentUserPlaylists = mutableListOf<PlaylistSimple>()
@@ -248,6 +244,7 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
      */
     private fun addActionsToNotificationBuilder(isPlaying: Boolean) {
         // Remove actions from notification builder
+        @Suppress("RestrictedApi")
         notificationBuilder.mActions.clear()
 
         val searchIntent = Intent(this, HostActivity::class.java)
@@ -407,9 +404,10 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
                             Log.e(TAG, "Error retrieving data from client song request")
                         }
                     }
-                    NearbyDevicesMessage.QUEUE_UPDATE,
+                    NearbyDevicesMessage.CURRENTLY_PLAYING_UPDATE,
                     NearbyDevicesMessage.INITIATE_CLIENT,
-                    NearbyDevicesMessage.HOST_DISCONNECTING -> {
+                    NearbyDevicesMessage.HOST_DISCONNECTING,
+                    NearbyDevicesMessage.NEW_TRACK_ADDED-> {
                         Log.e(TAG, "Hosts should not receive $payloadType messages")
                     }
                     NearbyDevicesMessage.INVALID -> {
@@ -514,8 +512,18 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
         if (currentPlaylistIndex >= 0) {
             for (endpointId: String in clientEndpoints) {
                 Nearby.getConnectionsClient(this).sendPayload(endpointId,
-                        Payload.fromBytes(String.format(NearbyDevicesMessage.QUEUE_UPDATE.messageFormat,
+                        Payload.fromBytes(String.format(NearbyDevicesMessage.CURRENTLY_PLAYING_UPDATE.messageFormat,
                                 currentPlaylistIndex.toString()).toByteArray()))
+            }
+        }
+    }
+
+    private fun notifyClientsTrackWasAdded(newTrackIndex: Int) {
+        if (newTrackIndex >= 0) {
+            for (endpointId: String in clientEndpoints) {
+                Nearby.getConnectionsClient(this).sendPayload(endpointId,
+                        Payload.fromBytes(String.format(NearbyDevicesMessage.NEW_TRACK_ADDED.messageFormat,
+                                newTrackIndex.toString()).toByteArray()))
             }
         }
     }
@@ -967,12 +975,20 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
                 willNextSongBeWrong = addNewTrack(songRequest)
             }
 
-            if (willNextSongBeWrong) {
+            // If already flagged for skip don't queue again, player seems to fix it's playlist position
+            // when the original song queued is skipped (may not match the true "next" song)
+            if (willNextSongBeWrong && !incorrectMetaDataFlag) {
                 // If we changed the next track notify service next track will be incorrect
                 incorrectMetaDataFlag = true
                 spotifyPlayer.queue(this, songRequest.uri)
             }
-            refreshPlaylist()
+
+            if (newTrackIndex < 0 || newTrackIndex > playlistTracks.size) {
+                Log.e(TAG, "Something went wrong, new track index is invalid")
+            } else {
+                pullNewTrack(newTrackIndex)
+                newTrackIndex = -1
+            }
         }
     }
 
@@ -1092,6 +1108,9 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
 
             return injectTrackToPosition(newTrackPosition, songRequest)
         } else {
+            // Cache new track index
+            newTrackIndex = playlistTracks.size
+
             addTrackToPlaylist(songRequest.uri)
             return songRequests.size == 2
         }
@@ -1099,6 +1118,9 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
 
     private fun injectTrackToPosition(newTrackPosition: Int, songRequest: SongRequestData): Boolean {
         if (newTrackPosition == songRequests.size) {
+            // Cache new track index
+            newTrackIndex = playlistTracks.size
+
             // No base playlist track found add track to end of playlist
             Log.d(TAG, "Adding track to end of playlist")
             addTrackToPlaylist(songRequest.uri)
@@ -1107,6 +1129,9 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
         } else if (newTrackPosition > songRequests.size) {
             // Should not be possible
             Log.e(TAG, "INVALID NEW TRACK POSITION INDEX")
+
+            // Cache new track index (as invalid)
+            newTrackIndex = -1
             return false
         } else {
             // If new track position is not equal or greater than song request size we need to move it
@@ -1115,6 +1140,9 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
 
             Log.d(TAG, "Adding new track at playlist index: " + (newTrackPosition + currentPlaylistIndex))
             addTrackToPlaylistPosition(songRequest.uri, newTrackPosition + currentPlaylistIndex)
+
+            // Cache new track index
+            newTrackIndex = newTrackPosition + currentPlaylistIndex
 
             // Return true if we're moving the added track to the "next" position
             return newTrackPosition == 1
@@ -1180,11 +1208,27 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
     }
 
     override fun playlistRefreshComplete() {
+        if (playlistTracks.size > 0) {
+            addActionsToNotificationBuilder(false)
+            showTrackInNotification(playlistTracks[0].track, true)
+        }
         notifyQueueChanged()
     }
 
+    override fun newTrackRetrievalComplete(newTrackIndex: Int) {
+        if (listener != null) {
+            listener?.onQueueUpdated(createDisplayList(playlistTracks.subList(currentPlaylistIndex, playlistTracks.size)))
+        }
+
+        if (playlistTracks.size - currentPlaylistIndex == 1) {
+            addActionsToNotificationBuilder(false)
+            showTrackInNotification(playlistTracks[currentPlaylistIndex].track, true)
+        }
+
+        notifyClientsTrackWasAdded(newTrackIndex)
+    }
+
     private fun clearTrackInfoFromNotification() {
-        // TODO: Ensure this method is doing what we want it to
         mediaSession.setMetadata(null)
 
         // Update session playback state
@@ -1192,6 +1236,7 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
                 .setState(PlaybackStateCompat.STATE_STOPPED, PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN, 0F)
                 .build())
 
+        @Suppress("RestrictedApi")
         notificationBuilder.mActions.clear()
 
         // Update notification data

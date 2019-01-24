@@ -7,15 +7,12 @@ import androidx.navigation.fragment.findNavController
 import com.chrisfry.socialq.business.AppConstants
 import com.chrisfry.socialq.enums.NearbyDevicesMessage
 import com.chrisfry.socialq.enums.PayloadTransferUpdateStatus
-import com.chrisfry.socialq.model.SongRequestData
 import com.chrisfry.socialq.utils.ApplicationUtils
 import com.google.android.gms.nearby.Nearby
 import com.google.android.gms.nearby.connection.*
 import com.google.android.gms.tasks.OnFailureListener
 import com.google.android.gms.tasks.OnSuccessListener
-import kaaes.spotify.webapi.android.models.UserPublic
 import java.lang.Exception
-import java.util.regex.Pattern
 
 class HostFragmentNearby : HostFragmentBase() {
     companion object {
@@ -99,7 +96,7 @@ class HostFragmentNearby : HostFragmentBase() {
 //                        val songRequest = getSongRequestFromPayload(payloadString)
 //                        handleSongRequest(songRequest)
                     }
-                    NearbyDevicesMessage.QUEUE_UPDATE -> {
+                    NearbyDevicesMessage.CURRENTLY_PLAYING_UPDATE -> {
                         // Should not receive these messages as the host
                         Log.e(TAG, "Hosts should not receive playlist ID, host ID or queue update messages")
                     }
@@ -171,7 +168,7 @@ class HostFragmentNearby : HostFragmentBase() {
         if (currentPlayingIndex >= 0) {
             for (endpointId: String in mClientEndpoints) {
                 Nearby.getConnectionsClient(context!!).sendPayload(endpointId, Payload.fromBytes(
-                        String.format(NearbyDevicesMessage.QUEUE_UPDATE.messageFormat,
+                        String.format(NearbyDevicesMessage.CURRENTLY_PLAYING_UPDATE.messageFormat,
                                 currentPlayingIndex.toString()).toByteArray()))
             }
         }
