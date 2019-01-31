@@ -301,8 +301,6 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
                     override fun onSuccess(unusedResult: Void?) {
                         Log.d(TAG, "Successfully advertising the host")
                         successfulAdvertisingFlag = true
-
-                        checkIfUserHasPlaylists()
                     }
                 })
                 .addOnFailureListener(object : OnFailureListener {
@@ -488,8 +486,8 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
                     "create playlist and check for user playlist for base")
             hostUser = spotifyService.me
             playlistOwnerUserId = hostUser.id
-            startNearbyAdvertising(queueTitle)
             initPlayer(AccessModel.getAccessToken())
+            checkIfUserHasPlaylists()
         } else {
             Log.d(TAG, "Updating player's access token")
             spotifyPlayer.login(accessToken)
@@ -1208,6 +1206,10 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
     }
 
     override fun playlistRefreshComplete() {
+        // Start advertising since base playlist load is complete
+        startNearbyAdvertising(queueTitle)
+
+        // If a base playlist has been loaded we should display the first track
         if (playlistTracks.size > 0) {
             addActionsToNotificationBuilder(false)
             showTrackInNotification(playlistTracks[0].track, true)
@@ -1256,10 +1258,12 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
                 Log.d(TAG, "Successfully created playlist for queue")
                 this@HostService.playlist = playlist
 
-                // If we have a base playlist ID load it up and start player
+                // If we have a base playlist ID load it up
                 if (basePlaylistId.isNotEmpty()) {
                     loadBasePlaylist(basePlaylistId)
                     basePlaylistId = ""
+                } else {
+                    startNearbyAdvertising(queueTitle)
                 }
                 return
             }
