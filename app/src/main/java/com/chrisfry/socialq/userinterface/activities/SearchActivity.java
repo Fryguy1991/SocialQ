@@ -65,7 +65,7 @@ import org.jetbrains.annotations.NotNull;
 /**
  * Activity for searching Spotify tracks
  */
-public class SearchActivity extends AppCompatActivity implements ISearchView, ISpotifySelectionListener,
+public class SearchActivity extends BaseActivity implements ISearchView, ISpotifySelectionListener,
         ISpotifySelectionPositionListener, View.OnClickListener {
     private final String TAG = SearchActivity.class.getName();
 

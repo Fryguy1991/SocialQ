@@ -14,7 +14,7 @@ import com.chrisfry.socialq.userinterface.views.QueueItemDecoration;
 /**
  * Activity used to search for and connect to a SocialQ
  */
-public abstract class QueueConnectActivity extends Activity implements View.OnClickListener{
+public abstract class QueueConnectActivity extends BaseActivity implements View.OnClickListener{
     private final String TAG = QueueConnectActivity.class.getName();
 
     private RecyclerView mQueueRecyclerView;

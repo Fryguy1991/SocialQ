@@ -29,7 +29,7 @@ import com.chrisfry.socialq.enums.UserType;
  * Start screen for the application
  */
 
-public class StartActivity extends AppCompatActivity {
+public class StartActivity extends BaseActivity {
     private static final String TAG = StartActivity.class.getName();
 
     // Used as a flag to determine if we need to launch a host or client after a permission request
