@@ -196,7 +196,7 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
                         // Build foreground notification
                         notificationBuilder = NotificationCompat.Builder(this, App.CHANNEL_ID)
                                 .setContentTitle(String.format(getString(R.string.host_notification_content_text), queueTitle))
-                                .setSmallIcon(R.drawable.notification_icon)
+                                .setSmallIcon(R.drawable.app_notification_icon)
                                 .setContentIntent(pendingIntent)
                                 .setColorized(true)
                                 .setOnlyAlertOnce(true)

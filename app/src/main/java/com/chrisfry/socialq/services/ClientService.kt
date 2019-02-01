@@ -125,7 +125,7 @@ class ClientService : SpotifyAccessService() {
             notificationBuilder = NotificationCompat.Builder(this, App.CHANNEL_ID)
                     .setContentTitle(getString(R.string.app_name))
                     .setContentText(notificationSubtext)
-                    .setSmallIcon(R.drawable.notification_icon)
+                    .setSmallIcon(R.drawable.app_notification_icon)
                     .setContentIntent(pendingIntent)
                     .setColor(colorResInt)
                     .setColorized(true)
