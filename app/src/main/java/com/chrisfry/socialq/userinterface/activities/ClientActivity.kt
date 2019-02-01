@@ -20,7 +20,7 @@ import com.chrisfry.socialq.userinterface.adapters.BasicTrackListAdapter
 import com.chrisfry.socialq.userinterface.views.QueueItemDecoration
 import kaaes.spotify.webapi.android.models.PlaylistTrack
 
-open class ClientActivity : BaseActivity(), ClientService.ClientServiceListener {
+open class ClientActivity : ServiceActivity(), ClientService.ClientServiceListener {
     private val TAG = ClientActivity::class.java.name
 
     // UI elements for queue display

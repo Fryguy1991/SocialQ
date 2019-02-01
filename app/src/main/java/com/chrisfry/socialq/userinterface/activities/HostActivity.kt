@@ -23,7 +23,7 @@ import com.chrisfry.socialq.userinterface.adapters.SelectablePlaylistAdapter
 import com.chrisfry.socialq.userinterface.views.QueueItemDecoration
 import kaaes.spotify.webapi.android.models.PlaylistSimple
 
-open class HostActivity : BaseActivity(), HostService.HostServiceListener,
+open class HostActivity : ServiceActivity(), HostService.HostServiceListener,
         IItemSelectionListener<String> {
     private val TAG = HostActivity::class.java.name
 
