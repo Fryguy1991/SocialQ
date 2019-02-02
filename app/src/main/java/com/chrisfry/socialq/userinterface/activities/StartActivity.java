@@ -143,7 +143,7 @@ public class StartActivity extends BaseActivity {
 
     private void handleHostStart() {
         Log.d(TAG, "Launching host dialog");
-        AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(StartActivity.this);
+        AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(StartActivity.this, R.style.AppDialog);
         dialogBuilder.setTitle(R.string.queue_options);
 
         // Reset default options
