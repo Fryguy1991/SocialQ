@@ -37,7 +37,9 @@
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toEndOf="@id/track_image_barrier"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_chainStyle="packed" />
+        app:layout_constraintVertical_chainStyle="packed"
+        android:textColor="?attr/colorPrimary"
+        android:textSize="@dimen/medium_text_2"/>
 
     <TextView
         android:id="@+id/tv_artist_name"
