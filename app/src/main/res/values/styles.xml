@@ -21,6 +21,13 @@
         <item name="pressedButtonColor">@color/Deep_Blue</item>
     </style>
 
+    <style name="AppDialog" parent="Theme.AppCompat.Light.Dialog.Alert">
+        <item name="colorAccent">@color/BurntOrangeLight</item>
+        <item name="android:textColorPrimary">@color/Slate2</item>
+        <item name="editTextColor">@color/Slate2</item>
+        <item name="android:windowBackground">@color/Ice_White</item>
+    </style>
+
     <style name="InverseText">
         <item name="android:textColor">?android:textColorPrimaryInverse</item>
         <item name="android:background">?android:colorPrimary</item>
