@@ -1,12 +1,28 @@
 <resources>
 
     <!-- Base application theme. -->
-    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
-        <!-- Customize your theme here. -->
-        <item name="colorPrimary">@color/colorPrimary</item>
-        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
-        <item name="colorAccent">@color/colorAccent</item>
-    </style>
-    
+    <style name="IceTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+        <!-- Major Theme Colors -->
+        <item name="colorPrimary">@color/Deep_Blue</item>
+        <item name="colorPrimaryDark">@color/Dark_Deep_Blue</item>
+        <item name="colorAccent">@color/BurntOrangeLight</item>
 
+        <!-- Theme Background Color -->
+        <item name="android:windowBackground">@color/Ice_White</item>
+
+        <!-- Theme Text Colors -->
+        <item name="android:textColorPrimary">@color/Slate2</item>
+        <item name="android:textColorPrimaryInverse">@color/White</item>
+        <item name="editTextColor">@color/Slate2</item>
+
+        <!-- Theme Button Colors -->
+        <item name="activeButtonColor">@color/Deep_Blue</item>
+        <item name="inactiveButtonColor">@color/Dirty_White</item>
+        <item name="pressedButtonColor">@color/Deep_Blue</item>
+    </style>
+
+    <style name="InverseText">
+        <item name="android:textColor">?android:textColorPrimaryInverse</item>
+        <item name="android:background">?android:colorPrimary</item>
+    </style>
 </resources>

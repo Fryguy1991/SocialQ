@@ -2,5 +2,5 @@
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="rectangle">
     <solid
-        android:color="@color/Pressed_Button_Color"/>
+        android:color="?attr/pressedButtonColor"/>
 </shape>
