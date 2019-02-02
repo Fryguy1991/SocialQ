@@ -10,6 +10,7 @@
 
     <!-- Text Size Dimens -->
     <dimen name="small_text">10sp</dimen>
+    <dimen name="medium_text_2">15sp</dimen>
     <dimen name="medium_text">20sp</dimen>
     <dimen name="large_text">30sp</dimen>
 
