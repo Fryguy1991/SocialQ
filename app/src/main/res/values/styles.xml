@@ -1,7 +1,7 @@
 <resources>
 
     <!-- Base application theme. -->
-    <style name="IceTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+    <style name="IceTheme" parent="Theme.AppCompat.Light.NoActionBar">
         <!-- Major Theme Colors -->
         <item name="colorPrimary">@color/Deep_Blue</item>
         <item name="colorPrimaryDark">@color/Dark_Deep_Blue</item>

@@ -32,6 +32,7 @@ import com.bumptech.glide.Glide;
 import com.chrisfry.socialq.business.AppConstants;
 import com.chrisfry.socialq.R;
 
+import androidx.appcompat.widget.Toolbar;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -183,6 +184,13 @@ public class SearchActivity extends BaseActivity implements ISearchView, ISpotif
         super.onCreate(savedInstanceState);
         setContentView(R.layout.search_base_layout);
         ButterKnife.bind(this);
+
+        // Setup the app toolbar
+        Toolbar toolbar = findViewById(R.id.app_toolbar);
+        if (toolbar != null) {
+            setSupportActionBar(toolbar);
+            toolbar.setTitle(R.string.search_activity_name);
+        }
 
         // Stop soft keyboard from pushing UI up
         getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING);

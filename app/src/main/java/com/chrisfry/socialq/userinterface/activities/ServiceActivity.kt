@@ -1,6 +1,7 @@
 package com.chrisfry.socialq.userinterface.activities
 
 import android.content.Intent
+import android.view.Menu
 
 import android.view.MenuItem
 import com.chrisfry.socialq.R
@@ -9,6 +10,12 @@ import com.chrisfry.socialq.enums.RequestType
 abstract class ServiceActivity : BaseActivity() {
     companion object {
         val TAG = ServiceActivity::class.java.name
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        val inflater = menuInflater
+        inflater.inflate(R.menu.main_screen_menu, menu)
+        return true
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {

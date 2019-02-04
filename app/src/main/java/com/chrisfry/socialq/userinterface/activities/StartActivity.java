@@ -10,8 +10,9 @@ import android.os.Bundle;
 import android.os.Process;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.AppCompatCheckBox;
+import androidx.appcompat.widget.Toolbar;
+
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -86,6 +87,12 @@ public class StartActivity extends BaseActivity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.start_screen);
+
+        // Setup the app toolbar
+        Toolbar toolbar = findViewById(R.id.app_toolbar);
+        if (toolbar != null) {
+            setSupportActionBar(toolbar);
+        }
 
         findViewById(R.id.btn_host_queue).setOnClickListener(mTypeSelect);
         findViewById(R.id.btn_join_queue).setOnClickListener(mTypeSelect);

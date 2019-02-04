@@ -6,6 +6,19 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
+    <!-- App Toolbar -->
+    <!-- THIS NEEDS TO BE AT THE TOP OF EVERY ACTIVITY -->
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/app_toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        app:layout_constraintTop_toTopOf="parent"
+        android:background="?attr/colorPrimary"
+        android:elevation="4dp"
+        android:theme="@style/ThemeOverlay.AppCompat.ActionBar"
+        app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
+        app:titleTextColor="@color/White"/>
+
     <ImageView
         android:layout_width="175dp"
         android:layout_height="175dp"

@@ -6,6 +6,20 @@
     android:layout_height="match_parent"
     android:animateLayoutChanges="true">
 
+    <!-- App Toolbar -->
+    <!-- THIS NEEDS TO BE AT THE TOP OF EVERY ACTIVITY -->
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/app_toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        app:layout_constraintTop_toTopOf="parent"
+        android:background="?attr/colorPrimary"
+        android:elevation="4dp"
+        android:theme="@style/ThemeOverlay.AppCompat.ActionBar"
+        app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
+        app:title="@string/app_name"
+        app:titleTextColor="@color/White"/>
+
     <EditText
         android:id="@+id/et_search_edit_text"
         android:layout_width="0dp"
@@ -17,7 +31,7 @@
         android:maxLines="1"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@id/app_toolbar" />
 
     <ScrollView
         android:id="@+id/sv_search_scroll_view"

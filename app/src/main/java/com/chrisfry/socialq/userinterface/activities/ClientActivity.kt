@@ -41,6 +41,12 @@ open class ClientActivity : ServiceActivity(), ClientService.ClientServiceListen
         super.onCreate(savedInstanceState)
         setContentView(R.layout.client_screen)
 
+        // Setup the app toolbar
+        val toolbar = findViewById<androidx.appcompat.widget.Toolbar>(R.id.app_toolbar)
+        if (toolbar != null) {
+            setSupportActionBar(toolbar)
+        }
+
         // Allow network operation in main thread
         val policy = StrictMode.ThreadPolicy.Builder()
                 .permitAll().build()
@@ -196,12 +202,6 @@ open class ClientActivity : ServiceActivity(), ClientService.ClientServiceListen
         }
 
         super.onDestroy()
-    }
-
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        val inflater = menuInflater
-        inflater.inflate(R.menu.main_screen_menu, menu)
-        return true
     }
 
     private fun setupQueueList() {

@@ -83,6 +83,12 @@ open class HostActivity : ServiceActivity(), HostService.HostServiceListener,
         super.onCreate(savedInstanceState)
         setContentView(R.layout.host_screen)
 
+        // Setup the app toolbar
+        val toolbar = findViewById<androidx.appcompat.widget.Toolbar>(R.id.app_toolbar)
+        if (toolbar != null) {
+            setSupportActionBar(toolbar)
+        }
+
         // Set fair play flag from intent (or default to app boolean default)
         isQueueFairPlay = intent.getBooleanExtra(AppConstants.FAIR_PLAY_KEY, resources.getBoolean(R.bool.fair_play_default))
 
@@ -262,12 +268,6 @@ open class HostActivity : ServiceActivity(), HostService.HostServiceListener,
         }
 
         super.onDestroy()
-    }
-
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        val inflater = menuInflater
-        inflater.inflate(R.menu.main_screen_menu, menu)
-        return true
     }
 
     private fun setupQueueList() {
