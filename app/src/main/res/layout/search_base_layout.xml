@@ -18,7 +18,7 @@
         android:theme="@style/ThemeOverlay.AppCompat.ActionBar"
         app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
         app:title="@string/app_name"
-        app:titleTextColor="@color/White"/>
+        app:titleTextColor="?android:textColorPrimaryInverse"/>
 
     <EditText
         android:id="@+id/et_search_edit_text"
