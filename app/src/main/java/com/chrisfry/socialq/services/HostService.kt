@@ -292,8 +292,32 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
         // Create advertising options (strategy)
         val options = AdvertisingOptions.Builder().setStrategy(Strategy.P2P_STAR).build()
 
+        // Build name of host. See AppConstants.NEARBY_HOST_NAME_FORMAT
+        val ownerName = when {
+            hostUser.display_name.isNullOrEmpty() -> {
+                val id = hostUser.id
+                if (id.isNullOrEmpty()) {
+                    getString(R.string.unknown)
+                } else {
+                    id
+                }
+            } else -> {
+                hostUser.display_name
+            }
+        }
+        val isFairplayCharacter = when (isQueueFairPlay) {
+            true -> {
+                AppConstants.FAIR_PLAY_TRUE_CHARACTER
+            }
+            false -> {
+                AppConstants.FAIR_PLAY_FALSE_CHARACTER
+            }
+        }
+        val hostName = String.format(AppConstants.NEARBY_HOST_NAME_FORMAT, queueTitle, ownerName, isFairplayCharacter)
+
+        // Attempt to start advertising
         Nearby.getConnectionsClient(this).startAdvertising(
-                queueTitle,
+                hostName,
                 AppConstants.SERVICE_NAME,
                 mConnectionLifecycleCallback,
                 options)

@@ -19,14 +19,19 @@ abstract class ServiceActivity : BaseActivity() {
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        when (item.itemId) {
-            R.id.search_fragment -> {
-                startSearchActivity()
-                return true
+        if (!super.onOptionsItemSelected(item)) {
+            when (item.itemId) {
+                R.id.search_fragment -> {
+                    startSearchActivity()
+                    return true
+                }
+                else -> {
+                    // Do nothing
+                    return false
+                }
             }
-            else ->
-                // Do nothing
-                return false
+        } else {
+            return true
         }
     }
 

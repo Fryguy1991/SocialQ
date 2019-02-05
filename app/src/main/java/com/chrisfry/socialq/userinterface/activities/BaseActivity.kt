@@ -4,12 +4,26 @@ import android.app.ActivityManager
 import android.graphics.BitmapFactory
 import android.os.Build
 import android.os.Bundle
+import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
 import com.chrisfry.socialq.R
 
 abstract class BaseActivity : AppCompatActivity() {
     companion object {
         val TAG = BaseActivity::class.java.name
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when (item.itemId) {
+            android.R.id.home -> {
+                onBackPressed()
+                return true
+            }
+            else -> {
+                // Do nothing
+                return false
+            }
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {

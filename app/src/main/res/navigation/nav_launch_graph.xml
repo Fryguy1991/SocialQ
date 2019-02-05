@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/nav_launch_graph"
+    app:startDestination="@id/launchFragment"
+    xmlns:tools="http://schemas.android.com/tools">
+    <fragment
+        android:id="@+id/launchFragment"
+        android:name="com.chrisfry.socialq.userinterface.fragments.LaunchFragment"
+        android:label="@string/available_queues"
+        tools:layout="@layout/fragment_launch">
+        <action
+            android:id="@+id/action_launchFragment_to_newQueueFragment"
+            app:destination="@id/newQueueFragment" />
+        <action
+            android:id="@+id/action_launchFragment_to_joinQueueFragment"
+            app:destination="@id/joinQueueFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/joinQueueFragment"
+        android:name="com.chrisfry.socialq.userinterface.fragments.JoinQueueFragment"
+        android:label="JoinQueueFragment"
+        tools:layout="@layout/join_queue_fragment">
+        <argument
+            android:name="queueInfo"
+            app:argType="com.chrisfry.socialq.model.JoinableQueueModel" />
+    </fragment>
+    <fragment
+        android:id="@+id/newQueueFragment"
+        android:name="com.chrisfry.socialq.userinterface.fragments.NewQueueFragment"
+        android:label="@string/new_queue"
+        tools:layout="@layout/fragment_new_queue" >
+        <action
+            android:id="@+id/action_newQueueFragment_to_hostActivity"
+            app:destination="@id/hostActivity"
+            app:popUpTo="@+id/launchFragment" />
+    </fragment>
+    <activity
+        android:id="@+id/hostActivity"
+        android:name="com.chrisfry.socialq.userinterface.activities.HostActivity"
+        android:label="HostActivity"
+        tools:layout="@layout/host_screen">
+        <argument
+            android:name="queueTitle"
+            app:argType="string"
+            android:defaultValue="@string/queue_title_default_value"/>
+        <argument
+            android:name="isFairPlay"
+            app:argType="boolean"/>
+    </activity>
+    <activity
+        android:id="@+id/clientActivity"
+        android:name="com.chrisfry.socialq.userinterface.activities.ClientActivity"
+        android:label="ClientActivity"
+        tools:layout="@layout/client_screen">
+        <argument
+            android:name="queueTitle"
+            app:argType="string" />
+        <argument
+            android:name="hostEndpointId"
+            app:argType="string" />
+    </activity>
+</navigation>

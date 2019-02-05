@@ -6,8 +6,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
 
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
@@ -190,6 +188,10 @@ public class SearchActivity extends BaseActivity implements ISearchView, ISpotif
         if (toolbar != null) {
             setSupportActionBar(toolbar);
             toolbar.setTitle(R.string.search_activity_name);
+        }
+
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         }
 
         // Stop soft keyboard from pushing UI up

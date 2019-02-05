@@ -19,6 +19,11 @@
         <item name="activeButtonColor">@color/Deep_Blue</item>
         <item name="inactiveButtonColor">@color/Dirty_White</item>
         <item name="pressedButtonColor">@color/Deep_Blue</item>
+
+        <!-- Theme Widget Styles -->
+        <item name="checkboxStyle">@style/AppCheckboxStyle</item>
+        <item name="toolbarStyle">@style/ToolBarStyle</item>
+        <item name="buttonStyle">@style/DefaultButtonStyle</item>
     </style>
 
     <style name="AppDialog" parent="Theme.AppCompat.Light.Dialog.Alert">
@@ -28,8 +33,28 @@
         <item name="android:windowBackground">@color/Ice_White</item>
     </style>
 
+    <!-- Text Styles -->
     <style name="InverseText">
         <item name="android:textColor">?android:textColorPrimaryInverse</item>
         <item name="android:background">?android:colorPrimary</item>
+    </style>
+    <style name="DataText">
+        <item name="android:textColor">?android:colorPrimary</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textSize">@dimen/medium_text</item>
+    </style>
+
+    <!-- Widget Styles -->
+    <style name="ToolBarStyle" parent="Widget.AppCompat.Toolbar">
+        <item name="android:background">?attr/colorPrimary</item>
+        <item name="android:textColorPrimary">@color/White</item>
+        <item name="android:colorBackground">?attr/colorPrimaryDark</item>
+    </style>
+    <style name="DefaultButtonStyle" parent="Widget.AppCompat.Button">
+        <item name="android:background">@drawable/rectangle_button</item>
+        <item name="android:textColor">?android:textColorPrimaryInverse</item>
+    </style>
+    <style name="AppCheckboxStyle" parent="Widget.AppCompat.CompoundButton.CheckBox">
+        <item name="android:textColor">@color/Slate2</item>
     </style>
 </resources>

@@ -62,7 +62,7 @@ open class HostActivity : ServiceActivity(), HostService.HostServiceListener,
             Log.d(TAG, "Host service disconnected")
             unbindService(this)
             isServiceBound = false
-            launchStartActivityAndFinish()
+            finish()
         }
     }
 
@@ -89,8 +89,10 @@ open class HostActivity : ServiceActivity(), HostService.HostServiceListener,
             setSupportActionBar(toolbar)
         }
 
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+
         // Set fair play flag from intent (or default to app boolean default)
-        isQueueFairPlay = intent.getBooleanExtra(AppConstants.FAIR_PLAY_KEY, resources.getBoolean(R.bool.fair_play_default))
+        isQueueFairPlay = intent.getBooleanExtra("isFairPlay", resources.getBoolean(R.bool.fair_play_default))
 
         initUi()
         addListeners()
@@ -104,6 +106,11 @@ open class HostActivity : ServiceActivity(), HostService.HostServiceListener,
         startHostService()
     }
 
+    override fun onNavigateUp(): Boolean {
+        onBackPressed()
+        return true
+    }
+
     private fun initUi() {
         // Initialize UI elements
         nextButton = findViewById(R.id.btn_next)
@@ -111,7 +118,7 @@ open class HostActivity : ServiceActivity(), HostService.HostServiceListener,
         queueList = findViewById(R.id.rv_queue_list_view)
 
         // Show queue title as activity title
-        title = intent.getStringExtra(AppConstants.QUEUE_TITLE_KEY)
+        title = intent.getStringExtra("queueTitle")
 
         // Stop soft keyboard from pushing UI up
         window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING)
@@ -311,7 +318,7 @@ open class HostActivity : ServiceActivity(), HostService.HostServiceListener,
 
     override fun closeHost() {
         stopHostService()
-        launchStartActivityAndFinish()
+        finish()
     }
 
     override fun showClientConnected() {

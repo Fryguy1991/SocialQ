@@ -68,18 +68,29 @@
     <string name="artist_albums">%1$s Albums</string>
 
     <!-- Start Screen Strings -->
-    <string name="login">Log In</string>
     <string name="start_queue">Start Queue</string>
     <string name="join_queue">Join Queue</string>
+    <string name="available_queues">Available Queues</string>
+    <string name="new_queue">New Queue</string>
+
+    <!-- Join Queue Fragment -->
+    <string name="queue_details">Queue Details</string>
+    <string name="queue_owner">Owner</string>
+    <string name="is_active">ON</string>
+    <string name="is_not_active">OFF</string>
+    <string name="unknown">Unknown</string>
 
     <!-- Queue Options Dialog Strings -->
     <string name="queue_options">Queue Options</string>
     <string name="queue_title">Queue Title</string>
     <string name="queue_title_default_value">SocialQ Host</string>
-    <string name="fair_play">Fair Play </string>
+    <string name="fair_play">Fair Play</string>
     <string name="default_playlist_name">SocialQ Playlist</string>
 
     <!-- Queue Connect Screen Strings -->
     <string name="join">Join</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 
 </resources>
