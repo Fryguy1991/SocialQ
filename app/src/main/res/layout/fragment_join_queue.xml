@@ -31,7 +31,7 @@
         android:layout_marginEnd="@dimen/default_margin"
         android:textSize="@dimen/medium_text_3"
         android:text="Adam Kovic"
-        style="@style/DataText"
+        style="@style/HeaderText"
         android:gravity="center_horizontal"/>
 
     <TextView
@@ -59,7 +59,7 @@
         android:layout_marginEnd="@dimen/default_margin"
         android:textSize="@dimen/medium_text_3"
         android:text="@string/on"
-        style="@style/DataText"
+        style="@style/HeaderText"
         android:gravity="center_horizontal"/>
 
     <Button

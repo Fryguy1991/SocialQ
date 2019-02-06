@@ -357,6 +357,8 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
 
         // Stop advertising and alert clients we have disconnected
         if (successfulAdvertisingFlag) {
+            Log.d(TAG, "Stop advertising host")
+            
             Nearby.getConnectionsClient(applicationContext).stopAdvertising()
             Nearby.getConnectionsClient(applicationContext).stopAllEndpoints()
         }

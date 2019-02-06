@@ -23,13 +23,21 @@
         <!-- Theme Widget Styles -->
         <item name="checkboxStyle">@style/AppCheckboxStyle</item>
         <item name="buttonStyle">@style/DefaultButtonStyle</item>
+        <item name="alertDialogTheme">@style/AppDialog</item>
     </style>
 
     <style name="AppDialog" parent="Theme.AppCompat.Light.Dialog.Alert">
+        <item name="colorPrimary">@color/Deep_Blue</item>
         <item name="colorAccent">@color/BurntOrangeLight</item>
         <item name="android:textColorPrimary">@color/Slate2</item>
         <item name="editTextColor">@color/Slate2</item>
         <item name="android:windowBackground">@color/Ice_White</item>
+        <item name="android:windowTitleStyle">@style/DialogTitleText</item>
+    </style>
+    <style name="DialogTitleText">
+        <item name="android:textColor">?android:colorPrimary</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textSize">@dimen/medium_text</item>
     </style>
 
     <!-- Text Styles -->
@@ -37,7 +45,7 @@
         <item name="android:textColor">?android:textColorPrimaryInverse</item>
         <item name="android:background">?android:colorPrimary</item>
     </style>
-    <style name="DataText">
+    <style name="HeaderText">
         <item name="android:textColor">?android:colorPrimary</item>
         <item name="android:textStyle">bold</item>
         <item name="android:textSize">@dimen/medium_text</item>
@@ -61,6 +69,6 @@
         <item name="android:layout_height">@dimen/round_button_size</item>
     </style>
     <style name="AppCheckboxStyle" parent="Widget.AppCompat.CompoundButton.CheckBox">
-        <item name="android:textColor">@color/Slate2</item>
+        <item name="android:textColor">?android:textColorPrimary</item>
     </style>
 </resources>

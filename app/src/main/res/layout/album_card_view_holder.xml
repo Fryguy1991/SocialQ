@@ -32,11 +32,11 @@
             android:layout_marginStart="@dimen/default_margin"
             android:layout_marginEnd="@dimen/default_margin"
             android:layout_marginBottom="@dimen/default_margin"
-            android:textStyle="bold"
             android:maxLines="1"
             android:ellipsize="end"
             android:textSize="@dimen/album_card_text_size"
-            android:gravity="center_horizontal"/>
+            android:gravity="center_horizontal"
+            style="@style/HeaderText"/>
 
         <TextView
             android:id="@+id/tv_artist_name"

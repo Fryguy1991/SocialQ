@@ -186,7 +186,7 @@ open class HostActivity : ServiceActivity(), HostService.HostServiceListener,
 
     override fun onBackPressed() {
 
-        val dialogBuilder = AlertDialog.Builder(this, R.style.AppDialog)
+        val dialogBuilder = AlertDialog.Builder(this)
         dialogBuilder.setTitle(getString(R.string.close_host_dialog_title))
 
         // Inflate content view and get references to UI elements
@@ -227,7 +227,7 @@ open class HostActivity : ServiceActivity(), HostService.HostServiceListener,
     }
 
     override fun showBasePlaylistDialog(playlists: List<PlaylistSimple>) {
-        val dialogBuilder = AlertDialog.Builder(this, R.style.AppDialog)
+        val dialogBuilder = AlertDialog.Builder(this)
         dialogBuilder.setTitle(getString(R.string.select_base_playlist))
 
         // Inflate content view and get references to UI elements
@@ -295,18 +295,18 @@ open class HostActivity : ServiceActivity(), HostService.HostServiceListener,
 
     override fun onQueuePause() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            playPauseButton.setImageDrawable(resources.getDrawable(R.drawable.play_button, this.theme))
+            playPauseButton.background = resources.getDrawable(R.drawable.play_button, this.theme)
         } else {
-            playPauseButton.setImageDrawable(resources.getDrawable(R.drawable.play_button))
+            playPauseButton.background = resources.getDrawable(R.drawable.play_button)
         }
         playPauseButton.contentDescription = "queue_paused"
     }
 
     override fun onQueuePlay() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            playPauseButton.setImageDrawable(resources.getDrawable(R.drawable.pause_button, this.theme))
+            playPauseButton.background = resources.getDrawable(R.drawable.pause_button, this.theme)
         } else {
-            playPauseButton.setImageDrawable(resources.getDrawable(R.drawable.pause_button))
+            playPauseButton.background = resources.getDrawable(R.drawable.pause_button)
         }
         playPauseButton.contentDescription = "queue_playing"
     }

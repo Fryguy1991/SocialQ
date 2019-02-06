@@ -26,5 +26,7 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@id/iv_artist_image" />
+        app:layout_constraintStart_toEndOf="@id/iv_artist_image"
+        android:textSize="@dimen/medium_text_2"
+        style="@style/HeaderText"/>
 </merge>

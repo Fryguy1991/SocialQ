@@ -55,17 +55,15 @@
                 android:layout_marginEnd="@dimen/default_margin"
                 android:gravity="center"
                 android:text="@string/songs"
-                android:textSize="@dimen/medium_text"
-                android:textStyle="bold"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
+                app:layout_constraintTop_toTopOf="parent"
+                style="@style/HeaderText"/>
 
             <com.chrisfry.socialq.userinterface.views.TrackAlbumView
                 android:id="@+id/cv_track_1"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/default_margin"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/tv_song_heading" />
@@ -96,10 +94,10 @@
                 android:gravity="center_vertical"
                 android:text="@string/see_all_songs"
                 android:textSize="@dimen/see_all_text_size"
-                android:textStyle="bold"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/cv_track_3" />
+                app:layout_constraintTop_toBottomOf="@id/cv_track_3"
+                style="@style/HeaderText"/>
 
             <TextView
                 android:id="@+id/tv_artist_heading"
@@ -110,11 +108,10 @@
                 android:layout_marginEnd="@dimen/default_margin"
                 android:gravity="center"
                 android:text="@string/artists"
-                android:textSize="@dimen/medium_text"
-                android:textStyle="bold"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/tv_see_all_songs" />
+                app:layout_constraintTop_toBottomOf="@id/tv_see_all_songs"
+                style="@style/HeaderText"/>
 
             <com.chrisfry.socialq.userinterface.views.ArtistView
                 android:id="@+id/cv_artist_1"
@@ -150,10 +147,10 @@
                 android:gravity="center_vertical"
                 android:text="@string/see_all_artists"
                 android:textSize="@dimen/see_all_text_size"
-                android:textStyle="bold"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/cv_artist_3" />
+                app:layout_constraintTop_toBottomOf="@id/cv_artist_3"
+                style="@style/HeaderText"/>
 
             <TextView
                 android:id="@+id/tv_album_heading"
@@ -164,11 +161,10 @@
                 android:layout_marginEnd="@dimen/default_margin"
                 android:gravity="center"
                 android:text="@string/albums"
-                android:textSize="@dimen/medium_text"
-                android:textStyle="bold"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/tv_see_all_artists" />
+                app:layout_constraintTop_toBottomOf="@id/tv_see_all_artists"
+                style="@style/HeaderText"/>
 
             <com.chrisfry.socialq.userinterface.views.TrackAlbumView
                 android:id="@+id/cv_album_1"
@@ -205,11 +201,11 @@
                 android:gravity="center_vertical"
                 android:text="@string/see_all_albums"
                 android:textSize="@dimen/see_all_text_size"
-                android:textStyle="bold"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/cv_album_3" />
+                app:layout_constraintTop_toBottomOf="@id/cv_album_3"
+                style="@style/HeaderText"/>
             <!-- END BASE RESULT VIEWS-->
 
             <!-- START ARTIST VIEWS-->
@@ -233,11 +229,10 @@
                 android:layout_marginEnd="@dimen/default_margin"
                 android:gravity="center"
                 android:text="@string/top_tracks"
-                android:textSize="@dimen/medium_text"
-                android:textStyle="bold"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/iv_artist_layout_image" />
+                app:layout_constraintTop_toBottomOf="@id/iv_artist_layout_image"
+                style="@style/HeaderText"/>
 
             <com.chrisfry.socialq.userinterface.views.TextViewWithUri
                 android:id="@+id/tv_top_track_1"
@@ -298,11 +293,10 @@
                 android:layout_marginEnd="@dimen/default_margin"
                 android:gravity="center"
                 android:text="@string/albums"
-                android:textSize="@dimen/medium_text"
-                android:textStyle="bold"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/tv_top_track_5" />
+                app:layout_constraintTop_toBottomOf="@id/tv_top_track_5"
+                style="@style/HeaderText"/>
 
             <com.chrisfry.socialq.userinterface.views.AlbumCardView
                 android:id="@+id/cv_artist_album_1"
@@ -368,11 +362,11 @@
                 android:gravity="center_vertical"
                 android:text="@string/see_all_albums"
                 android:textSize="@dimen/see_all_text_size"
-                android:textStyle="bold"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/cv_artist_album_3" />
+                app:layout_constraintTop_toBottomOf="@id/cv_artist_album_3"
+                style="@style/HeaderText"/>
             <!-- END ARTIST VIEWS-->
         </androidx.constraintlayout.widget.ConstraintLayout>
     </ScrollView>
@@ -388,12 +382,12 @@
         android:gravity="center_horizontal"
         android:text="@string/no_results_found"
         android:textSize="@dimen/large_text"
-        android:textStyle="bold"
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/et_search_edit_text" />
+        app:layout_constraintTop_toBottomOf="@id/et_search_edit_text"
+        style="@style/HeaderText"/>
     <!-- END NO RESULT VIEWS-->
 
     <!-- START ALBUM VIEWS-->
@@ -407,7 +401,7 @@
         android:visibility="gone"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@id/app_toolbar" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rv_search_results"
