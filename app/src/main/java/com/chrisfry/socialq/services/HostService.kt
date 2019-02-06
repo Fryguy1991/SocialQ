@@ -352,13 +352,30 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
         isBound = true
     }
 
+    override fun authorizationFailed() {
+        Log.d(TAG, "Host service is ending due to authorization failure")
+
+        // Stop advertising and alert clients we have disconnected
+        if (successfulAdvertisingFlag) {
+            Log.d(TAG, "Stop advertising host")
+
+            Nearby.getConnectionsClient(applicationContext).stopAdvertising()
+            Nearby.getConnectionsClient(applicationContext).stopAllEndpoints()
+        }
+
+        listener?.closeHost()
+
+        // Let app know that the service has ended
+        App.hasServiceBeenStarted = false
+    }
+
     override fun onDestroy() {
         Log.d(TAG, "Host service is ending")
 
         // Stop advertising and alert clients we have disconnected
         if (successfulAdvertisingFlag) {
             Log.d(TAG, "Stop advertising host")
-            
+
             Nearby.getConnectionsClient(applicationContext).stopAdvertising()
             Nearby.getConnectionsClient(applicationContext).stopAllEndpoints()
         }
@@ -1320,14 +1337,19 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
                     currentUserPlaylists.clear()
                 }
 
-                currentUserPlaylists.addAll(playlistsPager.items)
+                // If playlists don't have tracks don't show them
+                for (playlist in playlistsPager.items) {
+                    if (playlist.tracks.total > 0) {
+                        currentUserPlaylists.add(playlist)
+                    }
+                }
 
-
+                val nextPlaylistIndex = playlistsPager.items.size + playlistsPager.offset
                 // Check if there are more than 50 playlists by the user. If so we should get the next 50
-                if (currentUserPlaylists.size < playlistsPager.total) {
+                if (nextPlaylistIndex < playlistsPager.total) {
                     val options = HashMap<String, Any>()
                     options[SpotifyService.LIMIT] = AppConstants.PLAYLIST_LIMIT
-                    options[SpotifyService.OFFSET] = currentUserPlaylists.size
+                    options[SpotifyService.OFFSET] = nextPlaylistIndex
 
                     spotifyService.getPlaylists(playlistOwnerUserId, options, this)
                 } else {

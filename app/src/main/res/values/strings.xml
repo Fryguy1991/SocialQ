@@ -32,6 +32,7 @@
     <string name="base_playlist">Base Playlist</string>
     <string name="client_joined">A Client Has Joined</string>
     <string name="client_disconnected">A Client Has Disconnected</string>
+    <string name="number_of_tracks">%1$s Tracks</string>
 
     <!-- Close Host Dialog Strings -->
     <string name="close_host_dialog_title">Close Queue?</string>
