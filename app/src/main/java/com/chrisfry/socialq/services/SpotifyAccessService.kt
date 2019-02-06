@@ -112,7 +112,7 @@ abstract class SpotifyAccessService : Service() {
 
     fun authFailed() {
         Log.e(TAG, "Authorization failed. Shutting down service")
-        stopSelf()
+        authorizationFailed()
     }
 
     protected open fun initSpotifyElements(accessToken: String) {
@@ -347,4 +347,6 @@ abstract class SpotifyAccessService : Service() {
     abstract fun playlistRefreshComplete()
 
     abstract fun newTrackRetrievalComplete(newTrackIndex: Int)
+
+    abstract fun authorizationFailed()
 }
