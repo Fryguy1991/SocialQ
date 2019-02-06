@@ -1,6 +1,5 @@
 package com.chrisfry.socialq.userinterface.fragments
 
-import android.content.Context
 import android.os.Bundle
 import android.util.Log
 import androidx.fragment.app.Fragment
@@ -8,12 +7,14 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.navigation.findNavController
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.chrisfry.socialq.R
 import com.chrisfry.socialq.business.AppConstants
 import com.chrisfry.socialq.model.JoinableQueueModel
 import com.chrisfry.socialq.userinterface.adapters.QueueDisplayAdapter
+import com.chrisfry.socialq.userinterface.interfaces.IQueueSelectionListener
 import com.chrisfry.socialq.userinterface.views.QueueItemDecoration
 import com.google.android.gms.nearby.Nearby
 import com.google.android.gms.nearby.connection.DiscoveredEndpointInfo
@@ -35,7 +36,7 @@ import java.util.regex.Pattern
  * create an instance of this fragment.
  *
  */
-class LaunchFragment : Fragment() {
+class LaunchFragment : Fragment(), IQueueSelectionListener {
     companion object {
         val TAG = LaunchFragment::class.java.name
         /**
@@ -47,8 +48,6 @@ class LaunchFragment : Fragment() {
         @JvmStatic
         fun newInstance() = LaunchFragment().apply {}
     }
-
-    private var listener: LaunchFragmentListener? = null
 
     // NEARBY VALUES
     // Flag to indicate if we successfully started searching for hosts
@@ -62,15 +61,6 @@ class LaunchFragment : Fragment() {
     // Recycler view and adapter references
     private val queueAdapter = QueueDisplayAdapter()
     private lateinit var recyclerView: RecyclerView
-
-    override fun onAttach(context: Context) {
-        super.onAttach(context)
-        if (context is LaunchFragmentListener) {
-            listener = context
-        } else {
-            throw RuntimeException(context.toString() + " must implement LaunchFragmentListener")
-        }
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -100,6 +90,7 @@ class LaunchFragment : Fragment() {
         recyclerView.layoutManager = layoutManager
         recyclerView.addItemDecoration(QueueItemDecoration(context))
 
+        queueAdapter.listener = this
         recyclerView.adapter = queueAdapter
         queueAdapter.notifyDataSetChanged()
     }
@@ -116,24 +107,9 @@ class LaunchFragment : Fragment() {
         super.onDestroy()
     }
 
-    override fun onDetach() {
-        super.onDetach()
-        listener = null
-    }
-
-    /**
-     * This interface must be implemented by activities that contain this
-     * fragment to allow an interaction in this fragment to be communicated
-     * to the activity and potentially other fragments contained in that
-     * activity.
-     *
-     *
-     * See the Android Training lesson [Communicating with Other Fragments]
-     * (http://developer.android.com/training/basics/fragments/communicating.html)
-     * for more information.
-     */
-    interface LaunchFragmentListener {
-        fun queueSelected(endpointId: String)
+    override fun queueSelected(queueModel: JoinableQueueModel) {
+        val joinQueueDirections = LaunchFragmentDirections.actionLaunchFragmentToClientActivity(queueModel.queueName, queueModel.endpointId)
+        findNavController().navigate(joinQueueDirections)
     }
 
     private fun searchForQueues() {

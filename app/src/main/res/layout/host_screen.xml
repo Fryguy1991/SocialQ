@@ -13,11 +13,8 @@
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
         app:layout_constraintTop_toTopOf="parent"
-        android:background="?attr/colorPrimary"
         android:elevation="4dp"
-        android:theme="@style/ThemeOverlay.AppCompat.ActionBar"
-        app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
-        app:titleTextColor="?android:textColorPrimaryInverse"/>
+        android:theme="@style/ToolBarStyle"/>
 
     <!-- START HOST LIST ELEMENTS-->
     <androidx.recyclerview.widget.RecyclerView
@@ -33,24 +30,22 @@
 
     <ImageView
         android:id="@+id/btn_play_pause"
-        android:layout_width="60dp"
-        android:layout_height="60dp"
         android:layout_marginEnd="@dimen/default_margin"
         android:layout_marginBottom="@dimen/default_margin"
         android:contentDescription="queue_paused"
-        android:src="@drawable/play_button"
+        android:background="@drawable/play_button"
         app:layout_constraintBottom_toTopOf="@+id/btn_next"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent"
+        style="@style/RoundButtonStyle"/>
 
     <ImageView
         android:id="@+id/btn_next"
-        android:layout_width="60dp"
-        android:layout_height="60dp"
         android:layout_marginEnd="@dimen/default_margin"
         android:layout_marginBottom="@dimen/default_margin"
-        android:src="@drawable/next_button"
+        android:background="@drawable/next_button"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent"
+        style="@style/RoundButtonStyle"/>
 
     <androidx.constraintlayout.widget.Group
         android:id="@+id/group_host_list_elements"

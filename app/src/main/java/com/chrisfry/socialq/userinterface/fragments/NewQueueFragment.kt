@@ -6,9 +6,10 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.inputmethod.EditorInfo
 import android.widget.CheckBox
 import android.widget.EditText
-import androidx.navigation.findNavController
+import androidx.navigation.fragment.findNavController
 import com.chrisfry.socialq.R
 
 /**
@@ -36,19 +37,35 @@ class NewQueueFragment : Fragment() {
         fairplayCheckBox = view.findViewById(R.id.cb_fairplay_checkbox)
         queueTitleEditText = view.findViewById(R.id.et_queue_name)
 
-        startQueueButton.setOnClickListener {
-            var title = queueTitleEditText.text.toString()
-            if (title.isEmpty()) {
-                title = getString(R.string.queue_title_default_value)
+        // When done button is pressed on soft keyboard start the queue
+        queueTitleEditText.setOnEditorActionListener { v, actionId, event ->
+            when(actionId) {
+                EditorInfo.IME_ACTION_DONE -> {
+                    startSocialQ()
+                    true
+                }
+                else -> {
+                    false
+                }
             }
-
-            val isFairPlay = fairplayCheckBox.isChecked
-
-            // Navigate to the host activity
-            val hostDirections = NewQueueFragmentDirections.actionNewQueueFragmentToHostActivity(isFairPlay)
-            hostDirections.setQueueTitle(title)
-            view.findNavController().navigate(hostDirections)
-
         }
+
+        startQueueButton.setOnClickListener {
+            startSocialQ()
+        }
+    }
+
+    private fun startSocialQ() {
+        var title = queueTitleEditText.text.toString()
+        if (title.isEmpty()) {
+            title = getString(R.string.queue_title_default_value)
+        }
+
+        val isFairPlay = fairplayCheckBox.isChecked
+
+        // Navigate to the host activity
+        val hostDirections = NewQueueFragmentDirections.actionNewQueueFragmentToHostActivity(isFairPlay)
+        hostDirections.setQueueTitle(title)
+        findNavController().navigate(hostDirections)
     }
 }

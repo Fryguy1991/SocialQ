@@ -1,15 +1,16 @@
 package com.chrisfry.socialq.userinterface.activities
 
 import android.os.Bundle
+import android.view.WindowManager
 import androidx.appcompat.widget.Toolbar
 import androidx.navigation.NavController
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupWithNavController
 import com.chrisfry.socialq.R
-import com.chrisfry.socialq.userinterface.fragments.LaunchFragment
+import com.chrisfry.socialq.userinterface.fragments.JoinQueueFragment
 
-class LaunchActivity : BaseActivity(), LaunchFragment.LaunchFragmentListener {
+class LaunchActivity : BaseActivity(), JoinQueueFragment.JoinQueueFragmentListener {
     companion object {
         val TAG = LaunchActivity::class.java.name
     }
@@ -17,10 +18,7 @@ class LaunchActivity : BaseActivity(), LaunchFragment.LaunchFragmentListener {
     // Reference to nav controller
     private lateinit var navController: NavController
 
-    // LaunchFragment methods
-    override fun queueSelected(endpointId: String) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
+    private lateinit var toolbar: Toolbar
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -31,9 +29,14 @@ class LaunchActivity : BaseActivity(), LaunchFragment.LaunchFragmentListener {
         val appBarConfiguration = AppBarConfiguration(navController.graph)
 
         // Setup the app toolbar
-        val toolbar = findViewById<Toolbar>(R.id.app_toolbar)
-        if (toolbar != null) {
-            toolbar.setupWithNavController(navController, appBarConfiguration)
-        }
+        toolbar = findViewById(R.id.app_toolbar)
+        toolbar.setupWithNavController(navController, appBarConfiguration)
+
+        // Stop soft keyboard from pushing UI up
+        window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING)
+    }
+
+    override fun showQueueTitle(queueTitle: String) {
+        toolbar.title = queueTitle
     }
 }

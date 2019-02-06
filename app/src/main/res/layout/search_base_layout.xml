@@ -13,12 +13,8 @@
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
         app:layout_constraintTop_toTopOf="parent"
-        android:background="?attr/colorPrimary"
         android:elevation="4dp"
-        android:theme="@style/ThemeOverlay.AppCompat.ActionBar"
-        app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
-        app:title="@string/app_name"
-        app:titleTextColor="?android:textColorPrimaryInverse"/>
+        android:theme="@style/ToolBarStyle"/>
 
     <EditText
         android:id="@+id/et_search_edit_text"

@@ -76,8 +76,8 @@
     <!-- Join Queue Fragment -->
     <string name="queue_details">Queue Details</string>
     <string name="queue_owner">Owner</string>
-    <string name="is_active">ON</string>
-    <string name="is_not_active">OFF</string>
+    <string name="on">On</string>
+    <string name="off">Off</string>
     <string name="unknown">Unknown</string>
 
     <!-- Queue Options Dialog Strings -->

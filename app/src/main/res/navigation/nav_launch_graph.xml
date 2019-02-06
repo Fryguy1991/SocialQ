@@ -13,14 +13,13 @@
             android:id="@+id/action_launchFragment_to_newQueueFragment"
             app:destination="@id/newQueueFragment" />
         <action
-            android:id="@+id/action_launchFragment_to_joinQueueFragment"
-            app:destination="@id/joinQueueFragment" />
+            android:id="@+id/action_launchFragment_to_clientActivity"
+            app:destination="@id/clientActivity" />
     </fragment>
     <fragment
         android:id="@+id/joinQueueFragment"
         android:name="com.chrisfry.socialq.userinterface.fragments.JoinQueueFragment"
-        android:label="JoinQueueFragment"
-        tools:layout="@layout/join_queue_fragment">
+        tools:layout="@layout/fragment_join_queue">
         <argument
             android:name="queueInfo"
             app:argType="com.chrisfry.socialq.model.JoinableQueueModel" />

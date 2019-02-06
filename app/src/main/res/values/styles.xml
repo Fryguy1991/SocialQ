@@ -22,7 +22,6 @@
 
         <!-- Theme Widget Styles -->
         <item name="checkboxStyle">@style/AppCheckboxStyle</item>
-        <item name="toolbarStyle">@style/ToolBarStyle</item>
         <item name="buttonStyle">@style/DefaultButtonStyle</item>
     </style>
 
@@ -45,14 +44,21 @@
     </style>
 
     <!-- Widget Styles -->
-    <style name="ToolBarStyle" parent="Widget.AppCompat.Toolbar">
+    <style name="ToolBarStyle" parent="ThemeOverlay.AppCompat.ActionBar">
         <item name="android:background">?attr/colorPrimary</item>
         <item name="android:textColorPrimary">@color/White</item>
         <item name="android:colorBackground">?attr/colorPrimaryDark</item>
+        <item name="android:colorControlNormal">@color/White</item>
+        <item name="android:titleTextStyle">@color/White</item>
     </style>
     <style name="DefaultButtonStyle" parent="Widget.AppCompat.Button">
         <item name="android:background">@drawable/rectangle_button</item>
         <item name="android:textColor">?android:textColorPrimaryInverse</item>
+    </style>
+    <style name="RoundButtonStyle" parent="Widget.AppCompat.Button">
+        <item name="android:elevation">@dimen/standard_elevation</item>
+        <item name="android:layout_width">@dimen/round_button_size</item>
+        <item name="android:layout_height">@dimen/round_button_size</item>
     </style>
     <style name="AppCheckboxStyle" parent="Widget.AppCompat.CompoundButton.CheckBox">
         <item name="android:textColor">@color/Slate2</item>

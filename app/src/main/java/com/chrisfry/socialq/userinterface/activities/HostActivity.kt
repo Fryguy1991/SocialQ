@@ -92,7 +92,7 @@ open class HostActivity : ServiceActivity(), HostService.HostServiceListener,
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
         // Set fair play flag from intent (or default to app boolean default)
-        isQueueFairPlay = intent.getBooleanExtra("isFairPlay", resources.getBoolean(R.bool.fair_play_default))
+        isQueueFairPlay = intent.getBooleanExtra(AppConstants.FAIR_PLAY_KEY, resources.getBoolean(R.bool.fair_play_default))
 
         initUi()
         addListeners()
@@ -118,7 +118,7 @@ open class HostActivity : ServiceActivity(), HostService.HostServiceListener,
         queueList = findViewById(R.id.rv_queue_list_view)
 
         // Show queue title as activity title
-        title = intent.getStringExtra("queueTitle")
+        title = intent.getStringExtra(AppConstants.QUEUE_TITLE_KEY)
 
         // Stop soft keyboard from pushing UI up
         window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING)

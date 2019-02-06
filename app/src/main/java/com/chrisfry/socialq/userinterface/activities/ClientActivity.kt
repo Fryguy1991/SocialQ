@@ -47,6 +47,8 @@ open class ClientActivity : ServiceActivity(), ClientService.ClientServiceListen
             setSupportActionBar(toolbar)
         }
 
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+
         // Allow network operation in main thread
         val policy = StrictMode.ThreadPolicy.Builder()
                 .permitAll().build()
@@ -64,7 +66,7 @@ open class ClientActivity : ServiceActivity(), ClientService.ClientServiceListen
         val endpointString = intent?.getStringExtra(AppConstants.ND_ENDPOINT_ID_EXTRA_KEY)
         if (!App.hasServiceBeenStarted && endpointString.isNullOrEmpty()) {
             Log.e(TAG, "Error, trying to start client with invalid endpointId")
-            launchStartActivityAndFinish()
+            finish()
             return
         }
 
@@ -97,7 +99,7 @@ open class ClientActivity : ServiceActivity(), ClientService.ClientServiceListen
             Log.d(TAG, "Client service disconnected")
             unbindService(this)
             isServiceBound = false
-            launchStartActivityAndFinish()
+            finish()
         }
     }
 
@@ -255,6 +257,6 @@ open class ClientActivity : ServiceActivity(), ClientService.ClientServiceListen
     override fun closeClient() {
         clientService.removeClientServiceListener()
         stopClientService()
-        launchStartActivityAndFinish()
+        finish()
     }
 }
