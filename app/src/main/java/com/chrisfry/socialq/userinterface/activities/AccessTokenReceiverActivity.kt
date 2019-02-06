@@ -59,10 +59,10 @@ class AccessTokenReceiverActivity : Activity() {
 
         // Bind to service
         if (isHostFlag) {
-            val serviceTokenIntent = Intent(baseContext, HostService::class.java)
+            val serviceTokenIntent = Intent(this, HostService::class.java)
             bindService(serviceTokenIntent, serviceConnection, Context.BIND_AUTO_CREATE)
         } else {
-            val serviceTokenIntent = Intent(baseContext, ClientService::class.java)
+            val serviceTokenIntent = Intent(this, ClientService::class.java)
             bindService(serviceTokenIntent, serviceConnection, Context.BIND_AUTO_CREATE)
         }
 
@@ -135,7 +135,9 @@ class AccessTokenReceiverActivity : Activity() {
                     Log.e(TAG, "Reached maximum number of auth attempts")
                     Toast.makeText(this, R.string.toast_authentication_error_client, Toast.LENGTH_LONG).show()
                     accessService.authFailed()
+                    isBound = false
                     unbindService(serviceConnection)
+                    finish()
                 }
             }
             RequestType.SEARCH_REQUEST,

@@ -11,15 +11,13 @@ class SelectablePlaylistAdapter : BaseRecyclerViewAdapter<PlaylistSelectionHolde
     var listener: IItemSelectionListener<String>? = null
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PlaylistSelectionHolder {
-        return PlaylistSelectionHolder(LayoutInflater.from(parent.context).inflate(R.layout.simple_text_holder, parent, false))
+        return PlaylistSelectionHolder(LayoutInflater.from(parent.context).inflate(R.layout.playlist_display_holder, parent, false))
     }
 
     override fun onBindViewHolder(holder: PlaylistSelectionHolder, position: Int) {
         holder.listener = this
         val itemToDisplay = itemList[position]
-        holder.playlistId = itemToDisplay.id
-        holder.setText(itemToDisplay.name)
-        // TODO: Consider displaying more playlist details?
+        holder.setPlaylist(itemToDisplay)
         // IDEA: Expand playlist description (if available) on click
     }
 

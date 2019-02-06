@@ -41,6 +41,14 @@ open class ClientActivity : ServiceActivity(), ClientService.ClientServiceListen
         super.onCreate(savedInstanceState)
         setContentView(R.layout.client_screen)
 
+        // Setup the app toolbar
+        val toolbar = findViewById<androidx.appcompat.widget.Toolbar>(R.id.app_toolbar)
+        if (toolbar != null) {
+            setSupportActionBar(toolbar)
+        }
+
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+
         // Allow network operation in main thread
         val policy = StrictMode.ThreadPolicy.Builder()
                 .permitAll().build()
@@ -58,7 +66,7 @@ open class ClientActivity : ServiceActivity(), ClientService.ClientServiceListen
         val endpointString = intent?.getStringExtra(AppConstants.ND_ENDPOINT_ID_EXTRA_KEY)
         if (!App.hasServiceBeenStarted && endpointString.isNullOrEmpty()) {
             Log.e(TAG, "Error, trying to start client with invalid endpointId")
-            launchStartActivityAndFinish()
+            finish()
             return
         }
 
@@ -91,7 +99,7 @@ open class ClientActivity : ServiceActivity(), ClientService.ClientServiceListen
             Log.d(TAG, "Client service disconnected")
             unbindService(this)
             isServiceBound = false
-            launchStartActivityAndFinish()
+            finish()
         }
     }
 
@@ -157,8 +165,7 @@ open class ClientActivity : ServiceActivity(), ClientService.ClientServiceListen
     }
 
     override fun onBackPressed() {
-        val dialogBuilder = AlertDialog.Builder(this)
-        dialogBuilder.setTitle(R.string.close_client_dialog_title)
+        val dialogBuilder = AlertDialog.Builder(this, R.style.AppDialog)
 
         val contentView = layoutInflater.inflate(R.layout.client_exit_dialog, null)
         val followCheckbox = contentView.findViewById<CheckBox>(R.id.cb_follow_playlist)
@@ -198,12 +205,6 @@ open class ClientActivity : ServiceActivity(), ClientService.ClientServiceListen
         super.onDestroy()
     }
 
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        val inflater = menuInflater
-        inflater.inflate(R.menu.main_screen_menu, menu)
-        return true
-    }
-
     private fun setupQueueList() {
         trackDisplayAdapter = BasicTrackListAdapter()
         queueList.adapter = trackDisplayAdapter
@@ -217,8 +218,7 @@ open class ClientActivity : ServiceActivity(), ClientService.ClientServiceListen
     }
 
     override fun showHostDisconnectDialog() {
-        val dialogBuilder = AlertDialog.Builder(this)
-        dialogBuilder.setTitle(R.string.close_client_host_disconnect_dialog_title)
+        val dialogBuilder = AlertDialog.Builder(this, R.style.AppDialog)
         dialogBuilder.setView(R.layout.host_disconnected_dialog)
 
         dialogBuilder.setPositiveButton(R.string.yes) { dialog, which ->
@@ -255,6 +255,6 @@ open class ClientActivity : ServiceActivity(), ClientService.ClientServiceListen
     override fun closeClient() {
         clientService.removeClientServiceListener()
         stopClientService()
-        launchStartActivityAndFinish()
+        finish()
     }
 }

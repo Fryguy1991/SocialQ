@@ -442,9 +442,9 @@ abstract class HostFragmentBase : SpotifyFragment(), PlayQueueService.PlayQueueS
         mIsPlaying = false
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            mPlayPauseButton.setImageDrawable(resources.getDrawable(R.drawable.play_button, activity?.theme))
+            mPlayPauseButton.background = resources.getDrawable(R.drawable.play_button, activity?.theme)
         } else {
-            mPlayPauseButton.setImageDrawable(resources.getDrawable(R.drawable.play_button))
+            mPlayPauseButton.background = resources.getDrawable(R.drawable.play_button)
         }
         mPlayPauseButton.contentDescription = "queue_paused"
     }
@@ -453,9 +453,9 @@ abstract class HostFragmentBase : SpotifyFragment(), PlayQueueService.PlayQueueS
         mIsPlaying = true
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            mPlayPauseButton.setImageDrawable(resources.getDrawable (R.drawable.pause_button, activity?.theme))
+            mPlayPauseButton.background = resources.getDrawable(R.drawable.pause_button, activity?.theme)
         } else {
-            mPlayPauseButton.setImageDrawable(resources.getDrawable(R.drawable.pause_button))
+            mPlayPauseButton.background = resources.getDrawable(R.drawable.pause_button)
         }
         mPlayPauseButton.contentDescription = "queue_playing"
     }

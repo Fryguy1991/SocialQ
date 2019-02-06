@@ -1,12 +1,79 @@
 <resources>
 
     <!-- Base application theme. -->
-    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
-        <!-- Customize your theme here. -->
-        <item name="colorPrimary">@color/colorPrimary</item>
-        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
-        <item name="colorAccent">@color/colorAccent</item>
-    </style>
-    
+    <style name="IceTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <!-- Major Theme Colors -->
+        <item name="colorPrimary">@color/Deep_Blue</item>
+        <item name="colorPrimaryDark">@color/Dark_Deep_Blue</item>
+        <item name="colorAccent">@color/BurntOrangeLight</item>
 
+        <!-- Theme Background Color -->
+        <item name="android:windowBackground">@color/Ice_White</item>
+
+        <!-- Theme Text Colors -->
+        <item name="android:textColorPrimary">@color/Slate2</item>
+        <item name="android:textColorPrimaryInverse">@color/White</item>
+        <item name="editTextColor">@color/Slate2</item>
+
+        <!-- Theme Button Colors -->
+        <item name="activeButtonColor">@color/Deep_Blue</item>
+        <item name="inactiveButtonColor">@color/Dirty_White</item>
+        <item name="pressedButtonColor">@color/Deep_Blue</item>
+
+        <!-- Theme Widget Styles -->
+        <item name="checkboxStyle">@style/AppCheckboxStyle</item>
+        <item name="buttonStyle">@style/DefaultButtonStyle</item>
+        <item name="alertDialogTheme">@style/AppDialog</item>
+    </style>
+
+    <style name="AppDialog" parent="Theme.AppCompat.Light.Dialog.Alert">
+        <item name="colorPrimary">@color/Deep_Blue</item>
+        <item name="colorAccent">@color/BurntOrangeLight</item>
+        <item name="android:textColorPrimary">@color/Slate2</item>
+        <item name="editTextColor">@color/Slate2</item>
+        <item name="android:windowBackground">@color/Ice_White</item>
+    </style>
+    <style name="DialogTitleText">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">?attr/actionBarSize</item>
+        <item name="android:background">?attr/colorPrimary</item>
+        <item name="android:textColor">@color/White</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textSize">@dimen/medium_text</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:paddingStart">@dimen/standard_spacing</item>
+        <item name="android:paddingLeft">@dimen/standard_spacing</item>
+    </style>
+
+    <!-- Text Styles -->
+    <style name="InverseText">
+        <item name="android:textColor">?android:textColorPrimaryInverse</item>
+        <item name="android:background">?android:colorPrimary</item>
+    </style>
+    <style name="HeaderText">
+        <item name="android:textColor">?android:colorPrimary</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textSize">@dimen/medium_text</item>
+    </style>
+
+    <!-- Widget Styles -->
+    <style name="ToolBarStyle" parent="ThemeOverlay.AppCompat.ActionBar">
+        <item name="android:background">?attr/colorPrimary</item>
+        <item name="android:textColorPrimary">@color/White</item>
+        <item name="android:colorBackground">?attr/colorPrimaryDark</item>
+        <item name="android:colorControlNormal">@color/White</item>
+        <item name="android:titleTextStyle">@color/White</item>
+    </style>
+    <style name="DefaultButtonStyle" parent="Widget.AppCompat.Button">
+        <item name="android:background">@drawable/rectangle_button</item>
+        <item name="android:textColor">?android:textColorPrimaryInverse</item>
+    </style>
+    <style name="RoundButtonStyle" parent="Widget.AppCompat.Button">
+        <item name="android:elevation">@dimen/standard_elevation</item>
+        <item name="android:layout_width">@dimen/round_button_size</item>
+        <item name="android:layout_height">@dimen/round_button_size</item>
+    </style>
+    <style name="AppCheckboxStyle" parent="Widget.AppCompat.CompoundButton.CheckBox">
+        <item name="android:textColor">?android:textColorPrimary</item>
+    </style>
 </resources>

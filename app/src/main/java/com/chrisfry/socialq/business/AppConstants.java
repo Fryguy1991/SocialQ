@@ -27,10 +27,10 @@ public class AppConstants {
 
     // Intent extra key strings
     public static final String SEARCH_RESULTS_EXTRA_KEY = "search_results_key";
-    public static final String ND_ENDPOINT_ID_EXTRA_KEY = "endpoint_id_key";
+    public static final String ND_ENDPOINT_ID_EXTRA_KEY = "hostEndpointId";
     public static final String SERVICE_PLAYLIST_ID_KEY = "playlist_key";
-    public static final String QUEUE_TITLE_KEY = "queue_title_key";
-    public static final String FAIR_PLAY_KEY = "fair_play_key";
+    public static final String QUEUE_TITLE_KEY = "queueTitle";
+    public static final String FAIR_PLAY_KEY = "isFairplay";
     public static final String IS_HOST_KEY = "is_socialq_host_key";
 
     // Message Prefix Strings
@@ -48,6 +48,14 @@ public class AppConstants {
     public static final String HOST_DISCONNECT_MESSAGE = "#HOST_DISCONNECT#";
     public static final String NEW_SONG_ADDED_MESSAGE_FORMAT = NEW_SONG_ADDED_PREFIX + "%1$s";
 
+    // Format for a SocialQ Host name
+    private static final String QUEUE_NAME_PREFIX = "#QUEUE_NAME#";
+    private static final String OWNER_NAME_PREFIX = "#OWNER_NAME#";
+    private static final String IS_FAIR_PLAY_PREFIX = "#IS_FAIR_PLAY#";
+    public static final String FAIR_PLAY_TRUE_CHARACTER = "T";
+    public static final String FAIR_PLAY_FALSE_CHARACTER = "F";
+    public static final String NEARBY_HOST_NAME_FORMAT = QUEUE_NAME_PREFIX + "%1$s" + OWNER_NAME_PREFIX + "%2$s" + IS_FAIR_PLAY_PREFIX + "%3$s";
+
     // START REGULAR EXPRESSIONS
     // Regex for notifying clients of the currently playing playlist index
     public static final String CURRENTLY_PLAYING_UPDATE_REGEX = CURRENTLY_PLAYING_UPDATE_PREFIX + "([0-9]+)";
@@ -57,6 +65,8 @@ public class AppConstants {
     public static final String FULL_SONG_REQUEST_REGEX = SONG_REQUEST_PREFIX + "(spotify:track:.+)" + CLIENT_USER_ID_PREFIX + "(.+)";
     // Regex for notifying clients that a track was added to the queue (match group is index of track that was added)
     public static final String NEW_SONG_ADDED_REGEX = NEW_SONG_ADDED_PREFIX + "([0-9]+)";
+    // Regex for SocialQ host advertising name
+    public static final String NEARBY_HOST_NAME_REGEX = QUEUE_NAME_PREFIX + "(.*)" + OWNER_NAME_PREFIX + "(.*)" + IS_FAIR_PLAY_PREFIX + "([" + FAIR_PLAY_TRUE_CHARACTER + FAIR_PLAY_FALSE_CHARACTER + "]{1})";
 
     // Spotify URL Regexs
     public static final String URL_TRACK_SEARCH = "https:\\/\\/api.spotify.com\\/v1\\/search\\?type=track&q=([^&]+).+";

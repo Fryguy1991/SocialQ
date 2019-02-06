@@ -31,13 +31,14 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="@dimen/default_margin"
         android:layout_marginEnd="@dimen/default_margin"
-        android:textStyle="bold"
         app:layout_constraintBottom_toTopOf="@+id/tv_artist_name"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toEndOf="@id/track_image_barrier"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_chainStyle="packed" />
+        app:layout_constraintVertical_chainStyle="packed"
+        android:textSize="@dimen/medium_text_2"
+        style="@style/HeaderText"/>
 
     <TextView
         android:id="@+id/tv_artist_name"

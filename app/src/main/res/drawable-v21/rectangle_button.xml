@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ripple xmlns:android="http://schemas.android.com/apk/res/android"
-    android:color="@color/Inactive_Button_Color">
+    android:color="?attr/inactiveButtonColor">
     <item>
         <selector xmlns:android="http://schemas.android.com/apk/res/android">
             <item android:drawable="@drawable/pressed_rectangle_background" android:state_pressed="true" />
