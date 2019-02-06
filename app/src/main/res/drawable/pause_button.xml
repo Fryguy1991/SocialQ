@@ -3,11 +3,7 @@
     <item
         android:drawable="@drawable/circle_button"/>
     <item
-        android:drawable="@mipmap/ic_media_pause"
-        android:left="10dp"
-        android:right="10dp"
-        android:top="10dp"
-        android:bottom="10dp"
+        android:drawable="@drawable/ic_pause"
         android:gravity="center"/>
 
 </layer-list>

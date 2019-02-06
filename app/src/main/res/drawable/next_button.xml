@@ -3,11 +3,7 @@
     <item
         android:drawable="@drawable/circle_button"/>
     <item
-        android:drawable="@mipmap/ic_media_next"
-        android:left="8dp"
-        android:right="8dp"
-        android:top="8dp"
-        android:bottom="8dp"
+        android:drawable="@drawable/ic_skip_next"
         android:gravity="center"/>
 
 </layer-list>

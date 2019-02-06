@@ -3,7 +3,6 @@
     <item
         android:drawable="@drawable/circle_button"/>
     <item
-        android:drawable="@drawable/ic_play_arrow"
+        android:drawable="@drawable/ic_add"
         android:gravity="center"/>
-
 </layer-list>
