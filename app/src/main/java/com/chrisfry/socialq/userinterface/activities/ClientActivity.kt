@@ -166,7 +166,6 @@ open class ClientActivity : ServiceActivity(), ClientService.ClientServiceListen
 
     override fun onBackPressed() {
         val dialogBuilder = AlertDialog.Builder(this, R.style.AppDialog)
-        dialogBuilder.setTitle(R.string.close_client_dialog_title)
 
         val contentView = layoutInflater.inflate(R.layout.client_exit_dialog, null)
         val followCheckbox = contentView.findViewById<CheckBox>(R.id.cb_follow_playlist)
@@ -220,7 +219,6 @@ open class ClientActivity : ServiceActivity(), ClientService.ClientServiceListen
 
     override fun showHostDisconnectDialog() {
         val dialogBuilder = AlertDialog.Builder(this, R.style.AppDialog)
-        dialogBuilder.setTitle(R.string.close_client_host_disconnect_dialog_title)
         dialogBuilder.setView(R.layout.host_disconnected_dialog)
 
         dialogBuilder.setPositiveButton(R.string.yes) { dialog, which ->

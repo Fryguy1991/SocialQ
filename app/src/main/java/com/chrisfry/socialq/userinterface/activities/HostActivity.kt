@@ -187,7 +187,6 @@ open class HostActivity : ServiceActivity(), HostService.HostServiceListener,
     override fun onBackPressed() {
 
         val dialogBuilder = AlertDialog.Builder(this)
-        dialogBuilder.setTitle(getString(R.string.close_host_dialog_title))
 
         // Inflate content view and get references to UI elements
         val contentView = layoutInflater.inflate(R.layout.save_playlist_dialog, null)
@@ -228,7 +227,6 @@ open class HostActivity : ServiceActivity(), HostService.HostServiceListener,
 
     override fun showBasePlaylistDialog(playlists: List<PlaylistSimple>) {
         val dialogBuilder = AlertDialog.Builder(this)
-        dialogBuilder.setTitle(getString(R.string.select_base_playlist))
 
         // Inflate content view and get references to UI elements
         val contentView = layoutInflater.inflate(R.layout.base_playlist_dialog, null)
