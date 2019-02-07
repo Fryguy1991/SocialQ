@@ -228,20 +228,6 @@ public class SearchActivity extends BaseActivity implements ISearchView, ISpotif
         super.onDestroy();
     }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        super.onOptionsItemSelected(item);
-
-        switch (item.getItemId()) {
-            case android.R.id.home:
-                presenter.backOrUpNavigation();
-                return true;
-            default:
-                // Didn't handle item selected return false
-                return false;
-        }
-    }
-
     private void initUi() {
         // Initialize UI elements
         mSearchEditText = findViewById(R.id.et_search_edit_text);
@@ -359,6 +345,8 @@ public class SearchActivity extends BaseActivity implements ISearchView, ISpotif
     public void onBackPressed() {
         presenter.backOrUpNavigation();
     }
+
+
 
     @Override
     public void onSelection(@NotNull String uri) {
