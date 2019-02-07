@@ -238,51 +238,46 @@
                 android:id="@+id/tv_top_track_1"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:gravity="center"
-                android:minHeight="@dimen/top_track_view_min_height"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/tv_top_track_header" />
+                app:layout_constraintTop_toBottomOf="@id/tv_top_track_header"
+                style="@style/TopTrackText"/>
 
             <com.chrisfry.socialq.userinterface.views.TextViewWithUri
                 android:id="@+id/tv_top_track_2"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:gravity="center"
-                android:minHeight="@dimen/top_track_view_min_height"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/tv_top_track_1" />
+                app:layout_constraintTop_toBottomOf="@id/tv_top_track_1"
+                style="@style/TopTrackText"/>
 
             <com.chrisfry.socialq.userinterface.views.TextViewWithUri
                 android:id="@+id/tv_top_track_3"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:gravity="center"
-                android:minHeight="@dimen/top_track_view_min_height"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/tv_top_track_2" />
+                app:layout_constraintTop_toBottomOf="@id/tv_top_track_2"
+                style="@style/TopTrackText"/>
 
             <com.chrisfry.socialq.userinterface.views.TextViewWithUri
                 android:id="@+id/tv_top_track_4"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:gravity="center"
-                android:minHeight="@dimen/top_track_view_min_height"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/tv_top_track_3" />
+                app:layout_constraintTop_toBottomOf="@id/tv_top_track_3"
+                style="@style/TopTrackText"/>
 
             <com.chrisfry.socialq.userinterface.views.TextViewWithUri
                 android:id="@+id/tv_top_track_5"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:gravity="center"
-                android:minHeight="@dimen/top_track_view_min_height"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/tv_top_track_4" />
+                app:layout_constraintTop_toBottomOf="@id/tv_top_track_4"
+                style="@style/TopTrackText"/>
 
             <TextView
                 android:id="@+id/tv_artist_album_header"
