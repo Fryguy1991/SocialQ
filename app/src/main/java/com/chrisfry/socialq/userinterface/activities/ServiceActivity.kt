@@ -1,6 +1,7 @@
 package com.chrisfry.socialq.userinterface.activities
 
 import android.content.Intent
+import android.view.Menu
 
 import android.view.MenuItem
 import com.chrisfry.socialq.R
@@ -11,15 +12,26 @@ abstract class ServiceActivity : BaseActivity() {
         val TAG = ServiceActivity::class.java.name
     }
 
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        val inflater = menuInflater
+        inflater.inflate(R.menu.main_screen_menu, menu)
+        return true
+    }
+
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        when (item.itemId) {
-            R.id.search_fragment -> {
-                startSearchActivity()
-                return true
+        if (!super.onOptionsItemSelected(item)) {
+            when (item.itemId) {
+                R.id.search_fragment -> {
+                    startSearchActivity()
+                    return true
+                }
+                else -> {
+                    // Do nothing
+                    return false
+                }
             }
-            else ->
-                // Do nothing
-                return false
+        } else {
+            return true
         }
     }
 

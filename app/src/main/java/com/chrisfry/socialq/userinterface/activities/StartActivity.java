@@ -10,8 +10,9 @@ import android.os.Bundle;
 import android.os.Process;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.AppCompatCheckBox;
+import androidx.appcompat.widget.Toolbar;
+
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -87,6 +88,12 @@ public class StartActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.start_screen);
 
+        // Setup the app toolbar
+        Toolbar toolbar = findViewById(R.id.app_toolbar);
+        if (toolbar != null) {
+            setSupportActionBar(toolbar);
+        }
+
         findViewById(R.id.btn_host_queue).setOnClickListener(mTypeSelect);
         findViewById(R.id.btn_join_queue).setOnClickListener(mTypeSelect);
 
@@ -143,7 +150,7 @@ public class StartActivity extends BaseActivity {
 
     private void handleHostStart() {
         Log.d(TAG, "Launching host dialog");
-        AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(StartActivity.this);
+        AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(StartActivity.this, R.style.AppDialog);
         dialogBuilder.setTitle(R.string.queue_options);
 
         // Reset default options

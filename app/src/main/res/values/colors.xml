@@ -7,27 +7,29 @@
     <color name="Transparent">#00000000</color>
     <color name="Black">#000000</color>
     <color name="BurntOrange">#be460e</color>
-    <color name="BurntOrangeLight">#F17941</color>
     <color name="BurntOrangeDark">#A52D00</color>
     <color name="Red">#FF0000</color>
+    <color name="Dirty_White">#BABABA</color>
 
     <!-- Blue App Colors -->
     <color name="Turquoise">#33A2E8</color>
     <color name="Turq_light">#4DBCFF</color>
     <color name="Turq_dark">#1A89CF</color>
 
+    <!-- Ice Palate -->
+    <color name="Deep_Blue">#46506B</color>
+    <color name="Slate">#383639</color>
+    <color name="Slate2">#6B696C</color>
+    <color name="Ice_White">#ECEFF5</color>
+    <color name="Snow_Blue">#8E9FBB</color>
+    <color name="Dark_Deep_Blue">#2D3752</color>
+    <color name="BurntOrangeLight">#F17941</color>
+
     <!-- Colors From Dark Action Bar Theme -->
     <color name="GrayDark">#212121</color>
     <color name="GrayLight">#555555</color>
     <color name="GrayInactive">#BABABA</color>
 
-    <!-- App Colors -->
-    <color name="colorPrimary">@color/Turquoise</color>
-    <color name="colorPrimaryDark">@color/Turq_dark</color>
-    <color name="colorAccent">@color/Red</color>
-
     <!-- Button Colors -->
-    <color name="Active_Button_Color">@color/Turquoise</color>
-    <color name="Inactive_Button_Color">#BABABA</color>
-    <color name="Pressed_Button_Color">@color/Turq_dark</color>
+    <color name="Active_Button_Color">@color/Deep_Blue</color>
 </resources>

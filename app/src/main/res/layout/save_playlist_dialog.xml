@@ -4,6 +4,14 @@
     android:layout_height="wrap_content"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
+    <TextView
+        android:id="@+id/tv_dialog_title"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:text="@string/close_host_dialog_title"
+        style="@style/DialogTitleText"/>
+
     <CheckBox
         android:id="@+id/cb_save_playlist"
         android:layout_width="0dp"
@@ -11,7 +19,7 @@
         android:layout_marginTop="@dimen/default_margin"
         android:layout_marginStart="@dimen/queue_dialog_side_margin"
         android:layout_marginEnd="@dimen/queue_dialog_side_margin"
-        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tv_dialog_title"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         android:text="@string/save_playlist"/>

@@ -30,8 +30,7 @@ import com.spotify.sdk.android.authentication.AuthenticationRequest
 import com.spotify.sdk.android.authentication.AuthenticationResponse
 import androidx.navigation.ui.NavigationUI
 
-class BaseSpotifyActivity : AppCompatActivity(), HostFragmentBase.BaseHostFragmentListener,
-        NavController.OnNavigatedListener {
+class BaseSpotifyActivity : AppCompatActivity(), HostFragmentBase.BaseHostFragmentListener {
     val TAG = BaseSpotifyActivity::class.java.name
 
     // References for toolbar UI elements
@@ -96,7 +95,7 @@ class BaseSpotifyActivity : AppCompatActivity(), HostFragmentBase.BaseHostFragme
 
         // Set activity as listener for navigation events
         val navController = findNavController(R.id.nav_host_fragment)
-        navController.addOnNavigatedListener(this@BaseSpotifyActivity)
+//        navController.addOnNavigatedListener(this@BaseSpotifyActivity)
 
         // Setup application toolbar
         val appBarConfig = AppBarConfiguration.Builder(navController.graph).build()
@@ -205,20 +204,20 @@ class BaseSpotifyActivity : AppCompatActivity(), HostFragmentBase.BaseHostFragme
         }
     }
 
-    override fun onNavigated(controller: NavController, destination: NavDestination) {
-        Log.d(TAG, "Navigating to ${resources.getResourceEntryName(destination.id)}")
-        when (destination.id) {
-            R.id.start_fragment ->{
-                searchActionItem?.isVisible = false
-            }
-            R.id.host_fragment_nearby -> {
-                searchActionItem!!.isVisible = true
-            }
-            R.id.search_fragment -> {
-                searchActionItem!!.isVisible = false
-            }
-        }
-    }
+//    override fun onNavigated(controller: NavController, destination: NavDestination) {
+//        Log.d(TAG, "Navigating to ${resources.getResourceEntryName(destination.id)}")
+//        when (destination.id) {
+//            R.id.start_fragment ->{
+//                searchActionItem?.isVisible = false
+//            }
+//            R.id.host_fragment_nearby -> {
+//                searchActionItem!!.isVisible = true
+//            }
+//            R.id.search_fragment -> {
+//                searchActionItem!!.isVisible = false
+//            }
+//        }
+//    }
 
     override fun onBackPressed() {
         findNavController(R.id.nav_host_fragment).currentDestination

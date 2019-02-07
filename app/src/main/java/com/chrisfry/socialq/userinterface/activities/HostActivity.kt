@@ -62,7 +62,7 @@ open class HostActivity : ServiceActivity(), HostService.HostServiceListener,
             Log.d(TAG, "Host service disconnected")
             unbindService(this)
             isServiceBound = false
-            launchStartActivityAndFinish()
+            finish()
         }
     }
 
@@ -83,6 +83,14 @@ open class HostActivity : ServiceActivity(), HostService.HostServiceListener,
         super.onCreate(savedInstanceState)
         setContentView(R.layout.host_screen)
 
+        // Setup the app toolbar
+        val toolbar = findViewById<androidx.appcompat.widget.Toolbar>(R.id.app_toolbar)
+        if (toolbar != null) {
+            setSupportActionBar(toolbar)
+        }
+
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+
         // Set fair play flag from intent (or default to app boolean default)
         isQueueFairPlay = intent.getBooleanExtra(AppConstants.FAIR_PLAY_KEY, resources.getBoolean(R.bool.fair_play_default))
 
@@ -96,6 +104,11 @@ open class HostActivity : ServiceActivity(), HostService.HostServiceListener,
         StrictMode.setThreadPolicy(policy)
 
         startHostService()
+    }
+
+    override fun onNavigateUp(): Boolean {
+        onBackPressed()
+        return true
     }
 
     private fun initUi() {
@@ -174,7 +187,6 @@ open class HostActivity : ServiceActivity(), HostService.HostServiceListener,
     override fun onBackPressed() {
 
         val dialogBuilder = AlertDialog.Builder(this)
-        dialogBuilder.setTitle(getString(R.string.close_host_dialog_title))
 
         // Inflate content view and get references to UI elements
         val contentView = layoutInflater.inflate(R.layout.save_playlist_dialog, null)
@@ -215,7 +227,6 @@ open class HostActivity : ServiceActivity(), HostService.HostServiceListener,
 
     override fun showBasePlaylistDialog(playlists: List<PlaylistSimple>) {
         val dialogBuilder = AlertDialog.Builder(this)
-        dialogBuilder.setTitle(getString(R.string.select_base_playlist))
 
         // Inflate content view and get references to UI elements
         val contentView = layoutInflater.inflate(R.layout.base_playlist_dialog, null)
@@ -264,12 +275,6 @@ open class HostActivity : ServiceActivity(), HostService.HostServiceListener,
         super.onDestroy()
     }
 
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        val inflater = menuInflater
-        inflater.inflate(R.menu.main_screen_menu, menu)
-        return true
-    }
-
     private fun setupQueueList() {
         trackDisplayAdapter = HostTrackListAdapter(applicationContext)
         queueList.adapter = trackDisplayAdapter
@@ -288,18 +293,18 @@ open class HostActivity : ServiceActivity(), HostService.HostServiceListener,
 
     override fun onQueuePause() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            playPauseButton.setImageDrawable(resources.getDrawable(R.drawable.play_button, this.theme))
+            playPauseButton.background = resources.getDrawable(R.drawable.play_button, this.theme)
         } else {
-            playPauseButton.setImageDrawable(resources.getDrawable(R.drawable.play_button))
+            playPauseButton.background = resources.getDrawable(R.drawable.play_button)
         }
         playPauseButton.contentDescription = "queue_paused"
     }
 
     override fun onQueuePlay() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            playPauseButton.setImageDrawable(resources.getDrawable(R.drawable.pause_button, this.theme))
+            playPauseButton.background = resources.getDrawable(R.drawable.pause_button, this.theme)
         } else {
-            playPauseButton.setImageDrawable(resources.getDrawable(R.drawable.pause_button))
+            playPauseButton.background = resources.getDrawable(R.drawable.pause_button)
         }
         playPauseButton.contentDescription = "queue_playing"
     }
@@ -311,7 +316,7 @@ open class HostActivity : ServiceActivity(), HostService.HostServiceListener,
 
     override fun closeHost() {
         stopHostService()
-        launchStartActivityAndFinish()
+        finish()
     }
 
     override fun showClientConnected() {

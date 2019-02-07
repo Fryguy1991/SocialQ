@@ -167,6 +167,19 @@ class ClientService : SpotifyAccessService() {
         isBound = true
     }
 
+    override fun authorizationFailed() {
+        Log.d(TAG, "Client service is ending due to authorization failure")
+
+        if (successfulConnectionFlag) {
+            Log.d(TAG, "Disconnecting from host")
+            Nearby.getConnectionsClient(this).stopAllEndpoints()
+        }
+
+        listener?.closeClient()
+
+        App.hasServiceBeenStarted = false
+    }
+
     fun setClientServiceListener(listener: ClientServiceListener) {
         this.listener = listener
     }

@@ -1,9 +1,9 @@
 package com.chrisfry.socialq.userinterface.activities;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import androidx.annotation.Nullable;
+import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import android.view.View;
@@ -39,6 +39,12 @@ public abstract class QueueConnectActivity extends BaseActivity implements View.
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.queue_connect_screen);
+
+        // Setup the app toolbar
+        Toolbar toolbar = findViewById(R.id.app_toolbar);
+        if (toolbar != null) {
+            setSupportActionBar(toolbar);
+        }
 
         mQueueJoinButton = findViewById(R.id.btn_queue_join);
         mQueueJoinButton.setOnClickListener(this);
