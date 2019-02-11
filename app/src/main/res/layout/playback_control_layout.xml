@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <com.chrisfry.socialq.userinterface.views.SquareImageView
+        android:id="@+id/cv_playback_control_album_image"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginStart="@dimen/playback_control_margin"
+        android:layout_marginEnd="@dimen/playback_control_margin"/>
+
+    <TextView
+        android:id="@+id/tv_playback_control_track_name"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@id/cv_playback_control_album_image"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginStart="@dimen/playback_control_margin"
+        android:layout_marginEnd="@dimen/playback_control_margin"
+        android:gravity="center_horizontal"/>
+
+    <TextView
+        android:id="@+id/tv_playback_control_artist_name"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@id/tv_playback_control_track_name"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginStart="@dimen/playback_control_margin"
+        android:layout_marginEnd="@dimen/playback_control_margin"
+        android:gravity="center_horizontal"/>
+
+    <TextView
+        android:id="@+id/tv_playback_control_user_name"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@id/tv_playback_control_artist_name"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginStart="@dimen/playback_control_margin"
+        android:layout_marginEnd="@dimen/playback_control_margin"
+        android:gravity="center_horizontal"/>
+
+    <Button
+        android:id="@+id/btn_playback_control_play_pause"
+        android:layout_width="0dp"
+        android:layout_height="?attr/actionBarSize"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <Button
+        android:id="@+id/btn_playback_control_skip"
+        android:layout_width="0dp"
+        android:layout_height="?attr/actionBarSize"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toEndOf="@id/btn_playback_control_play_pause"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

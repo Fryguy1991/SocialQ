@@ -34,10 +34,13 @@
     <dimen name="top_track_view_min_height">40dp</dimen>
     <dimen name="number_width">30dp</dimen>
 
-    <!-- Notification dimens -->
+    <!-- Notification Dimens -->
     <dimen name="notification_album_art_size">40dp</dimen>
     <dimen name="notification_button_width">50dp</dimen>
     <dimen name="notification_button_height">50dp</dimen>
 
     <dimen name="round_button_size">60dp</dimen>
+
+    <!-- Playback Control View Dimens -->
+    <dimen name="playback_control_margin">50dp</dimen>
 </resources>
