@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:animateLayoutChanges="true"
-    android:background="@color/Light_Deep_Blue">
+    android:background="?attr/colorAccent">
 
     <com.chrisfry.socialq.userinterface.views.SquareImageView
         android:id="@+id/cv_playback_control_album_image"

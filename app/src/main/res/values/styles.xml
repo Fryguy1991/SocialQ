@@ -21,9 +21,9 @@
         <item name="inactiveButtonColor">@color/Dirty_White</item>
         <item name="pressedButtonColor">@color/Deep_Blue</item>
         <!-- Secondary Button Colors -->
-        <item name="secondaryActiveButtonColor">@color/Light_Deep_Blue</item>
+        <item name="secondaryActiveButtonColor">?attr/colorAccent</item>
         <item name="secondaryInactiveButtonColor">@color/Dirty_White</item>
-        <item name="secondaryPressedButtonColor">@color/Light_Deep_Blue</item>
+        <item name="secondaryPressedButtonColor">?attr/colorAccent</item>
 
         <!-- Theme Widget Styles -->
         <item name="checkboxStyle">@style/AppCheckboxStyle</item>
