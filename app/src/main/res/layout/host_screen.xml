@@ -4,7 +4,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/cl_host_layout_base"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:animateLayoutChanges="true">
 
     <!-- App Toolbar -->
     <!-- THIS NEEDS TO BE AT THE TOP OF EVERY ACTIVITY -->
@@ -16,7 +17,13 @@
         android:elevation="4dp"
         android:theme="@style/ToolBarStyle"/>
 
-    <!-- START HOST LIST ELEMENTS-->
+    <com.chrisfry.socialq.userinterface.views.PlaybackControlView
+        android:id="@+id/cv_playback_control_view"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@id/app_toolbar"
+        android:visibility="gone"/>
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rv_queue_list_view"
         android:layout_width="0dp"
@@ -26,31 +33,15 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/app_toolbar" />
+        app:layout_constraintTop_toBottomOf="@id/cv_playback_control_view" />
 
     <ImageView
-        android:id="@+id/btn_play_pause"
+        android:id="@+id/btn_add_track"
         android:layout_marginEnd="@dimen/default_margin"
+        android:layout_marginRight="@dimen/default_margin"
         android:layout_marginBottom="@dimen/default_margin"
-        android:contentDescription="queue_paused"
-        android:background="@drawable/play_button"
-        app:layout_constraintBottom_toTopOf="@+id/btn_next"
-        app:layout_constraintEnd_toEndOf="parent"
-        style="@style/RoundButtonStyle"/>
-
-    <ImageView
-        android:id="@+id/btn_next"
-        android:layout_marginEnd="@dimen/default_margin"
-        android:layout_marginBottom="@dimen/default_margin"
-        android:background="@drawable/next_button"
+        android:background="@drawable/add_button"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         style="@style/RoundButtonStyle"/>
-
-    <androidx.constraintlayout.widget.Group
-        android:id="@+id/group_host_list_elements"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        app:constraint_referenced_ids="rv_queue_list_view,btn_play_pause,btn_next" />
-    <!-- END HOST LIST ELEMENTS-->
 </androidx.constraintlayout.widget.ConstraintLayout>

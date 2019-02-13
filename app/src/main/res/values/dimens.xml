@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <dimen name="queue_decorator_height">2dp</dimen>
+    <dimen name="queue_decorator_height">1dp</dimen>
 
     <!-- Spacing Dimens -->
     <dimen name="default_margin">8dp</dimen>
@@ -19,8 +19,7 @@
     <!-- Elevation Dimens -->
     <dimen name="standard_elevation">4dp</dimen>
 
-    <!-- Host Dialog Options Dimens -->
-    <dimen name="queue_dialog_side_margin">25dp</dimen>
+    <dimen name="dialog_side_margin">25dp</dimen>
 
     <!-- Search Dimens -->
     <dimen name="artist_picture_size">60dp</dimen>
@@ -43,4 +42,5 @@
 
     <!-- Playback Control View Dimens -->
     <dimen name="playback_control_margin">50dp</dimen>
+    <dimen name="playback_button_size">60dp</dimen>
 </resources>

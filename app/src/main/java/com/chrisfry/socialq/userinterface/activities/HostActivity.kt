@@ -3,11 +3,11 @@ package com.chrisfry.socialq.userinterface.activities
 import android.content.*
 import android.os.*
 import android.util.Log
-import android.view.Menu
 import android.view.View
 import android.view.WindowManager
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -20,17 +20,18 @@ import com.chrisfry.socialq.userinterface.App
 import com.chrisfry.socialq.userinterface.adapters.HostTrackListAdapter
 import com.chrisfry.socialq.userinterface.adapters.IItemSelectionListener
 import com.chrisfry.socialq.userinterface.adapters.SelectablePlaylistAdapter
+import com.chrisfry.socialq.userinterface.views.PlaybackControlView
 import com.chrisfry.socialq.userinterface.views.QueueItemDecoration
 import kaaes.spotify.webapi.android.models.PlaylistSimple
 
 open class HostActivity : ServiceActivity(), HostService.HostServiceListener,
-        IItemSelectionListener<String> {
+        IItemSelectionListener<String>, PlaybackControlView.IPlaybackControlListener, View.OnClickListener {
     private val TAG = HostActivity::class.java.name
 
-    // UI element references
-    private lateinit var nextButton: View
-    private lateinit var playPauseButton: ImageView
-
+    // UI ELEMENTS
+    private lateinit var rootLayout: ConstraintLayout
+    private lateinit var addButton: View
+    private lateinit var playbackControlView: PlaybackControlView
     // Track list elements
     private lateinit var queueList: RecyclerView
     private lateinit var trackDisplayAdapter: HostTrackListAdapter
@@ -42,6 +43,8 @@ open class HostActivity : ServiceActivity(), HostService.HostServiceListener,
     private var isServiceBound = false
     // Reference to base playlist dialog
     private var basePlaylistDialog: AlertDialog? = null
+    // Flag for if the view is currently expanded
+    private var isPlaybackControlExpanded = false
 
     // Object for connecting to/from play queue service
     private val hostServiceConnection = object : ServiceConnection {
@@ -95,7 +98,6 @@ open class HostActivity : ServiceActivity(), HostService.HostServiceListener,
         isQueueFairPlay = intent.getBooleanExtra(AppConstants.FAIR_PLAY_KEY, resources.getBoolean(R.bool.fair_play_default))
 
         initUi()
-        addListeners()
         setupQueueList()
 
         // Allow network operation in main thread
@@ -112,26 +114,21 @@ open class HostActivity : ServiceActivity(), HostService.HostServiceListener,
     }
 
     private fun initUi() {
-        // Initialize UI elements
-        nextButton = findViewById(R.id.btn_next)
-        playPauseButton = findViewById(R.id.btn_play_pause)
+        // Initialize UI
+        rootLayout = findViewById(R.id.cl_host_layout_base)
         queueList = findViewById(R.id.rv_queue_list_view)
+        playbackControlView = findViewById(R.id.cv_playback_control_view)
+        addButton = findViewById(R.id.btn_add_track)
+
+        addButton.setOnClickListener(this)
+        playbackControlView.setListener(this)
+        playbackControlView.setOnClickListener(this)
 
         // Show queue title as activity title
         title = intent.getStringExtra(AppConstants.QUEUE_TITLE_KEY)
 
         // Stop soft keyboard from pushing UI up
         window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING)
-    }
-
-    private fun addListeners() {
-        nextButton.setOnClickListener {
-            hostService.requestPlayNext()
-        }
-
-        playPauseButton.setOnClickListener {
-            view -> handlePlayPause(view.contentDescription == "queue_playing")
-        }
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -184,6 +181,25 @@ open class HostActivity : ServiceActivity(), HostService.HostServiceListener,
         stopService(stopHostIntent)
     }
 
+    override fun onClick(v: View?) {
+        if (v != null) {
+            when (v.id) {
+                R.id.cv_playback_control_view -> {
+                    if (isPlaybackControlExpanded) {
+                        playbackControlView.shrinkLayout()
+                        isPlaybackControlExpanded = false
+                    } else {
+                        playbackControlView.expandLayout()
+                        isPlaybackControlExpanded = true
+                    }
+                }
+                else -> {
+                    // Not handling click here. Pass on to parent object.
+                    super.onClick(v)
+                }
+            }
+        }
+    }
     override fun onBackPressed() {
 
         val dialogBuilder = AlertDialog.Builder(this)
@@ -292,26 +308,42 @@ open class HostActivity : ServiceActivity(), HostService.HostServiceListener,
     }
 
     override fun onQueuePause() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            playPauseButton.background = resources.getDrawable(R.drawable.play_button, this.theme)
-        } else {
-            playPauseButton.background = resources.getDrawable(R.drawable.play_button)
-        }
-        playPauseButton.contentDescription = "queue_paused"
+        playbackControlView.setPaused()
     }
 
     override fun onQueuePlay() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            playPauseButton.background = resources.getDrawable(R.drawable.pause_button, this.theme)
-        } else {
-            playPauseButton.background = resources.getDrawable(R.drawable.pause_button)
-        }
-        playPauseButton.contentDescription = "queue_playing"
+        playbackControlView.setPlaying()
     }
 
     override fun onQueueUpdated(songRequests: List<ClientRequestData>) {
         // Display updated track list
-        trackDisplayAdapter.updateAdapter(songRequests)
+        displayTrackList(songRequests)
+    }
+
+    private fun displayTrackList(songRequests: List<ClientRequestData>) {
+        when {
+            songRequests.size < 0 -> {
+                Log.e(TAG, "Error invalid song request list sent")
+            }
+            songRequests.isEmpty() -> {
+                if (isPlaybackControlExpanded) {
+                    playbackControlView.shrinkLayout()
+                    isPlaybackControlExpanded = false
+                }
+                playbackControlView.visibility = View.GONE
+                trackDisplayAdapter.updateAdapter(mutableListOf())
+            }
+            songRequests.size == 1 -> {
+                playbackControlView.visibility = View.VISIBLE
+                playbackControlView.displayRequest(songRequests[0])
+                trackDisplayAdapter.updateAdapter(mutableListOf())
+            }
+            songRequests.size > 1 -> {
+                playbackControlView.visibility = View.VISIBLE
+                playbackControlView.displayRequest(songRequests[0])
+                trackDisplayAdapter.updateAdapter(songRequests.subList(1, songRequests.size))
+            }
+        }
     }
 
     override fun closeHost() {
@@ -347,11 +379,19 @@ open class HostActivity : ServiceActivity(), HostService.HostServiceListener,
         Log.d(TAG, "Re-initializing host view")
 
         this.title = title
-        trackDisplayAdapter.updateAdapter(songRequests)
+        displayTrackList(songRequests)
         if (isPlaying) {
             onQueuePlay()
         } else {
             onQueuePause()
         }
+    }
+
+    override fun requestPlayPause(isPlaying: Boolean) {
+        handlePlayPause(isPlaying)
+    }
+
+    override fun requestSkip() {
+        hostService.requestPlayNext()
     }
 }
