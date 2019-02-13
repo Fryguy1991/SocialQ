@@ -2,6 +2,7 @@ package com.chrisfry.socialq.userinterface.fragments
 
 
 import android.os.Bundle
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
@@ -16,8 +17,7 @@ import com.chrisfry.socialq.R
  * A simple [Fragment] subclass.
  *
  */
-class NewQueueFragment : Fragment() {
-
+class NewQueueFragment : BaseLaunchFragment() {
     // UI ELEMENTS
     private lateinit var startQueueButton: View
     private lateinit var fairplayCheckBox: CheckBox
@@ -41,7 +41,9 @@ class NewQueueFragment : Fragment() {
         queueTitleEditText.setOnEditorActionListener { v, actionId, event ->
             when(actionId) {
                 EditorInfo.IME_ACTION_DONE -> {
-                    startSocialQ()
+                    if (hasLocationPermission()) {
+                        startSocialQ()
+                    }
                     true
                 }
                 else -> {
@@ -51,7 +53,9 @@ class NewQueueFragment : Fragment() {
         }
 
         startQueueButton.setOnClickListener {
-            startSocialQ()
+            if (hasLocationPermission()) {
+                startSocialQ()
+            }
         }
     }
 
@@ -65,7 +69,16 @@ class NewQueueFragment : Fragment() {
 
         // Navigate to the host activity
         val hostDirections = NewQueueFragmentDirections.actionNewQueueFragmentToHostActivity(isFairPlay)
-        hostDirections.setQueueTitle(title)
+        hostDirections.queueTitle = title
         findNavController().navigate(hostDirections)
+    }
+
+    override fun locationPermissionReceived() {
+        startSocialQ()
+    }
+
+    override fun locationPermissionRejected() {
+        // Do nothing, just don't start the host if we don't have location permission
+        Log.d(TAG, "Not starting host due to lack of location permission")
     }
 }
