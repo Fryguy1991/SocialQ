@@ -16,9 +16,14 @@
         <item name="editTextColor">@color/Slate2</item>
 
         <!-- Theme Button Colors -->
+        <!-- Primary Button Colors -->
         <item name="activeButtonColor">@color/Deep_Blue</item>
         <item name="inactiveButtonColor">@color/Dirty_White</item>
         <item name="pressedButtonColor">@color/Deep_Blue</item>
+        <!-- Secondary Button Colors -->
+        <item name="secondaryActiveButtonColor">@color/Light_Deep_Blue</item>
+        <item name="secondaryInactiveButtonColor">@color/Dirty_White</item>
+        <item name="secondaryPressedButtonColor">@color/Light_Deep_Blue</item>
 
         <!-- Theme Widget Styles -->
         <item name="checkboxStyle">@style/AppCheckboxStyle</item>
@@ -41,8 +46,8 @@
         <item name="android:textStyle">bold</item>
         <item name="android:textSize">@dimen/medium_text</item>
         <item name="android:gravity">center_vertical</item>
-        <item name="android:paddingStart">@dimen/standard_spacing</item>
-        <item name="android:paddingLeft">@dimen/standard_spacing</item>
+        <item name="android:paddingStart">@dimen/dialog_side_margin</item>
+        <item name="android:paddingLeft">@dimen/dialog_side_margin</item>
     </style>
 
     <!-- Text Styles -->
