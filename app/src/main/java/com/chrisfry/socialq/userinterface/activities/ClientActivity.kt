@@ -5,7 +5,7 @@ import android.os.Bundle
 import android.os.IBinder
 import android.os.StrictMode
 import android.util.Log
-import android.view.Menu
+import android.view.View
 import android.widget.CheckBox
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
@@ -23,9 +23,12 @@ import kaaes.spotify.webapi.android.models.PlaylistTrack
 open class ClientActivity : ServiceActivity(), ClientService.ClientServiceListener {
     private val TAG = ClientActivity::class.java.name
 
-    // UI elements for queue display
+    // UI ELEMENTS
+    // Queue display elements
     private lateinit var queueList: RecyclerView
     private lateinit var trackDisplayAdapter: BasicTrackListAdapter
+    // Button for adding a new track
+    private lateinit var addButton: View
 
     // Reference to host endpoint ID
     private var hostEnpointId = ""
@@ -106,6 +109,8 @@ open class ClientActivity : ServiceActivity(), ClientService.ClientServiceListen
     private fun initUi() {
         // Initialize UI elements
         queueList = findViewById(R.id.rv_queue_list_view)
+        addButton = findViewById(R.id.btn_add_track)
+        addButton.setOnClickListener(this)
 
         // Show queue title as activity title
         title = hostQueueTitle
