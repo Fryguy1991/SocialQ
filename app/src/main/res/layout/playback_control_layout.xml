@@ -1,65 +1,99 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/cl_playback_root"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+    android:layout_height="wrap_content"
+    android:animateLayoutChanges="true"
+    android:background="@color/Light_Deep_Blue">
 
     <com.chrisfry.socialq.userinterface.views.SquareImageView
         android:id="@+id/cv_playback_control_album_image"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        app:layout_constraintTop_toTopOf="parent"
+        android:layout_width="@dimen/artist_picture_size"
+        android:layout_height="@dimen/artist_picture_size"
+        android:layout_marginStart="@dimen/default_margin"
+        android:layout_marginLeft="@dimen/default_margin"
+        android:layout_marginTop="@dimen/default_margin"
+        android:layout_marginBottom="@dimen/default_margin"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginStart="@dimen/playback_control_margin"
-        android:layout_marginEnd="@dimen/playback_control_margin"/>
+        app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
         android:id="@+id/tv_playback_control_track_name"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        app:layout_constraintTop_toBottomOf="@id/cv_playback_control_album_image"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginStart="@dimen/playback_control_margin"
-        android:layout_marginEnd="@dimen/playback_control_margin"
-        android:gravity="center_horizontal"/>
+        android:layout_marginStart="@dimen/default_margin"
+        android:layout_marginTop="@dimen/default_margin"
+        android:layout_marginEnd="@dimen/default_margin"
+        android:text="Red Flag"
+        android:textSize="@dimen/medium_text_2"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toTopOf="@+id/tv_playback_control_artist_name"
+        app:layout_constraintEnd_toStartOf="@id/btn_playback_control_play_pause"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@id/cv_playback_control_album_image"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_chainStyle="packed"
+        android:textColor="?android:textColorPrimaryInverse"
+        android:maxLines="1"
+        android:ellipsize="end"/>
 
     <TextView
         android:id="@+id/tv_playback_control_artist_name"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        app:layout_constraintTop_toBottomOf="@id/tv_playback_control_track_name"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginStart="@dimen/playback_control_margin"
-        android:layout_marginEnd="@dimen/playback_control_margin"
-        android:gravity="center_horizontal"/>
+        android:layout_marginStart="@dimen/default_margin"
+        android:layout_marginEnd="@dimen/default_margin"
+        android:text="Billy Talent"
+        android:textStyle="normal"
+        app:layout_constraintBottom_toTopOf="@+id/tv_playback_control_user_name"
+        app:layout_constraintEnd_toStartOf="@id/btn_playback_control_play_pause"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@id/cv_playback_control_album_image"
+        app:layout_constraintTop_toBottomOf="@+id/tv_playback_control_track_name"
+        android:textColor="?android:textColorPrimaryInverse"
+        android:maxLines="1"
+        android:ellipsize="end"/>
 
     <TextView
         android:id="@+id/tv_playback_control_user_name"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        app:layout_constraintTop_toBottomOf="@id/tv_playback_control_artist_name"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginStart="@dimen/playback_control_margin"
-        android:layout_marginEnd="@dimen/playback_control_margin"
-        android:gravity="center_horizontal"/>
+        android:layout_marginStart="@dimen/default_margin"
+        android:layout_marginEnd="@dimen/default_margin"
+        android:layout_marginBottom="@dimen/default_margin"
+        android:text="Chris Fry"
+        android:textStyle="italic"
+        android:visibility="visible"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/btn_playback_control_play_pause"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@id/cv_playback_control_album_image"
+        app:layout_constraintTop_toBottomOf="@+id/tv_playback_control_artist_name"
+        android:textColor="?android:textColorPrimaryInverse"
+        android:maxLines="1"
+        android:ellipsize="end"/>
 
     <Button
         android:id="@+id/btn_playback_control_play_pause"
-        android:layout_width="0dp"
-        android:layout_height="?attr/actionBarSize"
+        android:layout_width="@dimen/playback_button_size"
+        android:layout_height="@dimen/playback_button_size"
+        android:background="@drawable/rectangle_play_button"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintEnd_toStartOf="@id/btn_playback_control_skip"
+        app:layout_constraintTop_toTopOf="parent"
+        android:stateListAnimator="@null"/>
 
     <Button
         android:id="@+id/btn_playback_control_skip"
-        android:layout_width="0dp"
-        android:layout_height="?attr/actionBarSize"
+        android:layout_width="@dimen/playback_button_size"
+        android:layout_height="@dimen/playback_button_size"
+        android:background="@drawable/rectangle_skip_button"
+        app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toEndOf="@id/btn_playback_control_play_pause"
-        app:layout_constraintEnd_toEndOf="parent"/>
-
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginEnd="@dimen/default_margin"
+        android:layout_marginRight="@dimen/default_margin"
+        android:stateListAnimator="@null"/>
 </androidx.constraintlayout.widget.ConstraintLayout>
