@@ -31,8 +31,8 @@ abstract class HostFragmentBase : SpotifyFragment(), PlayQueueService.PlayQueueS
     }
 
     // UI element references
-    private lateinit var mNextButton: View
-    private lateinit var mPlayPauseButton: ImageView
+//    private lateinit var mNextButton: View
+//    private lateinit var mPlayPauseButton: ImageView
 
     // Track list elements
     private lateinit var mQueueList: RecyclerView
@@ -119,19 +119,19 @@ abstract class HostFragmentBase : SpotifyFragment(), PlayQueueService.PlayQueueS
 
     private fun initUi(baseView: View) {
         // Initialize UI elements
-        mNextButton = baseView.findViewById(R.id.btn_next)
-        mPlayPauseButton = baseView.findViewById(R.id.btn_play_pause)
+//        mNextButton = baseView.findViewById(R.id.btn_next)
+//        mPlayPauseButton = baseView.findViewById(R.id.btn_play_pause)
         mQueueList = baseView.findViewById(R.id.rv_queue_list_view)
     }
 
     private fun addListeners() {
-        mNextButton.setOnClickListener {
-            mPlayQueueService!!.requestPlayNext()
-        }
-
-        mPlayPauseButton.setOnClickListener {
-            view -> handlePlayPause(view.contentDescription == "queue_playing")
-        }
+//        mNextButton.setOnClickListener {
+//            mPlayQueueService!!.requestPlayNext()
+//        }
+//
+//        mPlayPauseButton.setOnClickListener {
+//            view -> handlePlayPause(view.contentDescription == "queue_playing")
+//        }
     }
 
     private fun initSpotifyElements() {
@@ -441,23 +441,23 @@ abstract class HostFragmentBase : SpotifyFragment(), PlayQueueService.PlayQueueS
     override fun onQueuePause() {
         mIsPlaying = false
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            mPlayPauseButton.background = resources.getDrawable(R.drawable.play_button, activity?.theme)
-        } else {
-            mPlayPauseButton.background = resources.getDrawable(R.drawable.play_button)
-        }
-        mPlayPauseButton.contentDescription = "queue_paused"
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+//            mPlayPauseButton.background = resources.getDrawable(R.drawable.play_button, activity?.theme)
+//        } else {
+//            mPlayPauseButton.background = resources.getDrawable(R.drawable.play_button)
+//        }
+//        mPlayPauseButton.contentDescription = "queue_paused"
     }
 
     override fun onQueuePlay() {
         mIsPlaying = true
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            mPlayPauseButton.background = resources.getDrawable(R.drawable.pause_button, activity?.theme)
-        } else {
-            mPlayPauseButton.background = resources.getDrawable(R.drawable.pause_button)
-        }
-        mPlayPauseButton.contentDescription = "queue_playing"
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+//            mPlayPauseButton.background = resources.getDrawable(R.drawable.pause_button, activity?.theme)
+//        } else {
+//            mPlayPauseButton.background = resources.getDrawable(R.drawable.pause_button)
+//        }
+//        mPlayPauseButton.contentDescription = "queue_playing"
     }
 
     override fun onQueueUpdated() {
