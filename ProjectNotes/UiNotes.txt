@@ -1,5 +1,5 @@
 Coffee Shop Notes:
-- Need to add location access logic to new launch activity
+X Need to add location access logic to new launch activity
 - When using linearlayout decorator (bar) match bar width
 - Move search (for client) down to action area
 - Figure out where to put host controls
