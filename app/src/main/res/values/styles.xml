@@ -5,7 +5,7 @@
         <!-- Major Theme Colors -->
         <item name="colorPrimary">@color/Deep_Blue</item>
         <item name="colorPrimaryDark">@color/Dark_Deep_Blue</item>
-        <item name="colorAccent">@color/BurntOrangeLight</item>
+        <item name="colorAccent">@color/BurntOrangeLight2</item>
 
         <!-- Theme Background Color -->
         <item name="android:windowBackground">@color/Ice_White</item>

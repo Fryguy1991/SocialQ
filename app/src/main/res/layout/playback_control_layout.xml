@@ -35,7 +35,7 @@
         app:layout_constraintStart_toEndOf="@id/cv_playback_control_album_image"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_chainStyle="packed"
-        android:textColor="?android:textColorPrimaryInverse"
+        android:textColor="?attr/colorPrimary"
         android:maxLines="1"
         android:ellipsize="end"/>
 

@@ -14,6 +14,13 @@
         android:elevation="4dp"
         android:theme="@style/ToolBarStyle"/>
 
+    <com.chrisfry.socialq.userinterface.views.PlaybackControlView
+        android:id="@+id/cv_playback_control_view"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@id/app_toolbar"
+        android:visibility="gone"/>
+
     <ImageView
         android:id="@+id/btn_add_track"
         android:layout_marginEnd="@dimen/default_margin"
@@ -32,5 +39,5 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/app_toolbar" />
+        app:layout_constraintTop_toBottomOf="@id/cv_playback_control_view" />
 </androidx.constraintlayout.widget.ConstraintLayout>

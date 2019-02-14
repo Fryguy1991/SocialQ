@@ -25,7 +25,7 @@ import com.chrisfry.socialq.userinterface.views.QueueItemDecoration
 import kaaes.spotify.webapi.android.models.PlaylistSimple
 
 open class HostActivity : ServiceActivity(), HostService.HostServiceListener,
-        IItemSelectionListener<String>, PlaybackControlView.IPlaybackControlListener, View.OnClickListener {
+        IItemSelectionListener<String>, PlaybackControlView.IPlaybackControlListener {
     private val TAG = HostActivity::class.java.name
 
     // UI ELEMENTS
@@ -43,8 +43,6 @@ open class HostActivity : ServiceActivity(), HostService.HostServiceListener,
     private var isServiceBound = false
     // Reference to base playlist dialog
     private var basePlaylistDialog: AlertDialog? = null
-    // Flag for if the view is currently expanded
-    private var isPlaybackControlExpanded = false
 
     // Object for connecting to/from play queue service
     private val hostServiceConnection = object : ServiceConnection {
@@ -181,25 +179,6 @@ open class HostActivity : ServiceActivity(), HostService.HostServiceListener,
         stopService(stopHostIntent)
     }
 
-    override fun onClick(v: View?) {
-        if (v != null) {
-            when (v.id) {
-                R.id.cv_playback_control_view -> {
-                    if (isPlaybackControlExpanded) {
-                        playbackControlView.shrinkLayout()
-                        isPlaybackControlExpanded = false
-                    } else {
-                        playbackControlView.expandLayout()
-                        isPlaybackControlExpanded = true
-                    }
-                }
-                else -> {
-                    // Not handling click here. Pass on to parent object.
-                    super.onClick(v)
-                }
-            }
-        }
-    }
     override fun onBackPressed() {
 
         val dialogBuilder = AlertDialog.Builder(this)
@@ -326,10 +305,7 @@ open class HostActivity : ServiceActivity(), HostService.HostServiceListener,
                 Log.e(TAG, "Error invalid song request list sent")
             }
             songRequests.isEmpty() -> {
-                if (isPlaybackControlExpanded) {
-                    playbackControlView.shrinkLayout()
-                    isPlaybackControlExpanded = false
-                }
+                playbackControlView.shrinkLayout()
                 playbackControlView.visibility = View.GONE
                 trackDisplayAdapter.updateAdapter(mutableListOf())
             }

@@ -14,6 +14,7 @@ import com.bumptech.glide.Glide
 import com.chrisfry.socialq.R
 import com.chrisfry.socialq.model.ClientRequestData
 import com.chrisfry.socialq.utils.DisplayUtils
+import kaaes.spotify.webapi.android.models.PlaylistTrack
 
 class PlaybackControlView : ConstraintLayout {
     companion object {
@@ -40,6 +41,8 @@ class PlaybackControlView : ConstraintLayout {
     private lateinit var listener: IPlaybackControlListener
     // Flag for if the player is currently playing
     private var isPlaying = false
+    // Flag for keeping track of if view is expanded or not
+    private var isExpanded = false
 
     init {
         LayoutInflater.from(context).inflate(R.layout.playback_control_layout, this)
@@ -53,6 +56,14 @@ class PlaybackControlView : ConstraintLayout {
 
         playPauseButton = findViewById(R.id.btn_playback_control_play_pause)
         skipButton = findViewById(R.id.btn_playback_control_skip)
+
+        rootLayout.setOnClickListener {
+            if (isExpanded) {
+                shrinkLayout()
+            } else {
+                expandLayout()
+            }
+        }
 
         playPauseButton.setOnClickListener {
             listener.requestPlayPause(isPlaying)
@@ -77,9 +88,11 @@ class PlaybackControlView : ConstraintLayout {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
             TransitionManager.beginDelayedTransition(rootLayout)
         }
+
+        isExpanded = false
     }
 
-    fun expandLayout() {
+    private fun expandLayout() {
         Log.d(TAG, "Expanding playback control layout")
 
         trackNameText.maxLines = Integer.MAX_VALUE
@@ -89,6 +102,8 @@ class PlaybackControlView : ConstraintLayout {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
             TransitionManager.beginDelayedTransition(rootLayout)
         }
+
+        isExpanded = true
     }
 
     fun setPlaying() {
@@ -110,13 +125,27 @@ class PlaybackControlView : ConstraintLayout {
     }
 
     fun displayRequest(request: ClientRequestData) {
-        trackNameText.text = request.track.track.name
-        artistNameText.text = DisplayUtils.getTrackArtistString(request.track)
         userNameText.text = request.user.display_name
 
-        if (request.track.track.album.images.size > 0) {
-            Glide.with(albumArtImage).load(request.track.track.album.images[0].url).into(albumArtImage)
+        displayTrack(request.track)
+    }
+
+    fun displayTrack(track: PlaylistTrack) {
+        trackNameText.text = track.track.name
+        artistNameText.text = DisplayUtils.getTrackArtistString(track)
+
+        if (track.track.album.images.size > 0) {
+            Glide.with(albumArtImage).load(track.track.album.images[0].url).into(albumArtImage)
         }
+    }
+
+    fun hideControls() {
+        playPauseButton.visibility = View.GONE
+        skipButton.visibility = View.GONE
+    }
+
+    fun hideUser() {
+        userNameText.visibility = View.GONE
     }
 
     interface IPlaybackControlListener {

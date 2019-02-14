@@ -17,6 +17,7 @@ import com.chrisfry.socialq.enums.RequestType
 import com.chrisfry.socialq.services.ClientService
 import com.chrisfry.socialq.userinterface.App
 import com.chrisfry.socialq.userinterface.adapters.BasicTrackListAdapter
+import com.chrisfry.socialq.userinterface.views.PlaybackControlView
 import com.chrisfry.socialq.userinterface.views.QueueItemDecoration
 import kaaes.spotify.webapi.android.models.PlaylistTrack
 
@@ -29,6 +30,8 @@ open class ClientActivity : ServiceActivity(), ClientService.ClientServiceListen
     private lateinit var trackDisplayAdapter: BasicTrackListAdapter
     // Button for adding a new track
     private lateinit var addButton: View
+    // View for displaying currently playing track
+    private lateinit var playbackControlView: PlaybackControlView
 
     // Reference to host endpoint ID
     private var hostEnpointId = ""
@@ -110,6 +113,10 @@ open class ClientActivity : ServiceActivity(), ClientService.ClientServiceListen
         // Initialize UI elements
         queueList = findViewById(R.id.rv_queue_list_view)
         addButton = findViewById(R.id.btn_add_track)
+        playbackControlView = findViewById(R.id.cv_playback_control_view)
+        playbackControlView.hideControls()
+        playbackControlView.hideUser()
+
         addButton.setOnClickListener(this)
 
         // Show queue title as activity title
@@ -219,7 +226,30 @@ open class ClientActivity : ServiceActivity(), ClientService.ClientServiceListen
     }
 
     override fun onQueueUpdated(queueTracks: List<PlaylistTrack>) {
-        trackDisplayAdapter.updateAdapter(queueTracks)
+        displayTrackList(queueTracks)
+    }
+
+    private fun displayTrackList(queueTracks: List<PlaylistTrack>) {
+        when {
+            queueTracks.size < 0 -> {
+                Log.e(TAG, "Error invalid song request list sent")
+            }
+            queueTracks.isEmpty() -> {
+                playbackControlView.shrinkLayout()
+                playbackControlView.visibility = View.GONE
+                trackDisplayAdapter.updateAdapter(mutableListOf())
+            }
+            queueTracks.size == 1 -> {
+                playbackControlView.visibility = View.VISIBLE
+                playbackControlView.displayTrack(queueTracks[0])
+                trackDisplayAdapter.updateAdapter(mutableListOf())
+            }
+            queueTracks.size > 1 -> {
+                playbackControlView.visibility = View.VISIBLE
+                playbackControlView.displayTrack(queueTracks[0])
+                trackDisplayAdapter.updateAdapter(queueTracks.subList(1, queueTracks.size))
+            }
+        }
     }
 
     override fun showHostDisconnectDialog() {
@@ -253,7 +283,7 @@ open class ClientActivity : ServiceActivity(), ClientService.ClientServiceListen
     }
 
     override fun initiateView(queueTitle: String, trackList: List<PlaylistTrack>) {
-        trackDisplayAdapter.updateAdapter(trackList)
+        displayTrackList(trackList)
         title = queueTitle
     }
 
