@@ -67,20 +67,20 @@ class LaunchFragment : BaseLaunchFragment(), IQueueSelectionListener {
     // Cached queue model for joining queue after location permission is granted
     private var cachedQueueModel: JoinableQueueModel? = null
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
-        if (hasLocationPermission()) {
-            searchForQueues()
-        }
-    }
-
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
         if (container != null) {
             return inflater.inflate(R.layout.fragment_launch, container, false)
         } else {
             return null
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+
+        if (hasLocationPermission()) {
+            searchForQueues()
         }
     }
 
@@ -109,7 +109,12 @@ class LaunchFragment : BaseLaunchFragment(), IQueueSelectionListener {
         findNavController().navigate(R.id.action_launchFragment_to_newQueueFragment)
     }
 
-    override fun onDestroy() {
+    override fun onPause() {
+        stopNearbyDiscovery()
+        super.onPause()
+    }
+
+    private fun stopNearbyDiscovery() {
         // Stop discovering SocialQs
         val context = activity
         if (nearbySuccessfullyDiscovering && context != null) {
@@ -118,7 +123,8 @@ class LaunchFragment : BaseLaunchFragment(), IQueueSelectionListener {
             Nearby.getConnectionsClient(context).stopDiscovery()
             nearbySuccessfullyDiscovering = false
         }
-        super.onDestroy()
+
+        joinableQueues.clear()
     }
 
     override fun queueSelected(queueModel: JoinableQueueModel) {
@@ -161,6 +167,8 @@ class LaunchFragment : BaseLaunchFragment(), IQueueSelectionListener {
 
     private val endpointDiscoveryCallback = object : EndpointDiscoveryCallback() {
         override fun onEndpointFound(endpointId: String, discoveredEndpointInfo: DiscoveredEndpointInfo) {
+            Log.d(TAG, "Endpoint Found")
+
             if (discoveredEndpointInfo.serviceId == AppConstants.SERVICE_NAME) {
                 Log.d(TAG, "Found a SocialQ host with endpoint ID $endpointId")
 
@@ -183,6 +191,8 @@ class LaunchFragment : BaseLaunchFragment(), IQueueSelectionListener {
         }
 
         override fun onEndpointLost(endpointId: String) {
+            Log.d(TAG, "Endpoint Lost")
+
             for (queue: JoinableQueueModel in joinableQueues) {
                 if (queue.endpointId == endpointId) {
                     Log.d(TAG, "Lost a SocialQ host with endpoint ID ${queue.endpointId}")
