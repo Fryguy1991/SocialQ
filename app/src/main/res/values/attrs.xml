@@ -3,4 +3,8 @@
     <attr name="activeButtonColor" format="color"/>
     <attr name="inactiveButtonColor" format="color"/>
     <attr name="pressedButtonColor" format="color"/>
+
+    <attr name="secondaryActiveButtonColor" format="color"/>
+    <attr name="secondaryInactiveButtonColor" format="color"/>
+    <attr name="secondaryPressedButtonColor" format="color"/>
 </resources>

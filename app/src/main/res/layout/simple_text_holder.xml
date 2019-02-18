@@ -18,6 +18,6 @@
         android:layout_marginTop="@dimen/default_margin"
         app:layout_goneMarginTop="@dimen/default_margin"
         android:layout_marginBottom="@dimen/default_margin"
-        android:layout_marginStart="@dimen/queue_dialog_side_margin"
-        android:layout_marginEnd="@dimen/queue_dialog_side_margin"/>
+        android:layout_marginStart="@dimen/dialog_side_margin"
+        android:layout_marginEnd="@dimen/dialog_side_margin"/>
 </androidx.constraintlayout.widget.ConstraintLayout>
