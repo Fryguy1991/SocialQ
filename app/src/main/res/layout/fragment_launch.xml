@@ -24,5 +24,6 @@
         android:layout_marginBottom="@dimen/default_margin"
         android:layout_marginEnd="@dimen/default_margin"
         android:background="@drawable/add_button"
-        style="@style/RoundButtonStyle"/>
+        style="@style/RoundButtonStyle"
+        android:enabled="false"/>
 </androidx.constraintlayout.widget.ConstraintLayout>

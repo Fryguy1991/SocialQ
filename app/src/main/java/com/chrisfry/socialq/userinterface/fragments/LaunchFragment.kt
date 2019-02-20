@@ -1,17 +1,21 @@
 package com.chrisfry.socialq.userinterface.fragments
 
+import android.content.*
 import android.os.Bundle
 import android.util.Log
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.appcompat.app.AlertDialog
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.chrisfry.socialq.R
 import com.chrisfry.socialq.business.AppConstants
+import com.chrisfry.socialq.enums.SpotifyUserType
 import com.chrisfry.socialq.enums.UserType
+import com.chrisfry.socialq.model.AccessModel
 import com.chrisfry.socialq.model.JoinableQueueModel
 import com.chrisfry.socialq.userinterface.adapters.QueueDisplayAdapter
 import com.chrisfry.socialq.userinterface.interfaces.IQueueSelectionListener
@@ -23,18 +27,19 @@ import com.google.android.gms.nearby.connection.EndpointDiscoveryCallback
 import com.google.android.gms.nearby.connection.Strategy
 import com.google.android.gms.tasks.OnFailureListener
 import com.google.android.gms.tasks.OnSuccessListener
+import kaaes.spotify.webapi.android.SpotifyApi
+import kaaes.spotify.webapi.android.SpotifyCallback
+import kaaes.spotify.webapi.android.SpotifyError
+import kaaes.spotify.webapi.android.SpotifyService
+import kaaes.spotify.webapi.android.models.UserPrivate
+import retrofit.client.Response
 import java.lang.Exception
 import java.util.regex.Pattern
 
 
 /**
- * A simple [Fragment] subclass.
- * Activities that contain this fragment must implement the
- * [LaunchFragment.LaunchFragmentListener] interface
- * to handle interaction events.
- * Use the [LaunchFragment.newInstance] factory method to
- * create an instance of this fragment.
- *
+ * Landing fragment for the application. Responsible for finishing authorization and displaying any
+ * SocialQ's that can be joined.
  */
 class LaunchFragment : BaseLaunchFragment(), IQueueSelectionListener {
     companion object {
@@ -61,11 +66,59 @@ class LaunchFragment : BaseLaunchFragment(), IQueueSelectionListener {
     // Recycler view and adapter references
     private val queueAdapter = QueueDisplayAdapter()
     private lateinit var recyclerView: RecyclerView
+    // Builder for premium required dialog
+    private lateinit var alertbuilder: AlertDialog.Builder
 
     // Used as a flag to determine if we need to launch a host or client after a permission request
     private var userType = UserType.NONE
     // Cached queue model for joining queue after location permission is granted
     private var cachedQueueModel: JoinableQueueModel? = null
+
+    // SPOTIFY ELEMENTS
+    // API/Service for access Spotify data
+    private val spotifyApi = SpotifyApi()
+    private lateinit var spotifyService: SpotifyService
+    // Reference to current user
+    private var currentUser: UserPrivate? = null
+
+    // Receiver for registered broadcasts
+    private val launchFragmentBroadcastReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent?) {
+            // For now only action is access token refreshed
+            if (intent != null && intent.action != null) {
+                when (intent.action) {
+                    AppConstants.BR_INTENT_ACCESS_TOKEN_UPDATED -> {
+                        Log.d(TAG, "Received broadcast that access token was refreshed")
+                        val accessToken = AccessModel.getAccessToken()
+                        if (!accessToken.isNullOrEmpty()) {
+                            spotifyApi.setAccessToken(AccessModel.getAccessToken())
+                            spotifyService = spotifyApi.service
+
+                            val user = currentUser
+                            if (user == null) {
+                                spotifyService.getMe(currentUserCallback)
+                            }
+                        } else {
+                            Log.e(TAG, "Error: Invalid access token")
+                        }
+                    }
+                    else -> {
+                        Log.e(TAG, "Not expecting to receive " + intent.action!!)
+                    }
+                }
+            }
+        }
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        val parentActivity = activity
+        if (parentActivity != null) {
+            // Register to receive broadcasts when the auth code has been received
+            LocalBroadcastManager.getInstance(parentActivity).registerReceiver(launchFragmentBroadcastReceiver, IntentFilter(AppConstants.BR_INTENT_ACCESS_TOKEN_UPDATED))
+        }
+    }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
@@ -81,6 +134,11 @@ class LaunchFragment : BaseLaunchFragment(), IQueueSelectionListener {
 
         if (hasLocationPermission()) {
             searchForQueues()
+        }
+
+        val user = currentUser
+        if (user != null) {
+            newQueueButton.isEnabled = true
         }
     }
 
@@ -103,15 +161,40 @@ class LaunchFragment : BaseLaunchFragment(), IQueueSelectionListener {
         queueAdapter.listener = this
         recyclerView.adapter = queueAdapter
         queueAdapter.notifyDataSetChanged()
+
+        // Create builder for premium required dialog
+        val alertContext = context
+        if (alertContext != null) {
+            alertbuilder = AlertDialog.Builder(alertContext)
+                    .setView(R.layout.dialog_premium_required)
+                    .setPositiveButton(R.string.confirm) { dialog, which ->
+                        dialog.dismiss()
+                    }
+        }
     }
 
     private fun handleHostStart() {
-        findNavController().navigate(R.id.action_launchFragment_to_newQueueFragment)
+        val user = currentUser
+        if (user != null) {
+            when (SpotifyUserType.getSpotifyUserTypeFromProductType(user.product)) {
+                SpotifyUserType.PREMIUM -> findNavController().navigate(R.id.action_launchFragment_to_newQueueFragment)
+                SpotifyUserType.FREE,
+                SpotifyUserType.OPEN -> showPremiumRequiredDialog()
+            }
+        }
     }
 
     override fun onPause() {
         stopNearbyDiscovery()
         super.onPause()
+    }
+
+    override fun onDestroy() {
+        val brContext = context
+        if (brContext != null) {
+            LocalBroadcastManager.getInstance(brContext).unregisterReceiver(launchFragmentBroadcastReceiver)
+        }
+        super.onDestroy()
     }
 
     private fun stopNearbyDiscovery() {
@@ -125,6 +208,10 @@ class LaunchFragment : BaseLaunchFragment(), IQueueSelectionListener {
         }
 
         joinableQueues.clear()
+    }
+
+    private fun showPremiumRequiredDialog() {
+        alertbuilder.create().show()
     }
 
     override fun queueSelected(queueModel: JoinableQueueModel) {
@@ -229,5 +316,25 @@ class LaunchFragment : BaseLaunchFragment(), IQueueSelectionListener {
 
     override fun locationPermissionRejected() {
         userType = UserType.NONE
+    }
+
+    val currentUserCallback = object : SpotifyCallback<UserPrivate>() {
+        override fun success(user: UserPrivate?, response: Response?) {
+            if (user != null) {
+                Log.d(TAG, "Successfully retrieved current user")
+                currentUser = user
+
+                newQueueButton.isEnabled = true
+            } else {
+                Log.e(TAG, "Error user was null")
+            }
+        }
+
+        override fun failure(spotifyError: SpotifyError?) {
+            Log.e(TAG, "Error retrieving current user")
+            Log.e(TAG, spotifyError?.errorDetails?.message.toString())
+            // TODO: Think about what we should do if we can't retrieve the user
+        }
+
     }
 }

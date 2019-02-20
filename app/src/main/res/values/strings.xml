@@ -4,6 +4,7 @@
     <string name="play_queue_service_description">Service that uses SpotifyPlayer to play music and support the SocialQ application.</string>
     <string name="host_service_description">Service used to host a SocialQ</string>
     <string name="client_service_description">Service used as a client of a SocialQ</string>
+    <string name="access_service_description">Services used to keep SocialQ access tokens up to date</string>
 
     <!-- Notification Strings -->
     <string name="host_notification_content_text">Hosting \"%1$s\"</string>
@@ -91,7 +92,8 @@
     <!-- Queue Connect Screen Strings -->
     <string name="join">Join</string>
 
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <!-- Premium Required Dialog String -->
+    <string name="premium_required_title">Spotify Premium Required</string>
+    <string name="premium_required_description">Spotify premium is required in order to host a SocialQ!</string>
 
 </resources>

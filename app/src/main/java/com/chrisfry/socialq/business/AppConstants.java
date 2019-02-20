@@ -11,6 +11,8 @@ public class AppConstants {
     public static final String UUID_STRING = "2c865811-87e4-498b-9a95-b961edf2440d";
     public static final UUID APPLICATION_UUID = UUID.fromString(UUID_STRING);
 
+    public static final String AWS_SERVER_URL = "http://54.86.80.241/";
+
     // Service Name
     public static final String SERVICE_NAME = "com.chrisfry.socialq";
     // Client ID specific to this application
@@ -97,6 +99,7 @@ public class AppConstants {
     // Service IDs
     public static final int HOST_SERVICE_ID = 1;
     public static final int CLIENT_SERVICE_ID = 2;
+    public static final int ACCESS_SERVICE_ID = 3;
 
     // Auth JSON Keys
     public static final String JSON_BODY_KEY = "body";
