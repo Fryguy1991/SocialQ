@@ -204,6 +204,8 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
 
                         // Start service in the foreground
                         startForeground(AppConstants.HOST_SERVICE_ID, notificationBuilder.build())
+
+                        initSpotifyElements(AccessModel.getAccessToken())
                     } else {
                         Log.e(TAG, "Something went wrong initializing the media session")
 
@@ -935,7 +937,7 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
         Log.d(TAG, "Loading base playlist with ID: $playlistId")
 
         wasBasePlaylistLoaded = true
-        val basePlaylist = spotifyService.getPlaylist(playlistOwnerUserId, playlistId)
+        val basePlaylist = spotifyService.getPlaylist(playlistOwnerUserId, playlistId.toString())
 
         // Adding with base user ensure host added tracks are sorted within the base playlist
         val baseUser = UserPublic()

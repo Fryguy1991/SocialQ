@@ -85,7 +85,7 @@ dependencies {
     api project(':spotify-app-remote')
 
     // Retrofit
-    implementation 'com.squareup.retrofit2:retrofit:2.4.0'
+    implementation 'com.squareup.retrofit2:retrofit:2.5.0'
 
     // Glide (for pulling images from the web)
     kapt 'com.github.bumptech.glide:compiler:4.8.0'

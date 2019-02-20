@@ -232,9 +232,6 @@ abstract class SpotifyAccessService : Service() {
 
         isServiceEnding = true
 
-        // Clear access model. Should fire our access refresh thread (which won't due anything due to the flag change above)
-        AccessModel.setAccess("", -1)
-
         // Unregister from local broadcast manager
         LocalBroadcastManager.getInstance(this).unregisterReceiver(serviceBroadcastReceiver)
         super.onDestroy()

@@ -229,6 +229,8 @@ class LaunchFragment : BaseLaunchFragment(), IQueueSelectionListener {
     }
 
     private fun searchForQueues() {
+        joinableQueues.clear()
+
         val options = DiscoveryOptions.Builder().setStrategy(Strategy.P2P_STAR).build()
 
         val context = activity

@@ -13,6 +13,7 @@ import com.chrisfry.socialq.R
 import com.chrisfry.socialq.business.AppConstants
 import com.chrisfry.socialq.enums.NearbyDevicesMessage
 import com.chrisfry.socialq.enums.PayloadTransferUpdateStatus
+import com.chrisfry.socialq.model.AccessModel
 import com.chrisfry.socialq.userinterface.App
 import com.chrisfry.socialq.userinterface.activities.ClientActivity
 import com.chrisfry.socialq.utils.ApplicationUtils
@@ -135,6 +136,8 @@ class ClientService : SpotifyAccessService() {
 
             // Start service in the foreground
             startForeground(AppConstants.CLIENT_SERVICE_ID, notificationBuilder.build())
+
+            initSpotifyElements(AccessModel.getAccessToken())
 
             // Let app object know that a service has been started
             App.hasServiceBeenStarted = true
