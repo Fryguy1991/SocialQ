@@ -113,7 +113,7 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
     // ID of the base playlist to load
     private var basePlaylistId: String = ""
     // User object of the host's Spotify account
-    private lateinit var hostUser: UserPublic
+    private lateinit var hostUser: UserPrivate
 
     // Callback for successful/failed player connection
     private val connectivityCallback = object : Player.OperationCallback {
@@ -210,9 +210,6 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
                         stopSelf()
                         return START_NOT_STICKY
                     }
-
-                    // Request authorization code for Spotify
-                    requestHostAuthorization()
 
                     // Let app object know that a service has been started
                     App.hasServiceBeenStarted = true

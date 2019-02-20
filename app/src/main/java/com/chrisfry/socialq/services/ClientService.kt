@@ -136,9 +136,6 @@ class ClientService : SpotifyAccessService() {
             // Start service in the foreground
             startForeground(AppConstants.CLIENT_SERVICE_ID, notificationBuilder.build())
 
-            // Request authorization code for Spotify
-            requestClientAuthorization()
-
             // Let app object know that a service has been started
             App.hasServiceBeenStarted = true
         } else {
