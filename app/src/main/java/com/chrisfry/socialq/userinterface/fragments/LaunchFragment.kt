@@ -27,12 +27,6 @@ import com.google.android.gms.nearby.connection.EndpointDiscoveryCallback
 import com.google.android.gms.nearby.connection.Strategy
 import com.google.android.gms.tasks.OnFailureListener
 import com.google.android.gms.tasks.OnSuccessListener
-import kaaes.spotify.webapi.android.SpotifyApi
-import kaaes.spotify.webapi.android.SpotifyCallback
-import kaaes.spotify.webapi.android.SpotifyError
-import kaaes.spotify.webapi.android.SpotifyService
-import kaaes.spotify.webapi.android.models.UserPrivate
-import retrofit.client.Response
 import java.lang.Exception
 import java.util.regex.Pattern
 
@@ -74,13 +68,6 @@ class LaunchFragment : BaseLaunchFragment(), IQueueSelectionListener {
     // Cached queue model for joining queue after location permission is granted
     private var cachedQueueModel: JoinableQueueModel? = null
 
-    // SPOTIFY ELEMENTS
-    // API/Service for access Spotify data
-    private val spotifyApi = SpotifyApi()
-    private lateinit var spotifyService: SpotifyService
-    // Reference to current user
-    private var currentUser: UserPrivate? = null
-
     // Receiver for registered broadcasts
     private val launchFragmentBroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent?) {
@@ -89,17 +76,10 @@ class LaunchFragment : BaseLaunchFragment(), IQueueSelectionListener {
                 when (intent.action) {
                     AppConstants.BR_INTENT_ACCESS_TOKEN_UPDATED -> {
                         Log.d(TAG, "Received broadcast that access token was refreshed")
-                        val accessToken = AccessModel.getAccessToken()
-                        if (!accessToken.isNullOrEmpty()) {
-                            spotifyApi.setAccessToken(AccessModel.getAccessToken())
-                            spotifyService = spotifyApi.service
 
-                            val user = currentUser
-                            if (user == null) {
-                                spotifyService.getMe(currentUserCallback)
-                            }
-                        } else {
-                            Log.e(TAG, "Error: Invalid access token")
+                        val user = currentUser
+                        if (user == null) {
+                            requestSpotifyUser()
                         }
                     }
                     else -> {
@@ -200,7 +180,7 @@ class LaunchFragment : BaseLaunchFragment(), IQueueSelectionListener {
     private fun stopNearbyDiscovery() {
         // Stop discovering SocialQs
         val context = activity
-        if (nearbySuccessfullyDiscovering && context != null) {
+        if (context != null) {
             Log.d(TAG, "Stopping discovering of SocialQ Hosts")
 
             Nearby.getConnectionsClient(context).stopDiscovery()
@@ -320,23 +300,7 @@ class LaunchFragment : BaseLaunchFragment(), IQueueSelectionListener {
         userType = UserType.NONE
     }
 
-    val currentUserCallback = object : SpotifyCallback<UserPrivate>() {
-        override fun success(user: UserPrivate?, response: Response?) {
-            if (user != null) {
-                Log.d(TAG, "Successfully retrieved current user")
-                currentUser = user
-
-                newQueueButton.isEnabled = true
-            } else {
-                Log.e(TAG, "Error user was null")
-            }
-        }
-
-        override fun failure(spotifyError: SpotifyError?) {
-            Log.e(TAG, "Error retrieving current user")
-            Log.e(TAG, spotifyError?.errorDetails?.message.toString())
-            // TODO: Think about what we should do if we can't retrieve the user
-        }
-
+    override fun userRetrieved() {
+        newQueueButton.isEnabled = true
     }
 }
