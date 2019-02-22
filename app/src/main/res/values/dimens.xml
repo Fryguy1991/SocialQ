@@ -6,6 +6,7 @@
     <dimen name="default_margin">8dp</dimen>
     <dimen name="default_margin_x2">16dp</dimen>
     <dimen name="half_default_margin">4dp</dimen>
+    <dimen name="tight_spacing">10dp</dimen>
     <dimen name="standard_spacing">20dp</dimen>
     <dimen name="large_spacing">30dp</dimen>
 
@@ -20,6 +21,7 @@
     <dimen name="standard_elevation">4dp</dimen>
 
     <dimen name="dialog_side_margin">25dp</dimen>
+    <dimen name="dialog_side_and_default_margin">33dp</dimen>
 
     <!-- Search Dimens -->
     <dimen name="artist_picture_size">60dp</dimen>

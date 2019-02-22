@@ -21,6 +21,7 @@
     <string name="start">Start</string>
     <string name="cancel">Cancel</string>
     <string name="confirm">Confirm</string>
+    <string name="ok">Ok</string>
 
     <!-- Host Screen Strings -->
     <string name="next_btn">Next</string>
@@ -82,12 +83,17 @@
     <string name="off">Off</string>
     <string name="unknown">Unknown</string>
 
-    <!-- Queue Options Dialog Strings -->
+    <!-- Queue Options Strings -->
     <string name="queue_options">Queue Options</string>
-    <string name="queue_title">Queue Title</string>
+    <string name="queue_title">Queue Name</string>
     <string name="queue_title_default_value">SocialQ Host</string>
     <string name="fair_play">Fair Play</string>
+    <string name="enable_fair_play">Enable Fair Play</string>
+    <string name="fair_play_description">Fair play will automatically sort new songs based on who adds them. This ensures that users who add many songs in a row won\'t dominate the queue.</string>
+    <string name="use_base_playlist">Use Base Playlist</string>
+    <string name="base_playlist_description">Selecting a base playlist will load an existing Spotify playlist into the new queue.</string>
     <string name="default_playlist_name">SocialQ Playlist</string>
+    <string name="none">None</string>
 
     <!-- Queue Connect Screen Strings -->
     <string name="join">Join</string>

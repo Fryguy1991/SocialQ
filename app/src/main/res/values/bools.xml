@@ -2,5 +2,6 @@
 <resources>
 
     <bool name="fair_play_default">true</bool>
+    <bool name="load_base_playlist_by_default">false</bool>
 
 </resources>
