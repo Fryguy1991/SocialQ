@@ -2,19 +2,14 @@ package com.chrisfry.socialq.services
 
 import android.app.NotificationManager
 import android.app.Service
-import android.content.BroadcastReceiver
-import android.content.Context
-import android.content.Intent
-import android.content.IntentFilter
 import android.graphics.BitmapFactory
 import android.os.Binder
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaSessionCompat
 import android.util.Log
 import androidx.core.app.NotificationCompat
-import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.chrisfry.socialq.business.AppConstants
-import com.chrisfry.socialq.model.AccessModel
+import com.chrisfry.socialq.userinterface.App
 import com.chrisfry.socialq.utils.DisplayUtils
 import kaaes.spotify.webapi.android.SpotifyApi
 import kaaes.spotify.webapi.android.SpotifyCallback
@@ -27,11 +22,18 @@ import kaaes.spotify.webapi.android.models.Track
 import retrofit.client.Response
 import java.io.IOException
 import java.net.URL
+import javax.inject.Inject
 import kotlin.collections.HashMap
 
 abstract class SpotifyAccessService : Service() {
     companion object {
         val TAG = SpotifyAccessService::class.java.name
+    }
+
+    override fun onCreate() {
+        super.onCreate()
+
+        (application as App).spotifyComponent.inject(this)
     }
 
     open inner class SpotifyAccessServiceBinder : Binder() {
@@ -40,10 +42,9 @@ abstract class SpotifyAccessService : Service() {
         }
     }
 
-    // API for retrieve SpotifyService object
-    private val spotifyApi = SpotifyApi()
-    // Service for adding songs to the queue
-    protected lateinit var spotifyService: SpotifyService
+    // API for retrieving SpotifyService object
+    @Inject
+    protected lateinit var spotifyApi: SpotifyApi
     // Flag for indicating if we actually need a new access token (set to true when shutting down)
     private var isServiceEnding = false
     // User object for host's Spotify account
@@ -52,8 +53,6 @@ abstract class SpotifyAccessService : Service() {
     protected lateinit var playlist: Playlist
     // Tracks from queue playlist
     protected val playlistTracks = mutableListOf<PlaylistTrack>()
-    // Flag indicating if the service is a host
-    private var isHost = true
 
     // NOTIFICATION ELEMENTS
     // Reference to notification manager
@@ -65,41 +64,13 @@ abstract class SpotifyAccessService : Service() {
     // Reference to meta data builder
     protected val metaDataBuilder = MediaMetadataCompat.Builder()
 
-    private val serviceBroadcastReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context?, intent: Intent?) {
-            if (intent != null) {
-                when (intent.action) {
-                    AppConstants.BR_INTENT_ACCESS_TOKEN_UPDATED -> {
-                        if (!AccessModel.getAccessToken().isNullOrEmpty()) {
-                            initSpotifyElements(AccessModel.getAccessToken())
-                        }
-                    }
-                    else -> {
-                        // Not handling case here, do nothing
-                    }
-                }
-            }
-        }
-    }
-
-    init {
-        LocalBroadcastManager.getInstance(this).registerReceiver(serviceBroadcastReceiver, IntentFilter(AppConstants.BR_INTENT_ACCESS_TOKEN_UPDATED))
-    }
-
-    protected open fun initSpotifyElements(accessToken: String) {
-        Log.d(TAG, "Initializing Spotify elements")
-
-        spotifyApi.setAccessToken(accessToken)
-        spotifyService = spotifyApi.service
-    }
-
     protected fun refreshPlaylist() {
         Log.d(TAG, "Refreshing playlist")
 
         val options = HashMap<String, Any>()
         options[SpotifyService.MARKET] = AppConstants.PARAM_FROM_TOKEN
 
-        spotifyService.getPlaylist(playlistOwnerUserId, playlist.id, options, refreshPlaylistCallback)
+        spotifyApi.service.getPlaylist(playlistOwnerUserId, playlist.id, options, refreshPlaylistCallback)
     }
 
     protected fun pullNewTrack(newTrackIndex: Int) {
@@ -110,7 +81,7 @@ abstract class SpotifyAccessService : Service() {
         options[SpotifyService.LIMIT] = 1
         options[SpotifyService.OFFSET] = newTrackIndex
 
-        spotifyService.getPlaylistTracks(playlistOwnerUserId, playlist.id, options, newTrackCallback)
+        spotifyApi.service.getPlaylistTracks(playlistOwnerUserId, playlist.id, options, newTrackCallback)
     }
 
     private val newTrackCallback = object : SpotifyCallback<Pager<PlaylistTrack>>() {
@@ -146,7 +117,7 @@ abstract class SpotifyAccessService : Service() {
                     options[SpotifyService.OFFSET] = playlistTracks.size
                     options[SpotifyService.LIMIT] = AppConstants.PLAYLIST_TRACK_LIMIT
 
-                    spotifyService.getPlaylistTracks(playlistOwnerUserId, playlist.id, options, playlistTrackCallback)
+                    spotifyApi.service.getPlaylistTracks(playlistOwnerUserId, playlist.id, options, playlistTrackCallback)
                 } else {
                     Log.d(TAG, "Finished retrieving playlist tracks")
                     playlistRefreshComplete()
@@ -170,7 +141,7 @@ abstract class SpotifyAccessService : Service() {
                     val options = HashMap<String, Any>()
                     options[SpotifyService.OFFSET] = playlistTracks.size
 
-                    spotifyService.getPlaylistTracks(playlistOwnerUserId, playlist.id, options, this)
+                    spotifyApi.service.getPlaylistTracks(playlistOwnerUserId, playlist.id, options, this)
                 } else {
                     Log.d(TAG, "Finished retrieving playlist tracks")
                     playlistRefreshComplete()
@@ -231,9 +202,6 @@ abstract class SpotifyAccessService : Service() {
         mediaSession.release()
 
         isServiceEnding = true
-
-        // Unregister from local broadcast manager
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(serviceBroadcastReceiver)
         super.onDestroy()
     }
 

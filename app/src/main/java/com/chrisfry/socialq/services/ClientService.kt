@@ -137,7 +137,7 @@ class ClientService : SpotifyAccessService() {
             // Start service in the foreground
             startForeground(AppConstants.CLIENT_SERVICE_ID, notificationBuilder.build())
 
-            initSpotifyElements(AccessModel.getAccessToken())
+            initClient()
 
             // Let app object know that a service has been started
             App.hasServiceBeenStarted = true
@@ -199,7 +199,7 @@ class ClientService : SpotifyAccessService() {
     }
 
     fun followPlaylist() {
-        spotifyService.followPlaylist(clientUser!!.id, playlist.id, followPlaylistCallback)
+        spotifyApi.service.followPlaylist(clientUser!!.id, playlist.id, followPlaylistCallback)
     }
 
     override fun playlistRefreshComplete() {
@@ -245,15 +245,17 @@ class ClientService : SpotifyAccessService() {
         notificationManager.notify(AppConstants.CLIENT_SERVICE_ID, notificationBuilder.build())
     }
 
-    override fun initSpotifyElements(accessToken: String) {
-        super.initSpotifyElements(accessToken)
+    fun initClient() {
+        Log.d(TAG, "Initializing Client (connect to host)")
 
-        if (clientUser == null) {
-            Log.d(HostService.TAG, "Receiving Spotify access for the first time. Retrieve current user and connect to host")
-
-            clientUser = spotifyService.me
-            connectToHost()
+        if (AccessModel.getCurrentUser() == null) {
+            val currentUser = spotifyApi.service.me
+            AccessModel.setCurrentUser(currentUser)
+            clientUser = currentUser
+        } else {
+            clientUser = AccessModel.getCurrentUser()
         }
+        connectToHost()
     }
 
     private val mConnectionLifecycleCallback = object : ConnectionLifecycleCallback() {
@@ -326,7 +328,7 @@ class ClientService : SpotifyAccessService() {
 
                             if (hostId.isNotEmpty() && playlistId.isNotEmpty()) {
                                 playlistOwnerUserId = hostId
-                                spotifyService.getPlaylist(hostId, playlistId, playlistCallback)
+                                spotifyApi.service.getPlaylist(hostId, playlistId, playlistCallback)
                             }
 
                             try {
@@ -458,7 +460,7 @@ class ClientService : SpotifyAccessService() {
     fun requestInitiation() {
         Log.d(TAG, "View has been recreated. Requesting initiation")
 
-        listener?.initiateView(hostQueueTitle, playlistTracks.subList(cachedPlayingIndex, playlistTracks.size) )
+        listener?.initiateView(hostQueueTitle, playlistTracks.subList(cachedPlayingIndex, playlistTracks.size))
 
         if (hostDisconnect) {
             listener?.showHostDisconnectDialog()
@@ -490,7 +492,7 @@ class ClientService : SpotifyAccessService() {
                     options[SpotifyService.OFFSET] = playlistTracks.size
                     options[SpotifyService.LIMIT] = AppConstants.PLAYLIST_TRACK_LIMIT
 
-                    spotifyService.getPlaylistTracks(playlistOwnerUserId, playlist.id, options, playlistTrackCallback)
+                    spotifyApi.service.getPlaylistTracks(playlistOwnerUserId, playlist.id, options, playlistTrackCallback)
                 } else {
                     Log.d(TAG, "Finished retrieving playlist tracks")
                     playlistRefreshComplete()
