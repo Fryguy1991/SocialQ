@@ -147,7 +147,7 @@ class LaunchFragment : BaseLaunchFragment(), IQueueSelectionListener {
         if (alertContext != null) {
             alertbuilder = AlertDialog.Builder(alertContext)
                     .setView(R.layout.dialog_premium_required)
-                    .setPositiveButton(R.string.confirm) { dialog, which ->
+                    .setPositiveButton(R.string.ok) { dialog, which ->
                         dialog.dismiss()
                     }
         }

@@ -3,15 +3,37 @@ package com.chrisfry.socialq.userinterface.fragments
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Build
+import android.os.Bundle
 import android.os.Process
 import android.util.Log
 import androidx.fragment.app.Fragment
 import com.chrisfry.socialq.enums.RequestType
+import com.chrisfry.socialq.model.AccessModel
+import com.chrisfry.socialq.userinterface.App
+import kaaes.spotify.webapi.android.SpotifyApi
+import kaaes.spotify.webapi.android.SpotifyCallback
+import kaaes.spotify.webapi.android.SpotifyError
+import kaaes.spotify.webapi.android.models.UserPrivate
+import retrofit.client.Response
+import javax.inject.Inject
 
 abstract class BaseLaunchFragment : Fragment() {
 companion object {
     val TAG = BaseLaunchFragment::class.java.name
 }
+
+    @Inject
+    protected lateinit var spotifyApi: SpotifyApi
+    protected var currentUser: UserPrivate? = null
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        val parentActivity = activity
+        if (parentActivity != null) {
+            (parentActivity.application as App).spotifyComponent.inject(this)
+        }
+    }
 
     /**
      * Determines if ACCESS_COARSE_LOCATION permission has been granted and requests it if needed
@@ -66,7 +88,38 @@ companion object {
         }
     }
 
+    protected fun requestSpotifyUser() {
+        if (AccessModel.getCurrentUser() == null) {
+            spotifyApi.service.getMe(currentUserCallback)
+        } else {
+            currentUser = AccessModel.getCurrentUser()
+            userRetrieved()
+        }
+    }
+
+    private val currentUserCallback = object : SpotifyCallback<UserPrivate>() {
+        override fun success(user: UserPrivate?, response: Response?) {
+            if (user != null) {
+                Log.d(TAG, "Successfully retrieved current user")
+
+                AccessModel.setCurrentUser(user)
+                currentUser = user
+                userRetrieved()
+            } else {
+                Log.e(TAG, "Error user was null")
+            }
+        }
+
+        override fun failure(spotifyError: SpotifyError?) {
+            Log.e(TAG, "Error retrieving current user")
+            Log.e(TAG, spotifyError?.errorDetails?.message.toString())
+            // TODO: Think about what we should do if we can't retrieve the user
+        }
+    }
+
     abstract fun locationPermissionReceived()
 
     abstract fun locationPermissionRejected()
+
+    abstract fun userRetrieved()
 }
