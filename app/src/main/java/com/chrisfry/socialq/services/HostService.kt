@@ -162,6 +162,7 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
                         queueTitle = intent.getStringExtra(AppConstants.QUEUE_TITLE_KEY)
                     }
                     isQueueFairPlay = intent.getBooleanExtra(AppConstants.FAIR_PLAY_KEY, resources.getBoolean(R.bool.fair_play_default))
+                    basePlaylistId = intent.getStringExtra(AppConstants.BASE_PLAYLIST_ID_KEY)
 
                     notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
@@ -529,22 +530,10 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
             hostUser = spotifyService.me
             playlistOwnerUserId = hostUser.id
             initPlayer(AccessModel.getAccessToken())
-            checkIfUserHasPlaylists()
+            createPlaylistForQueue()
         } else {
             Log.d(TAG, "Updating player's access token")
             spotifyPlayer.login(accessToken)
-        }
-    }
-
-
-    private fun checkIfUserHasPlaylists() {
-        Log.d(TAG, "Pulling playlist data for ${hostUser.display_name}")
-
-        val options = HashMap<String, Any>()
-        options[SpotifyService.LIMIT] = AppConstants.PLAYLIST_LIMIT
-
-        if (playlistOwnerUserId != null) {
-            spotifyService.getPlaylists(playlistOwnerUserId, options, userPlaylistsCallback)
         }
     }
 
@@ -874,8 +863,6 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
         fun onQueuePlay()
 
         fun onQueueUpdated(songRequests: List<ClientRequestData>)
-
-        fun showBasePlaylistDialog(playlists: List<PlaylistSimple>)
 
         fun showLoadingScreen()
 
@@ -1213,16 +1200,6 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
         return displayList
     }
 
-    /**
-     * Item selection method for playlist ID in base playlist dialog
-     *
-     * @param selectedItem - ID of the playlist that was selected
-     */
-    fun basePlaylistSelected(playlistId: String) {
-        basePlaylistId = playlistId
-        createPlaylistForQueue()
-    }
-
     fun savePlaylistAs(playlistName: String) {
         // Create body parameters for modifying playlist details
         val saveName = if (playlistName.isEmpty()) getString(R.string.default_playlist_name) else playlistName
@@ -1231,10 +1208,6 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
 
         Log.d(TAG, "Saving playlist as: $saveName")
         spotifyService.changePlaylistDetails(playlistOwnerUserId, playlist.id, playlistParameters, playlistCloseCallback)
-    }
-
-    fun noBasePlaylistSelected() {
-        createPlaylistForQueue()
     }
 
     fun hostRequestSong(uri: String) {
@@ -1318,50 +1291,6 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
             Log.e(TAG, "Failed to create playlist. Try again")
             createPlaylistForQueue()
             // TODO: Should stop trying after so many failures
-        }
-    }
-
-    // Callback for retrieving host user's playlists
-    private val userPlaylistsCallback = object : SpotifyCallback<Pager<PlaylistSimple>>() {
-        override fun success(playlistsPager: Pager<PlaylistSimple>?, response: Response?) {
-            if (playlistsPager != null) {
-                if (playlistsPager.total == 0) {
-                    Log.d(TAG, "User has no playlists to show")
-                    createPlaylistForQueue()
-                    return
-                }
-
-                if (playlistsPager.offset == 0) {
-                    // Fresh retrieval
-                    currentUserPlaylists.clear()
-                }
-
-                // If playlists don't have tracks don't show them
-                for (playlist in playlistsPager.items) {
-                    if (playlist.tracks.total > 0) {
-                        currentUserPlaylists.add(playlist)
-                    }
-                }
-
-                val nextPlaylistIndex = playlistsPager.items.size + playlistsPager.offset
-                // Check if there are more than 50 playlists by the user. If so we should get the next 50
-                if (nextPlaylistIndex < playlistsPager.total) {
-                    val options = HashMap<String, Any>()
-                    options[SpotifyService.LIMIT] = AppConstants.PLAYLIST_LIMIT
-                    options[SpotifyService.OFFSET] = nextPlaylistIndex
-
-                    spotifyService.getPlaylists(playlistOwnerUserId, options, this)
-                } else {
-                    if (listener != null) {
-                        listener?.showBasePlaylistDialog(currentUserPlaylists)
-                    }
-                }
-            }
-        }
-
-        override fun failure(spotifyError: SpotifyError?) {
-            Log.e(TAG, spotifyError?.errorDetails?.message.toString())
-            Log.e(TAG, "Failed to retrieve user playlists")
         }
     }
 

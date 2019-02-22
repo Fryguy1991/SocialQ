@@ -7,7 +7,6 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.view.inputmethod.EditorInfo
 import android.widget.CheckBox
 import android.widget.EditText
 import androidx.appcompat.app.AlertDialog
@@ -19,6 +18,7 @@ import com.chrisfry.socialq.business.AppConstants
 import com.chrisfry.socialq.userinterface.adapters.IItemSelectionListener
 import com.chrisfry.socialq.userinterface.adapters.SelectableBasePlaylistAdapter
 import com.chrisfry.socialq.userinterface.views.QueueItemDecoration
+import com.chrisfry.socialq.utils.DisplayUtils
 import kaaes.spotify.webapi.android.SpotifyCallback
 import kaaes.spotify.webapi.android.SpotifyError
 import kaaes.spotify.webapi.android.SpotifyService
@@ -92,21 +92,6 @@ class NewQueueFragment : BaseLaunchFragment(), IItemSelectionListener<String> {
                     }
         }
 
-        // When done button is pressed on soft keyboard start the queue
-        queueTitleEditText.setOnEditorActionListener { v, actionId, event ->
-            when(actionId) {
-                EditorInfo.IME_ACTION_DONE -> {
-                    if (hasLocationPermission()) {
-                        startSocialQ()
-                    }
-                    true
-                }
-                else -> {
-                    false
-                }
-            }
-        }
-
         startQueueButton.setOnClickListener {
             if (hasLocationPermission()) {
                 startSocialQ()
@@ -124,6 +109,7 @@ class NewQueueFragment : BaseLaunchFragment(), IItemSelectionListener<String> {
         basePlaylistCheckBox.setOnCheckedChangeListener { buttonView, isChecked ->
             if (isChecked) {
                 basePlaylistRecyclerView.visibility = View.VISIBLE
+                DisplayUtils.hideSoftKeyboard(activity)
             } else {
                 basePlaylistAdapter.clearSelection()
                 basePlaylistRecyclerView.scrollToPosition(0)
@@ -152,7 +138,7 @@ class NewQueueFragment : BaseLaunchFragment(), IItemSelectionListener<String> {
         val isFairPlay = fairplayCheckBox.isChecked
 
         // Navigate to the host activity
-        val hostDirections = NewQueueFragmentDirections.actionNewQueueFragmentToHostActivity(isFairPlay)
+        val hostDirections = NewQueueFragmentDirections.actionNewQueueFragmentToHostActivity(isFairPlay, basePlaylistId)
         hostDirections.queueTitle = title
         findNavController().navigate(hostDirections)
     }

@@ -29,10 +29,8 @@
         android:layout_marginStart="@dimen/dialog_side_margin"
         android:layout_marginTop="@dimen/standard_spacing"
         android:checked="@bool/fair_play_default"
-        android:focusable="false"
-        android:focusableInTouchMode="false"
         app:layout_constraintTop_toBottomOf="@id/et_queue_name"
-        android:text="@string/enable_fair_play"/>
+        android:text="@string/enable_fair_play" />
 
     <ImageView
         android:id="@+id/iv_fairplay_info"
@@ -52,8 +50,6 @@
         android:layout_marginStart="@dimen/dialog_side_margin"
         android:layout_marginTop="@dimen/standard_spacing"
         android:checked="@bool/load_base_playlist_by_default"
-        android:focusable="false"
-        android:focusableInTouchMode="false"
         app:layout_constraintTop_toBottomOf="@id/cb_fairplay_checkbox"
         android:text="@string/use_base_playlist"/>
 
@@ -76,7 +72,7 @@
         android:layout_marginEnd="@dimen/dialog_side_margin"
         android:layout_marginBottom="@dimen/default_margin"
         android:visibility="gone"
-        app:layout_constraintBottom_toTopOf="@id/btn_start_queue"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/cb_base_playlist_checkbox" />

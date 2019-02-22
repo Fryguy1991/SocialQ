@@ -33,6 +33,7 @@ public class AppConstants {
     public static final String SERVICE_PLAYLIST_ID_KEY = "playlist_key";
     public static final String QUEUE_TITLE_KEY = "queueTitle";
     public static final String FAIR_PLAY_KEY = "isFairplay";
+    public static final String BASE_PLAYLIST_ID_KEY = "basePlaylistId";
     public static final String IS_HOST_KEY = "is_socialq_host_key";
 
     // Message Prefix Strings

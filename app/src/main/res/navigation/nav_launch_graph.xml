@@ -58,6 +58,9 @@
         <argument
             android:name="isFairPlay"
             app:argType="boolean"/>
+        <argument
+            android:name="basePlaylistId"
+            app:argType="string"/>
     </activity>
     <activity
         android:id="@+id/clientActivity"
