@@ -17,7 +17,8 @@ class App : Application() {
         val CHANNEL_ID = "SocialQServiceChannel"
     }
 
-    lateinit var spotifyComponent: FrySpotifyComponent
+    @JvmField
+    var spotifyComponent: FrySpotifyComponent? = null
 
     override fun onCreate() {
         super.onCreate()
@@ -25,7 +26,6 @@ class App : Application() {
         createNotificationChannel()
 
         spotifyComponent = DaggerFrySpotifyComponent.builder().frySpotifyModule(FrySpotifyModule(this)).build()
-        spotifyComponent.inject(this)
     }
 
     private fun createNotificationChannel() {

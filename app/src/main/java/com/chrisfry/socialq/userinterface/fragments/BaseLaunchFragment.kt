@@ -31,7 +31,7 @@ companion object {
 
         val parentActivity = activity
         if (parentActivity != null) {
-            (parentActivity.application as App).spotifyComponent.inject(this)
+            (parentActivity.application as App).spotifyComponent?.inject(this)
         }
     }
 

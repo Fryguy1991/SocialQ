@@ -31,7 +31,6 @@ import com.chrisfry.socialq.business.AppConstants;
 import com.chrisfry.socialq.R;
 
 import androidx.appcompat.widget.Toolbar;
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -42,9 +41,10 @@ import kaaes.spotify.webapi.android.models.Album;
 import kaaes.spotify.webapi.android.models.Artist;
 import kaaes.spotify.webapi.android.models.Track;
 
+import com.chrisfry.socialq.business.dagger.modules.components.FrySpotifyComponent;
 import com.chrisfry.socialq.business.presenters.ISearchPresenter;
 import com.chrisfry.socialq.business.presenters.SearchPresenter;
-import com.chrisfry.socialq.model.AccessModel;
+import com.chrisfry.socialq.userinterface.App;
 import com.chrisfry.socialq.userinterface.adapters.ArtistCardAdapter;
 import com.chrisfry.socialq.userinterface.adapters.SearchAlbumTrackAdapter;
 import com.chrisfry.socialq.userinterface.adapters.SearchTrackAdapter;
@@ -69,7 +69,7 @@ public class SearchActivity extends BaseActivity implements ISearchView, ISpotif
     private final String TAG = SearchActivity.class.getName();
 
     // Reference to search presenter
-    private ISearchPresenter presenter = new SearchPresenter();
+    private ISearchPresenter presenter;
 
     // UI references
     private ScrollView mResultsScrollView;
@@ -152,24 +152,6 @@ public class SearchActivity extends BaseActivity implements ISearchView, ISpotif
         }
     };
 
-    // Receiver for registered broadcasts
-    private BroadcastReceiver mSearchBroadcastReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            // For now only action is access code update
-            if (intent != null && intent.getAction() != null) {
-                switch (intent.getAction()) {
-                    case AppConstants.BR_INTENT_ACCESS_TOKEN_UPDATED:
-                        Log.d(TAG, "Received broadcast that access token was updated, notifying presenter");
-                        presenter.receiveNewAccessToken(AccessModel.getAccessToken());
-                        break;
-                    default:
-                        Log.e(TAG, "Not expecting to receive " + intent.getAction());
-                }
-            }
-        }
-    };
-
     private void sendHandlerMessage(int msgWhat) {
         Message message = mHandler.obtainMessage();
         message.what = msgWhat;
@@ -180,6 +162,13 @@ public class SearchActivity extends BaseActivity implements ISearchView, ISpotif
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        FrySpotifyComponent component = ((App)getApplication()).spotifyComponent;
+
+        if (component != null) {
+            presenter = new SearchPresenter(component);
+        }
+
         setContentView(R.layout.search_base_layout);
         ButterKnife.bind(this);
 
@@ -197,15 +186,6 @@ public class SearchActivity extends BaseActivity implements ISearchView, ISpotif
         // Stop soft keyboard from pushing UI up
         getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING);
 
-        String accessToken = AccessModel.getAccessToken();
-        if (accessToken == null || SystemClock.elapsedRealtime() > AccessModel.getAccessExpireTime()) {
-            Log.d(TAG, "Invalid Access Token");
-            Toast.makeText(this, "Invalid Access Token", Toast.LENGTH_LONG).show();
-            finish();
-        } else {
-            presenter.receiveNewAccessToken(accessToken);
-        }
-
         // Show up nav icon
         if (getActionBar() != null) {
             getActionBar().setDisplayHomeAsUpEnabled(true);
@@ -215,17 +195,6 @@ public class SearchActivity extends BaseActivity implements ISearchView, ISpotif
         addListeners();
         initAdapters();
         presenter.attach(this);
-
-        // Register to receive notifications when access token has been updated
-        LocalBroadcastManager.getInstance(this).registerReceiver(mSearchBroadcastReceiver, new IntentFilter(AppConstants.BR_INTENT_ACCESS_TOKEN_UPDATED));
-    }
-
-    @Override
-    protected void onDestroy() {
-        // Unregister broadcast receiver
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(mSearchBroadcastReceiver);
-
-        super.onDestroy();
     }
 
     private void initUi() {
