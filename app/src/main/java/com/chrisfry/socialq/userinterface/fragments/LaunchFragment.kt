@@ -77,10 +77,9 @@ class LaunchFragment : BaseLaunchFragment(), IQueueSelectionListener {
                     AppConstants.BR_INTENT_ACCESS_TOKEN_UPDATED -> {
                         Log.d(TAG, "Received broadcast that access token was refreshed")
 
-                        val user = currentUser
-                        if (user == null) {
-                            requestSpotifyUser()
-                        }
+                        // Ensure if a new user has signed in we store them in the access model
+                        AccessModel.setCurrentUser(null)
+                        requestSpotifyUser()
                     }
                     else -> {
                         Log.e(TAG, "Not expecting to receive " + intent.action!!)

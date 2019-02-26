@@ -10,7 +10,7 @@ import android.os.StrictMode
 import android.os.SystemClock
 import android.util.Log
 import android.view.WindowManager
-import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.Toolbar
 import androidx.navigation.NavController
 import androidx.navigation.findNavController
@@ -43,6 +43,8 @@ class LaunchActivity : BaseActivity(), JoinQueueFragment.JoinQueueFragmentListen
     private var retryCount = 0
     // Scheduler for refreshing access token
     private lateinit var scheduler: JobScheduler
+    // Builder for dialogs
+    private lateinit var alertbuilder: AlertDialog.Builder
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -65,6 +67,18 @@ class LaunchActivity : BaseActivity(), JoinQueueFragment.JoinQueueFragmentListen
         StrictMode.setThreadPolicy(policy)
 
         scheduler = getSystemService(Context.JOB_SCHEDULER_SERVICE) as JobScheduler
+
+        alertbuilder = AlertDialog.Builder(this)
+                .setView(R.layout.dialog_auth_fail)
+                .setPositiveButton(R.string.retry) { dialog, which ->
+                    requestAuthorization()
+                }
+                .setNegativeButton(R.string.close_app) {dialog, which ->
+                    finish()
+                }
+                .setOnCancelListener {
+                    finish()
+                }
 
         requestAuthorization()
     }
@@ -131,15 +145,8 @@ class LaunchActivity : BaseActivity(), JoinQueueFragment.JoinQueueFragmentListen
                         Log.e(TAG, "Something went wrong. Not handling response type: ${response.type}")
                     }
                 }
-                if (retryCount < 3) {
-                    Log.e(TAG, "Trying again to get access token")
-                    retryCount++
-                    requestAuthorization()
-                } else {
-                    Log.e(TAG, "Reached maximum number of auth attempts")
-                    Toast.makeText(this, R.string.toast_authentication_error_client, Toast.LENGTH_LONG).show()
-                    finish()
-                }
+                // Show authorization failed dialog
+                alertbuilder.create().show()
             }
             RequestType.SEARCH_REQUEST,
             RequestType.LOCATION_PERMISSION_REQUEST -> {
