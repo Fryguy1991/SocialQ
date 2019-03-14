@@ -109,8 +109,6 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
     // Cached value for newly added track index
     private var newTrackIndex = -1
 
-    // List of user's playlist
-    private val currentUserPlaylists = mutableListOf<PlaylistSimple>()
     // Title of the SocialQ
     private lateinit var queueTitle: String
     // ID of the base playlist to load
@@ -165,7 +163,6 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
                 }
             }
         }
-
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
