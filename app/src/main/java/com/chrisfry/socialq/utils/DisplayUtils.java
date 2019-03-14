@@ -1,8 +1,10 @@
 package com.chrisfry.socialq.utils;
 
+import android.app.Activity;
 import android.content.Context;
 import android.util.TypedValue;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 
 import com.spotify.sdk.android.player.Metadata;
 
@@ -86,4 +88,14 @@ public class DisplayUtils {
             view.setVisibility(View.VISIBLE);
         }
     };
+
+    public static void hideSoftKeyboard(Activity activity) {
+        InputMethodManager inputMethodManager =
+                (InputMethodManager) activity.getSystemService(
+                        Activity.INPUT_METHOD_SERVICE);
+        if (activity.getCurrentFocus() != null) {
+            inputMethodManager.hideSoftInputFromWindow(
+                    activity.getCurrentFocus().getWindowToken(), 0);
+        }
+    }
 }

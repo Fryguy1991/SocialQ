@@ -18,14 +18,10 @@ import com.chrisfry.socialq.model.ClientRequestData
 import com.chrisfry.socialq.services.HostService
 import com.chrisfry.socialq.userinterface.App
 import com.chrisfry.socialq.userinterface.adapters.HostTrackListAdapter
-import com.chrisfry.socialq.userinterface.adapters.IItemSelectionListener
-import com.chrisfry.socialq.userinterface.adapters.SelectablePlaylistAdapter
 import com.chrisfry.socialq.userinterface.views.PlaybackControlView
 import com.chrisfry.socialq.userinterface.views.QueueItemDecoration
-import kaaes.spotify.webapi.android.models.PlaylistSimple
 
-open class HostActivity : ServiceActivity(), HostService.HostServiceListener,
-        IItemSelectionListener<String>, PlaybackControlView.IPlaybackControlListener {
+open class HostActivity : ServiceActivity(), HostService.HostServiceListener, PlaybackControlView.IPlaybackControlListener {
     private val TAG = HostActivity::class.java.name
 
     // UI ELEMENTS
@@ -41,8 +37,6 @@ open class HostActivity : ServiceActivity(), HostService.HostServiceListener,
     private var isQueueFairPlay = false
     // Flag to determine if the service is bound or not
     private var isServiceBound = false
-    // Reference to base playlist dialog
-    private var basePlaylistDialog: AlertDialog? = null
 
     // Object for connecting to/from play queue service
     private val hostServiceConnection = object : ServiceConnection {
@@ -155,6 +149,7 @@ open class HostActivity : ServiceActivity(), HostService.HostServiceListener,
         val startHostIntent = Intent(this, HostService::class.java)
         startHostIntent.putExtra(AppConstants.QUEUE_TITLE_KEY, intent.getStringExtra(AppConstants.QUEUE_TITLE_KEY))
         startHostIntent.putExtra(AppConstants.FAIR_PLAY_KEY, intent.getBooleanExtra(AppConstants.FAIR_PLAY_KEY, resources.getBoolean(R.bool.fair_play_default)))
+        startHostIntent.putExtra(AppConstants.BASE_PLAYLIST_ID_KEY, intent.getStringExtra(AppConstants.BASE_PLAYLIST_ID_KEY))
 
         // If we can't find a host service to bind to, start the host service then bind
         if (App.hasServiceBeenStarted) {
@@ -218,43 +213,6 @@ open class HostActivity : ServiceActivity(), HostService.HostServiceListener,
         }
 
         dialogBuilder.create().show()
-    }
-
-    override fun showBasePlaylistDialog(playlists: List<PlaylistSimple>) {
-        val dialogBuilder = AlertDialog.Builder(this)
-
-        // Inflate content view and get references to UI elements
-        val contentView = layoutInflater.inflate(R.layout.base_playlist_dialog, null)
-        val playlistList = contentView.findViewById<RecyclerView>(R.id.rv_playlist_list)
-
-        // Add recycler view item decoration
-        val layoutManager = LinearLayoutManager(this, RecyclerView.VERTICAL, false)
-        playlistList.layoutManager = layoutManager
-        playlistList.addItemDecoration(QueueItemDecoration(applicationContext))
-
-        // Setup list adapter
-        val playlistAdapter = SelectablePlaylistAdapter()
-        playlistAdapter.listener = this
-        playlistAdapter.updateAdapter(playlists)
-        playlistList.adapter = playlistAdapter
-
-        dialogBuilder.setView(contentView)
-
-        dialogBuilder.setNeutralButton(R.string.fresh_playlist) { dialog, which ->
-            dialog.dismiss()
-            Log.d(TAG, "User selected not to use a base playlist")
-
-            hostService.noBasePlaylistSelected()
-        }
-
-        dialogBuilder.setOnCancelListener {
-            Log.d(TAG, "User didn't complete base playlist dialog")
-
-            hostService.noBasePlaylistSelected()
-        }
-
-        basePlaylistDialog = dialogBuilder.create()
-        basePlaylistDialog!!.show()
     }
 
     override fun onDestroy() {
@@ -333,18 +291,6 @@ open class HostActivity : ServiceActivity(), HostService.HostServiceListener,
 
     override fun showClientDisconnected() {
         Toast.makeText(this, getString(R.string.client_disconnected), Toast.LENGTH_SHORT).show()
-    }
-
-    /**
-     * Item selection method for playlist ID in base playlist dialog
-     *
-     * @param selectedItem - ID of the playlist that was selected
-     */
-    override fun onItemSelected(selectedItem: String) {
-        if (basePlaylistDialog != null && basePlaylistDialog!!.isShowing) {
-            basePlaylistDialog!!.dismiss()
-            hostService.basePlaylistSelected(selectedItem)
-        }
     }
 
     override fun showLoadingScreen() {

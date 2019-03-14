@@ -5,7 +5,9 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:animateLayoutChanges="true"
-    android:background="?attr/colorAccent">
+    android:background="?attr/colorAccent"
+    android:paddingTop="@dimen/default_margin"
+    android:paddingBottom="@dimen/default_margin">
 
     <com.chrisfry.socialq.userinterface.views.SquareImageView
         android:id="@+id/cv_playback_control_album_image"
@@ -13,8 +15,6 @@
         android:layout_height="@dimen/artist_picture_size"
         android:layout_marginStart="@dimen/default_margin"
         android:layout_marginLeft="@dimen/default_margin"
-        android:layout_marginTop="@dimen/default_margin"
-        android:layout_marginBottom="@dimen/default_margin"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -24,9 +24,11 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="@dimen/default_margin"
-        android:layout_marginTop="@dimen/default_margin"
         android:layout_marginEnd="@dimen/default_margin"
+        android:ellipsize="end"
+        android:maxLines="1"
         android:text="Red Flag"
+        android:textColor="?attr/colorPrimary"
         android:textSize="@dimen/medium_text_2"
         android:textStyle="bold"
         app:layout_constraintBottom_toTopOf="@+id/tv_playback_control_artist_name"
@@ -34,10 +36,7 @@
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toEndOf="@id/cv_playback_control_album_image"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_chainStyle="packed"
-        android:textColor="?attr/colorPrimary"
-        android:maxLines="1"
-        android:ellipsize="end"/>
+        app:layout_constraintVertical_chainStyle="packed" />
 
     <TextView
         android:id="@+id/tv_playback_control_artist_name"
@@ -62,7 +61,6 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="@dimen/default_margin"
         android:layout_marginEnd="@dimen/default_margin"
-        android:layout_marginBottom="@dimen/default_margin"
         android:text="Chris Fry"
         android:textStyle="italic"
         android:visibility="visible"

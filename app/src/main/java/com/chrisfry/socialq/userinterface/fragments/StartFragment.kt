@@ -1,11 +1,8 @@
 package com.chrisfry.socialq.userinterface.fragments
 
-import android.Manifest
 import android.app.AlertDialog
-import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
-import android.os.Process
 import androidx.appcompat.widget.AppCompatCheckBox
 import android.text.Editable
 import android.text.TextWatcher
@@ -16,12 +13,9 @@ import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.Toast
 import androidx.core.os.bundleOf
-import androidx.navigation.NavController
-import androidx.navigation.Navigation
 import androidx.navigation.fragment.findNavController
 import com.chrisfry.socialq.R
 import com.chrisfry.socialq.business.AppConstants
-import com.chrisfry.socialq.enums.RequestType
 import com.chrisfry.socialq.enums.UserType
 import com.chrisfry.socialq.userinterface.activities.BaseSpotifyActivity
 

@@ -2,6 +2,7 @@ package com.chrisfry.socialq.business.presenters
 
 import android.util.Log
 import com.chrisfry.socialq.business.AppConstants
+import com.chrisfry.socialq.business.dagger.modules.components.FrySpotifyComponent
 import com.chrisfry.socialq.enums.SearchNavStep.*
 import com.chrisfry.socialq.userinterface.interfaces.ISearchView
 import kaaes.spotify.webapi.android.SpotifyCallback
@@ -12,7 +13,7 @@ import retrofit.client.Response
 import java.util.*
 import java.util.regex.Pattern
 
-class SearchPresenter : SpotifyAccessPresenter(), ISearchPresenter {
+class SearchPresenter(spotifyComponent: FrySpotifyComponent) : SpotifyAccessPresenter(spotifyComponent), ISearchPresenter {
     companion object {
         val TAG = SearchPresenter::class.java.name
     }
@@ -80,9 +81,9 @@ class SearchPresenter : SpotifyAccessPresenter(), ISearchPresenter {
             clearSearchResults()
             getView()?.showEmptyBaseView()
         } else {
-            spotifyService.searchAlbums(searchTerm, options, albumsCallback)
-            spotifyService.searchTracks(searchTerm, options, songsCallback)
-            spotifyService.searchArtists(searchTerm, options, artistsCallback)
+            spotifyApi.service.searchAlbums(searchTerm, options, albumsCallback)
+            spotifyApi.service.searchTracks(searchTerm, options, songsCallback)
+            spotifyApi.service.searchArtists(searchTerm, options, artistsCallback)
         }
     }
 
@@ -273,7 +274,7 @@ class SearchPresenter : SpotifyAccessPresenter(), ISearchPresenter {
                             i++
                         }
 
-                        spotifyService.getAlbums(albumSearchString, fullAlbumsCallback)
+                        spotifyApi.service.getAlbums(albumSearchString, fullAlbumsCallback)
 
                     } else {
                         baseAlbumResults.clear()
@@ -325,7 +326,7 @@ class SearchPresenter : SpotifyAccessPresenter(), ISearchPresenter {
                 if (albumsPager.total > artistAlbums.size) {
                     Log.d(TAG, "Retrieving more albums by ${selectedArtist!!.name}")
                     options[SpotifyService.OFFSET] = albumsPager.offset + albumsPager.items.size
-                    spotifyService.getArtistAlbums(selectedArtist!!.id, options, this)
+                    spotifyApi.service.getArtistAlbums(selectedArtist!!.id, options, this)
                 } else {
                     Log.d(TAG, "Finished retrieving ${selectedArtist!!.name} albums")
 
@@ -403,7 +404,7 @@ class SearchPresenter : SpotifyAccessPresenter(), ISearchPresenter {
 
             // If we're loaded up with 20 albums or at end of list send full album call
             if (i % 20 == 0 || i >= albums.size) {
-                spotifyService.getAlbums(albumSearchString, artistFullAlbumCallback)
+                spotifyApi.service.getAlbums(albumSearchString, artistFullAlbumCallback)
                 albumSearchString = ""
             }
         }
@@ -479,8 +480,8 @@ class SearchPresenter : SpotifyAccessPresenter(), ISearchPresenter {
                         artistFullAlbumRetrievalComplete = false
                         selectedArtist = artist
                         options["include_groups"] = "album,single"
-                        spotifyService.getArtistAlbums(artist.id, options, artistAlbumCallback)
-                        spotifyService.getArtistTopTrack(artist.id, Locale.getDefault().country, artistTopTracksCallback)
+                        spotifyApi.service.getArtistAlbums(artist.id, options, artistAlbumCallback)
+                        spotifyApi.service.getArtistTopTrack(artist.id, Locale.getDefault().country, artistTopTracksCallback)
                         return
                     }
                 }
@@ -498,8 +499,8 @@ class SearchPresenter : SpotifyAccessPresenter(), ISearchPresenter {
                     // Retrieve artist's albums and top tracks (callbacks responsible for notifying view)
                     artistTopTrackRetrievalComplete = false
                     artistFullAlbumRetrievalComplete = false
-                    spotifyService.getArtistAlbums(baseArtistResults[position].id, options, artistAlbumCallback)
-                    spotifyService.getArtistTopTrack(baseArtistResults[position].id, Locale.getDefault().country, artistTopTracksCallback)
+                    spotifyApi.service.getArtistAlbums(baseArtistResults[position].id, options, artistAlbumCallback)
+                    spotifyApi.service.getArtistTopTrack(baseArtistResults[position].id, Locale.getDefault().country, artistTopTracksCallback)
                 } else {
                     Log.e(TAG, "Invalid artist index")
                 }

@@ -1,5 +1,7 @@
 package com.chrisfry.socialq.model;
 
+import kaaes.spotify.webapi.android.models.UserPrivate;
+
 /**
  * Model for access information
  */
@@ -12,6 +14,8 @@ public class AccessModel {
     private static String mAccessToken = null;
     // Time when this access token expires
     private static long mAccessExpireTime = -1;
+    // Spotify user object of who has access
+    private static UserPrivate mCurrentUser = null;
 
     public static void setAccess(String token, long expireTime) {
         if (token == null || token.isEmpty()) {
@@ -52,4 +56,11 @@ public class AccessModel {
         return mRefreshToken;
     }
 
+    public static void setCurrentUser(UserPrivate user) {
+        mCurrentUser = user;
+    }
+
+    public static UserPrivate getCurrentUser() {
+        return mCurrentUser;
+    }
 }

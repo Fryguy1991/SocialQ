@@ -1,6 +1,6 @@
 package com.chrisfry.socialq.business.presenters
 
-interface ISearchPresenter : ISpotifyAccessPresenter {
+interface ISearchPresenter : IBasePresenter {
     fun searchByText(searchTerm: String)
 
     fun backOrUpNavigation()
