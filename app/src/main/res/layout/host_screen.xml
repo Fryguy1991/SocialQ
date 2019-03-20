@@ -17,7 +17,7 @@
         android:elevation="4dp"
         android:theme="@style/ToolBarStyle"/>
 
-    <com.chrisfry.socialq.userinterface.views.PlaybackControlView
+    <com.chrisf.socialq.userinterface.views.PlaybackControlView
         android:id="@+id/cv_playback_control_view"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

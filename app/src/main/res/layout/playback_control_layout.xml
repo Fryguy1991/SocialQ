@@ -9,7 +9,7 @@
     android:paddingTop="@dimen/default_margin"
     android:paddingBottom="@dimen/default_margin">
 
-    <com.chrisfry.socialq.userinterface.views.SquareImageView
+    <com.chrisf.socialq.userinterface.views.SquareImageView
         android:id="@+id/cv_playback_control_album_image"
         android:layout_width="@dimen/artist_picture_size"
         android:layout_height="@dimen/artist_picture_size"

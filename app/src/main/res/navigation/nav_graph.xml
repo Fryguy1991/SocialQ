@@ -7,7 +7,7 @@
 
     <fragment
         android:id="@+id/start_fragment"
-        android:name="com.chrisfry.socialq.userinterface.fragments.StartFragment"
+        android:name="com.chrisf.socialq.userinterface.fragments.StartFragment"
         android:label="SocialQ"
         tools:layout="@layout/start_screen">
         <action
@@ -16,7 +16,7 @@
     </fragment>
     <fragment
         android:id="@+id/host_fragment_nearby"
-        android:name="com.chrisfry.socialq.userinterface.fragments.HostFragmentNearby"
+        android:name="com.chrisf.socialq.userinterface.fragments.HostFragmentNearby"
         android:label="HostFragmentNearby"
         tools:layout="@layout/host_screen">
         <argument

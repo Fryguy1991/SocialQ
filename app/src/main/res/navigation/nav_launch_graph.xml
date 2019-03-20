@@ -6,7 +6,7 @@
     xmlns:tools="http://schemas.android.com/tools">
     <fragment
         android:id="@+id/launchFragment"
-        android:name="com.chrisfry.socialq.userinterface.fragments.LaunchFragment"
+        android:name="com.chrisf.socialq.userinterface.fragments.LaunchFragment"
         android:label="@string/available_queues"
         tools:layout="@layout/fragment_launch">
         <action
@@ -26,15 +26,15 @@
     </fragment>
     <fragment
         android:id="@+id/joinQueueFragment"
-        android:name="com.chrisfry.socialq.userinterface.fragments.JoinQueueFragment"
+        android:name="com.chrisf.socialq.userinterface.fragments.JoinQueueFragment"
         tools:layout="@layout/fragment_join_queue">
         <argument
             android:name="queueInfo"
-            app:argType="com.chrisfry.socialq.model.JoinableQueueModel" />
+            app:argType="com.chrisf.socialq.model.JoinableQueueModel" />
     </fragment>
     <fragment
         android:id="@+id/newQueueFragment"
-        android:name="com.chrisfry.socialq.userinterface.fragments.NewQueueFragment"
+        android:name="com.chrisf.socialq.userinterface.fragments.NewQueueFragment"
         android:label="@string/new_queue"
         tools:layout="@layout/fragment_new_queue" >
         <action
@@ -48,7 +48,7 @@
     </fragment>
     <activity
         android:id="@+id/hostActivity"
-        android:name="com.chrisfry.socialq.userinterface.activities.HostActivity"
+        android:name="com.chrisf.socialq.userinterface.activities.HostActivity"
         android:label="HostActivity"
         tools:layout="@layout/host_screen">
         <argument
@@ -64,7 +64,7 @@
     </activity>
     <activity
         android:id="@+id/clientActivity"
-        android:name="com.chrisfry.socialq.userinterface.activities.ClientActivity"
+        android:name="com.chrisf.socialq.userinterface.activities.ClientActivity"
         android:label="ClientActivity"
         tools:layout="@layout/client_screen">
         <argument
