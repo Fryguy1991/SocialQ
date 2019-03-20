@@ -53,6 +53,7 @@
     <string name="follow_playlist_question">Would you like to follow the playlist on Spotify?</string>
 
     <!-- Search Screen Strings -->
+    <string name="search_hint">Search for songs, artists or albums.</string>
     <string name="search_activity_name">Search</string>
     <string name="artists">Artists</string>
     <string name="songs">Songs</string>
