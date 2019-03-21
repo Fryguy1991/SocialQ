@@ -53,6 +53,7 @@
     <string name="follow_playlist_question">Would you like to follow the playlist on Spotify?</string>
 
     <!-- Search Screen Strings -->
+    <string name="search_hint">Search for songs, artists or albums.</string>
     <string name="search_activity_name">Search</string>
     <string name="artists">Artists</string>
     <string name="songs">Songs</string>
@@ -75,6 +76,7 @@
     <string name="join_queue">Join Queue</string>
     <string name="available_queues">Available Queues</string>
     <string name="new_queue">New Queue</string>
+    <string name="no_host_found_message">Not finding any available queues.\nPress \'+\' to create your own!</string>
 
     <!-- Join Queue Fragment -->
     <string name="queue_details">Queue Details</string>

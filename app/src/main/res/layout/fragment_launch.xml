@@ -2,7 +2,8 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:animateLayoutChanges="true">
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rv_available_queue_list"
@@ -17,6 +18,21 @@
         android:layout_marginTop="@dimen/default_margin"
         android:layout_marginBottom="@dimen/default_margin"/>
 
+    <TextView
+        android:id="@+id/tv_no_host_found"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="@string/no_host_found_message"
+        android:layout_marginStart="@dimen/default_margin_x2"
+        android:layout_marginEnd="@dimen/default_margin_x2"
+        android:layout_marginTop="@dimen/default_margin"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:textSize="@dimen/medium_text"
+        android:visibility="gone"
+        android:gravity="center_horizontal" />
+
     <Button
         android:id="@+id/btn_new_queue"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -26,4 +42,16 @@
         android:background="@drawable/add_button"
         style="@style/RoundButtonStyle"
         android:enabled="false"/>
+
+    <com.github.ybq.android.spinkit.SpinKitView
+        android:id="@+id/cv_spinkit_animation"
+        android:layout_width="@dimen/launch_search_animation_size"
+        android:layout_height="@dimen/launch_search_animation_size"
+        style="@style/SpinKitView.Small.DoubleBounce"
+        app:SpinKit_Color="?attr/colorAccent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:visibility="gone"/>
 </androidx.constraintlayout.widget.ConstraintLayout>

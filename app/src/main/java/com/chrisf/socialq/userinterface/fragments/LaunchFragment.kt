@@ -1,7 +1,7 @@
 package com.chrisf.socialq.userinterface.fragments
 
 import android.content.*
-import android.os.Bundle
+import android.os.*
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -46,6 +46,11 @@ class LaunchFragment : BaseLaunchFragment(), IQueueSelectionListener {
          */
         @JvmStatic
         fun newInstance() = LaunchFragment().apply {}
+
+        // Message what value for displaying no host found
+        private const val HOST_INSTRUCTION_MESSAGE_WHAT = 0
+        // Wait time before displaying instruction to start own queue (in milliseconds)
+        private const val NEARBY_WAIT_TIME = 5000L
     }
 
     // NEARBY VALUES
@@ -62,6 +67,10 @@ class LaunchFragment : BaseLaunchFragment(), IQueueSelectionListener {
     private lateinit var recyclerView: RecyclerView
     // Builder for premium required dialog
     private lateinit var alertbuilder: AlertDialog.Builder
+    // Text display for no host found
+    private lateinit var noHostMessage: View
+    // Animation view for host discovery
+    private lateinit var animatedDiscoveryView: View
 
     // Used as a flag to determine if we need to launch a host or client after a permission request
     private var userType = UserType.NONE
@@ -83,6 +92,24 @@ class LaunchFragment : BaseLaunchFragment(), IQueueSelectionListener {
                     }
                     else -> {
                         Log.e(TAG, "Not expecting to receive " + intent.action!!)
+                    }
+                }
+            }
+        }
+    }
+
+    private val handler = object : Handler(Looper.getMainLooper()) {
+        override fun handleMessage(msg: Message?) {
+            if (msg != null) {
+                when (msg.what) {
+                    HOST_INSTRUCTION_MESSAGE_WHAT -> {
+                        if (joinableQueues.size == 0) {
+                            recyclerView.visibility = View.GONE
+                            noHostMessage.visibility = View.VISIBLE
+                        }
+                    }
+                    else -> {
+                        Log.e(TAG, "Handler shouldn't receive message ${msg.what}")
                     }
                 }
             }
@@ -124,6 +151,8 @@ class LaunchFragment : BaseLaunchFragment(), IQueueSelectionListener {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         newQueueButton = view.findViewById(R.id.btn_new_queue)
         recyclerView = view.findViewById(R.id.rv_available_queue_list)
+        noHostMessage = view.findViewById(R.id.tv_no_host_found)
+        animatedDiscoveryView = view.findViewById(R.id.cv_spinkit_animation)
 
         newQueueButton.setOnClickListener {
             userType = UserType.HOST
@@ -184,6 +213,13 @@ class LaunchFragment : BaseLaunchFragment(), IQueueSelectionListener {
 
             Nearby.getConnectionsClient(context).stopDiscovery()
             nearbySuccessfullyDiscovering = false
+
+            // Clear messages to handler for displaying no host message
+            handler.removeMessages(HOST_INSTRUCTION_MESSAGE_WHAT)
+
+            noHostMessage.visibility = View.GONE
+            recyclerView.visibility = View.VISIBLE
+            animatedDiscoveryView.visibility = View.GONE
         }
 
         joinableQueues.clear()
@@ -219,6 +255,15 @@ class LaunchFragment : BaseLaunchFragment(), IQueueSelectionListener {
                         override fun onSuccess(p0: Void?) {
                             Log.d(TAG, "Successfully started discovering SocialQ Hosts")
                             nearbySuccessfullyDiscovering = true
+
+                            if (isResumed) {
+                                // Send delayed message to display no host message
+                                handler.sendEmptyMessageDelayed(HOST_INSTRUCTION_MESSAGE_WHAT, NEARBY_WAIT_TIME)
+                                animatedDiscoveryView.visibility = View.VISIBLE
+                            } else {
+                                // Fragment not resumed. onPause may have missed stopping nearby discovery
+                                stopNearbyDiscovery()
+                            }
                         }
 
                     })
@@ -252,6 +297,8 @@ class LaunchFragment : BaseLaunchFragment(), IQueueSelectionListener {
 
                     queueAdapter.updateAdapter(joinableQueues)
 
+                    noHostMessage.visibility = View.GONE
+                    recyclerView.visibility = View.VISIBLE
                 } else {
                     Log.e(TAG, "Endpoint ID $endpointId has an invalid name")
                 }
@@ -268,6 +315,11 @@ class LaunchFragment : BaseLaunchFragment(), IQueueSelectionListener {
                     joinableQueues.remove(queue)
                     queueAdapter.updateAdapter(joinableQueues)
                 }
+            }
+
+            if (joinableQueues.size == 0) {
+                // No longer have any joinable queues. Start wait time for no host message
+                handler.sendEmptyMessageDelayed(HOST_INSTRUCTION_MESSAGE_WHAT, NEARBY_WAIT_TIME)
             }
         }
     }
