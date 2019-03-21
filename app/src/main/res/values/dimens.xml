@@ -45,4 +45,6 @@
     <!-- Playback Control View Dimens -->
     <dimen name="playback_control_margin">50dp</dimen>
     <dimen name="playback_button_size">60dp</dimen>
+    
+    <dimen name="launch_search_animation_size">100dp</dimen>
 </resources>
