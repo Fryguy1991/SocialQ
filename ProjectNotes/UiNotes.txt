@@ -4,6 +4,6 @@ X When using linearlayout decorator (bar) match bar width
 X Move search (for client) down to action area
 X Figure out where to put host controls
 
-- If no hosts are found after a few seconds, display text (launch fragment) and instructions to act as host
-- Add hint to search edittext (Songs, Artists or Albums)
+X If no hosts are found after a few seconds, display text (launch fragment) and instructions to act as host
+X Add hint to search edittext (Songs, Artists or Albums)
 
