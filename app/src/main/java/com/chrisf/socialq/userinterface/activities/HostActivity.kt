@@ -31,6 +31,7 @@ open class HostActivity : ServiceActivity(), HostService.HostServiceListener, Pl
     // Track list elements
     private lateinit var queueList: RecyclerView
     private lateinit var trackDisplayAdapter: HostTrackListAdapter
+    private lateinit var emptyQueueMessage: View
 
     private lateinit var hostService: HostService
     // Boolean flag to store if queue should be "fair play"
@@ -111,6 +112,7 @@ open class HostActivity : ServiceActivity(), HostService.HostServiceListener, Pl
         queueList = findViewById(R.id.rv_queue_list_view)
         playbackControlView = findViewById(R.id.cv_playback_control_view)
         addButton = findViewById(R.id.btn_add_track)
+        emptyQueueMessage = findViewById(R.id.tv_empty_queue_text)
 
         addButton.setOnClickListener(this)
         playbackControlView.setListener(this)
@@ -266,16 +268,19 @@ open class HostActivity : ServiceActivity(), HostService.HostServiceListener, Pl
                 playbackControlView.shrinkLayout()
                 playbackControlView.visibility = View.GONE
                 trackDisplayAdapter.updateAdapter(mutableListOf())
+                emptyQueueMessage.visibility = View.VISIBLE
             }
             songRequests.size == 1 -> {
                 playbackControlView.visibility = View.VISIBLE
                 playbackControlView.displayRequest(songRequests[0])
                 trackDisplayAdapter.updateAdapter(mutableListOf())
+                emptyQueueMessage.visibility = View.GONE
             }
             songRequests.size > 1 -> {
                 playbackControlView.visibility = View.VISIBLE
                 playbackControlView.displayRequest(songRequests[0])
                 trackDisplayAdapter.updateAdapter(songRequests.subList(1, songRequests.size))
+                emptyQueueMessage.visibility = View.GONE
             }
         }
     }

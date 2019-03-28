@@ -33,6 +33,8 @@ open class ClientActivity : ServiceActivity(), ClientService.ClientServiceListen
     private lateinit var addButton: View
     // View for displaying currently playing track
     private lateinit var playbackControlView: PlaybackControlView
+    // View for displaying message that the queue is empty
+    private lateinit var emptyQueueMessage: View
 
     // Reference to host endpoint ID
     private var hostEnpointId = ""
@@ -115,6 +117,8 @@ open class ClientActivity : ServiceActivity(), ClientService.ClientServiceListen
         queueList = findViewById(R.id.rv_queue_list_view)
         addButton = findViewById(R.id.btn_add_track)
         playbackControlView = findViewById(R.id.cv_playback_control_view)
+        emptyQueueMessage = findViewById(R.id.tv_empty_queue_text)
+
         playbackControlView.hideControls()
         playbackControlView.hideUser()
 
@@ -239,16 +243,22 @@ open class ClientActivity : ServiceActivity(), ClientService.ClientServiceListen
                 playbackControlView.shrinkLayout()
                 playbackControlView.visibility = View.GONE
                 trackDisplayAdapter.updateAdapter(mutableListOf())
+
+                emptyQueueMessage.visibility = View.VISIBLE
             }
             queueTracks.size == 1 -> {
                 playbackControlView.visibility = View.VISIBLE
                 playbackControlView.displayTrack(queueTracks[0])
                 trackDisplayAdapter.updateAdapter(mutableListOf())
+
+                emptyQueueMessage.visibility = View.GONE
             }
             queueTracks.size > 1 -> {
                 playbackControlView.visibility = View.VISIBLE
                 playbackControlView.displayTrack(queueTracks[0])
                 trackDisplayAdapter.updateAdapter(queueTracks.subList(1, queueTracks.size))
+
+                emptyQueueMessage.visibility = View.GONE
             }
         }
     }
