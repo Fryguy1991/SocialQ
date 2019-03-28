@@ -32,7 +32,7 @@ class AccessService : JobService() {
             Log.d(TAG, "Request new access token")
             // TODO: Should be able to support requesting multiple AWS instances
             val client = OkHttpClient()
-            val request = Request.Builder().url(AppConstants.AWS_SERVER_URL + AccessModel.getRefreshToken()).build()
+            val request = Request.Builder().url(String.format(AppConstants.AUTH_REQ_URL_FORMAT, AccessModel.getRefreshToken())).build()
 
             val response = client.newCall(request).execute()
             val responseString = response.body()?.string()
