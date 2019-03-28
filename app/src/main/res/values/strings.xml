@@ -4,7 +4,7 @@
     <string name="play_queue_service_description">Service that uses SpotifyPlayer to play music and support the SocialQ application.</string>
     <string name="host_service_description">Service used to host a SocialQ</string>
     <string name="client_service_description">Service used as a client of a SocialQ</string>
-    <string name="access_service_description">Services used to keep SocialQ access tokens up to date</string>
+    <string name="access_service_description">Service used to keep SocialQ access token up to date</string>
 
     <!-- Notification Strings -->
     <string name="host_notification_content_text">Hosting \"%1$s\"</string>
@@ -35,6 +35,7 @@
     <string name="client_joined">A Client Has Joined</string>
     <string name="client_disconnected">A Client Has Disconnected</string>
     <string name="number_of_tracks">%1$s Tracks</string>
+    <string name="empty_queue_message">Queue is empty! Add tracks by pressing \'+\'</string>
 
     <!-- Close Host Dialog Strings -->
     <string name="close_host_dialog_title">Close Queue?</string>
@@ -45,6 +46,7 @@
     <string name="toast_authentication_error_client">Authentication Error</string>
     <string name="toast_host_disconnected">Queue Closed</string>
     <string name="toast_host_connection_error">Connection Error</string>
+    <string name="toast_failed_to_connect_to_host">Failed To Connect To Host</string>
 
     <!-- Close Client Dialog Strings -->
     <string name="close_client_dialog_title">Exit Queue?</string>
@@ -76,7 +78,9 @@
     <string name="join_queue">Join Queue</string>
     <string name="available_queues">Available Queues</string>
     <string name="new_queue">New Queue</string>
-    <string name="no_host_found_message">Not finding any available queues.\nPress \'+\' to create your own!</string>
+    <string name="no_host_found_message">No available queues were found. Pull down to retry, or start your own!</string>
+    <string name="host_search_failed_message">Queue search failed. Pull down to retry, or start your own!</string>
+    <string name="queue_searching_message">Searching for available queues.</string>
 
     <!-- Join Queue Fragment -->
     <string name="queue_details">Queue Details</string>
