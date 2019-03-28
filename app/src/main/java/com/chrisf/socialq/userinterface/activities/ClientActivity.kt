@@ -7,6 +7,7 @@ import android.os.StrictMode
 import android.util.Log
 import android.view.View
 import android.widget.CheckBox
+import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -291,5 +292,10 @@ open class ClientActivity : ServiceActivity(), ClientService.ClientServiceListen
         clientService.removeClientServiceListener()
         stopClientService()
         finish()
+    }
+
+    override fun failedToConnect() {
+        Toast.makeText(this, R.string.toast_failed_to_connect_to_host, Toast.LENGTH_LONG).show()
+        closeClient()
     }
 }
