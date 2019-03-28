@@ -11,14 +11,16 @@ public class AppConstants {
     public static final String UUID_STRING = "2c865811-87e4-498b-9a95-b961edf2440d";
     public static final UUID APPLICATION_UUID = UUID.fromString(UUID_STRING);
 
+    // AUTH Server Request Values
     public static final String AWS_SERVER_URL = "http://54.86.80.241/";
+    public static final String AUTH_REQ_URL_FORMAT = AWS_SERVER_URL + "app/socialq/code/%1$s";
 
     // Service Name
     public static final String SERVICE_NAME = "com.chrisf.socialq";
     // Client ID specific to this application
     public static final String CLIENT_ID = "0fab62a3895a4fa3aae14bc3e46bc59c";
     // Redirect URI
-    public static final String REDIRECT_URI = "fryredirect://callback";
+    public static final String REDIRECT_URI = "socialqredirect://callback";
 
     // Tags for media session
     public static final String HOST_MEDIA_SESSION_TAG = "socialq_host_media_session";

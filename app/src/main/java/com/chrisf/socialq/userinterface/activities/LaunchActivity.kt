@@ -164,7 +164,7 @@ class LaunchActivity : BaseActivity(), JoinQueueFragment.JoinQueueFragmentListen
         } else {
             Log.d(TAG, "Have authorization code. Request access/refresh tokens")
             val client = OkHttpClient()
-            val request = Request.Builder().url(AppConstants.AWS_SERVER_URL + AccessModel.getAuthorizationCode()).build()
+            val request = Request.Builder().url(String.format(AppConstants.AUTH_REQ_URL_FORMAT, AccessModel.getAuthorizationCode())).build()
 
             val response = client.newCall(request).execute()
             val responseString = response.body()?.string()
