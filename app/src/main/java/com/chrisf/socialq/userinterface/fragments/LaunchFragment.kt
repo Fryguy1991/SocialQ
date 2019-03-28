@@ -51,7 +51,7 @@ class LaunchFragment : BaseLaunchFragment(), IQueueSelectionListener, SwipeRefre
         @JvmStatic
         fun newInstance() = LaunchFragment().apply {}
 
-        // Message what value for displaying no host found
+        // Message what value for displaying host search complete
         private const val HOST_SEARCH_COMPLETE = 0
         // Wait time before displaying instruction to start own queue (in milliseconds)
         private const val NEARBY_WAIT_TIME = 5000L
