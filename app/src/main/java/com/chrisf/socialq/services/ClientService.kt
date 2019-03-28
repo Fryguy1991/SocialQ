@@ -443,7 +443,7 @@ class ClientService : SpotifyAccessService() {
                             hostDisconnect = true
                             listener?.showHostDisconnectDialog()
                         } else {
-                            stopSelf()
+                            listener?.failedToConnect()
                         }
                     }
                 })
@@ -545,5 +545,7 @@ class ClientService : SpotifyAccessService() {
         fun closeClient()
 
         fun initiateView(queueTitle: String, trackList: List<PlaylistTrack>)
+
+        fun failedToConnect()
     }
 }

@@ -17,6 +17,21 @@
         android:elevation="4dp"
         android:theme="@style/ToolBarStyle"/>
 
+    <TextView
+        android:id="@+id/tv_empty_queue_text"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@id/app_toolbar"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="200dp"
+        android:layout_marginStart="@dimen/default_margin"
+        android:layout_marginEnd="@dimen/default_margin"
+        android:text="@string/empty_queue_message"
+        android:textSize="@dimen/medium_text"
+        android:gravity="center_horizontal"
+        android:visibility="visible"/>
+
     <com.chrisf.socialq.userinterface.views.PlaybackControlView
         android:id="@+id/cv_playback_control_view"
         android:layout_width="match_parent"

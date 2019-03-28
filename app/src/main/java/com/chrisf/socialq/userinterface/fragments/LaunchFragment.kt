@@ -6,11 +6,14 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.chrisf.socialq.R
 import com.chrisf.socialq.business.AppConstants
 import com.chrisf.socialq.enums.SpotifyUserType
@@ -20,6 +23,7 @@ import com.chrisf.socialq.model.JoinableQueueModel
 import com.chrisf.socialq.userinterface.adapters.QueueDisplayAdapter
 import com.chrisf.socialq.userinterface.interfaces.IQueueSelectionListener
 import com.chrisf.socialq.userinterface.views.QueueItemDecoration
+import com.chrisf.socialq.utils.DisplayUtils
 import com.google.android.gms.nearby.Nearby
 import com.google.android.gms.nearby.connection.DiscoveredEndpointInfo
 import com.google.android.gms.nearby.connection.DiscoveryOptions
@@ -35,7 +39,7 @@ import java.util.regex.Pattern
  * Landing fragment for the application. Responsible for finishing authorization and displaying any
  * SocialQ's that can be joined.
  */
-class LaunchFragment : BaseLaunchFragment(), IQueueSelectionListener {
+class LaunchFragment : BaseLaunchFragment(), IQueueSelectionListener, SwipeRefreshLayout.OnRefreshListener {
     companion object {
         val TAG = LaunchFragment::class.java.name
         /**
@@ -47,8 +51,8 @@ class LaunchFragment : BaseLaunchFragment(), IQueueSelectionListener {
         @JvmStatic
         fun newInstance() = LaunchFragment().apply {}
 
-        // Message what value for displaying no host found
-        private const val HOST_INSTRUCTION_MESSAGE_WHAT = 0
+        // Message what value for displaying host search complete
+        private const val HOST_SEARCH_COMPLETE = 0
         // Wait time before displaying instruction to start own queue (in milliseconds)
         private const val NEARBY_WAIT_TIME = 5000L
     }
@@ -68,9 +72,9 @@ class LaunchFragment : BaseLaunchFragment(), IQueueSelectionListener {
     // Builder for premium required dialog
     private lateinit var alertbuilder: AlertDialog.Builder
     // Text display for no host found
-    private lateinit var noHostMessage: View
-    // Animation view for host discovery
-    private lateinit var animatedDiscoveryView: View
+    private lateinit var hostSearchMessage: TextView
+    // Layout for handling swipe refresh
+    private lateinit var swipeRefreshLayout: SwipeRefreshLayout
 
     // Used as a flag to determine if we need to launch a host or client after a permission request
     private var userType = UserType.NONE
@@ -102,11 +106,24 @@ class LaunchFragment : BaseLaunchFragment(), IQueueSelectionListener {
         override fun handleMessage(msg: Message?) {
             if (msg != null) {
                 when (msg.what) {
-                    HOST_INSTRUCTION_MESSAGE_WHAT -> {
-                        if (joinableQueues.size == 0) {
-                            recyclerView.visibility = View.GONE
-                            noHostMessage.visibility = View.VISIBLE
+                    HOST_SEARCH_COMPLETE -> {
+                        if (joinableQueues.size > 0) {
+                            // Hide host search message
+                            hostSearchMessage.visibility = View.GONE
+                        } else {
+                            // Show message indicating no hosts were found
+                            hostSearchMessage.text = getString(R.string.no_host_found_message)
+                            val layoutParams = hostSearchMessage.layoutParams as ConstraintLayout.LayoutParams
+                            layoutParams.topMargin = DisplayUtils.convertDpToPixels(context, 140)
+                            hostSearchMessage.visibility = View.VISIBLE
                         }
+
+                        // Update adapter with retrieved list of hosts
+                        queueAdapter.updateAdapter(joinableQueues)
+                        // Hide refresh animation
+                        swipeRefreshLayout.isRefreshing = false
+                        // Stop searching for hosts
+                        stopNearbyDiscovery()
                     }
                     else -> {
                         Log.e(TAG, "Handler shouldn't receive message ${msg.what}")
@@ -139,6 +156,10 @@ class LaunchFragment : BaseLaunchFragment(), IQueueSelectionListener {
         super.onResume()
 
         if (hasLocationPermission()) {
+            // Display that we are searching for queues
+            hostSearchMessage.text = getString(R.string.queue_searching_message)
+            hostSearchMessage.visibility = View.VISIBLE
+            swipeRefreshLayout.isRefreshing = true
             searchForQueues()
         }
 
@@ -151,8 +172,12 @@ class LaunchFragment : BaseLaunchFragment(), IQueueSelectionListener {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         newQueueButton = view.findViewById(R.id.btn_new_queue)
         recyclerView = view.findViewById(R.id.rv_available_queue_list)
-        noHostMessage = view.findViewById(R.id.tv_no_host_found)
-        animatedDiscoveryView = view.findViewById(R.id.cv_spinkit_animation)
+        hostSearchMessage = view.findViewById(R.id.tv_swipe_refresh_text)
+        swipeRefreshLayout = view.findViewById(R.id.srl_host_refresh_layout)
+
+        // TODO: Should map this to colorAccent so any color refactors are applied
+        swipeRefreshLayout.setColorSchemeResources(R.color.BurntOrangeLight2)
+        swipeRefreshLayout.setOnRefreshListener(this)
 
         newQueueButton.setOnClickListener {
             userType = UserType.HOST
@@ -194,6 +219,16 @@ class LaunchFragment : BaseLaunchFragment(), IQueueSelectionListener {
 
     override fun onPause() {
         stopNearbyDiscovery()
+
+        // Clear host search complete messages to handler
+        handler.removeMessages(HOST_SEARCH_COMPLETE)
+        // Clear host list
+        joinableQueues.clear()
+        queueAdapter.updateAdapter(joinableQueues)
+        // Hide searching text
+        hostSearchMessage.visibility = View.GONE
+        swipeRefreshLayout.isRefreshing = false
+
         super.onPause()
     }
 
@@ -205,6 +240,26 @@ class LaunchFragment : BaseLaunchFragment(), IQueueSelectionListener {
         super.onDestroy()
     }
 
+    override fun onRefresh() {
+        Log.d(TAG, "User has pulled down to refresh host list")
+
+        if (!nearbySuccessfullyDiscovering) {
+            hostSearchMessage.text = getString(R.string.queue_searching_message)
+            val layoutParams = hostSearchMessage.layoutParams as ConstraintLayout.LayoutParams
+            layoutParams.topMargin = DisplayUtils.convertDpToPixels(context, 75)
+
+            if (joinableQueues.size == 0) {
+                hostSearchMessage.visibility = View.VISIBLE
+            }
+            swipeRefreshLayout.isRefreshing = true
+
+            searchForQueues()
+        } else {
+            Log.e(TAG, "Flag indicates we are already discovering")
+        }
+    }
+
+
     private fun stopNearbyDiscovery() {
         // Stop discovering SocialQs
         val context = activity
@@ -213,16 +268,7 @@ class LaunchFragment : BaseLaunchFragment(), IQueueSelectionListener {
 
             Nearby.getConnectionsClient(context).stopDiscovery()
             nearbySuccessfullyDiscovering = false
-
-            // Clear messages to handler for displaying no host message
-            handler.removeMessages(HOST_INSTRUCTION_MESSAGE_WHAT)
-
-            noHostMessage.visibility = View.GONE
-            recyclerView.visibility = View.VISIBLE
-            animatedDiscoveryView.visibility = View.GONE
         }
-
-        joinableQueues.clear()
     }
 
     private fun showPremiumRequiredDialog() {
@@ -258,8 +304,7 @@ class LaunchFragment : BaseLaunchFragment(), IQueueSelectionListener {
 
                             if (isResumed) {
                                 // Send delayed message to display no host message
-                                handler.sendEmptyMessageDelayed(HOST_INSTRUCTION_MESSAGE_WHAT, NEARBY_WAIT_TIME)
-                                animatedDiscoveryView.visibility = View.VISIBLE
+                                handler.sendEmptyMessageDelayed(HOST_SEARCH_COMPLETE, NEARBY_WAIT_TIME)
                             } else {
                                 // Fragment not resumed. onPause may have missed stopping nearby discovery
                                 stopNearbyDiscovery()
@@ -273,6 +318,15 @@ class LaunchFragment : BaseLaunchFragment(), IQueueSelectionListener {
                             Log.e(TAG, p0.message)
 
                             nearbySuccessfullyDiscovering = false
+
+                            swipeRefreshLayout.isRefreshing = false
+
+                            hostSearchMessage.text = getString(R.string.host_search_failed_message)
+                            val layoutParams = hostSearchMessage.layoutParams as ConstraintLayout.LayoutParams
+                            layoutParams.topMargin = DisplayUtils.convertDpToPixels(context, 140)
+                            hostSearchMessage.visibility = View.VISIBLE
+
+                            queueAdapter.updateAdapter(joinableQueues)
                         }
                     })
         }
@@ -294,11 +348,6 @@ class LaunchFragment : BaseLaunchFragment(), IQueueSelectionListener {
 
                     val isFairplay = isFairplayCharacter == AppConstants.FAIR_PLAY_TRUE_CHARACTER
                     joinableQueues.add(JoinableQueueModel(endpointId, queueName, ownerName, isFairplay))
-
-                    queueAdapter.updateAdapter(joinableQueues)
-
-                    noHostMessage.visibility = View.GONE
-                    recyclerView.visibility = View.VISIBLE
                 } else {
                     Log.e(TAG, "Endpoint ID $endpointId has an invalid name")
                 }
@@ -313,13 +362,7 @@ class LaunchFragment : BaseLaunchFragment(), IQueueSelectionListener {
                     Log.d(TAG, "Lost a SocialQ host with endpoint ID ${queue.endpointId}")
 
                     joinableQueues.remove(queue)
-                    queueAdapter.updateAdapter(joinableQueues)
                 }
-            }
-
-            if (joinableQueues.size == 0) {
-                // No longer have any joinable queues. Start wait time for no host message
-                handler.sendEmptyMessageDelayed(HOST_INSTRUCTION_MESSAGE_WHAT, NEARBY_WAIT_TIME)
             }
         }
     }
