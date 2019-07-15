@@ -1,6 +1,7 @@
 package com.chrisf.socialq.userinterface.activities
 
 import android.content.Intent
+import android.view.Menu
 
 import android.view.MenuItem
 import android.view.View
@@ -10,6 +11,14 @@ import com.chrisf.socialq.enums.RequestType
 abstract class ServiceActivity : BaseActivity(), View.OnClickListener {
     companion object {
         val TAG = ServiceActivity::class.java.name
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        super.onCreateOptionsMenu(menu)
+        val inflater = menuInflater
+        inflater.inflate(R.menu.main_screen_menu, menu)
+
+        return true
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -27,12 +36,6 @@ abstract class ServiceActivity : BaseActivity(), View.OnClickListener {
         } else {
             return true
         }
-    }
-
-    protected fun launchStartActivityAndFinish() {
-        val startIntent = Intent(this, StartActivity::class.java)
-        startActivity(startIntent)
-        finish()
     }
 
     protected fun startSearchActivity() {

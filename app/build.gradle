@@ -5,7 +5,6 @@ apply plugin: 'androidx.navigation.safeargs'
 apply plugin: 'kotlin-android-extensions'
 apply plugin: 'com.github.dcendents.android-maven'
 
-def supportLibraryVersion = '28.0.0'
 def daggerVersion = '2.17'
 def butterKnifeVersion = '10.0.0'
 def navVersion = '1.0.0-alpha11'
@@ -33,6 +32,8 @@ android {
         }
 
         debug {
+            // TODO: Get SHA and update Spotify dashboard before uncommenting below
+//            applicationIdSuffix ".debug"
             minifyEnabled false
             shrinkResources false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
@@ -44,10 +45,18 @@ android {
     }
 }
 
+androidExtensions {
+    experimental = true
+}
+
 repositories {
     flatDir {
         dirs 'libs'
     }
+}
+
+ext {
+    rx_binding_version = '3.0.0-alpha2'
 }
 
 dependencies {
@@ -65,7 +74,7 @@ dependencies {
     implementation 'com.github.Fryguy1991:spotify-web-api-android:0.4.1'
 
     // Nearby Connections API
-    implementation 'com.google.android.gms:play-services-nearby:16.0.0'
+    implementation 'com.google.android.gms:play-services-nearby:17.0.0'
 
     // Butterknife elements
     implementation "com.jakewharton:butterknife:$butterKnifeVersion"
@@ -75,12 +84,12 @@ dependencies {
     implementation 'androidx.appcompat:appcompat:1.0.2'
     implementation 'androidx.recyclerview:recyclerview:1.0.0'
     implementation 'androidx.browser:browser:1.0.0'
-    implementation 'androidx.media:media:1.0.0'
+    implementation 'androidx.media:media:1.0.1'
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
-    implementation 'com.google.android.material:material:1.1.0-alpha02'
+    implementation 'com.google.android.material:material:1.1.0-alpha07'
 
     // Constraint Layout
-    implementation 'androidx.constraintlayout:constraintlayout:2.0.0-alpha3'
+    implementation 'androidx.constraintlayout:constraintlayout:2.0.0-beta2'
 
     // Dagger elements
     implementation "com.google.dagger:dagger:$daggerVersion"
@@ -117,4 +126,18 @@ dependencies {
 
     // SpinKit (loading animations)
     implementation 'com.github.ybq:Android-SpinKit:1.2.0'
+
+    // Timber
+    implementation 'com.jakewharton.timber:timber:4.7.1'
+
+    // RxJava
+    implementation 'io.reactivex.rxjava2:rxandroid:2.1.1'
+    implementation 'io.reactivex.rxjava2:rxjava:2.2.6'
+    implementation 'io.reactivex.rxjava2:rxkotlin:2.3.0'
+    implementation 'com.jakewharton.rxrelay2:rxrelay:2.0.0'
+    implementation "com.jakewharton.rxbinding3:rxbinding-core:$rx_binding_version"
+    implementation "com.jakewharton.rxbinding3:rxbinding-recyclerview:$rx_binding_version"
+    implementation "com.jakewharton.rxbinding3:rxbinding-appcompat:$rx_binding_version"
+    implementation "com.jakewharton.rxbinding3:rxbinding-viewpager:$rx_binding_version"
+    implementation "com.jakewharton.rxbinding3:rxbinding-material:$rx_binding_version"
 }

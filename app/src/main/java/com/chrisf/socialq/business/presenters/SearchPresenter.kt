@@ -2,7 +2,7 @@ package com.chrisf.socialq.business.presenters
 
 import android.util.Log
 import com.chrisf.socialq.business.AppConstants
-import com.chrisf.socialq.business.dagger.modules.components.FrySpotifyComponent
+import com.chrisf.socialq.business.dagger.components.AppComponent
 import com.chrisf.socialq.enums.SearchNavStep.*
 import com.chrisf.socialq.userinterface.interfaces.ISearchView
 import kaaes.spotify.webapi.android.SpotifyCallback
@@ -13,7 +13,7 @@ import retrofit.client.Response
 import java.util.*
 import java.util.regex.Pattern
 
-class SearchPresenter(spotifyComponent: FrySpotifyComponent) : SpotifyAccessPresenter(spotifyComponent), ISearchPresenter {
+class SearchPresenter(spotifyComponent: AppComponent) : SpotifyAccessPresenter(spotifyComponent), ISearchPresenter {
     companion object {
         val TAG = SearchPresenter::class.java.name
     }

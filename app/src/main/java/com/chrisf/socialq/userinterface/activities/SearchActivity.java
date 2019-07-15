@@ -35,7 +35,7 @@ import kaaes.spotify.webapi.android.models.Album;
 import kaaes.spotify.webapi.android.models.Artist;
 import kaaes.spotify.webapi.android.models.Track;
 
-import com.chrisf.socialq.business.dagger.modules.components.FrySpotifyComponent;
+import com.chrisf.socialq.business.dagger.components.AppComponent;
 import com.chrisf.socialq.business.presenters.ISearchPresenter;
 import com.chrisf.socialq.business.presenters.SearchPresenter;
 import com.chrisf.socialq.userinterface.App;
@@ -157,11 +157,7 @@ public class SearchActivity extends BaseActivity implements ISearchView, ISpotif
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        FrySpotifyComponent component = ((App)getApplication()).spotifyComponent;
-
-        if (component != null) {
-            presenter = new SearchPresenter(component);
-        }
+        presenter = new SearchPresenter(((App)getApplication()).appComponent);
 
         setContentView(R.layout.search_base_layout);
         ButterKnife.bind(this);

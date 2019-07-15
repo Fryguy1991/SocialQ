@@ -5,7 +5,6 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.os.Process
-import android.util.Log
 import androidx.fragment.app.Fragment
 import com.chrisf.socialq.enums.RequestType
 import com.chrisf.socialq.model.AccessModel
@@ -15,12 +14,10 @@ import kaaes.spotify.webapi.android.SpotifyCallback
 import kaaes.spotify.webapi.android.SpotifyError
 import kaaes.spotify.webapi.android.models.UserPrivate
 import retrofit.client.Response
+import timber.log.Timber
 import javax.inject.Inject
 
 abstract class BaseLaunchFragment : Fragment() {
-companion object {
-    val TAG = BaseLaunchFragment::class.java.name
-}
 
     @Inject
     protected lateinit var spotifyApi: SpotifyApi
@@ -31,7 +28,7 @@ companion object {
 
         val parentActivity = activity
         if (parentActivity != null) {
-            (parentActivity.application as App).spotifyComponent?.inject(this)
+            (parentActivity.application as App).appComponent.inject(this)
         }
     }
 
@@ -67,18 +64,18 @@ companion object {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
 
         val requestType = RequestType.getRequestTypeFromRequestCode(requestCode)
-        Log.d(TAG, "Received request type: $requestType")
+        Timber.d("Received request type: $requestType")
 
         // Handle request result
         when (requestType) {
             RequestType.LOCATION_PERMISSION_REQUEST -> if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                Log.d(TAG, "Location permission received")
+                Timber.d("Location permission received")
 
                 locationPermissionReceived()
             } else {
                 // Permissions rejected. User will see permissions request until permission
                 // is granted or else the application will not be able to function
-                Log.d(TAG, "Location permission rejected")
+                Timber.d("Location permission rejected")
 
                 locationPermissionRejected()
             }
@@ -100,19 +97,19 @@ companion object {
     private val currentUserCallback = object : SpotifyCallback<UserPrivate>() {
         override fun success(user: UserPrivate?, response: Response?) {
             if (user != null) {
-                Log.d(TAG, "Successfully retrieved current user")
+                Timber.d("Successfully retrieved current user")
 
                 AccessModel.setCurrentUser(user)
                 currentUser = user
                 userRetrieved()
             } else {
-                Log.e(TAG, "Error user was null")
+                Timber.e("Error user was null")
             }
         }
 
         override fun failure(spotifyError: SpotifyError?) {
-            Log.e(TAG, "Error retrieving current user")
-            Log.e(TAG, spotifyError?.errorDetails?.message.toString())
+            Timber.e("Error retrieving current user")
+            Timber.e(spotifyError?.errorDetails?.message.toString())
             // TODO: Think about what we should do if we can't retrieve the user
         }
     }

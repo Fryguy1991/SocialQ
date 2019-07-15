@@ -21,7 +21,6 @@ import com.chrisf.socialq.business.AppConstants
 import com.chrisf.socialq.enums.RequestType
 import com.chrisf.socialq.model.AccessModel
 import com.chrisf.socialq.services.AccessService
-import com.chrisf.socialq.userinterface.fragments.JoinQueueFragment
 import com.spotify.sdk.android.authentication.AuthenticationClient
 import com.spotify.sdk.android.authentication.AuthenticationRequest
 import com.spotify.sdk.android.authentication.AuthenticationResponse
@@ -30,7 +29,7 @@ import okhttp3.Request
 import org.json.JSONObject
 import java.util.concurrent.TimeUnit
 
-class LaunchActivity : BaseActivity(), JoinQueueFragment.JoinQueueFragmentListener {
+class LaunchActivity : BaseActivity() {
     companion object {
         val TAG = LaunchActivity::class.java.name
     }
@@ -89,10 +88,6 @@ class LaunchActivity : BaseActivity(), JoinQueueFragment.JoinQueueFragmentListen
         super.onDestroy()
     }
 
-    override fun showQueueTitle(queueTitle: String) {
-        toolbar.title = queueTitle
-    }
-
     private fun requestAuthorization() {
         val accessScopes = arrayOf("user-read-private", "streaming", "playlist-modify-private", "playlist-modify-public", "playlist-read-private")
         val builder = AuthenticationRequest.Builder(
@@ -105,6 +100,8 @@ class LaunchActivity : BaseActivity(), JoinQueueFragment.JoinQueueFragmentListen
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+
         val requestType = RequestType.getRequestTypeFromRequestCode(requestCode)
         when (requestType) {
             RequestType.SPOTIFY_AUTHENTICATION_REQUEST -> {
@@ -195,10 +192,14 @@ class LaunchActivity : BaseActivity(), JoinQueueFragment.JoinQueueFragmentListen
     }
 
     private fun startPeriodicAccessRefresh() {
-        scheduler.schedule(JobInfo.Builder(AppConstants.ACCESS_SERVICE_ID,
-                ComponentName(this, AccessService::class.java))
-                .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
-                .setPeriodic(TimeUnit.MINUTES.toMillis(20))
-                .build())
+        scheduler.schedule(
+                JobInfo.Builder(
+                        AppConstants.ACCESS_SERVICE_ID,
+                        ComponentName(this, AccessService::class.java)
+                )
+                        .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
+                        .setPeriodic(TimeUnit.MINUTES.toMillis(20))
+                        .build()
+        )
     }
 }

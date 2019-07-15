@@ -19,7 +19,7 @@ import com.chrisf.socialq.business.AppConstants
 import com.chrisf.socialq.enums.SpotifyUserType
 import com.chrisf.socialq.enums.UserType
 import com.chrisf.socialq.model.AccessModel
-import com.chrisf.socialq.model.JoinableQueueModel
+import com.chrisf.socialq.model.QueueModel
 import com.chrisf.socialq.userinterface.adapters.QueueDisplayAdapter
 import com.chrisf.socialq.userinterface.interfaces.IQueueSelectionListener
 import com.chrisf.socialq.userinterface.views.QueueItemDecoration
@@ -61,7 +61,7 @@ class LaunchFragment : BaseLaunchFragment(), IQueueSelectionListener, SwipeRefre
     // Flag to indicate if we successfully started searching for hosts
     private var nearbySuccessfullyDiscovering = false
     // List of queues that can be joined
-    private val joinableQueues: MutableList<JoinableQueueModel> = mutableListOf()
+    private val joinableQueues: MutableList<QueueModel> = mutableListOf()
 
     // UI ELEMENTS
     // Button for starting a new queue
@@ -79,7 +79,7 @@ class LaunchFragment : BaseLaunchFragment(), IQueueSelectionListener, SwipeRefre
     // Used as a flag to determine if we need to launch a host or client after a permission request
     private var userType = UserType.NONE
     // Cached queue model for joining queue after location permission is granted
-    private var cachedQueueModel: JoinableQueueModel? = null
+    private var cachedQueueModel: QueueModel? = null
 
     // Receiver for registered broadcasts
     private val launchFragmentBroadcastReceiver = object : BroadcastReceiver() {
@@ -275,7 +275,7 @@ class LaunchFragment : BaseLaunchFragment(), IQueueSelectionListener, SwipeRefre
         alertbuilder.create().show()
     }
 
-    override fun queueSelected(queueModel: JoinableQueueModel) {
+    override fun queueSelected(queueModel: QueueModel) {
         userType = UserType.CLIENT
         cachedQueueModel = queueModel
         if (hasLocationPermission()) {
@@ -283,7 +283,7 @@ class LaunchFragment : BaseLaunchFragment(), IQueueSelectionListener, SwipeRefre
         }
     }
 
-    private fun handleClientStart(queueModel: JoinableQueueModel) {
+    private fun handleClientStart(queueModel: QueueModel) {
         cachedQueueModel = null
         val joinQueueDirections = LaunchFragmentDirections.actionLaunchFragmentToClientActivity(queueModel.queueName, queueModel.endpointId)
         findNavController().navigate(joinQueueDirections)
@@ -347,7 +347,7 @@ class LaunchFragment : BaseLaunchFragment(), IQueueSelectionListener, SwipeRefre
                     val isFairplayCharacter = hostNameMatcher.group(3)
 
                     val isFairplay = isFairplayCharacter == AppConstants.FAIR_PLAY_TRUE_CHARACTER
-                    joinableQueues.add(JoinableQueueModel(endpointId, queueName, ownerName, isFairplay))
+                    joinableQueues.add(QueueModel(endpointId, queueName, ownerName, isFairplay))
                 } else {
                     Log.e(TAG, "Endpoint ID $endpointId has an invalid name")
                 }
@@ -357,7 +357,7 @@ class LaunchFragment : BaseLaunchFragment(), IQueueSelectionListener, SwipeRefre
         override fun onEndpointLost(endpointId: String) {
             Log.d(TAG, "Endpoint Lost")
 
-            for (queue: JoinableQueueModel in joinableQueues) {
+            for (queue: QueueModel in joinableQueues) {
                 if (queue.endpointId == endpointId) {
                     Log.d(TAG, "Lost a SocialQ host with endpoint ID ${queue.endpointId}")
 

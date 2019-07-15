@@ -33,7 +33,7 @@ abstract class SpotifyAccessService : Service() {
     override fun onCreate() {
         super.onCreate()
 
-        (application as App).spotifyComponent?.inject(this)
+        (application as App).appComponent.inject(this)
     }
 
     open inner class SpotifyAccessServiceBinder : Binder() {

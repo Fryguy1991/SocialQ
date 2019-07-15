@@ -25,6 +25,7 @@ import kaaes.spotify.webapi.android.SpotifyService
 import kaaes.spotify.webapi.android.models.Pager
 import kaaes.spotify.webapi.android.models.PlaylistSimple
 import retrofit.client.Response
+import timber.log.Timber
 import java.util.HashMap
 
 /**
@@ -149,7 +150,7 @@ class NewQueueFragment : BaseLaunchFragment(), IItemSelectionListener<String> {
 
     override fun locationPermissionRejected() {
         // Do nothing, just don't start the host if we don't have location permission
-        Log.d(TAG, "Not starting host due to lack of location permission")
+        Timber.d("Not starting host due to lack of location permission")
     }
 
     override fun onItemSelected(selectedItem: String) {
@@ -162,7 +163,7 @@ class NewQueueFragment : BaseLaunchFragment(), IItemSelectionListener<String> {
         override fun success(playlistsPager: Pager<PlaylistSimple>?, response: Response?) {
             if (playlistsPager != null) {
                 if (playlistsPager.total == 0) {
-                    Log.d(TAG, "User has no playlists to show")
+                    Timber.d("User has no playlists to show")
                     // TODO: Disable base playlist CB?
                     return
                 }
@@ -200,8 +201,8 @@ class NewQueueFragment : BaseLaunchFragment(), IItemSelectionListener<String> {
         }
 
         override fun failure(spotifyError: SpotifyError?) {
-            Log.e(TAG, spotifyError?.errorDetails?.message.toString())
-            Log.e(TAG, "Failed to retrieve user playlists")
+            Timber.e(spotifyError?.errorDetails?.message.toString())
+            Timber.e("Failed to retrieve user playlists")
         }
     }
 }

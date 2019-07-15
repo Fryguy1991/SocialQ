@@ -25,14 +25,6 @@
             app:popExitAnim="@anim/nav_default_pop_exit_anim" />
     </fragment>
     <fragment
-        android:id="@+id/joinQueueFragment"
-        android:name="com.chrisf.socialq.userinterface.fragments.JoinQueueFragment"
-        tools:layout="@layout/fragment_join_queue">
-        <argument
-            android:name="queueInfo"
-            app:argType="com.chrisf.socialq.model.JoinableQueueModel" />
-    </fragment>
-    <fragment
         android:id="@+id/newQueueFragment"
         android:name="com.chrisf.socialq.userinterface.fragments.NewQueueFragment"
         android:label="@string/new_queue"
