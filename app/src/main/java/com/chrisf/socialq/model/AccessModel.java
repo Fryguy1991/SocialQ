@@ -3,7 +3,7 @@ package com.chrisf.socialq.model;
 import kaaes.spotify.webapi.android.models.UserPrivate;
 
 /**
- * Model for access information
+ * Model for access information (SHOULD REFACTOR TO STORE/ACCESS THIS INFO IN SHARED PREFS)
  */
 public class AccessModel {
     // Authorization code for requesting an access token and refresh token
