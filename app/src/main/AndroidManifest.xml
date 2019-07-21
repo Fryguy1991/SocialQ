@@ -51,7 +51,8 @@
         <!-- Activity for Search Screen -->
         <activity android:name=".userinterface.activities.NewSearchActivity"
             android:label="@string/search_activity_name"
-            android:screenOrientation="portrait"/>
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="adjustResize"/>
 
         <!-- Activity for Spotify login (created by Spotify) -->
         <activity

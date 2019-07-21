@@ -1,6 +1,7 @@
 package com.chrisf.socialq.userinterface.activities
 
 import android.os.Bundle
+import android.view.View
 import android.view.WindowManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.chrisf.socialq.R
@@ -23,11 +24,20 @@ class NewSearchActivity : BaseActivity<SearchState, SearchAction, SearchProcesso
         activityComponent.inject(this)
     }
 
+    override fun handleState(state: SearchState) {
+        when (state) {
+            DisplayBaseView -> displayBaseView()
+            is DisplayBaseResults -> displayBaseResults(state)
+            is DisplayNoResults -> displayNoResults(state.searchTerm)
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_search)
 
         initViews()
+        actionStream.accept(ViewCreated)
     }
 
     override fun onResume() {
@@ -60,13 +70,26 @@ class NewSearchActivity : BaseActivity<SearchState, SearchAction, SearchProcesso
         searchResultsRecyclerView.layoutManager = LinearLayoutManager(this)
     }
 
-    override fun handleState(state: SearchState) {
-        when (state) {
-            is DisplayBaseResults -> displayBaseResults(state)
-        }
+    private fun displayBaseView() {
+        baseResultsAdapter.updateData(emptyList(), emptyList(), emptyList())
+        searchResultsRecyclerView.visibility = View.GONE
+        noResultsText.visibility = View.GONE
     }
 
     private fun displayBaseResults(state: DisplayBaseResults) {
+        // If search term is empty swallow search results
+        if (searchTermField.text.toString().isEmpty()) {
+            return
+        }
+
         baseResultsAdapter.updateData(state.trackList, state.artistList, state.albumList)
+        searchResultsRecyclerView.visibility = View.VISIBLE
+        noResultsText.visibility = View.GONE
+    }
+
+    private fun displayNoResults(term: String) {
+        searchResultsRecyclerView.visibility = View.GONE
+        noResultsText.text = String.format(getString(R.string.no_results_found), term)
+        noResultsText.visibility = View.VISIBLE
     }
 }

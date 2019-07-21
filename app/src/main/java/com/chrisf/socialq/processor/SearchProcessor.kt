@@ -28,7 +28,8 @@ class SearchProcessor @Inject constructor(
 
     override fun handleAction(action: SearchAction) {
         when (action) {
-            ViewResumed -> pushSearchResultsToView()
+            ViewCreated -> stateStream.accept(DisplayBaseView)
+//            ViewResumed -> pushSearchResultsToView()
             is SearchTermModified -> searchForMusic(action.term)
             is ArtistSelected -> retrieveArtistDetails(action.uri)
         }
@@ -90,6 +91,7 @@ class SearchProcessor @Inject constructor(
                         DisplayNoResults(term)
                     } else {
                         DisplayBaseResults(
+                                term,
                                 trackResponse.body()!!.tracks.items,
                                 artistResponse.body()!!.artists.items,
                                 albumResponse.body()!!.albums.items
@@ -115,6 +117,7 @@ class SearchProcessor @Inject constructor(
         data class ReportTrackResult(val trackUri: String): SearchState()
         data class DisplayNoResults(val searchTerm: String): SearchState()
         data class DisplayBaseResults(
+                val searchTerm: String,
                 val trackList: List<Track>,
                 val artistList: List<Artist>,
                 val albumList: List<AlbumSimple>
@@ -132,6 +135,7 @@ class SearchProcessor @Inject constructor(
     }
 
     sealed class SearchAction {
+        object ViewCreated: SearchAction()
         object ViewResumed: SearchAction()
         object BackPressed: SearchAction()
         object NavUpPressed: SearchAction()
