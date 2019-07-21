@@ -75,7 +75,3 @@ class AppModule(private val app: Context) {
         return CompositeDisposable()
     }
 }
-
-interface AppComponentActivity {
-    fun provideComponent(): AppComponent
-}

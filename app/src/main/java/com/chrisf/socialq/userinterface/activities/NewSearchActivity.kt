@@ -2,9 +2,7 @@ package com.chrisf.socialq.userinterface.activities
 
 import android.content.Intent
 import android.os.Bundle
-import android.view.View
 import android.view.WindowManager
-import androidx.recyclerview.widget.LinearLayoutManager
 import com.chrisf.socialq.AppConstants
 import com.chrisf.socialq.R
 import com.chrisf.socialq.dagger.components.ActivityComponent
@@ -13,15 +11,12 @@ import com.chrisf.socialq.processor.SearchProcessor.SearchAction
 import com.chrisf.socialq.processor.SearchProcessor.SearchAction.*
 import com.chrisf.socialq.processor.SearchProcessor.SearchState
 import com.chrisf.socialq.processor.SearchProcessor.SearchState.*
-import com.chrisf.socialq.userinterface.adapters.SearchResultsAdapter
-import com.chrisf.socialq.userinterface.adapters.SearchResultsAdapter.SearchResultClick.*
-import com.jakewharton.rxbinding3.widget.textChanges
-import io.reactivex.android.schedulers.AndroidSchedulers
+import com.chrisf.socialq.userinterface.fragments.SearchResultsFragment
 import kotlinx.android.synthetic.main.activity_search.*
-import java.util.concurrent.TimeUnit
 
 class NewSearchActivity : BaseActivity<SearchState, SearchAction, SearchProcessor>() {
-    private val baseResultsAdapter = SearchResultsAdapter()
+
+    private lateinit var searchResultsFragment: SearchResultsFragment
 
     override fun resolveDependencies(activityComponent: ActivityComponent) {
         activityComponent.inject(this)
@@ -29,9 +24,6 @@ class NewSearchActivity : BaseActivity<SearchState, SearchAction, SearchProcesso
 
     override fun handleState(state: SearchState) {
         when (state) {
-            DisplayBaseView -> displayBaseView()
-            is DisplayBaseResults -> displayBaseResults(state)
-            is DisplayNoResults -> displayNoResults(state.searchTerm)
             is ReportTrackResult -> sendTrackResult(state.trackUri)
         }
     }
@@ -62,51 +54,12 @@ class NewSearchActivity : BaseActivity<SearchState, SearchAction, SearchProcesso
         // TODO: Do I actually want to do this? Probably not
         window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING)
 
-        @Suppress("CheckResult")
-        searchTermField.textChanges()
-                .skipInitialValue()
-                .throttleLast(250L, TimeUnit.MILLISECONDS)
-                .subscribeOn(AndroidSchedulers.mainThread())
-                .doOnSubscribe { subscriptions.add(it) }
-                .subscribe { actionStream.accept(SearchTermModified(searchTermField.text.toString())) }
+        searchResultsFragment = SearchResultsFragment.getInstance()
 
-        searchResultsRecyclerView.adapter = baseResultsAdapter
-        searchResultsRecyclerView.layoutManager = LinearLayoutManager(this)
-
-        @Suppress("CheckResult")
-        baseResultsAdapter.clickObservable
-                .subscribeOn(AndroidSchedulers.mainThread())
-                .doOnSubscribe { subscriptions.add(it) }
-                .subscribe {
-                    when (it) {
-                        is TrackClick -> actionStream.accept(TrackSelected(it.uri))
-                        is ArtistClick -> actionStream.accept(ArtistSelected(it.id))
-                        is AlbumClick -> actionStream.accept(AlbumSelected(it.id))
-                    }
-                }
-    }
-
-    private fun displayBaseView() {
-        baseResultsAdapter.updateData(emptyList(), emptyList(), emptyList())
-        searchResultsRecyclerView.visibility = View.GONE
-        noResultsText.visibility = View.GONE
-    }
-
-    private fun displayBaseResults(state: DisplayBaseResults) {
-        // If search term doesn't match what's in edittext eat the result
-        if (searchTermField.text.toString() != state.searchTerm) {
-            return
-        }
-
-        baseResultsAdapter.updateData(state.trackList, state.artistList, state.albumList)
-        searchResultsRecyclerView.visibility = View.VISIBLE
-        noResultsText.visibility = View.GONE
-    }
-
-    private fun displayNoResults(term: String) {
-        searchResultsRecyclerView.visibility = View.GONE
-        noResultsText.text = String.format(getString(R.string.no_results_found), term)
-        noResultsText.visibility = View.VISIBLE
+        supportFragmentManager
+                .beginTransaction()
+                .add(appFragment.id, searchResultsFragment)
+                .commit()
     }
 
     private fun sendTrackResult(uri: String) {
