@@ -1047,7 +1047,7 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
     /**
      * Adds a song to end of the referenced playlist
      *
-     * @param uri - uri of the track to be added
+     * @param uri - id of the track to be added
      */
     private fun addTrackToPlaylist(uri: String) {
         addTrackToPlaylistPosition(uri, -1)
@@ -1056,7 +1056,7 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
     /**
      * Adds a song to the referenced playlist at the given position (or end if not specified)
      *
-     * @param uri      - uri of the track to be added
+     * @param uri      - id of the track to be added
      * @param position - position of the track to be added (if less than 0, track placed at end of playlist)
      */
     private fun addTrackToPlaylistPosition(uri: String, position: Int) {

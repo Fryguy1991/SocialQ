@@ -24,23 +24,28 @@ class SearchProcessor @Inject constructor(
         subscriptions: CompositeDisposable
 ): BaseProcessor<SearchState, SearchAction>(lifecycle, subscriptions) {
 
-    private var seachNavStep = SearchNavStep.BASE
-
     override fun handleAction(action: SearchAction) {
         when (action) {
             ViewCreated -> stateStream.accept(DisplayBaseView)
 //            ViewResumed -> pushSearchResultsToView()
             is SearchTermModified -> searchForMusic(action.term)
-            is ArtistSelected -> retrieveArtistDetails(action.uri)
+            is TrackSelected -> stateStream.accept(ReportTrackResult(action.id))
+            is ArtistSelected -> retrieveArtistDetails(action.id)
+            is AlbumSelected -> retrieveAlbumDetails(action.id)
         }
     }
 
-    private fun pushSearchResultsToView() {
-
+    private fun retrieveAlbumDetails(albumId: String) {
+        @Suppress("CheckResult")
+        spotifyService.getFullAlbum(albumId)
+                .subscribeOn(Schedulers.io())
+                .doOnSubscribe { subscriptions.add(it) }
+                .subscribe { response ->
+                    stateStream.accept(DisplayAlbum(response.body()!!))
+                }
     }
 
     private fun retrieveArtistDetails(artistId: String) {
-        seachNavStep = SearchNavStep.ARTIST
 
         @Suppress("CheckResult")
         Single.zip(
@@ -131,7 +136,7 @@ class SearchProcessor @Inject constructor(
                 val artistAlbums: List<AlbumSimple>
         ): SearchState()
         data class DisplayArtistAlbums(val artistAlbumList: List<AlbumSimple>): SearchState()
-        data class DisplayAlbum(val trackList: List<Track>): SearchState()
+        data class DisplayAlbum(val album: Album): SearchState()
     }
 
     sealed class SearchAction {
@@ -140,8 +145,8 @@ class SearchProcessor @Inject constructor(
         object BackPressed: SearchAction()
         object NavUpPressed: SearchAction()
         data class SearchTermModified(val term: String): SearchAction()
-        data class TrackSelected(val uri: String): SearchAction()
-        data class AlbumSelected(val uri: String): SearchAction()
-        data class ArtistSelected(val uri: String): SearchAction()
+        data class TrackSelected(val id: String): SearchAction()
+        data class AlbumSelected(val id: String): SearchAction()
+        data class ArtistSelected(val id: String): SearchAction()
     }
 }

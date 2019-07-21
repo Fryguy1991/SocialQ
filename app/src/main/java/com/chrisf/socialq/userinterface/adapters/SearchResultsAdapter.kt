@@ -8,8 +8,11 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
 import com.chrisf.socialq.R
 import com.chrisf.socialq.model.spotify.AlbumSimple
+import com.chrisf.socialq.userinterface.adapters.SearchResultsAdapter.*
 import com.chrisf.socialq.userinterface.adapters.SearchResultsAdapter.SearchViewType.*
 import com.chrisf.socialq.utils.DisplayUtils
+import com.jakewharton.rxrelay2.PublishRelay
+import io.reactivex.Observable
 import kaaes.spotify.webapi.android.models.Artist
 import kaaes.spotify.webapi.android.models.Track
 import kotlinx.android.synthetic.main.holder_search_album.view.*
@@ -26,6 +29,12 @@ class SearchResultsAdapter(private val headerChildCount: Int = 3)
     private val trackList = mutableListOf<Track>()
     private val artistList = mutableListOf<Artist>()
     private val albumList = mutableListOf<AlbumSimple>()
+
+    private val clickRelay: PublishRelay<SearchResultClick> = PublishRelay.create()
+    val clickObservable: Observable<SearchResultClick>
+        get() {
+            return clickRelay.hide()
+        }
 
     fun updateData(
             tracks: List<Track>,
@@ -54,7 +63,7 @@ class SearchResultsAdapter(private val headerChildCount: Int = 3)
             ARTIST -> R.layout.holder_search_artist
             ALBUM -> R.layout.holder_search_album
         }
-        val view =  LayoutInflater.from(parent.context).inflate(layoutId, parent, false)
+        val view = LayoutInflater.from(parent.context).inflate(layoutId, parent, false)
         return SearchResultsViewHolder(view)
     }
 
@@ -150,7 +159,7 @@ class SearchResultsAdapter(private val headerChildCount: Int = 3)
         return itemTypeList.toList()
     }
 
-    private fun getTrackIndexByPosition(position: Int) : Int {
+    private fun getTrackIndexByPosition(position: Int): Int {
         val numberOfTracks = min(trackList.size, headerChildCount)
 
         val isTrackHeaderVisible = trackList.size > 0
@@ -162,7 +171,7 @@ class SearchResultsAdapter(private val headerChildCount: Int = 3)
         }
     }
 
-    private fun getArtistIndexByPosition(position: Int) : Int {
+    private fun getArtistIndexByPosition(position: Int): Int {
         val numberOfTracks = min(trackList.size, headerChildCount)
         val numberOfArtists = min(artistList.size, headerChildCount)
 
@@ -176,14 +185,14 @@ class SearchResultsAdapter(private val headerChildCount: Int = 3)
         if (isAllTrackHeaderVisible) countBeforeArtists += 1
         if (isArtistHeaderVisible) countBeforeArtists += 1
 
-        return if (isArtistHeaderVisible && position >= countBeforeArtists && position < countBeforeArtists + numberOfArtists ) {
+        return if (isArtistHeaderVisible && position >= countBeforeArtists && position < countBeforeArtists + numberOfArtists) {
             position - countBeforeArtists
         } else {
             -1
         }
     }
 
-    private fun getAlbumIndexByPosition(position: Int) : Int {
+    private fun getAlbumIndexByPosition(position: Int): Int {
         val numberOfTracks = min(trackList.size, headerChildCount)
         val numberOfArtists = min(artistList.size, headerChildCount)
         val numberOfAlbums = min(albumList.size, headerChildCount)
@@ -202,7 +211,7 @@ class SearchResultsAdapter(private val headerChildCount: Int = 3)
         if (isAllArtistHeaderVisible) countBeforeAlbums += 1
         if (isAlbumHeaderVisible) countBeforeAlbums += 1
 
-        return if (isAlbumHeaderVisible && position >= countBeforeAlbums && position < countBeforeAlbums + numberOfAlbums ) {
+        return if (isAlbumHeaderVisible && position >= countBeforeAlbums && position < countBeforeAlbums + numberOfAlbums) {
             position - countBeforeAlbums
         } else {
             -1
@@ -220,56 +229,69 @@ class SearchResultsAdapter(private val headerChildCount: Int = 3)
         ARTIST,
         ALBUM
     }
-}
 
-class SearchResultsViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-    lateinit var uri: String
 
-    fun bindTrack(track: Track) {
-        uri = track.uri
-        itemView.trackName.text = track.name
-        itemView.artistName.text = DisplayUtils.getTrackArtistString(track)
+    inner class SearchResultsViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        lateinit var id: String
 
-        val imageUrl = if (track.album.images.isNotEmpty()) track.album.images[0].url else ""
-        if (imageUrl.isEmpty()) {
-            Glide.with(itemView).load(R.mipmap.black_record).into(itemView.trackArt)
-        } else {
-            Glide.with(itemView).load(imageUrl).apply(RequestOptions().placeholder(R.mipmap.black_record)).into(itemView.trackArt)
+        fun bindTrack(track: Track) {
+            id = track.uri
+            itemView.trackName.text = track.name
+            itemView.artistName.text = DisplayUtils.getTrackArtistString(track)
+
+            val imageUrl = if (track.album.images.isNotEmpty()) track.album.images[0].url else ""
+            if (imageUrl.isEmpty()) {
+                Glide.with(itemView).load(R.mipmap.black_record).into(itemView.trackArt)
+            } else {
+                Glide.with(itemView).load(imageUrl).apply(RequestOptions().placeholder(R.mipmap.black_record)).into(itemView.trackArt)
+            }
+            itemView.setOnClickListener { clickRelay.accept(SearchResultClick.TrackClick(id)) }
+        }
+
+        fun bindArtist(artist: Artist) {
+            id = artist.id
+            itemView.artistName.text = artist.name
+
+            val imageUrl = if (artist.images.isNotEmpty()) artist.images[0].url else ""
+            if (imageUrl.isEmpty()) {
+                Glide.with(itemView).load(R.mipmap.black_blank_person).into(itemView.artistImage)
+            } else {
+                Glide.with(itemView).load(imageUrl).apply(RequestOptions().placeholder(R.mipmap.black_blank_person)).into(itemView.artistImage)
+            }
+            itemView.setOnClickListener { clickRelay.accept(SearchResultClick.ArtistClick(id)) }
+        }
+
+        fun bindAlbum(album: AlbumSimple) {
+            id = album.id
+            itemView.albumName.text = album.name
+            itemView.artistName.text = DisplayUtils.getAlbumArtistString(album)
+
+            val imageUrl = if (album.images.isNotEmpty()) album.images[0].url else ""
+            if (imageUrl.isEmpty()) {
+                Glide.with(itemView).load(R.mipmap.black_record).into(itemView.albumArt)
+            } else {
+                Glide.with(itemView).load(imageUrl).apply(RequestOptions().placeholder(R.mipmap.black_record)).into(itemView.albumArt)
+            }
+            itemView.setOnClickListener { clickRelay.accept(SearchResultClick.AlbumClick(id)) }
+        }
+
+        fun bindHeader(headerText: String) {
+            id = headerText
+            itemView.headerText.text = headerText
+            // TODO: Relay click
+        }
+
+        fun bindViewAllButton(viewAllText: String) {
+            id = viewAllText
+            itemView.viewAllButton.text = viewAllText
+            // TODO: Relay click
         }
     }
 
-    fun bindArtist(artist: Artist) {
-        uri = artist.uri
-        itemView.artistName.text = artist.name
-
-        val imageUrl = if (artist.images.isNotEmpty()) artist.images[0].url else ""
-        if (imageUrl.isEmpty()) {
-            Glide.with(itemView).load(R.mipmap.black_blank_person).into(itemView.artistImage)
-        } else {
-            Glide.with(itemView).load(imageUrl).apply(RequestOptions().placeholder(R.mipmap.black_blank_person)).into(itemView.artistImage)
-        }
-    }
-
-    fun bindAlbum(album: AlbumSimple) {
-        uri = album.uri
-        itemView.albumName.text = album.name
-        itemView.artistName.text = DisplayUtils.getAlbumArtistString(album)
-
-        val imageUrl = if (album.images.isNotEmpty()) album.images[0].url else ""
-        if (imageUrl.isEmpty()) {
-            Glide.with(itemView).load(R.mipmap.black_record).into(itemView.albumArt)
-        } else {
-            Glide.with(itemView).load(imageUrl).apply(RequestOptions().placeholder(R.mipmap.black_record)).into(itemView.albumArt)
-        }
-    }
-
-    fun bindHeader(headerText: String) {
-        uri = headerText
-        itemView.headerText.text = headerText
-    }
-
-    fun bindViewAllButton(viewAllText: String) {
-        uri = viewAllText
-        itemView.viewAllButton.text = viewAllText
+    sealed class SearchResultClick {
+        data class TrackClick(val uri: String) : SearchResultClick()
+        data class ArtistClick(val id: String) : SearchResultClick()
+        data class AlbumClick(val id: String) : SearchResultClick()
+        // TODO: Header and view all clicks
     }
 }
