@@ -49,8 +49,7 @@
             android:screenOrientation="portrait" />
 
         <!-- Activity for Search Screen -->
-        <activity
-            android:name="com.chrisf.socialq.userinterface.activities.SearchActivity"
+        <activity android:name=".userinterface.activities.NewSearchActivity"
             android:label="@string/search_activity_name"
             android:screenOrientation="portrait"/>
 

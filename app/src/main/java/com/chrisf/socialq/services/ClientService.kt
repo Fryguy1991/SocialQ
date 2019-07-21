@@ -10,7 +10,7 @@ import android.support.v4.media.session.MediaSessionCompat
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.chrisf.socialq.R
-import com.chrisf.socialq.business.AppConstants
+import com.chrisf.socialq.AppConstants
 import com.chrisf.socialq.enums.NearbyDevicesMessage
 import com.chrisf.socialq.enums.PayloadTransferUpdateStatus
 import com.chrisf.socialq.model.AccessModel

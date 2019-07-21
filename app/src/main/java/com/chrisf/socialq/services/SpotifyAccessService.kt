@@ -8,7 +8,7 @@ import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaSessionCompat
 import android.util.Log
 import androidx.core.app.NotificationCompat
-import com.chrisf.socialq.business.AppConstants
+import com.chrisf.socialq.AppConstants
 import com.chrisf.socialq.userinterface.App
 import com.chrisf.socialq.utils.DisplayUtils
 import kaaes.spotify.webapi.android.SpotifyApi

@@ -15,7 +15,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.chrisf.socialq.R
-import com.chrisf.socialq.business.AppConstants
+import com.chrisf.socialq.AppConstants
 import com.chrisf.socialq.enums.SpotifyUserType
 import com.chrisf.socialq.enums.UserType
 import com.chrisf.socialq.model.AccessModel

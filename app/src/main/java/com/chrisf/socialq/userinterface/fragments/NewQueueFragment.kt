@@ -2,7 +2,6 @@ package com.chrisf.socialq.userinterface.fragments
 
 
 import android.os.Bundle
-import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
@@ -14,17 +13,14 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.chrisf.socialq.R
-import com.chrisf.socialq.business.AppConstants
+import com.chrisf.socialq.AppConstants
 import com.chrisf.socialq.userinterface.adapters.IItemSelectionListener
 import com.chrisf.socialq.userinterface.adapters.SelectableBasePlaylistAdapter
 import com.chrisf.socialq.userinterface.views.QueueItemDecoration
 import com.chrisf.socialq.utils.DisplayUtils
-import kaaes.spotify.webapi.android.SpotifyCallback
-import kaaes.spotify.webapi.android.SpotifyError
+import io.reactivex.android.schedulers.AndroidSchedulers
 import kaaes.spotify.webapi.android.SpotifyService
-import kaaes.spotify.webapi.android.models.Pager
 import kaaes.spotify.webapi.android.models.PlaylistSimple
-import retrofit.client.Response
 import timber.log.Timber
 import java.util.HashMap
 
@@ -126,7 +122,20 @@ class NewQueueFragment : BaseLaunchFragment(), IItemSelectionListener<String> {
 
         val user = currentUser
         if (user != null) {
-            spotifyApi.service.getPlaylists(user.id, options, userPlaylistsCallback)
+            spotifyApi.getCurrentUsersPlaylsit()
+                    // TODO: MOVE TO IO!!!!!! ALSO REQUEST REST OF PLAYLISTS
+                    .subscribeOn(AndroidSchedulers.mainThread())
+                    .subscribe {response ->
+                        if (response.isSuccessful) {
+                            // If playlists don't have tracks don't show them
+                            for (playlist in response.body()!!.items) {
+                                if (playlist.tracks.total > 0) {
+                                    currentUserPlaylists.add(playlist)
+                                }
+                            }
+                            basePlaylistAdapter.updateAdapter(currentUserPlaylists)
+                        }
+                    }
         }
     }
 
@@ -155,54 +164,5 @@ class NewQueueFragment : BaseLaunchFragment(), IItemSelectionListener<String> {
 
     override fun onItemSelected(selectedItem: String) {
         basePlaylistId = selectedItem
-    }
-
-
-    // Callback for retrieving host user's playlists
-    private val userPlaylistsCallback = object : SpotifyCallback<Pager<PlaylistSimple>>() {
-        override fun success(playlistsPager: Pager<PlaylistSimple>?, response: Response?) {
-            if (playlistsPager != null) {
-                if (playlistsPager.total == 0) {
-                    Timber.d("User has no playlists to show")
-                    // TODO: Disable base playlist CB?
-                    return
-                }
-
-                if (playlistsPager.offset == 0) {
-                    // Fresh retrieval
-                    currentUserPlaylists.clear()
-                }
-
-                // If playlists don't have tracks don't show them
-                for (playlist in playlistsPager.items) {
-                    if (playlist.tracks.total > 0) {
-                        currentUserPlaylists.add(playlist)
-                    }
-                }
-
-                val nextPlaylistIndex = playlistsPager.items.size + playlistsPager.offset
-                // Check if there are more than 50 playlists by the user. If so we should get the next 50
-                if (nextPlaylistIndex < playlistsPager.total) {
-                    val options = HashMap<String, Any>()
-                    options[SpotifyService.LIMIT] = AppConstants.PLAYLIST_LIMIT
-                    options[SpotifyService.OFFSET] = nextPlaylistIndex
-
-                    val user = currentUser
-                    if (user != null) {
-                        spotifyApi.service.getPlaylists(user.id, options, this)
-                    }
-                } else {
-                    val adapterContext = context
-                    if (adapterContext != null) {
-                        basePlaylistAdapter.updateAdapter(currentUserPlaylists)
-                    }
-                }
-            }
-        }
-
-        override fun failure(spotifyError: SpotifyError?) {
-            Timber.e(spotifyError?.errorDetails?.message.toString())
-            Timber.e("Failed to retrieve user playlists")
-        }
     }
 }

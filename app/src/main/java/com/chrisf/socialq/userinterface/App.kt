@@ -6,9 +6,9 @@ import android.app.NotificationManager
 import android.os.Build
 import com.chrisf.socialq.BuildConfig
 import com.chrisf.socialq.R
-import com.chrisf.socialq.business.dagger.components.AppComponent
-import com.chrisf.socialq.business.dagger.components.DaggerAppComponent
-import com.chrisf.socialq.business.dagger.modules.AppModule
+import com.chrisf.socialq.dagger.components.AppComponent
+import com.chrisf.socialq.dagger.components.DaggerAppComponent
+import com.chrisf.socialq.dagger.modules.AppModule
 import timber.log.Timber
 
 class App : Application() {

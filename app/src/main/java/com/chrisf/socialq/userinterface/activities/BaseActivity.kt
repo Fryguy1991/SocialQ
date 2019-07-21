@@ -7,10 +7,31 @@ import android.os.Bundle
 import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
 import com.chrisf.socialq.R
+import com.chrisf.socialq.dagger.components.ActivityComponent
+import com.chrisf.socialq.dagger.components.AppComponent
+import com.chrisf.socialq.dagger.modules.ActivityModule
+import com.chrisf.socialq.dagger.modules.AppComponentActivity
+import com.chrisf.socialq.processor.BaseProcessor
+import com.chrisf.socialq.userinterface.App
+import com.jakewharton.rxrelay2.PublishRelay
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.disposables.CompositeDisposable
+import javax.inject.Inject
 
-abstract class BaseActivity : AppCompatActivity() {
-    companion object {
-        val TAG = BaseActivity::class.java.name
+abstract class BaseActivity<State, Action, Processor : BaseProcessor<State, Action>> :
+        AppCompatActivity(), AppComponentActivity {
+
+    private lateinit var activityComponent: ActivityComponent
+
+    @Inject
+    lateinit var processor: Processor
+
+    protected val subscriptions = CompositeDisposable()
+
+    protected val actionStream: PublishRelay<Action> = PublishRelay.create()
+
+    override fun provideComponent(): AppComponent {
+        return (application as App).appComponent
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -28,6 +49,17 @@ abstract class BaseActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        activityComponent = (application as App).appComponent.activityComponent(ActivityModule(this))
+        resolveDependencies(activityComponent)
+
+        subscriptions.add(processor.attach(actionStream))
+        @Suppress("CheckResult")
+        processor.stateObservable
+                .doOnSubscribe{ subscriptions.add(it) }
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(this::handleState)
+
 
         // Ensure when app is in recents a white title bar is displayed
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
@@ -51,4 +83,13 @@ abstract class BaseActivity : AppCompatActivity() {
             setTaskDescription(taskDescription)
         }
     }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        subscriptions.clear()
+    }
+
+    abstract fun resolveDependencies(activityComponent: ActivityComponent)
+
+    abstract fun handleState(state: State)
 }

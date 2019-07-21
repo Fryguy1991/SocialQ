@@ -5,10 +5,11 @@ import android.view.Menu
 
 import android.view.MenuItem
 import android.view.View
+import androidx.appcompat.app.AppCompatActivity
 import com.chrisf.socialq.R
 import com.chrisf.socialq.enums.RequestType
 
-abstract class ServiceActivity : BaseActivity(), View.OnClickListener {
+abstract class ServiceActivity : AppCompatActivity(), View.OnClickListener {
     companion object {
         val TAG = ServiceActivity::class.java.name
     }
@@ -39,7 +40,7 @@ abstract class ServiceActivity : BaseActivity(), View.OnClickListener {
     }
 
     protected fun startSearchActivity() {
-        val searchIntent = Intent(this, SearchActivity::class.java)
+        val searchIntent = Intent(this, NewSearchActivity::class.java)
         startActivityForResult(searchIntent, RequestType.SEARCH_REQUEST.requestCode)
     }
 

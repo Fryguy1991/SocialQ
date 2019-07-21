@@ -1,4 +1,4 @@
-package com.chrisf.socialq.business;
+package com.chrisf.socialq;
 
 import java.util.UUID;
 

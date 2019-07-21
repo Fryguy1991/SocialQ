@@ -60,6 +60,9 @@
         <item name="android:textStyle">bold</item>
         <item name="android:textSize">@dimen/medium_text</item>
     </style>
+    <style name="SeeAllText" parent="HeaderText">
+        <item name="android:textSize">@dimen/see_all_text_size</item>
+    </style>
     <style name="TopTrackText">
         <item name="android:minHeight">@dimen/top_track_view_min_height</item>
         <item name="android:layout_marginStart">@dimen/default_margin_x2</item>

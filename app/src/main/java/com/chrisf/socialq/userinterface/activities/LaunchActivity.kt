@@ -8,16 +8,16 @@ import android.content.Intent
 import android.os.Bundle
 import android.os.StrictMode
 import android.os.SystemClock
-import android.util.Log
 import android.view.WindowManager
 import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.navigation.NavController
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupWithNavController
 import com.chrisf.socialq.R
-import com.chrisf.socialq.business.AppConstants
+import com.chrisf.socialq.AppConstants
 import com.chrisf.socialq.enums.RequestType
 import com.chrisf.socialq.model.AccessModel
 import com.chrisf.socialq.services.AccessService
@@ -27,12 +27,10 @@ import com.spotify.sdk.android.authentication.AuthenticationResponse
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONObject
+import timber.log.Timber
 import java.util.concurrent.TimeUnit
 
-class LaunchActivity : BaseActivity() {
-    companion object {
-        val TAG = LaunchActivity::class.java.name
-    }
+class LaunchActivity : AppCompatActivity() {
 
     // Reference to nav controller
     private lateinit var navController: NavController
@@ -108,7 +106,7 @@ class LaunchActivity : BaseActivity() {
                 val response = AuthenticationClient.getResponse(resultCode, data)
                 when (response.type) {
                     AuthenticationResponse.Type.CODE -> {
-                        Log.d(TAG, "Authorization code granted")
+                        Timber.d("Authorization code granted")
 
                         // Store authorization code
                         AccessModel.setAuthorizationCode(response.code)
@@ -118,7 +116,7 @@ class LaunchActivity : BaseActivity() {
                         return
                     }
                     AuthenticationResponse.Type.TOKEN -> {
-                        Log.e(TAG, "Should be retrieving access tokens from backend server")
+                        Timber.e("Should be retrieving access tokens from backend server")
                         // Calculate when access token expires (response "ExpiresIn" is in seconds, subtract a minute to worry less about timing)
                         val expireTime = SystemClock.elapsedRealtime() + (response.expiresIn - 60) * 1000
 
@@ -130,16 +128,16 @@ class LaunchActivity : BaseActivity() {
                         return
                     }
                     AuthenticationResponse.Type.ERROR -> {
-                        Log.e(TAG, "Authentication error: ${response.error}")
+                        Timber.e("Authentication error: ${response.error}")
                     }
                     AuthenticationResponse.Type.EMPTY -> {
-                        Log.e(TAG, "Not handling empty case")
+                        Timber.e("Not handling empty case")
                     }
                     AuthenticationResponse.Type.UNKNOWN -> {
-                        Log.e(TAG, "Not handling unknown case")
+                        Timber.e("Not handling unknown case")
                     }
                     else -> {
-                        Log.e(TAG, "Something went wrong. Not handling response type: ${response.type}")
+                        Timber.e("Something went wrong. Not handling response type: ${response.type}")
                     }
                 }
                 // Show authorization failed dialog
@@ -147,19 +145,19 @@ class LaunchActivity : BaseActivity() {
             }
             RequestType.SEARCH_REQUEST,
             RequestType.LOCATION_PERMISSION_REQUEST -> {
-                Log.e(TAG, "Launch activity should not receiver $requestType")
+                Timber.e("Launch activity should not receiver $requestType")
             }
             RequestType.NONE -> {
-                Log.e(TAG, "Unhandled request code")
+                Timber.e("Unhandled request code")
             }
         }
     }
 
     private fun authCodeReceived() {
         if (AccessModel.getAuthorizationCode().isNullOrEmpty()) {
-            Log.e(TAG, "Error invalid authorization code")
+            Timber.e("Error invalid authorization code")
         } else {
-            Log.d(TAG, "Have authorization code. Request access/refresh tokens")
+            Timber.d("Have authorization code. Request access/refresh tokens")
             val client = OkHttpClient()
             val request = Request.Builder().url(String.format(AppConstants.AUTH_REQ_URL_FORMAT, AccessModel.getAuthorizationCode())).build()
 
@@ -173,7 +171,7 @@ class LaunchActivity : BaseActivity() {
                 val refreshToken = bodyJson.getString(AppConstants.JSON_REFRESH_TOEKN_KEY)
                 val expiresIn = bodyJson.getInt(AppConstants.JSON_EXPIRES_IN_KEY)
 
-                Log.d(TAG, "Received authorization:\nAccess Token: $accessToken\nRefresh Token: $refreshToken\nExpires In: $expiresIn seconds")
+                Timber.d("Received authorization:\nAccess Token: $accessToken\nRefresh Token: $refreshToken\nExpires In: $expiresIn seconds")
 
                 // Store refresh token
                 AccessModel.setRefreshToken(refreshToken)
@@ -186,7 +184,7 @@ class LaunchActivity : BaseActivity() {
                 // Schedule access token refresh to occur every 20 minutes
                 startPeriodicAccessRefresh()
             } else {
-                Log.e(TAG, "Response was unsuccessful or response string was null")
+                Timber.e("Response was unsuccessful or response string was null")
             }
         }
     }

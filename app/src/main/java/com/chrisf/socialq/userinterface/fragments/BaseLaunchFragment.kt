@@ -8,8 +8,9 @@ import android.os.Process
 import androidx.fragment.app.Fragment
 import com.chrisf.socialq.enums.RequestType
 import com.chrisf.socialq.model.AccessModel
+import com.chrisf.socialq.network.FrySpotifyService
 import com.chrisf.socialq.userinterface.App
-import kaaes.spotify.webapi.android.SpotifyApi
+import io.reactivex.android.schedulers.AndroidSchedulers
 import kaaes.spotify.webapi.android.SpotifyCallback
 import kaaes.spotify.webapi.android.SpotifyError
 import kaaes.spotify.webapi.android.models.UserPrivate
@@ -20,7 +21,7 @@ import javax.inject.Inject
 abstract class BaseLaunchFragment : Fragment() {
 
     @Inject
-    protected lateinit var spotifyApi: SpotifyApi
+    protected lateinit var spotifyApi: FrySpotifyService
     protected var currentUser: UserPrivate? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -87,7 +88,16 @@ abstract class BaseLaunchFragment : Fragment() {
 
     protected fun requestSpotifyUser() {
         if (AccessModel.getCurrentUser() == null) {
-            spotifyApi.service.getMe(currentUserCallback)
+            spotifyApi.getCurrentUser()
+                    //TODO: Move to IO!!!!!
+                    .subscribeOn(AndroidSchedulers.mainThread())
+                    .subscribe { response ->
+                        if (response.isSuccessful) {
+                            currentUser = response.body()
+                            AccessModel.setCurrentUser(response.body())
+                            userRetrieved()
+                        }
+                    }
         } else {
             currentUser = AccessModel.getCurrentUser()
             userRetrieved()

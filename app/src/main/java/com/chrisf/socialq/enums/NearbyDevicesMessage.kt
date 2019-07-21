@@ -1,6 +1,6 @@
 package com.chrisf.socialq.enums
 
-import com.chrisf.socialq.business.AppConstants
+import com.chrisf.socialq.AppConstants
 
 enum class NearbyDevicesMessage (val regex: String, val messageFormat: String) {
     CURRENTLY_PLAYING_UPDATE(AppConstants.CURRENTLY_PLAYING_UPDATE_REGEX, AppConstants.CURRENTLY_PLAYING_UPDATE_MESSAGE_FORMAT),

@@ -5,7 +5,7 @@ import android.app.job.JobService
 import android.content.Intent
 import android.os.SystemClock
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
-import com.chrisf.socialq.business.AppConstants
+import com.chrisf.socialq.AppConstants
 import com.chrisf.socialq.model.AccessModel
 import com.chrisf.socialq.userinterface.App
 import kaaes.spotify.webapi.android.SpotifyApi
