@@ -9,6 +9,7 @@ import com.bumptech.glide.request.RequestOptions
 import com.chrisf.socialq.R
 import com.chrisf.socialq.model.spotify.AlbumSimple
 import com.chrisf.socialq.userinterface.adapters.SearchResultsAdapter.*
+import com.chrisf.socialq.userinterface.adapters.SearchResultsAdapter.SearchResultClick.*
 import com.chrisf.socialq.userinterface.adapters.SearchResultsAdapter.SearchViewType.*
 import com.chrisf.socialq.utils.DisplayUtils
 import com.jakewharton.rxrelay2.PublishRelay
@@ -26,9 +27,9 @@ import kotlin.math.min
 
 class SearchResultsAdapter(private val headerChildCount: Int = 3)
     : RecyclerView.Adapter<SearchResultsViewHolder>() {
-    private val trackList = mutableListOf<Track>()
-    private val artistList = mutableListOf<Artist>()
-    private val albumList = mutableListOf<AlbumSimple>()
+    val trackList = mutableListOf<Track>()
+    val artistList = mutableListOf<Artist>()
+    val albumList = mutableListOf<AlbumSimple>()
 
     private val clickRelay: PublishRelay<SearchResultClick> = PublishRelay.create()
     val clickObservable: Observable<SearchResultClick>
@@ -70,12 +71,12 @@ class SearchResultsAdapter(private val headerChildCount: Int = 3)
     override fun onBindViewHolder(holder: SearchResultsViewHolder, position: Int) {
         val viewType = SearchViewType.values()[getItemViewType(position)]
         when (viewType) {
-            TRACK_HEADER -> holder.bindHeader("Songs")
-            ARTIST_HEADER -> holder.bindHeader("Artists")
-            ALBUM_HEADER -> holder.bindHeader("Albums")
-            ALL_TRACKS_HEADER -> holder.bindViewAllButton("See All Songs")
-            ALL_ARTIST_HEADER -> holder.bindViewAllButton("See All Artists")
-            ALL_ALBUM_HEADER -> holder.bindViewAllButton("See All Albums")
+            TRACK_HEADER -> holder.bindHeader(R.string.songs)
+            ARTIST_HEADER -> holder.bindHeader(R.string.artists)
+            ALBUM_HEADER -> holder.bindHeader(R.string.albums)
+            ALL_TRACKS_HEADER -> holder.bindViewAllButton(R.string.see_all_songs)
+            ALL_ARTIST_HEADER -> holder.bindViewAllButton(R.string.see_all_artists)
+            ALL_ALBUM_HEADER -> holder.bindViewAllButton(R.string.see_all_albums)
             TRACK -> holder.bindTrack(trackList[getTrackIndexByPosition(position)])
             ARTIST -> holder.bindArtist(artistList[getArtistIndexByPosition(position)])
             ALBUM -> holder.bindAlbum(albumList[getAlbumIndexByPosition(position)])
@@ -245,7 +246,7 @@ class SearchResultsAdapter(private val headerChildCount: Int = 3)
             } else {
                 Glide.with(itemView).load(imageUrl).apply(RequestOptions().placeholder(R.mipmap.black_record)).into(itemView.trackArt)
             }
-            itemView.setOnClickListener { clickRelay.accept(SearchResultClick.TrackClick(id)) }
+            itemView.setOnClickListener { clickRelay.accept(TrackClick(id)) }
         }
 
         fun bindArtist(artist: Artist) {
@@ -258,7 +259,7 @@ class SearchResultsAdapter(private val headerChildCount: Int = 3)
             } else {
                 Glide.with(itemView).load(imageUrl).apply(RequestOptions().placeholder(R.mipmap.black_blank_person)).into(itemView.artistImage)
             }
-            itemView.setOnClickListener { clickRelay.accept(SearchResultClick.ArtistClick(id)) }
+            itemView.setOnClickListener { clickRelay.accept(ArtistClick(id)) }
         }
 
         fun bindAlbum(album: AlbumSimple) {
@@ -272,19 +273,18 @@ class SearchResultsAdapter(private val headerChildCount: Int = 3)
             } else {
                 Glide.with(itemView).load(imageUrl).apply(RequestOptions().placeholder(R.mipmap.black_record)).into(itemView.albumArt)
             }
-            itemView.setOnClickListener { clickRelay.accept(SearchResultClick.AlbumClick(id)) }
+            itemView.setOnClickListener { clickRelay.accept(AlbumClick(id)) }
         }
 
-        fun bindHeader(headerText: String) {
-            id = headerText
-            itemView.headerText.text = headerText
-            // TODO: Relay click
+        fun bindHeader(headerTextId: Int) {
+            id = headerTextId.toString()
+            itemView.headerText.text = itemView.resources.getString(headerTextId)
         }
 
-        fun bindViewAllButton(viewAllText: String) {
-            id = viewAllText
-            itemView.viewAllButton.text = viewAllText
-            // TODO: Relay click
+        fun bindViewAllButton(viewAllTextId: Int) {
+            id = viewAllTextId.toString()
+            itemView.viewAllButton.text = itemView.resources.getString(viewAllTextId)
+            itemView.setOnClickListener { clickRelay.accept(ViewAllClick(id)) }
         }
     }
 
@@ -292,6 +292,6 @@ class SearchResultsAdapter(private val headerChildCount: Int = 3)
         data class TrackClick(val uri: String) : SearchResultClick()
         data class ArtistClick(val id: String) : SearchResultClick()
         data class AlbumClick(val id: String) : SearchResultClick()
-        // TODO: Header and view all clicks
+        data class ViewAllClick(val id: String): SearchResultClick()
     }
 }

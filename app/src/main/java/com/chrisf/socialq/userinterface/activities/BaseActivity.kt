@@ -6,6 +6,7 @@ import android.os.Build
 import android.os.Bundle
 import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
+import androidx.fragment.app.Fragment
 import com.chrisf.socialq.R
 import com.chrisf.socialq.dagger.components.ActivityComponent
 import com.chrisf.socialq.dagger.components.ActivityComponentHolder
@@ -19,6 +20,8 @@ import javax.inject.Inject
 
 abstract class BaseActivity<State, Action, Processor : BaseProcessor<State, Action>> :
         AppCompatActivity(), ActivityComponentHolder {
+
+    abstract val FRAGMENT_HOLDER_ID: Int
 
     private lateinit var activityComponent: ActivityComponent
 
@@ -85,6 +88,19 @@ abstract class BaseActivity<State, Action, Processor : BaseProcessor<State, Acti
     override fun onDestroy() {
         super.onDestroy()
         subscriptions.clear()
+    }
+
+    protected fun addFragment(fragment: Fragment) {
+        supportFragmentManager.beginTransaction()
+                .add(FRAGMENT_HOLDER_ID, fragment)
+                .commit()
+    }
+
+    protected fun addFragmentToBackstack(fragment: Fragment) {
+        supportFragmentManager.beginTransaction()
+                .replace(FRAGMENT_HOLDER_ID, fragment)
+                .addToBackStack(null)
+                .commit()
     }
 
     abstract fun resolveDependencies(activityComponent: ActivityComponent)

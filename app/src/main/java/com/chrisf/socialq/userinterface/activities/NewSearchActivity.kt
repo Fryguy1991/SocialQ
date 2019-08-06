@@ -2,7 +2,6 @@ package com.chrisf.socialq.userinterface.activities
 
 import android.content.Intent
 import android.os.Bundle
-import android.view.WindowManager
 import com.chrisf.socialq.AppConstants
 import com.chrisf.socialq.R
 import com.chrisf.socialq.dagger.components.ActivityComponent
@@ -12,11 +11,13 @@ import com.chrisf.socialq.processor.SearchProcessor.SearchAction.*
 import com.chrisf.socialq.processor.SearchProcessor.SearchState
 import com.chrisf.socialq.processor.SearchProcessor.SearchState.*
 import com.chrisf.socialq.userinterface.fragments.SearchResultsFragment
+import com.chrisf.socialq.userinterface.fragments.SearchTracksFragment
+import kaaes.spotify.webapi.android.models.Track
 import kotlinx.android.synthetic.main.activity_search.*
 
-class NewSearchActivity : BaseActivity<SearchState, SearchAction, SearchProcessor>() {
+class NewSearchActivity : BaseActivity<SearchState, SearchAction, SearchProcessor>(), SearchNavController {
 
-    private lateinit var searchResultsFragment: SearchResultsFragment
+    override val FRAGMENT_HOLDER_ID = R.id.appFragment
 
     override fun resolveDependencies(activityComponent: ActivityComponent) {
         activityComponent.inject(this)
@@ -42,6 +43,12 @@ class NewSearchActivity : BaseActivity<SearchState, SearchAction, SearchProcesso
         actionStream.accept(ViewResumed)
     }
 
+    override fun navigateToViewAllTracks(initialTracks: List<Track>) {
+        appToolbar.title = getString(R.string.songs)
+        val fragment = SearchTracksFragment.getInstance(initialTracks)
+        addFragmentToBackstack(fragment)
+    }
+
     private fun initViews() {
         // Setup the app toolbar
         setSupportActionBar(appToolbar)
@@ -50,16 +57,8 @@ class NewSearchActivity : BaseActivity<SearchState, SearchAction, SearchProcesso
             supportActionBar!!.setDisplayHomeAsUpEnabled(true)
         }
 
-        // Stop soft keyboard from pushing UI up
-        // TODO: Do I actually want to do this? Probably not
-        window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING)
-
-        searchResultsFragment = SearchResultsFragment.getInstance()
-
-        supportFragmentManager
-                .beginTransaction()
-                .add(appFragment.id, searchResultsFragment)
-                .commit()
+        val fragment = SearchResultsFragment.getInstance()
+        addFragment(fragment)
     }
 
     private fun sendTrackResult(uri: String) {
@@ -68,4 +67,8 @@ class NewSearchActivity : BaseActivity<SearchState, SearchAction, SearchProcesso
         setResult(RESULT_OK, resultIntent)
         finish()
     }
+}
+
+interface SearchNavController {
+    fun navigateToViewAllTracks(initialTracks: List<Track>)
 }
