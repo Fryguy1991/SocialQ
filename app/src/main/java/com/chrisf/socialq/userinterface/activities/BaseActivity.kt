@@ -91,15 +91,23 @@ abstract class BaseActivity<State, Action, Processor : BaseProcessor<State, Acti
     }
 
     protected fun addFragment(fragment: Fragment) {
+        addFragment(fragment, null)
+    }
+
+    protected fun addFragment(fragment: Fragment, transactionId: String?) {
         supportFragmentManager.beginTransaction()
-                .add(FRAGMENT_HOLDER_ID, fragment)
+                .add(FRAGMENT_HOLDER_ID, fragment, transactionId)
                 .commit()
     }
 
     protected fun addFragmentToBackstack(fragment: Fragment) {
+        addFragmentToBackstack(fragment, null)
+    }
+
+    protected fun addFragmentToBackstack(fragment: Fragment, transactionId: String?) {
         supportFragmentManager.beginTransaction()
                 .replace(FRAGMENT_HOLDER_ID, fragment)
-                .addToBackStack(null)
+                .addToBackStack(transactionId)
                 .commit()
     }
 

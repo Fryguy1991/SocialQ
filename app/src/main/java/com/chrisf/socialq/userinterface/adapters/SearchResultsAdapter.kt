@@ -23,6 +23,7 @@ import kotlinx.android.synthetic.main.holder_search_track.view.*
 import kotlinx.android.synthetic.main.holder_search_track.view.artistName
 import kotlinx.android.synthetic.main.holder_search_track.view.trackName
 import kotlinx.android.synthetic.main.holder_view_all_header.view.*
+import java.util.concurrent.TimeUnit
 import kotlin.math.min
 
 class SearchResultsAdapter(private val headerChildCount: Int = 3)
@@ -34,7 +35,7 @@ class SearchResultsAdapter(private val headerChildCount: Int = 3)
     private val clickRelay: PublishRelay<SearchResultClick> = PublishRelay.create()
     val clickObservable: Observable<SearchResultClick>
         get() {
-            return clickRelay.hide()
+            return clickRelay.hide().throttleFirst(1, TimeUnit.SECONDS)
         }
 
     fun updateData(

@@ -10,12 +10,14 @@ import com.chrisf.socialq.processor.SearchProcessor.SearchAction
 import com.chrisf.socialq.processor.SearchProcessor.SearchAction.*
 import com.chrisf.socialq.processor.SearchProcessor.SearchState
 import com.chrisf.socialq.processor.SearchProcessor.SearchState.*
+import com.chrisf.socialq.userinterface.fragments.SearchAlbumFragment
 import com.chrisf.socialq.userinterface.fragments.SearchResultsFragment
 import com.chrisf.socialq.userinterface.fragments.SearchTracksFragment
+import kaaes.spotify.webapi.android.models.Album
 import kaaes.spotify.webapi.android.models.Track
 import kotlinx.android.synthetic.main.activity_search.*
 
-class NewSearchActivity : BaseActivity<SearchState, SearchAction, SearchProcessor>(), SearchNavController {
+class NewSearchActivity : BaseActivity<SearchState, SearchAction, SearchProcessor>() {
 
     override val FRAGMENT_HOLDER_ID = R.id.appFragment
 
@@ -26,6 +28,8 @@ class NewSearchActivity : BaseActivity<SearchState, SearchAction, SearchProcesso
     override fun handleState(state: SearchState) {
         when (state) {
             is ReportTrackResult -> sendTrackResult(state.trackUri)
+            is DisplayAlbum -> navigateToAlbum(state.album)
+            is NavigateToAllTracks -> navigateToViewAllTracks(state.initialTrackList)
         }
     }
 
@@ -43,12 +47,6 @@ class NewSearchActivity : BaseActivity<SearchState, SearchAction, SearchProcesso
         actionStream.accept(ViewResumed)
     }
 
-    override fun navigateToViewAllTracks(initialTracks: List<Track>) {
-        appToolbar.title = getString(R.string.songs)
-        val fragment = SearchTracksFragment.getInstance(initialTracks)
-        addFragmentToBackstack(fragment)
-    }
-
     private fun initViews() {
         // Setup the app toolbar
         setSupportActionBar(appToolbar)
@@ -58,7 +56,25 @@ class NewSearchActivity : BaseActivity<SearchState, SearchAction, SearchProcesso
         }
 
         val fragment = SearchResultsFragment.getInstance()
-        addFragment(fragment)
+        addFragment(fragment, RESULTS_ID)
+
+        supportFragmentManager.addOnBackStackChangedListener {
+            if (supportFragmentManager.backStackEntryCount == 0) {
+                appToolbar.title = getString(R.string.search_activity_name)
+            }
+        }
+    }
+
+    private fun navigateToAlbum(album: Album) {
+        appToolbar.title = album.name
+        val fragment = SearchAlbumFragment.getInstance(album)
+        addFragmentToBackstack(fragment)
+    }
+
+    private fun navigateToViewAllTracks(initialTracks: List<Track>) {
+        appToolbar.title = getString(R.string.songs)
+        val fragment = SearchTracksFragment.getInstance(initialTracks)
+        addFragmentToBackstack(fragment)
     }
 
     private fun sendTrackResult(uri: String) {
@@ -67,8 +83,8 @@ class NewSearchActivity : BaseActivity<SearchState, SearchAction, SearchProcesso
         setResult(RESULT_OK, resultIntent)
         finish()
     }
-}
 
-interface SearchNavController {
-    fun navigateToViewAllTracks(initialTracks: List<Track>)
+    companion object {
+        private const val RESULTS_ID = "results"
+    }
 }

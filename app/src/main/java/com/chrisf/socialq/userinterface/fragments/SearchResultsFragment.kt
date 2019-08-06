@@ -12,7 +12,6 @@ import com.chrisf.socialq.processor.SearchProcessor.SearchAction
 import com.chrisf.socialq.processor.SearchProcessor.SearchAction.*
 import com.chrisf.socialq.processor.SearchProcessor.SearchState
 import com.chrisf.socialq.processor.SearchProcessor.SearchState.*
-import com.chrisf.socialq.userinterface.activities.SearchNavController
 import com.chrisf.socialq.userinterface.adapters.SearchResultsAdapter
 import com.chrisf.socialq.userinterface.adapters.SearchResultsAdapter.SearchResultClick.*
 import com.jakewharton.rxbinding3.widget.textChanges
@@ -28,7 +27,6 @@ class SearchResultsFragment : BaseFragment<SearchState, SearchAction, SearchProc
             DisplayBaseView -> displayBaseView()
             is DisplayBaseResults -> displayBaseResults(state)
             is DisplayNoResults -> displayNoResults(state.searchTerm)
-            NavigateToAllTracks -> navigateToAllTracks()
         }
     }
 
@@ -98,14 +96,10 @@ class SearchResultsFragment : BaseFragment<SearchState, SearchAction, SearchProc
 
     private fun handleViewAllClick(resourceId: String) {
         when (resourceId) {
-            R.string.see_all_songs.toString() -> actionStream.accept(ViewAllTracksSelected)
+            R.string.see_all_songs.toString() -> actionStream.accept(ViewAllTracksSelected(baseResultsAdapter.trackList))
             R.string.see_all_artists.toString() -> actionStream.accept(ViewAllArtistsSelected)
             R.string.see_all_albums.toString() -> actionStream.accept(ViewAllAlbumsSelected)
         }
-    }
-
-    private fun navigateToAllTracks() {
-        (activity as SearchNavController).navigateToViewAllTracks(baseResultsAdapter.trackList)
     }
 
     companion object {
