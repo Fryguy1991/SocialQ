@@ -32,7 +32,7 @@
         android:textStyle="bold"
         android:textSize="@dimen/medium_text_2"
         android:textColor="?android:colorPrimary"
-        tools:text="Ruested from the Rain"/>
+        tools:text="Rusted from the Rain"/>
 
     <TextView
         android:id="@+id/artistName"
