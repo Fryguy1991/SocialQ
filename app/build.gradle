@@ -24,6 +24,16 @@ android {
         versionCode versionPatch
         versionName "${versionMajor}.${versionMinor}.${versionPatch}"
     }
+
+    signingConfigs {
+        debug {
+            keyAlias 'debug'
+            keyPassword 'android'
+            storeFile file('../debug.jks')
+            storePassword 'android'
+        }
+    }
+
     buildTypes {
         release {
             minifyEnabled true
@@ -32,8 +42,7 @@ android {
         }
 
         debug {
-            // TODO: Get SHA and update Spotify dashboard before uncommenting below
-//            applicationIdSuffix ".debug"
+            applicationIdSuffix ".debug"
             minifyEnabled false
             shrinkResources false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
