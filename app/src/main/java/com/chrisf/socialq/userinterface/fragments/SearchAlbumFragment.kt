@@ -1,5 +1,6 @@
 package com.chrisf.socialq.userinterface.fragments
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -11,12 +12,15 @@ import com.bumptech.glide.request.RequestOptions
 import com.chrisf.socialq.R
 import com.chrisf.socialq.dagger.components.FragmentComponent
 import com.chrisf.socialq.processor.SearchProcessor
+import com.jakewharton.rxrelay2.PublishRelay
+import io.reactivex.Observable
 import kaaes.spotify.webapi.android.models.Album
 import kaaes.spotify.webapi.android.models.TrackSimple
 import kotlinx.android.synthetic.main.fragment_search_album.*
 import kotlinx.android.synthetic.main.holder_album_art.view.*
 import kotlinx.android.synthetic.main.holder_album_track.view.*
 import java.lang.IllegalStateException
+import java.util.concurrent.TimeUnit
 
 class SearchAlbumFragment : BaseFragment<SearchProcessor.SearchState, SearchProcessor.SearchAction, SearchProcessor>() {
 
@@ -41,11 +45,19 @@ class SearchAlbumFragment : BaseFragment<SearchProcessor.SearchState, SearchProc
             albumAdapter = SearchAlbumAdapter(album)
             albumRecyclerView.layoutManager = LinearLayoutManager(context)
             albumRecyclerView.adapter = albumAdapter
+
+            albumAdapter.clickObservable
+                    .doOnSubscribe { subscriptions.add(it) }
+                    .subscribe {
+                        if (!it.isNullOrEmpty()) {
+                            actionStream.accept(SearchProcessor.SearchAction.TrackSelected(it))
+                        }
+                    }
         }
     }
 
     override fun handleState(state: SearchProcessor.SearchState) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        // TODO: Should page through album tracks if there are too many
     }
 
     companion object {
@@ -63,11 +75,18 @@ class SearchAlbumFragment : BaseFragment<SearchProcessor.SearchState, SearchProc
     }
 
     private class SearchAlbumAdapter(private val album: Album) : RecyclerView.Adapter<SearchAlbumAdapter.AlbumViewHolder>() {
+        private val clickRelay: PublishRelay<String> = PublishRelay.create()
+        val clickObservable: Observable<String>
+            get() {
+                return clickRelay.hide().throttleFirst(1, TimeUnit.SECONDS)
+            }
+
         private val albumArtUrl: String = if (album.images == null || album.images?.isEmpty()!!) {
             ""
         } else {
             album.images[0].url ?: ""
         }
+
         private val numberOfTracks: Int = album.tracks.items?.size ?: 0
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AlbumViewHolder {
@@ -100,7 +119,7 @@ class SearchAlbumFragment : BaseFragment<SearchProcessor.SearchState, SearchProc
                 holder.bind(albumArtUrl)
                 return
             }
-            val trackIndex = if (albumArtUrl.isEmpty()) position else position -1
+            val trackIndex = if (albumArtUrl.isEmpty()) position else position - 1
             holder.bind(album.tracks.items[trackIndex], trackIndex + 1)
         }
 
@@ -112,9 +131,11 @@ class SearchAlbumFragment : BaseFragment<SearchProcessor.SearchState, SearchProc
                         .into(itemView.albumArt)
             }
 
+            @SuppressLint("SetTextI18n")
             fun bind(track: TrackSimple, position: Int) {
                 itemView.albumTrackName.text = track.name
                 itemView.albumTrackNumber.text = "$position."
+                itemView.setOnClickListener { clickRelay.accept(track.uri) }
             }
         }
 
