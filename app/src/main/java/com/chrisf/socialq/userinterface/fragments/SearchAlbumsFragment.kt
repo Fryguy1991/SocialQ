@@ -11,20 +11,27 @@ import com.chrisf.socialq.R
 import com.chrisf.socialq.dagger.components.FragmentComponent
 import com.chrisf.socialq.model.spotify.AlbumSimple
 import com.chrisf.socialq.processor.SearchProcessor
+import com.chrisf.socialq.processor.SearchProcessor.SearchAction
+import com.chrisf.socialq.processor.SearchProcessor.SearchState
 import com.chrisf.socialq.userinterface.AlbumGridDecorator
+import com.chrisf.socialq.userinterface.activities.TitleActivity
 import com.chrisf.socialq.userinterface.adapters.BaseRecyclerViewAdapter
+import com.chrisf.socialq.userinterface.fragments.SearchAlbumAdapter.AlbumViewholder
 import com.chrisf.socialq.utils.DisplayUtils
+import com.jakewharton.rxrelay2.PublishRelay
+import io.reactivex.Observable
 import kotlinx.android.synthetic.main.fragment_search_albums.*
 import kotlinx.android.synthetic.main.holder_album.view.*
+import java.util.concurrent.TimeUnit
 
-class SearchAlbumsFragment : BaseFragment<SearchProcessor.SearchState, SearchProcessor.SearchAction, SearchProcessor>() {
+class SearchAlbumsFragment : BaseFragment<SearchState, SearchAction, SearchProcessor>() {
     private val albumsAdapter = SearchAlbumAdapter()
 
     override fun resolveDepencencies(component: FragmentComponent) {
         component.inject(this)
     }
 
-    override fun handleState(state: SearchProcessor.SearchState) {
+    override fun handleState(state: SearchState) {
         // TODO: Should page through albums
     }
 
@@ -38,6 +45,11 @@ class SearchAlbumsFragment : BaseFragment<SearchProcessor.SearchState, SearchPro
         initViews()
     }
 
+    override fun onResume() {
+        super.onResume()
+        (activity as TitleActivity).setTitle(getString(R.string.albums))
+    }
+
     private fun initViews() {
         val albumArray = arguments?.getParcelableArrayList<AlbumSimple>(INITIAL_ALBUM_KEY)
 
@@ -47,6 +59,10 @@ class SearchAlbumsFragment : BaseFragment<SearchProcessor.SearchState, SearchPro
             albumsAdapter.updateAdapter(albumArray.toList())
         }
 
+        albumsAdapter.clickObservable
+                .doOnSubscribe { subscriptions.add(it) }
+                .subscribe { actionStream.accept(SearchAction.AlbumSelected(it.albumId)) }
+
         albumsRecyclerView.adapter = albumsAdapter
         albumsRecyclerView.addItemDecoration(AlbumGridDecorator())
         albumsRecyclerView.layoutManager = GridLayoutManager(context, AlbumGridDecorator.SPAN_COUNT)
@@ -55,7 +71,7 @@ class SearchAlbumsFragment : BaseFragment<SearchProcessor.SearchState, SearchPro
     companion object {
         private const val INITIAL_ALBUM_KEY = "initial_albums"
 
-        fun getInstance(initialAlbumList: List<AlbumSimple>) : SearchAlbumsFragment {
+        fun getInstance(initialAlbumList: List<AlbumSimple>): SearchAlbumsFragment {
             val fragment = SearchAlbumsFragment()
 
             val arrayList = ArrayList<AlbumSimple>()
@@ -71,7 +87,12 @@ class SearchAlbumsFragment : BaseFragment<SearchProcessor.SearchState, SearchPro
 }
 
 private class SearchAlbumAdapter : BaseRecyclerViewAdapter<AlbumViewholder, AlbumSimple>() {
-    // TODO: Handling clicking an album
+    private val clickRelay: PublishRelay<AlbumClick> = PublishRelay.create()
+    val clickObservable: Observable<AlbumClick>
+        get() {
+            return clickRelay.hide().throttleFirst(1, TimeUnit.SECONDS)
+        }
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AlbumViewholder {
         val view = LayoutInflater.from(parent.context).inflate(R.layout.holder_album, parent, false)
         return AlbumViewholder(view)
@@ -81,20 +102,20 @@ private class SearchAlbumAdapter : BaseRecyclerViewAdapter<AlbumViewholder, Albu
         holder.bind(itemList[position])
     }
 
-}
 
-private class AlbumViewholder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+    private inner class AlbumViewholder(itemView: View) : RecyclerView.ViewHolder(itemView) {
 
-    lateinit var albumId: String
+        fun bind(album: AlbumSimple) {
+            if (album.images.isNotEmpty()) {
+                Glide.with(itemView).load(album.images[0].url).into(itemView.albumArt)
+            }
 
-    fun bind(album: AlbumSimple) {
-        albumId = album.id
+            itemView.albumName.text = album.name
+            itemView.artistName.text = DisplayUtils.getAlbumArtistString(album)
 
-        if (album.images.isNotEmpty()) {
-            Glide.with(itemView).load(album.images[0].url).into(itemView.albumArt)
+            itemView.setOnClickListener { clickRelay.accept(AlbumClick(album.id)) }
         }
-
-        itemView.albumName.text = album.name
-        itemView.artistName.text = DisplayUtils.getAlbumArtistString(album)
     }
 }
+
+private data class AlbumClick(val albumId: String)

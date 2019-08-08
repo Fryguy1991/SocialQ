@@ -12,6 +12,7 @@ import com.bumptech.glide.request.RequestOptions
 import com.chrisf.socialq.R
 import com.chrisf.socialq.dagger.components.FragmentComponent
 import com.chrisf.socialq.processor.SearchProcessor
+import com.chrisf.socialq.userinterface.activities.TitleActivity
 import com.jakewharton.rxrelay2.PublishRelay
 import io.reactivex.Observable
 import kaaes.spotify.webapi.android.models.Album
@@ -25,6 +26,8 @@ import java.util.concurrent.TimeUnit
 class SearchSingleAlbumFragment : BaseFragment<SearchProcessor.SearchState, SearchProcessor.SearchAction, SearchProcessor>() {
 
     private lateinit var albumAdapter: SearchAlbumAdapter
+
+    private lateinit var fragmentTitle: String
 
     override fun resolveDepencencies(component: FragmentComponent) {
         component.inject(this)
@@ -42,6 +45,8 @@ class SearchSingleAlbumFragment : BaseFragment<SearchProcessor.SearchState, Sear
         if (album == null) {
             throw IllegalStateException("SearchSingleAlbumFragment needs an album to display")
         } else {
+            fragmentTitle = album.name
+
             albumAdapter = SearchAlbumAdapter(album)
             albumRecyclerView.layoutManager = LinearLayoutManager(context)
             albumRecyclerView.adapter = albumAdapter
@@ -54,6 +59,11 @@ class SearchSingleAlbumFragment : BaseFragment<SearchProcessor.SearchState, Sear
                         }
                     }
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        (activity as TitleActivity).setTitle(fragmentTitle)
     }
 
     override fun handleState(state: SearchProcessor.SearchState) {

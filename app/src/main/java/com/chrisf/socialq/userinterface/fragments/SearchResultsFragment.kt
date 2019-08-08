@@ -12,6 +12,7 @@ import com.chrisf.socialq.processor.SearchProcessor.SearchAction
 import com.chrisf.socialq.processor.SearchProcessor.SearchAction.*
 import com.chrisf.socialq.processor.SearchProcessor.SearchState
 import com.chrisf.socialq.processor.SearchProcessor.SearchState.*
+import com.chrisf.socialq.userinterface.activities.TitleActivity
 import com.chrisf.socialq.userinterface.adapters.SearchResultsAdapter
 import com.chrisf.socialq.userinterface.adapters.SearchResultsAdapter.SearchResultClick.*
 import com.jakewharton.rxbinding3.widget.textChanges
@@ -41,6 +42,11 @@ class SearchResultsFragment : BaseFragment<SearchState, SearchAction, SearchProc
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         initViews()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        (activity as TitleActivity).setTitle(getString(R.string.search_activity_name))
     }
 
     private fun initViews() {

@@ -12,6 +12,7 @@ import com.chrisf.socialq.dagger.components.FragmentComponent
 import com.chrisf.socialq.processor.SearchProcessor
 import com.chrisf.socialq.processor.SearchProcessor.SearchAction
 import com.chrisf.socialq.processor.SearchProcessor.SearchState
+import com.chrisf.socialq.userinterface.activities.TitleActivity
 import com.chrisf.socialq.userinterface.adapters.BaseRecyclerViewAdapter
 import com.chrisf.socialq.utils.DisplayUtils
 import com.jakewharton.rxrelay2.PublishRelay
@@ -40,6 +41,11 @@ class SearchTracksFragment : BaseFragment<SearchState, SearchAction, SearchProce
         super.onViewCreated(view, savedInstanceState)
 
         initViews()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        (activity as TitleActivity).setTitle(getString(R.string.songs))
     }
 
     private fun initViews() {

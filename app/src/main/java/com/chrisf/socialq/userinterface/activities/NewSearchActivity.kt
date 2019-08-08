@@ -19,7 +19,7 @@ import kaaes.spotify.webapi.android.models.Album
 import kaaes.spotify.webapi.android.models.Track
 import kotlinx.android.synthetic.main.activity_search.*
 
-class NewSearchActivity : BaseActivity<SearchState, SearchAction, SearchProcessor>() {
+class NewSearchActivity : BaseActivity<SearchState, SearchAction, SearchProcessor>(), TitleActivity {
 
     override val FRAGMENT_HOLDER_ID = R.id.appFragment
 
@@ -53,7 +53,6 @@ class NewSearchActivity : BaseActivity<SearchState, SearchAction, SearchProcesso
     private fun initViews() {
         // Setup the app toolbar
         setSupportActionBar(appToolbar)
-        appToolbar.setTitle(R.string.search_activity_name)
         if (supportActionBar != null) {
             supportActionBar!!.setDisplayHomeAsUpEnabled(true)
         }
@@ -68,20 +67,21 @@ class NewSearchActivity : BaseActivity<SearchState, SearchAction, SearchProcesso
         }
     }
 
+    override fun setTitle(title: String) {
+        appToolbar.title = title
+    }
+
     private fun navigateToAlbum(album: Album) {
-        appToolbar.title = album.name
         val fragment = SearchSingleAlbumFragment.getInstance(album)
         addFragmentToBackstack(fragment)
     }
 
     private fun navigateToViewAllTracks(initialTracks: List<Track>) {
-        appToolbar.title = getString(R.string.songs)
         val fragment = SearchTracksFragment.getInstance(initialTracks)
         addFragmentToBackstack(fragment)
     }
 
     private fun navigateToViewAllAlbums(initialAlbums: List<AlbumSimple>) {
-        appToolbar.title = getString(R.string.albums)
         val fragment = SearchAlbumsFragment.getInstance(initialAlbums)
         addFragmentToBackstack(fragment)
     }
@@ -96,4 +96,8 @@ class NewSearchActivity : BaseActivity<SearchState, SearchAction, SearchProcesso
     companion object {
         private const val RESULTS_ID = "results"
     }
+}
+
+interface TitleActivity {
+    fun setTitle(title: String)
 }
