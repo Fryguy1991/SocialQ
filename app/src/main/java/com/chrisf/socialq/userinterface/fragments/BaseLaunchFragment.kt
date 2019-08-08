@@ -8,13 +8,10 @@ import android.os.Process
 import androidx.fragment.app.Fragment
 import com.chrisf.socialq.enums.RequestType
 import com.chrisf.socialq.model.AccessModel
+import com.chrisf.socialq.model.spotify.UserPrivate
 import com.chrisf.socialq.network.FrySpotifyService
 import com.chrisf.socialq.userinterface.App
 import io.reactivex.android.schedulers.AndroidSchedulers
-import kaaes.spotify.webapi.android.SpotifyCallback
-import kaaes.spotify.webapi.android.SpotifyError
-import kaaes.spotify.webapi.android.models.UserPrivate
-import retrofit.client.Response
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -101,26 +98,6 @@ abstract class BaseLaunchFragment : Fragment() {
         } else {
             currentUser = AccessModel.getCurrentUser()
             userRetrieved()
-        }
-    }
-
-    private val currentUserCallback = object : SpotifyCallback<UserPrivate>() {
-        override fun success(user: UserPrivate?, response: Response?) {
-            if (user != null) {
-                Timber.d("Successfully retrieved current user")
-
-                AccessModel.setCurrentUser(user)
-                currentUser = user
-                userRetrieved()
-            } else {
-                Timber.e("Error user was null")
-            }
-        }
-
-        override fun failure(spotifyError: SpotifyError?) {
-            Timber.e("Error retrieving current user")
-            Timber.e(spotifyError?.errorDetails?.message.toString())
-            // TODO: Think about what we should do if we can't retrieve the user
         }
     }
 

@@ -164,7 +164,7 @@ abstract class SpotifyAccessService : Service() {
         metaDataBuilder.putString(MediaMetadataCompat.METADATA_KEY_ALBUM, trackToShow.album?.name)
         metaDataBuilder.putString(MediaMetadataCompat.METADATA_KEY_TITLE, trackToShow.name)
         metaDataBuilder.putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_TITLE, trackToShow.name)
-        metaDataBuilder.putString(MediaMetadataCompat.METADATA_KEY_ARTIST, DisplayUtils.getTrackArtistString(trackToShow))
+        metaDataBuilder.putString(MediaMetadataCompat.METADATA_KEY_ARTIST, DisplayUtils.getArtistStringFromList(trackToShow.artists))
 
         // Attempt to update album art in notification and metadata
         if (trackToShow.album.images.size > 0) {
@@ -186,7 +186,7 @@ abstract class SpotifyAccessService : Service() {
 
         // Update notification data
         notificationBuilder.setContentTitle(trackToShow.name)
-        notificationBuilder.setContentText(DisplayUtils.getTrackArtistString(trackToShow))
+        notificationBuilder.setContentText(DisplayUtils.getArtistStringFromList(trackToShow.artists))
 
         val notificationId = when (serviceIsHost) {
             true -> AppConstants.HOST_SERVICE_ID

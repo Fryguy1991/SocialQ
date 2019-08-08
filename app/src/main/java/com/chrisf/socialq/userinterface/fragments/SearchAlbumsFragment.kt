@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
+import com.bumptech.glide.request.RequestOptions
 import com.chrisf.socialq.R
 import com.chrisf.socialq.dagger.components.FragmentComponent
 import com.chrisf.socialq.model.spotify.AlbumSimple
@@ -106,9 +107,10 @@ private class SearchAlbumAdapter : BaseRecyclerViewAdapter<AlbumViewholder, Albu
     private inner class AlbumViewholder(itemView: View) : RecyclerView.ViewHolder(itemView) {
 
         fun bind(album: AlbumSimple) {
-            if (album.images.isNotEmpty()) {
-                Glide.with(itemView).load(album.images[0].url).into(itemView.albumArt)
-            }
+            Glide.with(itemView)
+                    .setDefaultRequestOptions(RequestOptions.placeholderOf(R.mipmap.black_record))
+                    .load(if (album.images.isEmpty()) null else album.images[0].url)
+                    .into(itemView.albumArt)
 
             itemView.albumName.text = album.name
             itemView.artistName.text = DisplayUtils.getAlbumArtistString(album)

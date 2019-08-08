@@ -8,14 +8,14 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
 import com.chrisf.socialq.R
 import com.chrisf.socialq.model.spotify.AlbumSimple
+import com.chrisf.socialq.model.spotify.Artist
+import com.chrisf.socialq.model.spotify.Track
 import com.chrisf.socialq.userinterface.adapters.SearchResultsAdapter.*
 import com.chrisf.socialq.userinterface.adapters.SearchResultsAdapter.SearchResultClick.*
 import com.chrisf.socialq.userinterface.adapters.SearchResultsAdapter.SearchViewType.*
 import com.chrisf.socialq.utils.DisplayUtils
 import com.jakewharton.rxrelay2.PublishRelay
 import io.reactivex.Observable
-import kaaes.spotify.webapi.android.models.Artist
-import kaaes.spotify.webapi.android.models.Track
 import kotlinx.android.synthetic.main.holder_search_album.view.*
 import kotlinx.android.synthetic.main.holder_search_artist.view.*
 import kotlinx.android.synthetic.main.holder_search_header.view.*

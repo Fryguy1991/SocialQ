@@ -5,7 +5,9 @@ import android.os.Bundle
 import com.chrisf.socialq.AppConstants
 import com.chrisf.socialq.R
 import com.chrisf.socialq.dagger.components.ActivityComponent
+import com.chrisf.socialq.model.spotify.Album
 import com.chrisf.socialq.model.spotify.AlbumSimple
+import com.chrisf.socialq.model.spotify.Track
 import com.chrisf.socialq.processor.SearchProcessor
 import com.chrisf.socialq.processor.SearchProcessor.SearchAction
 import com.chrisf.socialq.processor.SearchProcessor.SearchAction.*
@@ -15,8 +17,6 @@ import com.chrisf.socialq.userinterface.fragments.SearchAlbumsFragment
 import com.chrisf.socialq.userinterface.fragments.SearchSingleAlbumFragment
 import com.chrisf.socialq.userinterface.fragments.SearchResultsFragment
 import com.chrisf.socialq.userinterface.fragments.SearchTracksFragment
-import kaaes.spotify.webapi.android.models.Album
-import kaaes.spotify.webapi.android.models.Track
 import kotlinx.android.synthetic.main.activity_search.*
 
 class NewSearchActivity : BaseActivity<SearchState, SearchAction, SearchProcessor>(), TitleActivity {

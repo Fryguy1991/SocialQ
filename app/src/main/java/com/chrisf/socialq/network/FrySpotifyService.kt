@@ -1,11 +1,11 @@
 package com.chrisf.socialq.network
 
-import com.chrisf.socialq.model.spotify.AlbumSimple
+import com.chrisf.socialq.model.spotify.*
 import com.chrisf.socialq.model.spotify.pager.AlbumSimplePager
 import com.chrisf.socialq.model.spotify.pager.ArtistPager
+import com.chrisf.socialq.model.spotify.pager.Pager
 import com.chrisf.socialq.model.spotify.pager.TrackPager
 import io.reactivex.Single
-import kaaes.spotify.webapi.android.models.*
 import retrofit2.http.GET
 import retrofit2.http.Query
 import retrofit2.Response
@@ -47,7 +47,7 @@ interface FrySpotifyService {
     ) : Single<Response<Pager<AlbumSimple>>>
 
     @GET("artists/{id}/top-tracks?country=from_token")
-    fun getArtistTopTracks(@Path("id") artistId: String) : Single<Response<Tracks>>
+    fun getArtistTopTracks(@Path("id") artistId: String) : Single<Response<TracksObject>>
 
     @GET("albums/{id}")
     fun getFullAlbum(@Path("id") albumId: String) : Single<Response<Album>>

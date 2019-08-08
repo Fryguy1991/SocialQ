@@ -4,19 +4,22 @@ import android.os.Parcelable
 import kotlinx.android.parcel.Parcelize
 
 @Parcelize
-data class AlbumSimple(
-        val album_group: String?,
-        val album_type: String,
+data class TrackSimple(
         val artists: List<ArtistSimple>,
         val available_markets: List<String>,
+        // disc_number
+        // duration_ms
+        val explicit: Boolean,
+        // external IDs
         // val external_urls: Map<String, String>,
-        // val href: String,
+        // href
         val id: String,
-        val images: List<Image>,
+        val is_playable: Boolean,
+        // linked_from
+        // restrictions
         val name: String,
-        val release_date: String,
-        // val release_date_precision: String,
-        // restrictions object
+        // preview_url
         val type: String,
-        val uri: String
+        val uri: String,
+        val is_local: Boolean
 ) : Parcelable

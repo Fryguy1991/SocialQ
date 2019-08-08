@@ -7,8 +7,10 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
+import com.bumptech.glide.request.RequestOptions
 import com.chrisf.socialq.R
 import com.chrisf.socialq.dagger.components.FragmentComponent
+import com.chrisf.socialq.model.spotify.Track
 import com.chrisf.socialq.processor.SearchProcessor
 import com.chrisf.socialq.processor.SearchProcessor.SearchAction
 import com.chrisf.socialq.processor.SearchProcessor.SearchState
@@ -17,7 +19,6 @@ import com.chrisf.socialq.userinterface.adapters.BaseRecyclerViewAdapter
 import com.chrisf.socialq.utils.DisplayUtils
 import com.jakewharton.rxrelay2.PublishRelay
 import io.reactivex.Observable
-import kaaes.spotify.webapi.android.models.Track
 import kotlinx.android.synthetic.main.fragment_search_tracks.*
 import kotlinx.android.synthetic.main.holder_search_track.view.*
 import java.util.concurrent.TimeUnit
@@ -108,12 +109,10 @@ private class SearchTrackAdapter : BaseRecyclerViewAdapter<SearchTrackAdapter.Tr
             itemView.trackName.text = track.name
             itemView.artistName.text = DisplayUtils.getTrackArtistString(track)
 
-            val url = track.album?.images?.get(0)?.url
-            if (url.isNullOrEmpty()) {
-                Glide.with(itemView).load(R.color.Transparent).into(itemView.trackArt)
-            } else {
-                Glide.with(itemView).load(url).into(itemView.trackArt)
-            }
+            Glide.with(itemView)
+                    .setDefaultRequestOptions(RequestOptions().placeholder(R.mipmap.black_record))
+                    .load(if (track.album.images.isEmpty()) null else track.album.images[0].url)
+                    .into(itemView.trackArt)
 
             itemView.setOnClickListener {
                 if (!track.uri.isNullOrEmpty()) {

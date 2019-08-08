@@ -1,8 +1,8 @@
 package com.chrisf.socialq.model
 
 import android.os.Parcelable
+import com.chrisf.socialq.model.spotify.UserPublic
 import kaaes.spotify.webapi.android.models.PlaylistTrack
-import kaaes.spotify.webapi.android.models.UserPublic
 import kotlinx.android.parcel.Parcelize
 
 @Parcelize

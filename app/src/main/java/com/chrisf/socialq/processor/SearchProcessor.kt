@@ -1,9 +1,10 @@
 package com.chrisf.socialq.processor
 
 import androidx.lifecycle.Lifecycle
-import com.chrisf.socialq.model.spotify.AlbumSimple
+import com.chrisf.socialq.model.spotify.*
 import com.chrisf.socialq.model.spotify.pager.AlbumSimplePager
 import com.chrisf.socialq.model.spotify.pager.ArtistPager
+import com.chrisf.socialq.model.spotify.pager.Pager
 import com.chrisf.socialq.model.spotify.pager.TrackPager
 import com.chrisf.socialq.network.FrySpotifyService
 import com.chrisf.socialq.processor.SearchProcessor.SearchAction
@@ -14,7 +15,6 @@ import io.reactivex.Single
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.functions.Function3
 import io.reactivex.schedulers.Schedulers
-import kaaes.spotify.webapi.android.models.*
 import retrofit2.Response
 import javax.inject.Inject
 
@@ -52,12 +52,12 @@ class SearchProcessor @Inject constructor(
         @Suppress("CheckResult")
         Single.zip(
                 spotifyService.getArtist(artistId),
-                spotifyService.getArtistAlbums(artistId),
+                spotifyService.getArtistAlbums(artistId, 4),
                 spotifyService.getArtistTopTracks(artistId),
                 Function3<
                         Response<Artist>,
                         Response<Pager<AlbumSimple>>,
-                        Response<Tracks>,
+                        Response<TracksObject>,
                         SearchState> { artist, albums, topTracks ->
                     // TODO: Ensure our response is good
 //                    if (artist.isSuccessful && albums.isSuccessful && topTracks.isSuccessful) {

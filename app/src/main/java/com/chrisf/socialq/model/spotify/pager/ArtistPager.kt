@@ -1,7 +1,7 @@
 package com.chrisf.socialq.model.spotify.pager
 
 import android.os.Parcelable
-import kaaes.spotify.webapi.android.models.Artist
+import com.chrisf.socialq.model.spotify.Artist
 import kotlinx.android.parcel.Parcelize
 
 @Parcelize

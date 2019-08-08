@@ -11,12 +11,12 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
 import com.chrisf.socialq.R
 import com.chrisf.socialq.dagger.components.FragmentComponent
+import com.chrisf.socialq.model.spotify.Album
+import com.chrisf.socialq.model.spotify.Track
 import com.chrisf.socialq.processor.SearchProcessor
 import com.chrisf.socialq.userinterface.activities.TitleActivity
 import com.jakewharton.rxrelay2.PublishRelay
 import io.reactivex.Observable
-import kaaes.spotify.webapi.android.models.Album
-import kaaes.spotify.webapi.android.models.TrackSimple
 import kotlinx.android.synthetic.main.fragment_search_album.*
 import kotlinx.android.synthetic.main.holder_album_art.view.*
 import kotlinx.android.synthetic.main.holder_album_track.view.*
@@ -91,14 +91,6 @@ class SearchSingleAlbumFragment : BaseFragment<SearchProcessor.SearchState, Sear
                 return clickRelay.hide().throttleFirst(1, TimeUnit.SECONDS)
             }
 
-        private val albumArtUrl: String = if (album.images == null || album.images?.isEmpty()!!) {
-            ""
-        } else {
-            album.images[0].url ?: ""
-        }
-
-        private val numberOfTracks: Int = album.tracks.items?.size ?: 0
-
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AlbumViewHolder {
             val layoutResource = when (AlbumItemType.values()[viewType]) {
                 AlbumItemType.ALBUM_ART -> R.layout.holder_album_art
@@ -109,15 +101,12 @@ class SearchSingleAlbumFragment : BaseFragment<SearchProcessor.SearchState, Sear
         }
 
         override fun getItemCount(): Int {
-            return if (albumArtUrl.isEmpty()) {
-                numberOfTracks
-            } else {
-                numberOfTracks + 1
-            }
+            val numberOfTracks = album.tracks?.items?.size ?: 0
+            return numberOfTracks + 1
         }
 
         override fun getItemViewType(position: Int): Int {
-            return if (position == 0 && albumArtUrl.isNotEmpty()) {
+            return if (position == 0) {
                 AlbumItemType.ALBUM_ART.ordinal
             } else {
                 AlbumItemType.TRACK.ordinal
@@ -125,16 +114,16 @@ class SearchSingleAlbumFragment : BaseFragment<SearchProcessor.SearchState, Sear
         }
 
         override fun onBindViewHolder(holder: AlbumViewHolder, position: Int) {
-            if (position == 0 && albumArtUrl.isNotEmpty()) {
-                holder.bind(albumArtUrl)
-                return
+            if (position == 0) {
+                holder.bind(if (album.images.isEmpty()) null else album.images[0].url)
+            } else {
+                val trackIndex = position - 1
+                holder.bind(album.tracks.items[trackIndex], trackIndex + 1)
             }
-            val trackIndex = if (albumArtUrl.isEmpty()) position else position - 1
-            holder.bind(album.tracks.items[trackIndex], trackIndex + 1)
         }
 
         private inner class AlbumViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-            fun bind(albumArtUrl: String) {
+            fun bind(albumArtUrl: String?) {
                 Glide.with(itemView)
                         .load(albumArtUrl)
                         .apply(RequestOptions().placeholder(R.mipmap.black_record))
@@ -142,7 +131,7 @@ class SearchSingleAlbumFragment : BaseFragment<SearchProcessor.SearchState, Sear
             }
 
             @SuppressLint("SetTextI18n")
-            fun bind(track: TrackSimple, position: Int) {
+            fun bind(track: Track, position: Int) {
                 itemView.albumTrackName.text = track.name
                 itemView.albumTrackNumber.text = "$position."
                 itemView.setOnClickListener { clickRelay.accept(track.uri) }

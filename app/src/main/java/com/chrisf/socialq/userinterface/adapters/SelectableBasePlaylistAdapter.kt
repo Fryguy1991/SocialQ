@@ -3,8 +3,8 @@ package com.chrisf.socialq.userinterface.adapters
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import com.chrisf.socialq.R
+import com.chrisf.socialq.model.spotify.PlaylistSimple
 import com.chrisf.socialq.userinterface.adapters.holders.SelectableBasePlaylistHolder
-import kaaes.spotify.webapi.android.models.PlaylistSimple
 
 class SelectableBasePlaylistAdapter : BaseRecyclerViewAdapter<SelectableBasePlaylistHolder, PlaylistSimple>(), IItemSelectionListener<Int> {
     private var selectedIndex = -1

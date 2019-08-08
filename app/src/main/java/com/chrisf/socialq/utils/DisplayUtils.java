@@ -5,15 +5,16 @@ import android.content.Context;
 import android.util.TypedValue;
 import android.view.inputmethod.InputMethodManager;
 
+import com.chrisf.socialq.model.spotify.Album;
 import com.chrisf.socialq.model.spotify.AlbumSimple;
+import com.chrisf.socialq.model.spotify.ArtistSimple;
+import com.chrisf.socialq.model.spotify.Track;
+import com.chrisf.socialq.model.spotify.TrackSimple;
 import com.spotify.sdk.android.player.Metadata;
 
 import java.util.List;
 
-import kaaes.spotify.webapi.android.models.Album;
-import kaaes.spotify.webapi.android.models.ArtistSimple;
 import kaaes.spotify.webapi.android.models.PlaylistTrack;
-import kaaes.spotify.webapi.android.models.TrackSimple;
 
 /**
  * Utils class for shared display methods
@@ -27,12 +28,29 @@ public class DisplayUtils {
      * @return - string containing artists in above format
      */
     public static String getTrackArtistString(TrackSimple track) {
-        return getArtistStringFromList(track.artists);
+        return getArtistStringFromListOfArtists(track.getArtists());
     }
 
-    private static String getArtistStringFromList(List<ArtistSimple> trackArtists) {
+    public static String getTrackArtistString(Track track) {
+        return getArtistStringFromListOfArtists(track.getArtists());
+    }
+
+    private static String getArtistStringFromListOfArtists(List<ArtistSimple> trackArtists) {
         String artistString = "";
         for(ArtistSimple artist : trackArtists) {
+            if(artistString.isEmpty()) {
+                artistString = artistString.concat(artist.getName());
+            } else {
+                artistString = artistString.concat(", " + artist.getName());
+            }
+        }
+        return artistString;
+    }
+
+    // TODO: Remove this along with kaas API
+    public static String getArtistStringFromList(List<kaaes.spotify.webapi.android.models.ArtistSimple> trackArtists) {
+        String artistString = "";
+        for(kaaes.spotify.webapi.android.models.ArtistSimple artist : trackArtists) {
             if(artistString.isEmpty()) {
                 artistString = artistString.concat(artist.name);
             } else {
@@ -43,7 +61,7 @@ public class DisplayUtils {
     }
 
     public static String getTrackArtistString(PlaylistTrack track) {
-        return getTrackArtistString(track.track);
+        return getArtistStringFromList(track.track.artists);
     }
 
     public static String getTrackArtistString(Metadata.Track track) {
@@ -51,7 +69,7 @@ public class DisplayUtils {
     }
 
     public static String getAlbumArtistString(Album album) {
-        return getArtistStringFromList(album.artists);
+        return getArtistStringFromListOfArtists(album.getArtists());
     }
 
     public static String getAlbumArtistString(AlbumSimple album) {

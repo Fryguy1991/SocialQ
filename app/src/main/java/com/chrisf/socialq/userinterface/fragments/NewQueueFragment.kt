@@ -13,16 +13,13 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.chrisf.socialq.R
-import com.chrisf.socialq.AppConstants
+import com.chrisf.socialq.model.spotify.PlaylistSimple
 import com.chrisf.socialq.userinterface.adapters.IItemSelectionListener
 import com.chrisf.socialq.userinterface.adapters.SelectableBasePlaylistAdapter
 import com.chrisf.socialq.userinterface.views.QueueItemDecoration
 import com.chrisf.socialq.utils.DisplayUtils
 import io.reactivex.android.schedulers.AndroidSchedulers
-import kaaes.spotify.webapi.android.SpotifyService
-import kaaes.spotify.webapi.android.models.PlaylistSimple
 import timber.log.Timber
-import java.util.HashMap
 
 /**
  * A simple [Fragment] subclass.
@@ -117,9 +114,6 @@ class NewQueueFragment : BaseLaunchFragment(), IItemSelectionListener<String> {
 
     override fun userRetrieved() {
         // Retrieve user playlists for spinner display
-        val options = HashMap<String, Any>()
-        options[SpotifyService.LIMIT] = AppConstants.PLAYLIST_LIMIT
-
         val user = currentUser
         if (user != null) {
             spotifyApi.getCurrentUsersPlaylsit()

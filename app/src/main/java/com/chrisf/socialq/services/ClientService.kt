@@ -14,6 +14,8 @@ import com.chrisf.socialq.AppConstants
 import com.chrisf.socialq.enums.NearbyDevicesMessage
 import com.chrisf.socialq.enums.PayloadTransferUpdateStatus
 import com.chrisf.socialq.model.AccessModel
+import com.chrisf.socialq.model.spotify.UserPrivate
+import com.chrisf.socialq.model.spotify.UserPublic
 import com.chrisf.socialq.userinterface.App
 import com.chrisf.socialq.userinterface.activities.ClientActivity
 import com.chrisf.socialq.utils.ApplicationUtils
@@ -66,7 +68,7 @@ class ClientService : SpotifyAccessService() {
     // Cached index for displaying correct track list
     private var cachedPlayingIndex = 0
     // Reference to client user Spotify account
-    private var clientUser: UserPublic? = null
+    private var clientUser: UserPrivate? = null
 
     // Title of the SocialQ
     private lateinit var hostQueueTitle: String
@@ -250,8 +252,16 @@ class ClientService : SpotifyAccessService() {
 
         if (AccessModel.getCurrentUser() == null) {
             val currentUser = spotifyApi.service.me
-            AccessModel.setCurrentUser(currentUser)
-            clientUser = currentUser
+            val fryCurrentUser = com.chrisf.socialq.model.spotify.UserPrivate(
+                    currentUser.country,
+                    currentUser.display_name,
+                    currentUser.id,
+                    emptyList(),
+                    currentUser.product,
+                    currentUser.type,
+                    currentUser.uri)
+            AccessModel.setCurrentUser(fryCurrentUser)
+            clientUser = fryCurrentUser
         } else {
             clientUser = AccessModel.getCurrentUser()
         }

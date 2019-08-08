@@ -24,6 +24,8 @@ import com.chrisf.socialq.enums.PayloadTransferUpdateStatus
 import com.chrisf.socialq.model.AccessModel
 import com.chrisf.socialq.model.ClientRequestData
 import com.chrisf.socialq.model.SongRequestData
+import com.chrisf.socialq.model.spotify.UserPrivate
+import com.chrisf.socialq.model.spotify.UserPublic
 import com.chrisf.socialq.userinterface.App
 import com.chrisf.socialq.userinterface.activities.HostActivity
 import com.chrisf.socialq.utils.ApplicationUtils
@@ -499,9 +501,22 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
             val songUri = matcher.group(1)
             val clientId = matcher.group(2)
 
-            return SongRequestData(songUri, spotifyApi.service.getUser(clientId))
+            val user = spotifyApi.service.getUser(clientId)
+            return SongRequestData(songUri, com.chrisf.socialq.model.spotify.UserPublic(
+                    user.display_name,
+                    user.id,
+                    emptyList(),
+                    user.type,
+                    user.uri
+            ))
         }
-        return SongRequestData("", UserPublic())
+        return SongRequestData("", com.chrisf.socialq.model.spotify.UserPublic(
+                "",
+                "",
+                emptyList(),
+                "",
+                ""
+        ))
     }
 
     override fun onAudioFocusChange(focusChange: Int) {
@@ -551,8 +566,16 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
 
             if (AccessModel.getCurrentUser() == null) {
                 val user = spotifyApi.service.me
-                AccessModel.setCurrentUser(user)
-                hostUser = user
+                val fryUser = com.chrisf.socialq.model.spotify.UserPrivate(
+                        user.country,
+                        user.display_name,
+                        user.id,
+                        emptyList(),
+                        user.product,
+                        user.type,
+                        user.uri)
+                AccessModel.setCurrentUser(fryUser)
+                hostUser = fryUser
             } else {
                 hostUser = AccessModel.getCurrentUser()
             }
@@ -952,9 +975,13 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
         val basePlaylist = spotifyApi.service.getPlaylist(playlistOwnerUserId, playlistId.toString())
 
         // Adding with base user ensure host added tracks are sorted within the base playlist
-        val baseUser = UserPublic()
-        baseUser.id = AppConstants.BASE_USER_ID
-        baseUser.display_name = resources.getString(R.string.base_playlist)
+        val baseUser = com.chrisf.socialq.model.spotify.UserPublic(
+                resources.getString(R.string.base_playlist),
+                AppConstants.BASE_USER_ID,
+                emptyList(),
+                "",
+                ""
+        )
 
         // Retrieve all tracks
         val playlistTracks = ArrayList<PlaylistTrack>()
@@ -1237,7 +1264,14 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
 
     fun hostRequestSong(uri: String) {
         if (uri.isNotEmpty()) {
-            handleSongRequest(SongRequestData(uri, hostUser))
+            val user = com.chrisf.socialq.model.spotify.UserPublic(
+                    hostUser.display_name,
+                    hostUser.id,
+                    emptyList(),
+                    hostUser.type,
+                    hostUser.uri
+            )
+            handleSongRequest(SongRequestData(uri, user))
         }
     }
 

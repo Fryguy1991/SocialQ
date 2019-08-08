@@ -1,6 +1,6 @@
 package com.chrisf.socialq.model;
 
-import kaaes.spotify.webapi.android.models.UserPrivate;
+import com.chrisf.socialq.model.spotify.UserPrivate;
 
 /**
  * Model for access information (SHOULD REFACTOR TO STORE/ACCESS THIS INFO IN SHARED PREFS)
