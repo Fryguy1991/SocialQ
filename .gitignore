@@ -1,4 +1,5 @@
 *.iml
+*.idea
 .gradle
 /local.properties
 /.idea/workspace.xml
@@ -8,9 +9,6 @@
 /captures
 /.idea/assetWizardSettings.xml
 /.idea/misc.xml
-/android-sdk-0.5.0-appremote_v1.1.0-auth
-/android-sdk-0.5.0-appremote_v1.1.0-auth.zip
-/android-streaming-sdk-master
-/android-streaming-sdk-master.zip
-/spotify-app-remote-release-0.4.0.aar
 /UI Design
+/Deployment
+/app/release
