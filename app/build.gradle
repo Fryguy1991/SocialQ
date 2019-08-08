@@ -152,4 +152,7 @@ dependencies {
     implementation "com.jakewharton.rxbinding3:rxbinding-appcompat:$rx_binding_version"
     implementation "com.jakewharton.rxbinding3:rxbinding-viewpager:$rx_binding_version"
     implementation "com.jakewharton.rxbinding3:rxbinding-material:$rx_binding_version"
+
+    // Anko references
+    implementation 'org.jetbrains.anko:anko:0.10.8'
 }

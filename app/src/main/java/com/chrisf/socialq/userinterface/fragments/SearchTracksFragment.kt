@@ -75,47 +75,47 @@ class SearchTracksFragment : BaseFragment<SearchState, SearchAction, SearchProce
             return fragment
         }
     }
+}
 
-    private class SearchTrackAdapter : BaseRecyclerViewAdapter<SearchTrackAdapter.TrackViewHolder, Track>() {
-        private val clickRelay: PublishRelay<TrackClick> = PublishRelay.create()
-        val clickObservable: Observable<TrackClick>
-            get() {
-                return clickRelay.hide().throttleFirst(1, TimeUnit.SECONDS)
-            }
-
-        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TrackViewHolder {
-            val view = LayoutInflater.from(parent.context).inflate(
-                    R.layout.holder_search_track,
-                    parent,
-                    false
-            )
-            return TrackViewHolder(view)
+private class SearchTrackAdapter : BaseRecyclerViewAdapter<SearchTrackAdapter.TrackViewHolder, Track>() {
+    private val clickRelay: PublishRelay<TrackClick> = PublishRelay.create()
+    val clickObservable: Observable<TrackClick>
+        get() {
+            return clickRelay.hide().throttleFirst(1, TimeUnit.SECONDS)
         }
 
-        override fun onBindViewHolder(holder: TrackViewHolder, position: Int) {
-            holder.bind(itemList[position])
-        }
-
-        inner class TrackViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-            fun bind(track: Track) {
-                itemView.trackName.text = track.name
-                itemView.artistName.text = DisplayUtils.getTrackArtistString(track)
-
-                val url = track.album?.images?.get(0)?.url
-                if (url.isNullOrEmpty()) {
-                    Glide.with(itemView).load(R.color.Transparent).into(itemView.trackArt)
-                } else {
-                    Glide.with(itemView).load(url).into(itemView.trackArt)
-                }
-
-                itemView.setOnClickListener {
-                    if (!track.uri.isNullOrEmpty()) {
-                        clickRelay.accept(TrackClick(track.uri))
-                    }
-                }
-            }
-        }
-
-        data class TrackClick(val uri: String)
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TrackViewHolder {
+        val view = LayoutInflater.from(parent.context).inflate(
+                R.layout.holder_search_track,
+                parent,
+                false
+        )
+        return TrackViewHolder(view)
     }
+
+    override fun onBindViewHolder(holder: TrackViewHolder, position: Int) {
+        holder.bind(itemList[position])
+    }
+
+    inner class TrackViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        fun bind(track: Track) {
+            itemView.trackName.text = track.name
+            itemView.artistName.text = DisplayUtils.getTrackArtistString(track)
+
+            val url = track.album?.images?.get(0)?.url
+            if (url.isNullOrEmpty()) {
+                Glide.with(itemView).load(R.color.Transparent).into(itemView.trackArt)
+            } else {
+                Glide.with(itemView).load(url).into(itemView.trackArt)
+            }
+
+            itemView.setOnClickListener {
+                if (!track.uri.isNullOrEmpty()) {
+                    clickRelay.accept(TrackClick(track.uri))
+                }
+            }
+        }
+    }
+
+    data class TrackClick(val uri: String)
 }

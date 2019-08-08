@@ -5,12 +5,14 @@ import android.os.Bundle
 import com.chrisf.socialq.AppConstants
 import com.chrisf.socialq.R
 import com.chrisf.socialq.dagger.components.ActivityComponent
+import com.chrisf.socialq.model.spotify.AlbumSimple
 import com.chrisf.socialq.processor.SearchProcessor
 import com.chrisf.socialq.processor.SearchProcessor.SearchAction
 import com.chrisf.socialq.processor.SearchProcessor.SearchAction.*
 import com.chrisf.socialq.processor.SearchProcessor.SearchState
 import com.chrisf.socialq.processor.SearchProcessor.SearchState.*
-import com.chrisf.socialq.userinterface.fragments.SearchAlbumFragment
+import com.chrisf.socialq.userinterface.fragments.SearchAlbumsFragment
+import com.chrisf.socialq.userinterface.fragments.SearchSingleAlbumFragment
 import com.chrisf.socialq.userinterface.fragments.SearchResultsFragment
 import com.chrisf.socialq.userinterface.fragments.SearchTracksFragment
 import kaaes.spotify.webapi.android.models.Album
@@ -30,6 +32,7 @@ class NewSearchActivity : BaseActivity<SearchState, SearchAction, SearchProcesso
             is ReportTrackResult -> sendTrackResult(state.trackUri)
             is DisplayAlbum -> navigateToAlbum(state.album)
             is NavigateToAllTracks -> navigateToViewAllTracks(state.initialTrackList)
+            is NavigateToAllAlbums -> navigateToViewAllAlbums(state.initialAlbumList)
         }
     }
 
@@ -67,13 +70,19 @@ class NewSearchActivity : BaseActivity<SearchState, SearchAction, SearchProcesso
 
     private fun navigateToAlbum(album: Album) {
         appToolbar.title = album.name
-        val fragment = SearchAlbumFragment.getInstance(album)
+        val fragment = SearchSingleAlbumFragment.getInstance(album)
         addFragmentToBackstack(fragment)
     }
 
     private fun navigateToViewAllTracks(initialTracks: List<Track>) {
         appToolbar.title = getString(R.string.songs)
         val fragment = SearchTracksFragment.getInstance(initialTracks)
+        addFragmentToBackstack(fragment)
+    }
+
+    private fun navigateToViewAllAlbums(initialAlbums: List<AlbumSimple>) {
+        appToolbar.title = getString(R.string.albums)
+        val fragment = SearchAlbumsFragment.getInstance(initialAlbums)
         addFragmentToBackstack(fragment)
     }
 

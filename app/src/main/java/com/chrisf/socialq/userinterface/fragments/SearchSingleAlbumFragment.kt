@@ -22,7 +22,7 @@ import kotlinx.android.synthetic.main.holder_album_track.view.*
 import java.lang.IllegalStateException
 import java.util.concurrent.TimeUnit
 
-class SearchAlbumFragment : BaseFragment<SearchProcessor.SearchState, SearchProcessor.SearchAction, SearchProcessor>() {
+class SearchSingleAlbumFragment : BaseFragment<SearchProcessor.SearchState, SearchProcessor.SearchAction, SearchProcessor>() {
 
     private lateinit var albumAdapter: SearchAlbumAdapter
 
@@ -40,7 +40,7 @@ class SearchAlbumFragment : BaseFragment<SearchProcessor.SearchState, SearchProc
         val album: Album? = arguments?.getParcelable(ALBUM_KEY)
 
         if (album == null) {
-            throw IllegalStateException("SearchAlbumFragment needs an album to display")
+            throw IllegalStateException("SearchSingleAlbumFragment needs an album to display")
         } else {
             albumAdapter = SearchAlbumAdapter(album)
             albumRecyclerView.layoutManager = LinearLayoutManager(context)
@@ -63,8 +63,8 @@ class SearchAlbumFragment : BaseFragment<SearchProcessor.SearchState, SearchProc
     companion object {
         private const val ALBUM_KEY = "album"
 
-        fun getInstance(album: Album): SearchAlbumFragment {
-            val fragment = SearchAlbumFragment()
+        fun getInstance(album: Album): SearchSingleAlbumFragment {
+            val fragment = SearchSingleAlbumFragment()
 
             val args = Bundle()
             args.putParcelable(ALBUM_KEY, album)
