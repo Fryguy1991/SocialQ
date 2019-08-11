@@ -14,7 +14,7 @@ import com.chrisf.socialq.utils.DisplayUtils
 class HostTrackListAdapter(val context : Context) : BaseRecyclerViewAdapter<HostTrackHolder, ClientRequestData>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): HostTrackHolder {
-        return HostTrackHolder(LayoutInflater.from(parent.context).inflate(R.layout.host_track_holder, parent, false))
+        return HostTrackHolder(LayoutInflater.from(parent.context).inflate(R.layout.holder_host_track, parent, false))
     }
 
     override fun onBindViewHolder(holder: HostTrackHolder, position: Int) {

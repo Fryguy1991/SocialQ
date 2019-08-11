@@ -48,7 +48,7 @@ open class ClientActivity : ServiceActivity(), ClientService.ClientServiceListen
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.client_screen)
+        setContentView(R.layout.activity_client_screen)
 
         // Setup the app toolbar
         val toolbar = findViewById<androidx.appcompat.widget.Toolbar>(R.id.app_toolbar)

@@ -45,7 +45,7 @@ class LaunchActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.launch_activity)
+        setContentView(R.layout.activity_launch)
 
         // Retrieve nav controller
         navController = findNavController(R.id.frag_nav_host)

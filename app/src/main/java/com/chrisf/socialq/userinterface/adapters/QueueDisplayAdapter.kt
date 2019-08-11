@@ -11,7 +11,7 @@ class QueueDisplayAdapter : BaseRecyclerViewAdapter<QueueDisplayHolder, QueueMod
     lateinit var listener: IQueueSelectionListener
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): QueueDisplayHolder {
-        return QueueDisplayHolder(LayoutInflater.from(parent.context).inflate(R.layout.joinable_queue_holder, parent, false))
+        return QueueDisplayHolder(LayoutInflater.from(parent.context).inflate(R.layout.holder_joinable_queue, parent, false))
     }
 
     override fun onBindViewHolder(holder: QueueDisplayHolder, position: Int) {

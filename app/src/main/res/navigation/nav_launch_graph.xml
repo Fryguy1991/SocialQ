@@ -42,7 +42,7 @@
         android:id="@+id/hostActivity"
         android:name="com.chrisf.socialq.userinterface.activities.HostActivity"
         android:label="HostActivity"
-        tools:layout="@layout/host_screen">
+        tools:layout="@layout/activity_host_screen">
         <argument
             android:name="queueTitle"
             app:argType="string"
@@ -58,7 +58,7 @@
         android:id="@+id/clientActivity"
         android:name="com.chrisf.socialq.userinterface.activities.ClientActivity"
         android:label="ClientActivity"
-        tools:layout="@layout/client_screen">
+        tools:layout="@layout/activity_client_screen">
         <argument
             android:name="queueTitle"
             app:argType="string" />

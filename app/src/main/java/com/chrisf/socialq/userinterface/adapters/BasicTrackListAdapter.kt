@@ -13,7 +13,7 @@ import com.chrisf.socialq.utils.DisplayUtils
 class BasicTrackListAdapter : BaseRecyclerViewAdapter<BasicTrackAlbumHolder, PlaylistTrack>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BasicTrackAlbumHolder {
-        return BasicTrackAlbumHolder(LayoutInflater.from(parent.context).inflate(R.layout.base_track_album_holder, parent, false))
+        return BasicTrackAlbumHolder(LayoutInflater.from(parent.context).inflate(R.layout.holder_base_track_album, parent, false))
     }
 
     override fun onBindViewHolder(holder: BasicTrackAlbumHolder, position: Int) {

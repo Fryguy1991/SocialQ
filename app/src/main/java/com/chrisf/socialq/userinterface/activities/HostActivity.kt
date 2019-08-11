@@ -77,7 +77,7 @@ open class HostActivity : ServiceActivity(), HostService.HostServiceListener, Pl
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.host_screen)
+        setContentView(R.layout.activity_host_screen)
 
         // Setup the app toolbar
         val toolbar = findViewById<androidx.appcompat.widget.Toolbar>(R.id.app_toolbar)
