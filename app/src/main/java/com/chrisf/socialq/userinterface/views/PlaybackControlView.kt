@@ -13,8 +13,8 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import com.bumptech.glide.Glide
 import com.chrisf.socialq.R
 import com.chrisf.socialq.model.ClientRequestData
+import com.chrisf.socialq.model.spotify.PlaylistTrack
 import com.chrisf.socialq.utils.DisplayUtils
-import kaaes.spotify.webapi.android.models.PlaylistTrack
 
 class PlaybackControlView : ConstraintLayout {
     companion object {
@@ -134,7 +134,7 @@ class PlaybackControlView : ConstraintLayout {
         trackNameText.text = track.track.name
         artistNameText.text = DisplayUtils.getTrackArtistString(track)
 
-        if (track.track.album.images.size > 0) {
+        if (track.track.album.images.isNotEmpty()) {
             Glide.with(albumArtImage).load(track.track.album.images[0].url).into(albumArtImage)
         }
     }

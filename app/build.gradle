@@ -66,6 +66,7 @@ repositories {
 
 ext {
     rx_binding_version = '3.0.0-alpha2'
+    retrofit_version = '2.6.1'
 }
 
 dependencies {
@@ -76,11 +77,6 @@ dependencies {
     implementation 'com.spotify.android:auth:1.1.0'
     // This library handles music playback
     implementation 'com.spotify.sdk:spotify-player-24-noconnect-2.20b@aar'
-
-    //Spotify WebAPI Android wrapper
-//    implementation 'com.github.kaaes:spotify-web-api-android:0.4.1'
-    // Pull my own version of Spotify web api wrapper
-    implementation 'com.github.Fryguy1991:spotify-web-api-android:0.4.1'
 
     // Nearby Connections API
     implementation 'com.google.android.gms:play-services-nearby:17.0.0'
@@ -111,9 +107,9 @@ dependencies {
     implementation 'com.google.code.gson:gson:2.8.5'
 
     // Retrofit
-    implementation 'com.squareup.retrofit2:retrofit:2.5.0'
-    implementation 'com.squareup.retrofit2:converter-gson:2.5.0'
-    implementation "com.squareup.retrofit2:adapter-rxjava2:2.5.0"
+    implementation "com.squareup.retrofit2:retrofit:$retrofit_version"
+    implementation "com.squareup.retrofit2:converter-gson:$retrofit_version"
+    implementation "com.squareup.retrofit2:adapter-rxjava2:$retrofit_version"
     implementation  'com.squareup.okhttp3:logging-interceptor:3.8.0'
 
     // Glide (for pulling images from the web)

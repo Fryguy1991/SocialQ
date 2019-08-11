@@ -3,14 +3,12 @@ package com.chrisf.socialq.dagger.modules
 import android.content.Context
 import android.content.SharedPreferences
 import android.content.res.Resources
-import com.chrisf.socialq.dagger.components.AppComponent
 import com.chrisf.socialq.model.AccessModel
 import com.chrisf.socialq.network.FrySpotifyService
 import com.google.gson.GsonBuilder
 import dagger.Module
 import dagger.Provides
 import io.reactivex.disposables.CompositeDisposable
-import kaaes.spotify.webapi.android.SpotifyApi
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -38,12 +36,6 @@ class AppModule(private val app: Context) {
 
     @Provides
     @Singleton
-    fun providesSpotifyApi() : SpotifyApi {
-        return SpotifyApi()
-    }
-
-    @Provides
-    @Singleton
     fun providesFrySpotifyApi(): FrySpotifyService {
         val builder = OkHttpClient.Builder()
         builder.addInterceptor { chain ->
@@ -54,7 +46,7 @@ class AppModule(private val app: Context) {
             chain.proceed(request)
         }
         builder.addInterceptor (
-            HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY)
+            HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BASIC)
         )
 
         val gson = GsonBuilder()

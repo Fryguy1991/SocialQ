@@ -8,20 +8,12 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.chrisf.socialq.AppConstants
 import com.chrisf.socialq.model.AccessModel
 import com.chrisf.socialq.userinterface.App
-import kaaes.spotify.webapi.android.SpotifyApi
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONObject
 import timber.log.Timber
-import javax.inject.Inject
 
 class AccessService : JobService() {
-
-    /**
-     * Api to update with new access token (if successful)
-     */
-    @Inject
-    lateinit var spotifyApi: SpotifyApi
 
     override fun onCreate() {
         super.onCreate()
@@ -62,8 +54,6 @@ class AccessService : JobService() {
                 val expireTime = SystemClock.elapsedRealtime() + (expiresIn - 60) * 1000
                 // Set access token and expire time into model
                 AccessModel.setAccess(accessToken, expireTime)
-                // Update API access token
-                spotifyApi.setAccessToken(accessToken)
 
                 // Broadcast that the access code has been updated
                 Timber.d("Broadcasting that access token has been updated")

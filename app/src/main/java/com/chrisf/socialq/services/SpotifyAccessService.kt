@@ -6,24 +6,20 @@ import android.graphics.BitmapFactory
 import android.os.Binder
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaSessionCompat
-import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.chrisf.socialq.AppConstants
+import com.chrisf.socialq.model.spotify.Playlist
+import com.chrisf.socialq.model.spotify.PlaylistTrack
+import com.chrisf.socialq.model.spotify.Track
+import com.chrisf.socialq.network.FrySpotifyService
 import com.chrisf.socialq.userinterface.App
 import com.chrisf.socialq.utils.DisplayUtils
-import kaaes.spotify.webapi.android.SpotifyApi
-import kaaes.spotify.webapi.android.SpotifyCallback
-import kaaes.spotify.webapi.android.SpotifyError
-import kaaes.spotify.webapi.android.SpotifyService
-import kaaes.spotify.webapi.android.models.Pager
-import kaaes.spotify.webapi.android.models.Playlist
-import kaaes.spotify.webapi.android.models.PlaylistTrack
-import kaaes.spotify.webapi.android.models.Track
-import retrofit.client.Response
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.disposables.CompositeDisposable
+import timber.log.Timber
 import java.io.IOException
 import java.net.URL
 import javax.inject.Inject
-import kotlin.collections.HashMap
 
 abstract class SpotifyAccessService : Service() {
     companion object {
@@ -42,9 +38,11 @@ abstract class SpotifyAccessService : Service() {
         }
     }
 
+    protected val subscriptions = CompositeDisposable()
+
     // API for retrieving SpotifyService object
     @Inject
-    protected lateinit var spotifyApi: SpotifyApi
+    protected lateinit var spotifyApi: FrySpotifyService
     // Flag for indicating if we actually need a new access token (set to true when shutting down)
     private var isServiceEnding = false
     // User object for host's Spotify account
@@ -65,94 +63,49 @@ abstract class SpotifyAccessService : Service() {
     protected val metaDataBuilder = MediaMetadataCompat.Builder()
 
     protected fun refreshPlaylist() {
-        Log.d(TAG, "Refreshing playlist")
+        Timber.d("Refreshing playlist")
 
-        val options = HashMap<String, Any>()
-        options[SpotifyService.MARKET] = AppConstants.PARAM_FROM_TOKEN
+        playlistTracks.clear()
+        getPlaylistTracks(playlist.id)
+    }
 
-        spotifyApi.service.getPlaylist(playlistOwnerUserId, playlist.id, options, refreshPlaylistCallback)
+    private fun getPlaylistTracks(playlistId: String, offset: Int = 0) {
+        // TODO: Get this off the main thread
+        @Suppress("CheckResult")
+        spotifyApi.getPlaylistTracks(playlistId, 50, offset)
+                .subscribeOn(AndroidSchedulers.mainThread())
+                .doOnSubscribe { subscriptions.add(it) }
+                .subscribe { response ->
+                    if (response.body() == null) {
+                        // TODO: Try again?
+                    } else {
+                        val tracks = response.body()!!
+                        playlistTracks.addAll(tracks.items)
+
+                        if (tracks.next != null) {
+                            val nextOffset = tracks.offset + tracks.items.size
+                            getPlaylistTracks(playlistId, nextOffset)
+                        } else {
+                            playlistRefreshComplete()
+                        }
+                    }
+                }
     }
 
     protected fun pullNewTrack(newTrackIndex: Int) {
-        Log.d(TAG, "Pulling newly added track")
+        Timber.d("Pulling newly added track")
 
-        val options = HashMap<String, Any>()
-        options[SpotifyService.MARKET] = AppConstants.PARAM_FROM_TOKEN
-        options[SpotifyService.LIMIT] = 1
-        options[SpotifyService.OFFSET] = newTrackIndex
-
-        spotifyApi.service.getPlaylistTracks(playlistOwnerUserId, playlist.id, options, newTrackCallback)
-    }
-
-    private val newTrackCallback = object : SpotifyCallback<Pager<PlaylistTrack>>() {
-        override fun success(pager: Pager<PlaylistTrack>?, response: Response?) {
-            if (pager != null) {
-                Log.d(TAG, "Successfully pulled newly added track")
-
-                playlistTracks.add(pager.offset, pager.items[0])
-                newTrackRetrievalComplete(pager.offset)
-            } else {
-                Log.e(TAG, "Pager was null when retrieving newly added track")
-            }
-        }
-
-        override fun failure(spotifyError: SpotifyError?) {
-            Log.e(TAG, spotifyError?.errorDetails?.message.toString())
-            Log.e(TAG, "Failed to retrieve newly added track")
-        }
-    }
-
-    private val refreshPlaylistCallback = object : SpotifyCallback<Playlist>() {
-        override fun success(playlist: Playlist?, response: Response?) {
-            if (playlist != null) {
-                Log.d(TAG, "Successfully retrieved playlist")
-
-                this@SpotifyAccessService.playlist = playlist
-                playlistTracks.clear()
-                playlistTracks.addAll(playlist.tracks.items)
-
-                if (playlist.tracks.offset + playlist.tracks.items.size < playlist.tracks.total) {
-                    // Need to pull more tracks
-                    val options = HashMap<String, Any>()
-                    options[SpotifyService.OFFSET] = playlistTracks.size
-                    options[SpotifyService.LIMIT] = AppConstants.PLAYLIST_TRACK_LIMIT
-
-                    spotifyApi.service.getPlaylistTracks(playlistOwnerUserId, playlist.id, options, playlistTrackCallback)
-                } else {
-                    Log.d(TAG, "Finished retrieving playlist tracks")
-                    playlistRefreshComplete()
+        @Suppress("CheckResult")
+        spotifyApi.getPlaylistTracks(playlist.id, 1, newTrackIndex)
+                .subscribeOn(AndroidSchedulers.mainThread())
+                .doOnSubscribe { subscriptions.add(it) }
+                .subscribe { response ->
+                    if (response.body() != null) {
+                        val pager = response.body()!!
+                        playlistTracks.add(pager.offset, pager.items[0])
+                        newTrackRetrievalComplete(pager.offset)
+                    }
                 }
-            }
-        }
-
-        override fun failure(spotifyError: SpotifyError?) {
-            Log.e(TAG, spotifyError?.errorDetails?.message.toString())
-            Log.e(TAG, "Failed to retrieve playlist")
-        }
-    }
-
-    protected val playlistTrackCallback = object : SpotifyCallback<Pager<PlaylistTrack>>() {
-        override fun success(trackPager: Pager<PlaylistTrack>?, response: Response?) {
-            if (trackPager != null) {
-                playlistTracks.addAll(trackPager.items)
-
-                if (trackPager.offset + trackPager.items.size < trackPager.total) {
-                    Log.d(TAG, "Successfully retrieved some playlist tracks")
-                    val options = HashMap<String, Any>()
-                    options[SpotifyService.OFFSET] = playlistTracks.size
-
-                    spotifyApi.service.getPlaylistTracks(playlistOwnerUserId, playlist.id, options, this)
-                } else {
-                    Log.d(TAG, "Finished retrieving playlist tracks")
-                    playlistRefreshComplete()
-                }
-            }
-        }
-
-        override fun failure(spotifyError: SpotifyError?) {
-            Log.e(TAG, spotifyError?.errorDetails?.message.toString())
-            Log.e(TAG, "Failed to retrieve playlist tracks")
-        }
     }
 
     /**
@@ -164,10 +117,10 @@ abstract class SpotifyAccessService : Service() {
         metaDataBuilder.putString(MediaMetadataCompat.METADATA_KEY_ALBUM, trackToShow.album?.name)
         metaDataBuilder.putString(MediaMetadataCompat.METADATA_KEY_TITLE, trackToShow.name)
         metaDataBuilder.putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_TITLE, trackToShow.name)
-        metaDataBuilder.putString(MediaMetadataCompat.METADATA_KEY_ARTIST, DisplayUtils.getArtistStringFromList(trackToShow.artists))
+        metaDataBuilder.putString(MediaMetadataCompat.METADATA_KEY_ARTIST, DisplayUtils.getTrackArtistString(trackToShow))
 
         // Attempt to update album art in notification and metadata
-        if (trackToShow.album.images.size > 0) {
+        if (trackToShow.album.images.isNotEmpty()) {
             try {
                 val url = URL(trackToShow.album.images[0].url)
                 // Retrieve album art bitmap
@@ -178,7 +131,7 @@ abstract class SpotifyAccessService : Service() {
                 // Set bitmap data for notification
                 notificationBuilder.setLargeIcon(albumArtBitmap)
             } catch (exception: IOException) {
-                Log.e(TAG, "Error retrieving image bitmap: ${exception.message.toString()}")
+                Timber.e("Error retrieving image bitmap: ${exception.message.toString()}")
                 System.out.println(exception)
             }
         }
@@ -186,7 +139,7 @@ abstract class SpotifyAccessService : Service() {
 
         // Update notification data
         notificationBuilder.setContentTitle(trackToShow.name)
-        notificationBuilder.setContentText(DisplayUtils.getArtistStringFromList(trackToShow.artists))
+        notificationBuilder.setContentText(DisplayUtils.getTrackArtistString(trackToShow))
 
         val notificationId = when (serviceIsHost) {
             true -> AppConstants.HOST_SERVICE_ID
@@ -202,6 +155,8 @@ abstract class SpotifyAccessService : Service() {
         mediaSession.release()
 
         isServiceEnding = true
+
+        subscriptions.clear()
         super.onDestroy()
     }
 

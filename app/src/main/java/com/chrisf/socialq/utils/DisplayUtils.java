@@ -8,13 +8,12 @@ import android.view.inputmethod.InputMethodManager;
 import com.chrisf.socialq.model.spotify.Album;
 import com.chrisf.socialq.model.spotify.AlbumSimple;
 import com.chrisf.socialq.model.spotify.ArtistSimple;
+import com.chrisf.socialq.model.spotify.PlaylistTrack;
 import com.chrisf.socialq.model.spotify.Track;
 import com.chrisf.socialq.model.spotify.TrackSimple;
 import com.spotify.sdk.android.player.Metadata;
 
 import java.util.List;
-
-import kaaes.spotify.webapi.android.models.PlaylistTrack;
 
 /**
  * Utils class for shared display methods
@@ -47,21 +46,8 @@ public class DisplayUtils {
         return artistString;
     }
 
-    // TODO: Remove this along with kaas API
-    public static String getArtistStringFromList(List<kaaes.spotify.webapi.android.models.ArtistSimple> trackArtists) {
-        String artistString = "";
-        for(kaaes.spotify.webapi.android.models.ArtistSimple artist : trackArtists) {
-            if(artistString.isEmpty()) {
-                artistString = artistString.concat(artist.name);
-            } else {
-                artistString = artistString.concat(", " + artist.name);
-            }
-        }
-        return artistString;
-    }
-
     public static String getTrackArtistString(PlaylistTrack track) {
-        return getArtistStringFromList(track.track.artists);
+        return getArtistStringFromListOfArtists(track.getTrack().getArtists());
     }
 
     public static String getTrackArtistString(Metadata.Track track) {

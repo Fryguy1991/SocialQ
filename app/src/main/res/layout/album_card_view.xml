@@ -10,7 +10,7 @@
         android:background="?android:windowBackground">
 
         <com.chrisf.socialq.userinterface.views.SquareImageView
-            android:id="@+id/iv_album_image"
+            android:id="@+id/albumArt"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             app:layout_constraintTop_toTopOf="parent"
@@ -21,7 +21,7 @@
             android:layout_marginEnd="@dimen/default_margin"/>
 
         <TextView
-            android:id="@+id/tv_album_name"
+            android:id="@+id/albumName"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             app:layout_constraintTop_toBottomOf="@id/iv_album_image"
@@ -37,23 +37,5 @@
             android:textSize="@dimen/album_card_text_size"
             android:gravity="center_horizontal"
             style="@style/HeaderText"/>
-
-        <TextView
-            android:id="@+id/tv_artist_name"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            app:layout_constraintTop_toBottomOf="@id/tv_album_name"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            android:layout_marginBottom="@dimen/default_margin"
-            android:layout_marginStart="@dimen/default_margin"
-            android:layout_marginEnd="@dimen/default_margin"
-            android:textStyle="italic"
-            android:maxLines="1"
-            android:ellipsize="end"
-            android:textSize="@dimen/album_card_text_size"
-            android:gravity="center_horizontal"
-            android:visibility="gone"/>
     </androidx.constraintlayout.widget.ConstraintLayout>
 </merge>

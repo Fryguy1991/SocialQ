@@ -8,8 +8,8 @@ data class Pager<Type : Parcelable>(
         val href: String,
         val items: List<Type>,
         val limit: Int,
-        val next: String,
+        val next: String?,
         val offset: Int,
-        val previous: String,
+        val previous: String?,
         val total: Int
 ) : Parcelable

@@ -10,51 +10,29 @@ import androidx.cardview.widget.CardView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
 import com.chrisf.socialq.R
+import com.chrisf.socialq.model.spotify.AlbumSimple
 import com.chrisf.socialq.userinterface.interfaces.ISpotifySelectionListener
+import kotlinx.android.synthetic.main.view_album_card_view.view.*
 
-class AlbumCardView : CardView, View.OnClickListener {
+class AlbumCardView : CardView {
     constructor(context: Context) : super(context)
     constructor(context: Context, attributeSet: AttributeSet) : super(context, attributeSet)
     constructor(context: Context, attributeSet: AttributeSet, defStyle: Int) : super(context, attributeSet, defStyle)
-
-
-    private val image: ImageView
-    private val name: TextView
-    private val artistName: TextView
 
     lateinit var listener: ISpotifySelectionListener
     lateinit var uri: String
 
 
     init {
-        LayoutInflater.from(context).inflate(R.layout.album_card_view, this, true)
-
-        image = this.findViewById(R.id.iv_album_image)
-        name = this.findViewById(R.id.tv_album_name)
-        artistName = this.findViewById(R.id.tv_artist_name)
-
-        setOnClickListener(this)
+        LayoutInflater.from(context).inflate(R.layout.view_album_card_view, this, true)
     }
 
-    fun setName(name: String) {
-        this.name.text = name
-    }
+    fun bind(album: AlbumSimple) {
+            Glide.with(this)
+                    .setDefaultRequestOptions(RequestOptions.placeholderOf(R.mipmap.black_record))
+                    .load(album.images[0].url)
+                    .into(albumArt)
 
-    fun setArtistName(name: String) {
-        artistName.text = name
-        artistName.visibility = View.VISIBLE
-    }
-
-    fun setImageUrl(url: String) {
-        if (url.isEmpty()) {
-            Glide.with(image).load(R.mipmap.black_record).into(image)
-        } else {
-            Glide.with(image).load(url).apply(RequestOptions().placeholder(R.mipmap.black_record)).into(image)
-        }
-    }
-
-    override fun onClick(v: View?) {
-        listener.onSelection(uri)
     }
 
 }

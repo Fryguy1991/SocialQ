@@ -15,12 +15,12 @@ import androidx.recyclerview.widget.RecyclerView
 import com.chrisf.socialq.R
 import com.chrisf.socialq.AppConstants
 import com.chrisf.socialq.enums.RequestType
+import com.chrisf.socialq.model.spotify.PlaylistTrack
 import com.chrisf.socialq.services.ClientService
 import com.chrisf.socialq.userinterface.App
 import com.chrisf.socialq.userinterface.adapters.BasicTrackListAdapter
 import com.chrisf.socialq.userinterface.views.PlaybackControlView
 import com.chrisf.socialq.userinterface.views.QueueItemDecoration
-import kaaes.spotify.webapi.android.models.PlaylistTrack
 
 open class ClientActivity : ServiceActivity(), ClientService.ClientServiceListener {
     private val TAG = ClientActivity::class.java.name
