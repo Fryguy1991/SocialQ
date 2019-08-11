@@ -40,7 +40,7 @@ abstract class ServiceActivity : AppCompatActivity(), View.OnClickListener {
     }
 
     protected fun startSearchActivity() {
-        val searchIntent = Intent(this, NewSearchActivity::class.java)
+        val searchIntent = Intent(this, SearchActivity::class.java)
         startActivityForResult(searchIntent, RequestType.SEARCH_REQUEST.requestCode)
     }
 

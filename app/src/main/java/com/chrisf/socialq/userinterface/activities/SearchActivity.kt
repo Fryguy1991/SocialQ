@@ -19,7 +19,7 @@ import com.chrisf.socialq.userinterface.fragments.SearchResultsFragment
 import com.chrisf.socialq.userinterface.fragments.SearchTracksFragment
 import kotlinx.android.synthetic.main.activity_search.*
 
-class NewSearchActivity : BaseActivity<SearchState, SearchAction, SearchProcessor>(), TitleActivity {
+class SearchActivity : BaseActivity<SearchState, SearchAction, SearchProcessor>(), TitleActivity {
 
     override val FRAGMENT_HOLDER_ID = R.id.appFragment
 
