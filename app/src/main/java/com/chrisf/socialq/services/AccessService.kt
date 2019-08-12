@@ -7,19 +7,12 @@ import android.os.SystemClock
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.chrisf.socialq.AppConstants
 import com.chrisf.socialq.model.AccessModel
-import com.chrisf.socialq.userinterface.App
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONObject
 import timber.log.Timber
 
 class AccessService : JobService() {
-
-    override fun onCreate() {
-        super.onCreate()
-
-        (application as App).appComponent.inject(this)
-    }
 
     override fun onStartJob(params: JobParameters?): Boolean {
         refreshAccessToken()

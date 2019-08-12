@@ -39,8 +39,6 @@ class PlaybackControlView : ConstraintLayout {
 
     // Listener for communicating button presses
     private lateinit var listener: IPlaybackControlListener
-    // Flag for if the player is currently playing
-    private var isPlaying = false
     // Flag for keeping track of if view is expanded or not
     private var isExpanded = false
 
@@ -66,7 +64,7 @@ class PlaybackControlView : ConstraintLayout {
         }
 
         playPauseButton.setOnClickListener {
-            listener.requestPlayPause(isPlaying)
+            listener.requestPlayPause()
         }
 
         skipButton.setOnClickListener {
@@ -112,7 +110,6 @@ class PlaybackControlView : ConstraintLayout {
         } else {
             playPauseButton.background = resources.getDrawable(R.drawable.rectangle_pause_button)
         }
-        isPlaying = true
     }
 
     fun setPaused() {
@@ -121,7 +118,6 @@ class PlaybackControlView : ConstraintLayout {
         } else {
             playPauseButton.background = resources.getDrawable(R.drawable.rectangle_play_button)
         }
-        isPlaying = false
     }
 
     fun displayRequest(request: ClientRequestData) {
@@ -149,7 +145,7 @@ class PlaybackControlView : ConstraintLayout {
     }
 
     interface IPlaybackControlListener {
-        fun requestPlayPause(isPlaying: Boolean)
+        fun requestPlayPause()
 
         fun requestSkip()
     }

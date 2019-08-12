@@ -81,11 +81,11 @@ interface FrySpotifyService {
     ): Single<Response<Playlist>>
 
     @Headers("Content-Type: application/json")
-    @POST("playlists/{playlist_id}")
+    @PUT("playlists/{playlist_id}")
     fun changePlaylistDetails(
             @Path("playlist_id") playlistId: String,
             @Body body: Map<String, Any>
-    ): Single<Response<Any>>
+    ): Single<Response<Void>>
 
     @Headers("Content-Type: application/json")
     @POST("playlists/{playlist_id}/tracks")

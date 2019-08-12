@@ -2,7 +2,6 @@ package com.chrisf.socialq.userinterface.activities
 
 import android.content.*
 import android.os.*
-import android.util.Log
 import android.view.View
 import android.view.WindowManager
 import android.widget.*
@@ -20,9 +19,9 @@ import com.chrisf.socialq.userinterface.App
 import com.chrisf.socialq.userinterface.adapters.HostTrackListAdapter
 import com.chrisf.socialq.userinterface.views.PlaybackControlView
 import com.chrisf.socialq.userinterface.views.QueueItemDecoration
+import timber.log.Timber
 
 open class HostActivity : ServiceActivity(), HostService.HostServiceListener, PlaybackControlView.IPlaybackControlListener {
-    private val TAG = HostActivity::class.java.name
 
     // UI ELEMENTS
     private lateinit var rootLayout: ConstraintLayout
@@ -42,20 +41,21 @@ open class HostActivity : ServiceActivity(), HostService.HostServiceListener, Pl
     // Object for connecting to/from play queue service
     private val hostServiceConnection = object : ServiceConnection {
         override fun onServiceConnected(componentName: ComponentName, iBinder: IBinder) {
-            Log.d(TAG, "Host service Connected")
+            Timber.d("Host service Connected")
             val binder = iBinder as HostService.HostServiceBinder
             hostService = binder.getService()
             isServiceBound = true
 
             hostService.setPlayQueueServiceListener(this@HostActivity)
 
-            if (title.isNullOrEmpty()) {
-                hostService.requestInitiation()
-            }
+            // TODO: Might need this if activity is lost or recreated
+//            if (title.isNullOrEmpty()) {
+//                hostService.requestInitiation()
+//            }
         }
 
         override fun onServiceDisconnected(componentName: ComponentName) {
-            Log.d(TAG, "Host service disconnected")
+            Timber.d("Host service disconnected")
             unbindService(this)
             isServiceBound = false
             finish()
@@ -129,7 +129,7 @@ open class HostActivity : ServiceActivity(), HostService.HostServiceListener, Pl
         super.onActivityResult(requestCode, resultCode, data)
 
         val requestType = RequestType.getRequestTypeFromRequestCode(requestCode)
-        Log.d(TAG, "Received request type: $requestType")
+        Timber.d("Received request type: $requestType")
 
         // Handle request result
         when (requestType) {
@@ -139,10 +139,10 @@ open class HostActivity : ServiceActivity(), HostService.HostServiceListener, Pl
             }
             RequestType.SPOTIFY_AUTHENTICATION_REQUEST,
             RequestType.LOCATION_PERMISSION_REQUEST -> {
-                Log.e(TAG, "Host activity should not receive $requestType")
+                Timber.e("Host activity should not receive $requestType")
             }
             RequestType.NONE -> {
-                Log.e(TAG, "Unhandled request code: $requestCode")
+                Timber.e("Unhandled request code: $requestCode")
             }
         }
     }
@@ -155,17 +155,17 @@ open class HostActivity : ServiceActivity(), HostService.HostServiceListener, Pl
 
         // If we can't find a host service to bind to, start the host service then bind
         if (App.hasServiceBeenStarted) {
-            Log.d(TAG, "Attempting to bind to host service")
+            Timber.d("Attempting to bind to host service")
             bindService(startHostIntent, hostServiceConnection, Context.BIND_ABOVE_CLIENT)
         } else {
-            Log.d(TAG, "Starting and binding to host service")
+            Timber.d("Starting and binding to host service")
             ContextCompat.startForegroundService(this, startHostIntent)
             bindService(startHostIntent, hostServiceConnection, Context.BIND_ABOVE_CLIENT)
         }
     }
 
     private fun stopHostService() {
-        Log.d(TAG, "Unbinding from and stopping host service")
+        Timber.d("Unbinding from and stopping host service")
 
         if (isServiceBound) {
             unbindService(hostServiceConnection)
@@ -199,7 +199,7 @@ open class HostActivity : ServiceActivity(), HostService.HostServiceListener, Pl
 
         dialogBuilder.setPositiveButton(R.string.confirm) { dialog, which ->
             if (savePlaylistCheckbox.isChecked) {
-                Log.d(TAG, "Updating SocialQ playlist details")
+                Timber.d("Updating SocialQ playlist details")
 
                 hostService.savePlaylistAs(playlistNameEditText.text.toString())
             } else {
@@ -218,7 +218,7 @@ open class HostActivity : ServiceActivity(), HostService.HostServiceListener, Pl
     }
 
     override fun onDestroy() {
-        Log.d(TAG, "Destroying host activity")
+        Timber.d("Destroying host activity")
 
         // Unbind from the PlayQueueService
         if (isServiceBound) {
@@ -238,14 +238,6 @@ open class HostActivity : ServiceActivity(), HostService.HostServiceListener, Pl
         queueList.addItemDecoration(QueueItemDecoration(applicationContext))
     }
 
-    private fun handlePlayPause(isPlaying: Boolean) {
-        if (isPlaying) {
-            hostService.requestPause()
-        } else {
-            hostService.requestPlay()
-        }
-    }
-
     override fun onQueuePause() {
         playbackControlView.setPaused()
     }
@@ -262,7 +254,7 @@ open class HostActivity : ServiceActivity(), HostService.HostServiceListener, Pl
     private fun displayTrackList(songRequests: List<ClientRequestData>) {
         when {
             songRequests.size < 0 -> {
-                Log.e(TAG, "Error invalid song request list sent")
+                Timber.e("Error invalid song request list sent")
             }
             songRequests.isEmpty() -> {
                 playbackControlView.shrinkLayout()
@@ -303,7 +295,7 @@ open class HostActivity : ServiceActivity(), HostService.HostServiceListener, Pl
     }
 
     override fun initiateView(title: String, songRequests: List<ClientRequestData>, isPlaying: Boolean) {
-        Log.d(TAG, "Re-initializing host view")
+        Timber.d("Re-initializing host view")
 
         this.title = title
         displayTrackList(songRequests)
@@ -314,8 +306,8 @@ open class HostActivity : ServiceActivity(), HostService.HostServiceListener, Pl
         }
     }
 
-    override fun requestPlayPause(isPlaying: Boolean) {
-        handlePlayPause(isPlaying)
+    override fun requestPlayPause() {
+        hostService.requestPlayPauseToggle()
     }
 
     override fun requestSkip() {

@@ -6,56 +6,62 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.media.AudioAttributes
-import android.media.AudioFocusRequest
-import android.media.AudioManager
-import android.net.ConnectivityManager
-import android.os.Build
+import android.graphics.BitmapFactory
+import android.os.Binder
 import android.os.IBinder
+import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
 import androidx.core.app.NotificationCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.chrisf.socialq.R
 import com.chrisf.socialq.AppConstants
+import com.chrisf.socialq.dagger.components.ServiceComponent
 import com.chrisf.socialq.enums.NearbyDevicesMessage
 import com.chrisf.socialq.enums.PayloadTransferUpdateStatus
-import com.chrisf.socialq.extensions.addTo
-import com.chrisf.socialq.model.AccessModel
 import com.chrisf.socialq.model.ClientRequestData
-import com.chrisf.socialq.model.SongRequestData
-import com.chrisf.socialq.model.spotify.PlaylistTrack
-import com.chrisf.socialq.model.spotify.UserPrivate
-import com.chrisf.socialq.model.spotify.UserPublic
-import com.chrisf.socialq.network.FrySpotifyService
+import com.chrisf.socialq.model.spotify.Track
+import com.chrisf.socialq.processor.HostProcessor
+import com.chrisf.socialq.processor.HostProcessor.HostAction
+import com.chrisf.socialq.processor.HostProcessor.HostAction.*
+import com.chrisf.socialq.processor.HostProcessor.HostState
+import com.chrisf.socialq.processor.HostProcessor.HostState.*
 import com.chrisf.socialq.userinterface.App
 import com.chrisf.socialq.userinterface.activities.HostActivity
 import com.chrisf.socialq.utils.ApplicationUtils
+import com.chrisf.socialq.utils.DisplayUtils
 import com.google.android.gms.nearby.Nearby
 import com.google.android.gms.nearby.connection.*
 import com.google.android.gms.tasks.OnFailureListener
 import com.google.android.gms.tasks.OnSuccessListener
-import com.google.gson.JsonArray
-import com.spotify.sdk.android.player.*
-import io.reactivex.schedulers.Schedulers
 import timber.log.Timber
+import java.io.IOException
 import java.lang.Exception
+import java.net.URL
 import java.util.*
-import java.util.concurrent.TimeUnit
 import java.util.regex.Pattern
 
-class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.NotificationCallback,
-        Player.OperationCallback, AudioManager.OnAudioFocusChangeListener {
+class HostService : BaseService<HostState, HostAction, HostProcessor>(){
 
-    companion object {
-        val TAG = HostService::class.java.name
-    }
-
-    inner class HostServiceBinder : SpotifyAccessServiceBinder() {
-        override fun getService(): HostService {
+    inner class HostServiceBinder : Binder() {
+        fun getService(): HostService {
             return this@HostService
         }
     }
+
+    // Flag for indicating if we actually need a new access token (set to true when shutting down)
+    private var isServiceEnding = false
+
+    // NOTIFICATION ELEMENTS
+    // Reference to notification manager
+    protected lateinit var notificationManager: NotificationManager
+    // Builder for foreground notification
+    protected lateinit var notificationBuilder: NotificationCompat.Builder
+    // Reference to media session
+    protected lateinit var mediaSession: MediaSessionCompat
+    // Reference to meta data builder
+    protected val metaDataBuilder = MediaMetadataCompat.Builder()
+
 
     // SERVICE ELEMENTS
     // Binder for talking from bound activity to host
@@ -78,79 +84,28 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
     // Flag indicating success of advertising (used during activity destruction)
     private var successfulAdvertisingFlag = false
 
-    // AUDIO ELEMENTS
-    // Reference to system audio manager
-    private lateinit var audioManager: AudioManager
-    // Flag to resume playback when audio focus is returned
-    private var resumeOnAudioFocus = false
-    // Reference to current audio focus state
-    private var audioFocusState = -1
-    // Member player object used for playing audio
-    private var spotifyPlayer: SpotifyPlayer? = null
-    // Integer to keep track of song index in the queue
-    private var currentPlaylistIndex = 0
-    // Boolean flag to store when when delivery is done
-    private var audioDeliveryDoneFlag = true
-    // Boolean flag to store if MetaData is incorrect
-    private var incorrectMetaDataFlag = false
-    // Boolean flag for if a pause event was requested by the user
-    private var userRequestedPause = false
-    // Boolean flag for if the player is active
-    private var isPlayerActive = false
-    // Boolean flag for indicating if the player is playing (used for view initiation)
-    private var isPlaying = false
 
-    // QUEUE SORTING/FAIR PLAY ELEMENTS
-    // Boolean flag to store if queue should be "fair play"
-    private var isQueueFairPlay: Boolean = false
-    // List containing client song requests
-    private val songRequests = mutableListOf<SongRequestData>()
-    // Flag for storing if a base playlist has been loaded
-    private var wasBasePlaylistLoaded = false
-    // Cached value for newly added track index
-    private var newTrackIndex = -1
-    // List of shuffled tracks to be added to the playlist
-    private val shuffledTracks = mutableListOf<PlaylistTrack>()
-
-    // Title of the SocialQ
-    private lateinit var queueTitle: String
-    // ID of the base playlist to load
-    private var basePlaylistId: String = ""
-    // User object of the host's Spotify account
-    private lateinit var hostUser: UserPrivate
-
-    // Callback for successful/failed player connection
-    private val connectivityCallback = object : Player.OperationCallback {
-        override fun onSuccess() {
-            Timber.d("Success!")
-        }
-
-        override fun onError(error: Error) {
-            Timber.e("ERROR: $error")
-        }
-    }
-
-    // Callback for media session calls (ex: media buttons)
-    private val mediaSessionCallback = object : MediaSessionCompat.Callback() {
-        override fun onPlay() {
-            requestPlay()
-        }
-
-        override fun onSkipToNext() {
-            requestPlayNext()
-        }
-
-        override fun onPause() {
-            requestPause()
-        }
-
-        // TODO: May need this method for earlier versions of Android
-//        override fun onMediaButtonEvent(mediaButtonEvent: Intent?): Boolean {
-//            if (mediaButtonEvent != null) {
-//            }
-//            return false
+//    // Callback for media session calls (ex: media buttons)
+//    private val mediaSessionCallback = object : MediaSessionCompat.Callback() {
+//        override fun onPlay() {
+//            requestPlay()
 //        }
-    }
+//
+//        override fun onSkipToNext() {
+//            requestPlayNext()
+//        }
+//
+//        override fun onPause() {
+//            requestPause()
+//        }
+//
+//        // TODO: May need this method for earlier versions of Android
+////        override fun onMediaButtonEvent(mediaButtonEvent: Intent?): Boolean {
+////            if (mediaButtonEvent != null) {
+////            }
+////            return false
+////        }
+//    }
 
     private val hostServiceBroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -158,7 +113,7 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
                 when (intent.action) {
                     AppConstants.BR_INTENT_ACCESS_TOKEN_UPDATED -> {
                         Timber.d("Access token has been refreshed, update player access token")
-                        spotifyPlayer?.login(AccessModel.getAccessToken())
+                        actionStream.accept(AccessTokenUpdated)
                     }
                     else -> {
                         // Not handling other actions here, do nothing
@@ -168,6 +123,10 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
         }
     }
 
+    override fun resolveDependencies(serviceComponent: ServiceComponent) {
+        serviceComponent.inject(this)
+    }
+
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (intent != null) {
             when (intent.action) {
@@ -175,82 +134,55 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
                     Timber.d("Host service is being started")
 
                     // Set default for queue title
-                    queueTitle = getString(R.string.queue_title_default_value)
+                    var queueTitle = getString(R.string.queue_title_default_value)
 
                     // Check intent for storage of queue settings
                     if (intent.getStringExtra(AppConstants.QUEUE_TITLE_KEY) != null) {
                         queueTitle = intent.getStringExtra(AppConstants.QUEUE_TITLE_KEY)
                     }
-                    isQueueFairPlay = intent.getBooleanExtra(AppConstants.FAIR_PLAY_KEY, resources.getBoolean(R.bool.fair_play_default))
-                    basePlaylistId = intent.getStringExtra(AppConstants.BASE_PLAYLIST_ID_KEY)
+                    val isQueueFairPlay = intent.getBooleanExtra(AppConstants.FAIR_PLAY_KEY, resources.getBoolean(R.bool.fair_play_default))
+                    val basePlaylistId = intent.getStringExtra(AppConstants.BASE_PLAYLIST_ID_KEY)
+
+                    actionStream.accept(
+                            ServiceStarted(
+                                    this,
+                                    queueTitle,
+                                    isQueueFairPlay,
+                                    basePlaylistId
+                            )
+                    )
 
                     notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
-                    // Initialize playback state, allow play, pause, play/pause toggle and next
-                    playbackState = playbackStateBuilder
-                            .setActions(PlaybackStateCompat.ACTION_PLAY_PAUSE
-                                    or PlaybackStateCompat.ACTION_SKIP_TO_NEXT
-                                    or PlaybackStateCompat.ACTION_PLAY
-                                    or PlaybackStateCompat.ACTION_PAUSE)
-                            .build()
+                    // Create intent for touching foreground notification
+                    val pendingIntent = PendingIntent.getActivity(
+                            this,
+                            0,
+                            Intent(this, HostActivity::class.java),
+                            0)
 
-                    // Initialize media session
-                    mediaSession = MediaSessionCompat(baseContext, AppConstants.HOST_MEDIA_SESSION_TAG)
-                    mediaSession.isActive = true
-                    mediaSession.setFlags(MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS)
-                    mediaSession.setCallback(mediaSessionCallback)
-                    mediaSession.setPlaybackState(playbackState)
+                    // Build foreground notification
+                    notificationBuilder = NotificationCompat.Builder(this, App.CHANNEL_ID)
+                            .setContentTitle(String.format(getString(R.string.host_notification_content_text), queueTitle))
+                            .setSmallIcon(R.drawable.app_notification_icon)
+                            .setContentIntent(pendingIntent)
+                            .setColorized(true)
+                            .setOnlyAlertOnce(true)
+                            .setShowWhen(false)
 
-                    // Build notification and start foreground service
-                    val token = mediaSession.sessionToken
-                    if (token != null) {
-                        // Create intent for touching foreground notification
-                        val pendingIntent = PendingIntent.getActivity(
-                                this,
-                                0,
-                                Intent(this, HostActivity::class.java),
-                                0)
+                    // Register to receive access token update events
+                    LocalBroadcastManager.getInstance(applicationContext).registerReceiver(
+                            hostServiceBroadcastReceiver, IntentFilter(AppConstants.BR_INTENT_ACCESS_TOKEN_UPDATED))
 
-                        // Setup media style with media session token and displaying actions in compact view
-                        mediaStyle.setMediaSession(token)
-
-                        // Build foreground notification
-                        notificationBuilder = NotificationCompat.Builder(this, App.CHANNEL_ID)
-                                .setContentTitle(String.format(getString(R.string.host_notification_content_text), queueTitle))
-                                .setSmallIcon(R.drawable.app_notification_icon)
-                                .setContentIntent(pendingIntent)
-                                .setColorized(true)
-                                .setOnlyAlertOnce(true)
-                                .setShowWhen(false)
-
-                        // Register to receive access token update events
-                        LocalBroadcastManager.getInstance(applicationContext).registerReceiver(
-                                hostServiceBroadcastReceiver, IntentFilter(AppConstants.BR_INTENT_ACCESS_TOKEN_UPDATED))
-
-                        // Start service in the foreground
-                        startForeground(AppConstants.HOST_SERVICE_ID, notificationBuilder.build())
-
-                        initHost()
-                    } else {
-                        Timber.e("Something went wrong initializing the media session")
-
-                        stopSelf()
-                        return START_NOT_STICKY
-                    }
+                    // Start service in the foreground
+                    startForeground(AppConstants.HOST_SERVICE_ID, notificationBuilder.build())
 
                     // Let app object know that a service has been started
                     App.hasServiceBeenStarted = true
                 }
-                AppConstants.ACTION_REQUEST_PLAY_PAUSE -> {
-                    if (spotifyPlayer?.playbackState?.isPlaying!!) {
-                        requestPause()
-                    } else {
-                        requestPlay()
-                    }
-                }
-                AppConstants.ACTION_REQUEST_NEXT -> {
-                    requestPlayNext()
-                }
+
+                AppConstants.ACTION_REQUEST_PLAY_PAUSE -> actionStream.accept(RequestTogglePlayPause)
+                AppConstants.ACTION_REQUEST_NEXT -> actionStream.accept(RequestNext)
                 else -> {
                     Timber.e("Not handling action: ${intent.action}")
                 }
@@ -260,6 +192,178 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
         }
         return START_NOT_STICKY
     }
+
+    override fun onBind(intent: Intent?): IBinder? {
+        Timber.d("Host service is being bound")
+        isBound = true
+        return hostServiceBinder
+    }
+
+    override fun onUnbind(intent: Intent?): Boolean {
+        Timber.d("Host service is completely unbound")
+        isBound = false
+        return true
+    }
+
+    override fun onRebind(intent: Intent?) {
+        Timber.d("Host service is being rebound")
+        isBound = true
+    }
+
+    override fun onDestroy() {
+        Timber.d("Host service is ending")
+
+        mediaSession.release()
+        isServiceEnding = true
+
+        // Stop advertising and alert clients we have disconnected
+        if (successfulAdvertisingFlag) {
+            Timber.d("Stop advertising host")
+
+            Nearby.getConnectionsClient(applicationContext).stopAdvertising()
+            Nearby.getConnectionsClient(applicationContext).stopAllEndpoints()
+        }
+
+        // Let app know that the service has ended
+        App.hasServiceBeenStarted = false
+
+        // Unregister broadcast receiver
+        LocalBroadcastManager.getInstance(applicationContext).unregisterReceiver(hostServiceBroadcastReceiver)
+
+        super.onDestroy()
+    }
+
+    override fun handleState(state: HostState) {
+        when (state) {
+            is QueueInitiationComplete -> onQueueInitiationComplete(state)
+//            is ShowTrackInNotification -> TODO()
+            is PlaybackResumed -> onPlaybackResumed(state)
+            is PlaybackPaused -> onPlaybackPaused(state)
+            is PlaybackNext -> onPlaybackNext(state)
+            is AudioDeliveryDone -> onAudioDeliveryDone(state)
+            is TrackAdded -> onTrackAdded(state)
+            is InitiateNewClient -> initiateNewClient(state)
+        }
+    }
+
+    private fun onQueueInitiationComplete(state: QueueInitiationComplete) {
+
+        // TODO: Show track in notification
+
+        // Initialize playback state, allow play, pause, play/pause toggle and next
+        playbackState = playbackStateBuilder
+                .setActions(PlaybackStateCompat.ACTION_PLAY_PAUSE
+                        or PlaybackStateCompat.ACTION_SKIP_TO_NEXT
+                        or PlaybackStateCompat.ACTION_PLAY
+                        or PlaybackStateCompat.ACTION_PAUSE)
+                .build()
+
+        // Initialize media session
+        mediaSession = MediaSessionCompat(baseContext, AppConstants.HOST_MEDIA_SESSION_TAG)
+        mediaSession.isActive = true
+        mediaSession.setFlags(MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS)
+//        mediaSession.setCallback(mediaSessionCallback)
+        mediaSession.setPlaybackState(playbackState)
+
+        mediaStyle.setMediaSession(mediaSession.sessionToken)
+
+        startNearbyAdvertising(state)
+
+        listener?.onQueueUpdated(state.requestDataList)
+    }
+
+    private fun onPlaybackResumed(state: PlaybackResumed) {
+        // Update session playback state
+        mediaSession.setPlaybackState(playbackStateBuilder
+                .setState(PlaybackStateCompat.STATE_PLAYING, PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN, 1F)
+                .build())
+
+        // Update notification builder action buttons for playing
+        addActionsToNotificationBuilder(true)
+        notificationManager.notify(AppConstants.HOST_SERVICE_ID, notificationBuilder.build())
+
+        notifyPlayStarted()
+    }
+
+    private fun onPlaybackPaused(state: PlaybackPaused) {
+        // Update session playback state
+        mediaSession.setPlaybackState(playbackStateBuilder
+                .setState(PlaybackStateCompat.STATE_PAUSED, PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN, 0F)
+                .build())
+
+        if (state.tracksRemaining) {
+            addActionsToNotificationBuilder(false)
+            notificationManager.notify(AppConstants.HOST_SERVICE_ID, notificationBuilder.build())
+        }
+        notifyPaused()
+    }
+
+    private fun onPlaybackNext(state: PlaybackNext) {
+        // TODO: Show track in notification
+
+        if (listener != null) {
+            listener?.onQueueUpdated(state.trackRequestData)
+        }
+
+        Timber.d("Updating notification")
+        if (state.trackRequestData.isEmpty()) {
+            clearTrackInfoFromNotification(state.queueTitle)
+        } else {
+            showTrackInNotification(state.trackRequestData[0].track.track)
+        }
+
+        Timber.d("Notifying clients of next event")
+        if (state.currentPlaylistIndex >= 0) {
+            for (endpointId: String in clientEndpoints) {
+                Nearby.getConnectionsClient(this).sendPayload(endpointId,
+                        Payload.fromBytes(String.format(NearbyDevicesMessage.CURRENTLY_PLAYING_UPDATE.messageFormat,
+                                state.currentPlaylistIndex.toString()).toByteArray()))
+            }
+        }
+    }
+
+    private fun onAudioDeliveryDone(state: AudioDeliveryDone) {
+        // Stop service if we're not bound and out of songs
+        if (!isBound) {
+            Timber.d("Out of songs and not bound to host activity. Shutting down service.")
+            stopSelf()
+        }
+    }
+
+    private fun startNearbyAdvertising(state: QueueInitiationComplete) {
+        // Create advertising options (strategy)
+        val options = AdvertisingOptions.Builder().setStrategy(Strategy.P2P_STAR).build()
+
+        // Build name of host. See AppConstants.NEARBY_HOST_NAME_FORMAT
+        val ownerName = if (state.hostDisplayName.isEmpty()) state.hostId else state.hostDisplayName
+
+        val isFairplayCharacter = if (state.isFairPlay) {
+            AppConstants.FAIR_PLAY_TRUE_CHARACTER
+        } else {
+            AppConstants.FAIR_PLAY_FALSE_CHARACTER
+        }
+        val hostName = String.format(AppConstants.NEARBY_HOST_NAME_FORMAT, state.queueTitle, ownerName, isFairplayCharacter)
+
+        // Attempt to start advertising
+        Nearby.getConnectionsClient(this).startAdvertising(
+                hostName,
+                AppConstants.SERVICE_NAME,
+                mConnectionLifecycleCallback,
+                options)
+                .addOnSuccessListener(object : OnSuccessListener<Void> {
+                    override fun onSuccess(unusedResult: Void?) {
+                        Timber.d("Successfully advertising the host")
+                        successfulAdvertisingFlag = true
+                    }
+                })
+                .addOnFailureListener(object : OnFailureListener {
+                    override fun onFailure(p0: Exception) {
+                        Timber.e("Failed to start advertising the host")
+                        stopSelf()
+                    }
+                })
+    }
+
 
     /**
      * Adds action icons to notification builder, also removes existing icons
@@ -312,107 +416,22 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
         notificationBuilder.setStyle(style)
     }
 
-    private fun startNearbyAdvertising(queueTitle: String) {
-        // Create advertising options (strategy)
-        val options = AdvertisingOptions.Builder().setStrategy(Strategy.P2P_STAR).build()
-
-        // Build name of host. See AppConstants.NEARBY_HOST_NAME_FORMAT
-        val ownerName = when {
-            hostUser.display_name.isNullOrEmpty() -> {
-                val id = hostUser.id
-                if (id.isNullOrEmpty()) {
-                    getString(R.string.unknown)
-                } else {
-                    id
-                }
-            }
-            else -> {
-                hostUser.display_name
-            }
-        }
-        val isFairplayCharacter = when (isQueueFairPlay) {
-            true -> {
-                AppConstants.FAIR_PLAY_TRUE_CHARACTER
-            }
-            false -> {
-                AppConstants.FAIR_PLAY_FALSE_CHARACTER
-            }
-        }
-        val hostName = String.format(AppConstants.NEARBY_HOST_NAME_FORMAT, queueTitle, ownerName, isFairplayCharacter)
-
-        // Attempt to start advertising
-        Nearby.getConnectionsClient(this).startAdvertising(
-                hostName,
-                AppConstants.SERVICE_NAME,
-                mConnectionLifecycleCallback,
-                options)
-                .addOnSuccessListener(object : OnSuccessListener<Void> {
-                    override fun onSuccess(unusedResult: Void?) {
-                        Timber.d("Successfully advertising the host")
-                        successfulAdvertisingFlag = true
-                    }
-                })
-                .addOnFailureListener(object : OnFailureListener {
-                    override fun onFailure(p0: Exception) {
-                        Timber.e("Failed to start advertising the host")
-                        stopSelf()
-                    }
-                })
-    }
-
-    override fun onBind(intent: Intent?): IBinder? {
-        Timber.d("Host service is being bound")
-        isBound = true
-        return hostServiceBinder
-    }
-
-    override fun onUnbind(intent: Intent?): Boolean {
-        Timber.d("Host service is completely unbound")
-        isBound = false
-        return true
-    }
-
-    override fun onRebind(intent: Intent?) {
-        Timber.d("Host service is being rebound")
-        isBound = true
-    }
-
-    override fun authorizationFailed() {
-        Timber.d("Host service is ending due to authorization failure")
-
-        // Stop advertising and alert clients we have disconnected
-        if (successfulAdvertisingFlag) {
-            Timber.d("Stop advertising host")
-
-            Nearby.getConnectionsClient(applicationContext).stopAdvertising()
-            Nearby.getConnectionsClient(applicationContext).stopAllEndpoints()
-        }
-
-        listener?.closeHost()
-
-        // Let app know that the service has ended
-        App.hasServiceBeenStarted = false
-    }
-
-    override fun onDestroy() {
-        Timber.d("Host service is ending")
-
-        // Stop advertising and alert clients we have disconnected
-        if (successfulAdvertisingFlag) {
-            Timber.d("Stop advertising host")
-
-            Nearby.getConnectionsClient(applicationContext).stopAdvertising()
-            Nearby.getConnectionsClient(applicationContext).stopAllEndpoints()
-        }
-
-        // Let app know that the service has ended
-        App.hasServiceBeenStarted = false
-
-        // Unregister broadcast receiver
-        LocalBroadcastManager.getInstance(applicationContext).unregisterReceiver(hostServiceBroadcastReceiver)
-
-        super.onDestroy()
-    }
+//    override fun authorizationFailed() {
+//        Timber.d("Host service is ending due to authorization failure")
+//
+//        // Stop advertising and alert clients we have disconnected
+//        if (successfulAdvertisingFlag) {
+//            Timber.d("Stop advertising host")
+//
+//            Nearby.getConnectionsClient(applicationContext).stopAdvertising()
+//            Nearby.getConnectionsClient(applicationContext).stopAllEndpoints()
+//        }
+//
+//        listener?.closeHost()
+//
+//        // Let app know that the service has ended
+//        App.hasServiceBeenStarted = false
+//    }
 
     private val mConnectionLifecycleCallback = object : ConnectionLifecycleCallback() {
         override fun onConnectionInitiated(endpointId: String, connectionInfo: ConnectionInfo) {
@@ -429,7 +448,7 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
                         listener?.showClientConnected()
                     }
                     clientEndpoints.add(endPoint)
-                    initiateNewClient(endPoint)
+                    actionStream.accept(ClientConnected(endPoint))
                 }
                 ConnectionsStatusCodes.STATUS_CONNECTION_REJECTED -> Timber.d("Client connection rejected")
                 ConnectionsStatusCodes.STATUS_ERROR -> Timber.d("Error during client connection")
@@ -501,122 +520,18 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
                 return
             }
 
-            spotifyApi.getUserById(clientId)
-                    .subscribeOn(Schedulers.io())
-                    .subscribe(
-                            {
-                                var user = it.body()
-                                if (user == null) {
-                                    user = UserPublic(
-                                            "Error",
-                                            clientId,
-                                            emptyList(),
-                                            "Error",
-                                            "Error"
-                                    )
-                                }
-                                handleSongRequest(SongRequestData(songUri, user))
-                            },
-                            {
-                                val user = UserPublic(
-                                        "Error",
-                                        clientId,
-                                        emptyList(),
-                                        "Error",
-                                        "Error"
-                                )
-                                handleSongRequest(SongRequestData(songUri, user))
-                            })
-                    .addTo(subscriptions)
-
+            actionStream.accept(TrackRequested(clientId, songUri))
         }
     }
 
-    override fun onAudioFocusChange(focusChange: Int) {
-        audioFocusState = focusChange
+    private fun onTrackAdded(state: TrackAdded) {
+        listener?.onQueueUpdated(state.trackRequestData)
 
-        when (focusChange) {
-            AudioManager.AUDIOFOCUS_GAIN -> {
-                Timber.d("Gained audio focus")
-
-                // If flagged to resume audio, request play
-                if (resumeOnAudioFocus) {
-                    requestPlay()
-                    resumeOnAudioFocus = false
-                }
-            }
-            AudioManager.AUDIOFOCUS_LOSS -> {
-                Timber.d("Lost audio focus, pause playback")
-
-                // If we're currently playing audio, pause
-                if (spotifyPlayer?.playbackState?.isPlaying!!) {
-                    requestPause()
-                }
-            }
-            AudioManager.AUDIOFOCUS_LOSS_TRANSIENT -> {
-                Timber.d("Lost audio focus, focus should return, pause playback")
-
-                // If we're currently playing audio, flag to resume when we regain audio focus and pause
-                if (spotifyPlayer?.playbackState?.isPlaying!!) {
-                    resumeOnAudioFocus = true
-                    requestPause()
-                }
-            }
-            AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK -> {
-                Timber.d("Lost audio focus, should lower volume")
-
-                //TODO: Lower player volume
-            }
-            else -> {
-                Timber.e("Not handling this case")
-            }
-        }
-    }
-
-    private fun initHost() {
-        if (playlistOwnerUserId.isEmpty()) {
-            Timber.d("Initializing Host (init player, create playlist, load base playlist if selected")
-
-            if (AccessModel.getCurrentUser() == null) {
-                spotifyApi.getCurrentUser()
-                        .subscribeOn(Schedulers.io())
-                        .subscribe { response ->
-                            if (response.body() != null) {
-                                hostUser = response.body()!!
-                                playlistOwnerUserId = hostUser.id
-                                initPlayer(AccessModel.getAccessToken())
-                                createPlaylistForQueue()
-                            } else {
-                                Timber.e("Error retrieving current user")
-                            }
-                        }
-                        .addTo(subscriptions)
-
-            } else {
-                hostUser = AccessModel.getCurrentUser()
-                playlistOwnerUserId = hostUser.id
-                initPlayer(AccessModel.getAccessToken())
-                createPlaylistForQueue()
-            }
-        }
-    }
-
-    private fun notifyClientsQueueUpdated() {
-        if (currentPlaylistIndex >= 0) {
-            for (endpointId: String in clientEndpoints) {
-                Nearby.getConnectionsClient(this).sendPayload(endpointId,
-                        Payload.fromBytes(String.format(NearbyDevicesMessage.CURRENTLY_PLAYING_UPDATE.messageFormat,
-                                currentPlaylistIndex.toString()).toByteArray()))
-            }
-        }
-    }
-
-    private fun notifyClientsTrackWasAdded(newTrackIndex: Int) {
-        if (newTrackIndex >= 0) {
+        if (state.newTrackIndex >= 0) {
             for (endpointId: String in clientEndpoints) {
                 Nearby.getConnectionsClient(this).sendPayload(endpointId,
                         Payload.fromBytes(String.format(NearbyDevicesMessage.NEW_TRACK_ADDED.messageFormat,
-                                newTrackIndex.toString()).toByteArray()))
+                                state.newTrackIndex.toString()).toByteArray()))
             }
         }
     }
@@ -628,296 +543,18 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
         }
     }
 
-    private fun initiateNewClient(client: Any) {
-        if (clientEndpoints.contains(client.toString()) && playlist.id != null && playlistOwnerUserId.isNotEmpty()) {
+    private fun initiateNewClient(state: InitiateNewClient) {
+        if (clientEndpoints.contains(state.newClientId)
+                && state.playlistId.isNotEmpty()
+                && state.hostUserId.isNotEmpty()) {
             Timber.d("Sending host ID, playlist id, and current playing index to new client")
-            Nearby.getConnectionsClient(this).sendPayload(client.toString(), Payload.fromBytes(
+            Nearby.getConnectionsClient(this).sendPayload(state.newClientId, Payload.fromBytes(
                     String.format(NearbyDevicesMessage.INITIATE_CLIENT.messageFormat,
-                            playlistOwnerUserId,
-                            playlist.id,
-                            currentPlaylistIndex).toByteArray()))
+                            state.hostUserId,
+                            state.playlistId,
+                            state.currentPlaylistIndex).toByteArray()))
         }
     }
-
-    private fun initPlayer(accessToken: String) {
-        // Setup Spotify player
-        val playerConfig = Config(this, accessToken, AppConstants.CLIENT_ID)
-        spotifyPlayer = Spotify.getPlayer(playerConfig, this, object : SpotifyPlayer.InitializationObserver {
-            override fun onInitialized(player: SpotifyPlayer) {
-                Timber.d("Player initialized")
-
-                // Retrieve audio manager for managing audio focus
-                audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
-
-                player.setConnectivityStatus(connectivityCallback,
-                        getNetworkConnectivity(this@HostService))
-                player.addConnectionStateCallback(this@HostService)
-                player.addNotificationCallback(this@HostService)
-            }
-
-            override fun onError(error: Throwable) {
-                Timber.e("ERROR: Could not initialize player: %1s", error.message)
-            }
-        })
-    }
-
-    fun requestPlay() {
-        Timber.d("PLAY REQUEST")
-        if (audioFocusState == AudioManager.AUDIOFOCUS_GAIN) {
-            handlePlay()
-        } else {
-            if (requestAudioFocus()) {
-                // We have audio focus, request play
-                handlePlay()
-            } else {
-                // If we did not receive audio focus, flag to start playing when audio focus is gained
-                resumeOnAudioFocus = true
-            }
-        }
-    }
-
-    private fun handlePlay() {
-        if (spotifyPlayer?.playbackState != null) {
-            if (audioDeliveryDoneFlag) {
-                if (currentPlaylistIndex < playlistTracks.size) {
-                    // If audio has previously been completed (or never started)
-                    // start the playlist at the current index
-                    Timber.d("Audio previously finished.\nStarting playlist from index: $currentPlaylistIndex")
-                    spotifyPlayer?.playUri(this, playlist.uri, currentPlaylistIndex, 0)
-                    audioDeliveryDoneFlag = false
-                    incorrectMetaDataFlag = false
-                } else {
-                    Timber.d("Nothing to play")
-                }
-            } else {
-                Timber.d("Resuming player")
-                if (!spotifyPlayer?.playbackState?.isPlaying!!) {
-                    spotifyPlayer?.resume(this)
-                }
-            }
-        }
-    }
-
-    private fun requestAudioFocus(): Boolean {
-        Timber.d("Sending audio focus request")
-
-        var audioFocusResult = -1
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val playbackAttributes = AudioAttributes.Builder()
-                    .setUsage(AudioAttributes.USAGE_MEDIA)
-                    .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
-                    .build()
-            val request = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
-                    .setAudioAttributes(playbackAttributes)
-                    .setAcceptsDelayedFocusGain(true)
-                    .setOnAudioFocusChangeListener(this)
-                    .build()
-            audioFocusResult = audioManager.requestAudioFocus(request)
-        } else {
-            audioFocusResult = audioManager.requestAudioFocus(this, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN)
-        }
-
-        if (audioFocusResult == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
-            Timber.d("Audio focus was granted")
-        } else {
-            Timber.d("Audio focus was NOT granted")
-        }
-
-        return audioFocusResult == AudioManager.AUDIOFOCUS_REQUEST_GRANTED
-    }
-
-    fun requestPause() {
-        Timber.d("PAUSE REQUEST")
-        userRequestedPause = true
-        spotifyPlayer?.pause(this)
-    }
-
-    fun requestPlayNext() {
-        Timber.d("NEXT REQUEST")
-        if (!audioDeliveryDoneFlag) {
-            // Don't allow a skip when we're waiting on a new track to be queued
-            spotifyPlayer?.skipToNext(this)
-        } else {
-            Timber.d("Can't go to next track")
-        }
-    }
-
-    override fun onPlaybackEvent(playerEvent: PlayerEvent) {
-        Timber.d("New playback event: %1s", playerEvent.name)
-
-        when (playerEvent) {
-            PlayerEvent.kSpPlaybackNotifyPlay -> {
-                Timber.d("Player has started playing")
-
-                // Started/resumed playing, reset flag for resume audio on focus
-                resumeOnAudioFocus = false
-
-                // Update session playback state
-                mediaSession.setPlaybackState(playbackStateBuilder
-                        .setState(PlaybackStateCompat.STATE_PLAYING, PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN, 1F)
-                        .build())
-
-                // Update notification builder action buttons for playing
-                addActionsToNotificationBuilder(true)
-                notificationManager.notify(AppConstants.HOST_SERVICE_ID, notificationBuilder.build())
-
-                isPlaying = true
-                notifyPlayStarted()
-            }
-            PlayerEvent.kSpPlaybackNotifyContextChanged -> {
-            }
-            PlayerEvent.kSpPlaybackNotifyPause -> {
-                Timber.d("Player has paused")
-
-                // Update session playback state
-                mediaSession.setPlaybackState(playbackStateBuilder
-                        .setState(PlaybackStateCompat.STATE_PAUSED, PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN, 0F)
-                        .build())
-
-                // Update notification builder with action buttons for paused if we're paused with tracks remaining
-                if (currentPlaylistIndex < playlistTracks.size) {
-                    addActionsToNotificationBuilder(false)
-                    notificationManager.notify(AppConstants.HOST_SERVICE_ID, notificationBuilder.build())
-                }
-
-                // If meta data is incorrect we won't actually pause (unless user requested pause)
-                isPlaying = false
-                if (userRequestedPause || !incorrectMetaDataFlag) {
-                    notifyPaused()
-                    userRequestedPause = false
-                }
-            }
-            PlayerEvent.kSpPlaybackNotifyTrackChanged -> {
-                logMetaData()
-            }
-            PlayerEvent.kSpPlaybackNotifyMetadataChanged -> {
-                logMetaData()
-            }
-            PlayerEvent.kSpPlaybackNotifyTrackDelivered,
-            PlayerEvent.kSpPlaybackNotifyNext -> {
-                // Track has changed, remove top track from queue list
-                Timber.d("Player has moved to next track (next/track complete)")
-                // If we are about to play the wrong song we need to skip twice and not increment current playing index
-                // due to the handling of the queued track
-                if (incorrectMetaDataFlag) {
-                    Timber.d("Skipping queued placeholder, don't update index or notify we're skipping")
-
-                    incorrectMetaDataFlag = false
-                    spotifyPlayer?.skipToNext(this)
-                } else {
-                    if (songRequests.size > 0) {
-                        songRequests.removeAt(0)
-                    }
-                    currentPlaylistIndex++
-                    Timber.d("UPDATING CURRENT PLAYING INDEX TO: $currentPlaylistIndex")
-                    notifyQueueChanged()
-
-                    Timber.d("Updating notification")
-                    if (currentPlaylistIndex < playlistTracks.size) {
-                        showTrackInNotification(playlistTracks[currentPlaylistIndex].track, true)
-                    } else {
-                        clearTrackInfoFromNotification()
-                    }
-                }
-            }
-            PlayerEvent.kSpPlaybackNotifyAudioDeliveryDone -> {
-                // Current queue playlist has finished
-                Timber.d("Player has finished playing audio")
-                audioDeliveryDoneFlag = true
-
-                // Stop service if we're not bound and out of songs
-                if (!isBound) {
-                    Timber.d("Out of songs and not bound to host activity. Shutting down service.")
-                    stopSelf()
-                }
-            }
-            PlayerEvent.kSpPlaybackNotifyBecameActive -> {
-                // Player became active
-                Timber.d("Player is active")
-
-                isPlayerActive = true
-            }
-            else -> {
-            }
-        }// Do nothing or future implementation
-    }
-
-    private fun logMetaData() {
-        // Log previous/current/next tracks
-        val metadata = spotifyPlayer?.metadata
-        var previousTrack: String? = null
-        var nextTrack: String? = null
-        var currentTrack: String? = null
-        if (metadata?.prevTrack != null) {
-            previousTrack = metadata.prevTrack.name
-        }
-        if (metadata?.currentTrack != null) {
-            currentTrack = metadata.currentTrack.name
-        }
-        if (metadata?.nextTrack != null) {
-            nextTrack = metadata.nextTrack.name
-        }
-        Timber.i("META DATA:\nFinished/Skipped: " + previousTrack
-                + "\nNow Playing : " + currentTrack
-                + "\nNext Track: " + nextTrack)
-    }
-
-    override fun onPlaybackError(error: Error) {
-        Timber.e("ERROR: New playback error: %1s", error.name)
-    }
-
-    override fun onSuccess() {
-        Timber.d("Great Success!")
-    }
-
-    override fun onError(error: Error) {
-        Timber.e("ERROR: Playback error received : Error - %1s", error.name)
-    }
-
-    /**
-     * Registering for connectivity changes in Android does not actually deliver them to
-     * us in the delivered intent.
-     *
-     * @param context Android context
-     * @return Connectivity state to be passed to the SDK
-     */
-    private fun getNetworkConnectivity(context: Context): Connectivity {
-        val connectivityManager: ConnectivityManager?
-        connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-        if (connectivityManager != null) {
-            val activeNetwork = connectivityManager.activeNetworkInfo
-            return if (activeNetwork != null && activeNetwork.isConnected) {
-                Connectivity.fromNetworkType(activeNetwork.type)
-            } else {
-                Connectivity.OFFLINE
-            }
-        }
-        return Connectivity.OFFLINE
-    }
-
-    // START CONNECTION CALLBACK METHODS
-    override fun onLoggedIn() {
-        Timber.d("Logged In! Player can be used")
-        // TODO: Show loading screen until this call
-    }
-
-    override fun onLoggedOut() {
-        Timber.d("Logged Out! Player can no longer be used")
-    }
-
-    override fun onLoginFailed(error: Error) {
-        Timber.e("ERROR: Login Error: %1s", error.name)
-        // TODO: Should probably try to log into player again
-    }
-
-    override fun onTemporaryError() {
-        Timber.e("ERROR: Temporary Error")
-    }
-
-    override fun onConnectionMessage(s: String) {
-        Timber.d("Connection Message: $s")
-    }
-    // END CONNECTION CALLBACK METHODS
 
     // Inner interface used to cast listeners for service events
     interface HostServiceListener {
@@ -937,13 +574,6 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
         fun showClientDisconnected()
 
         fun initiateView(title: String, songRequests: List<ClientRequestData>, isPlaying: Boolean)
-    }
-
-    private fun notifyQueueChanged() {
-        if (listener != null) {
-            listener?.onQueueUpdated(createDisplayList(playlistTracks.subList(currentPlaylistIndex, playlistTracks.size)))
-        }
-        notifyClientsQueueUpdated()
     }
 
     private fun notifyPaused() {
@@ -972,414 +602,50 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
         this.listener = null
     }
 
-    private fun createPlaylistForQueue() {
-        Timber.d("Creating playlist for the SocialQ")
-        spotifyApi.createSocialQPlaylist(playlistOwnerUserId)
-                .subscribeOn(Schedulers.io())
-                .subscribe({ response ->
-                    if (response.body() == null) {
-                        Timber.e("Created playlist returned null")
-                        createPlaylistForQueue()
-                    } else {
-                        Timber.d("Successfully created playlist for queue")
-                        playlist = response.body()!!
-
-                        // If we have a base playlist ID load it up
-                        if (basePlaylistId.isNotEmpty()) {
-                            loadBasePlaylist(basePlaylistId)
-                            basePlaylistId = ""
-                        } else {
-                            startNearbyAdvertising(queueTitle)
-                        }
-                    }
-                }, {
-                    // TODO: Stop after too many errors?
-                    Timber.e(it)
-                    createPlaylistForQueue()
-                })
-                .addTo(subscriptions)
-    }
-
-    private fun loadBasePlaylist(playlistId: String) {
-        Timber.d("Loading base playlist with ID: $playlistId")
-
-        wasBasePlaylistLoaded = true
-
-        // TODO: Shouldn't assume success
-        getBasePlaylistTracks(playlistId)
-    }
-
-    private fun getBasePlaylistTracks(playlistId: String, offset: Int = 0) {
-        spotifyApi.getPlaylistTracks(playlistId, 50, offset)
-                .subscribeOn(Schedulers.io())
-                .subscribe { response ->
-                    if (response.body() == null) {
-                        // TODO: Try again?
-                    } else {
-                        val basePlaylistTracks = response.body()!!
-                        for (playlistTrack in basePlaylistTracks.items) {
-                            if (!playlistTrack.track.is_local) {
-                                playlistTracks.add(playlistTrack)
-                            }
-                        }
-
-                        if (basePlaylistTracks.next != null) {
-                            val nextOffset = basePlaylistTracks.offset + basePlaylistTracks.items.size
-                            getBasePlaylistTracks(playlistId, nextOffset)
-                        } else {
-                            // Shuffle entire track list
-                            val randomGenerator = Random()
-                            while (playlistTracks.size > 0) {
-                                val trackIndexToAdd = randomGenerator.nextInt(playlistTracks.size)
-
-                                Timber.d("123 - Adding to shuffled tracks")
-                                shuffledTracks.add(playlistTracks.removeAt(trackIndexToAdd))
-                            }
-                            addPlaylistTracks()
-                        }
-                    }
-                }
-                .addTo(subscriptions)
-    }
-
-    private fun addPlaylistTracks() {
-        // Adding with base user ensure host added tracks are sorted within the base playlist
-        val baseUser = UserPublic(
-                resources.getString(R.string.base_playlist),
-                AppConstants.BASE_USER_ID,
-                emptyList(),
-                "",
-                ""
-        )
-
-        // Add tracks (100 at a time) to playlist and add request date
-        Timber.d("123 -  Shuffled tracks size = ${shuffledTracks.size}")
-        while (shuffledTracks.size > 0) {
-            val urisArray = JsonArray()
-            // Can only add max 100 tracks
-            for (i in 0..99) {
-                if (shuffledTracks.size == 0) {
-                    break
-                }
-                val track = shuffledTracks.removeAt(0)
-                val requestData = SongRequestData(track.track.uri, baseUser)
-                songRequests.add(requestData)
-
-                urisArray.add(track.track.uri)
-            }
-
-            // TODO: Wait for success responses before sending more track to ensure order
-            Timber.d("123 - Sending add request for $urisArray")
-            spotifyApi.addTracksToPlaylist(
-                    playlist.id,
-                    FrySpotifyService.getAddTracksToPlaylistBody(urisArray)
-            )
-                    .subscribe({
-                        Timber.d(it.body().toString())
-                        if (shuffledTracks.isEmpty()) {
-                            refreshPlaylist()
-                        }
-                    }, {
-                        Timber.e(it)
-                    })
-                    .addTo(subscriptions)
-        }
-    }
-
-    private fun handleSongRequest(songRequest: SongRequestData?) {
-        if (songRequest != null && !songRequest.uri.isEmpty()) {
-            Timber.d("Received request for URI: " + songRequest.uri + ", from User ID: " + songRequest.user.id)
-
-            // Add track to request list
-            songRequests.add(songRequest)
-
-            val willNextSongBeWrong: Boolean
-            // Add track and figure out if our next song will be wrong
-            if (isQueueFairPlay) {
-                willNextSongBeWrong = addNewTrackFairplay(songRequest)
-            } else {
-                willNextSongBeWrong = addNewTrack(songRequest)
-            }
-
-            // If already flagged for skip don't queue again, player seems to fix it's playlist position
-            // when the original song queued is skipped (may not match the true "next" song)
-            if (willNextSongBeWrong && !incorrectMetaDataFlag) {
-                // If we changed the next track notify service next track will be incorrect
-                incorrectMetaDataFlag = true
-                spotifyPlayer?.queue(this, songRequest.uri)
-            }
-
-            if (newTrackIndex < 0 || newTrackIndex > playlistTracks.size) {
-                Timber.e("Something went wrong, new track index is invalid")
-            } else {
-                pullNewTrack(newTrackIndex)
-                newTrackIndex = -1
-            }
-        }
-    }
-
-    /**
-     * Adds a song to end of the referenced playlist
-     *
-     * @param uri - id of the track to be added
-     */
-    private fun addTrackToPlaylist(uri: String) {
-        addTrackToPlaylistPosition(uri, -1)
-    }
-
-    /**
-     * Adds a song to the referenced playlist at the given position (or end if not specified)
-     *
-     * @param uri      - id of the track to be added
-     * @param position - position of the track to be added (if less than 0, track placed at end of playlist)
-     */
-    private fun addTrackToPlaylistPosition(uri: String, position: Int) {
-
-        val newTrackPosition = if (position < 0) null else position
-        spotifyApi.addTrackToPlaylist(playlist.id, uri, newTrackPosition)
-                .subscribe({
-                    Timber.d(it.body().toString())
-                }, {
-                    Timber.e(it)
-                })
-                .addTo(subscriptions)
-    }
-
-    /**
-     * Injects most recently added track to fairplay position
-     *
-     * @param songRequest - Song request containing requestee and track info
-     * @return - Boolean flag for if the track was added at the next position
-     */
-    private fun addNewTrackFairplay(songRequest: SongRequestData): Boolean {
-        // Position of new track needs to go before first repeat that doesn't have a song of the requestee inside
-        // EX (Requestee = 3): 1 -> 2 -> 3 -> 1 -> 2 -> 1  New 3 track goes before 3rd track by 1
-        // PLAYLIST RESULT   : 1 -> 2 -> 3 -> 1 -> 2 -> 3 -> 1
-        var newTrackPosition = 0
-
-        val clientRepeatHash = HashMap<String, Boolean>()
-
-        // Start inspecting song requests
-        while (newTrackPosition < songRequests.size) {
-            val currentRequestUserId = songRequests[newTrackPosition].user.id
-
-            // Base playlist track. Check if we can replace it
-            if (currentRequestUserId == AppConstants.BASE_USER_ID) {
-                // If player is not active we can add a track at index 0 (replace base playlist)
-                // because we haven't started the playlist. Else don't cause the base playlist
-                // track may currently be playing
-                if (newTrackPosition == 0 && !isPlayerActive || newTrackPosition > 0) {
-                    // We want to keep user tracks above base playlist tracks.  Use base playlist
-                    // as a fall back.
-                    break
-                }
-            }
-
-            if (currentRequestUserId == songRequest.user.id) {
-                // If we found a requestee track set open repeats to true (found requestee track)
-                for (mapEntry in clientRepeatHash.entries) {
-                    mapEntry.setValue(true)
-                }
-            } else {
-                // Found a request NOT from the requestee client
-                if (clientRepeatHash.containsKey(currentRequestUserId)) {
-                    // Client already contained in hash (repeat)
-                    if (clientRepeatHash[currentRequestUserId]!!) {
-                        // If repeat contained requestee track (true flag) reset to false
-                        clientRepeatHash[currentRequestUserId] = false
-                    } else {
-                        // Client already contained in hash (repeat) and does not have a requestee track
-                        // We have a repeat with no requestee song in between
-                        break
-                    }
-                } else {
-                    // Add new client to the hash
-                    clientRepeatHash[currentRequestUserId] = false
-                }
-            }
-            newTrackPosition++
-        }
-
-        return injectTrackToPosition(newTrackPosition, songRequest)
-    }
-
-    /**
-     * Injects most recently added track to position before base playlist (if it exists)
-     *
-     * @param songRequest - Song request containing requestee and track info
-     * @return - Boolean flag for if the track was added at the next position
-     */
-    private fun addNewTrack(songRequest: SongRequestData): Boolean {
-        if (wasBasePlaylistLoaded) {
-            // Position of new track needs to go before first base playlist track
-
-            // Start inspecting song requests
-            var newTrackPosition = 0
-            while (newTrackPosition < songRequests.size) {
-                val currentRequestUserId = songRequests[newTrackPosition].user.id
-
-                // Base playlist track. Check if we can replace it
-                if (currentRequestUserId == AppConstants.BASE_USER_ID) {
-                    // If player is not active we can add a track at index 0 (replace base playlist)
-                    // because we haven't started the playlist. Else don't cause the base playlist
-                    // track may currently be playing
-                    if (newTrackPosition == 0 && !isPlayerActive || newTrackPosition > 0) {
-                        // We want to keep user tracks above base playlist tracks.  Use base playlist
-                        // as a fall back.
-                        break
-                    }
-                }
-                newTrackPosition++
-            }
-
-            return injectTrackToPosition(newTrackPosition, songRequest)
-        } else {
-            // Cache new track index
-            newTrackIndex = playlistTracks.size
-
-            addTrackToPlaylist(songRequest.uri)
-            return songRequests.size == 2
-        }
-    }
-
-    private fun injectTrackToPosition(newTrackPosition: Int, songRequest: SongRequestData): Boolean {
-        if (newTrackPosition == songRequests.size) {
-            // Cache new track index
-            newTrackIndex = playlistTracks.size
-
-            // No base playlist track found add track to end of playlist
-            Timber.d("Adding track to end of playlist")
-            addTrackToPlaylist(songRequest.uri)
-            // Return true if the song being added is next (request size of 2)
-            return songRequests.size == 1 || songRequests.size == 2
-        } else if (newTrackPosition > songRequests.size) {
-            // Should not be possible
-            Timber.e("INVALID NEW TRACK POSITION INDEX")
-
-            // Cache new track index (as invalid)
-            newTrackIndex = -1
-            return false
-        } else {
-            // If new track position is not equal or greater than song request size we need to move it
-            // Inject song request data to new position
-            songRequests.add(newTrackPosition, songRequests.removeAt(songRequests.size - 1))
-
-            Timber.d("Adding new track at playlist index: " + (newTrackPosition + currentPlaylistIndex))
-            addTrackToPlaylistPosition(songRequest.uri, newTrackPosition + currentPlaylistIndex)
-
-            // Cache new track index
-            newTrackIndex = newTrackPosition + currentPlaylistIndex
-
-            // Return true if we're moving the added track to the "next" position
-            return newTrackPosition == 1
-        }
-    }
-
     fun unfollowQueuePlaylist() {
         // Unfollow the playlist created for SocialQ
-        if (playlistOwnerUserId != null) {
-            Timber.d("Unfollowing playlist created for the SocialQ")
+        actionStream.accept(UnfollowPlaylist)
 
-            spotifyApi.unfollowPlaylist(playlist.id)
-                    .subscribe({
-                        if (it.code() == 200) {
-                            Timber.d("Successfully unfollowed playlist")
-                        } else {
-                            Timber.e("Error Unfollowing playlist")
-                        }
-                    }, {
-                        Timber.e(it)
-                    })
-                    .addTo(subscriptions)
-
-            shutdownQueue()
-        }
+        shutdownQueue()
     }
 
     private fun shutdownQueue() {
         notifyClientsHostDisconnecting()
-        spotifyPlayer?.logout()
-        try {
-            Timber.d("Releasing spotify player resource")
-            Spotify.awaitDestroyPlayer(this@HostService, 10000, TimeUnit.MILLISECONDS)
-        } catch (e: InterruptedException) {
-            e.printStackTrace()
-            Timber.e("Error releasing spotify player resource, hard shutting down")
-            Spotify.destroyPlayer(this@HostService)
-        }
 
         listener?.closeHost()
         listener = null
     }
 
 
-    private fun createDisplayList(trackList: List<PlaylistTrack>): List<ClientRequestData> {
-        val displayList = ArrayList<ClientRequestData>()
-
-        // TODO: This does not guarantee correct display.  If player does not play songs in
-        // correct order, the incorrect users may be displayed
-        var i = 0
-        while (i < trackList.size && i < songRequests.size) {
-            displayList.add(ClientRequestData(trackList[i], songRequests[i].user))
-            i++
-        }
-
-        return displayList
-    }
-
     fun savePlaylistAs(playlistName: String) {
-        // Create body parameters for modifying playlist details
-        val saveName = if (playlistName.isEmpty()) getString(R.string.default_playlist_name) else playlistName
-
-        Timber.d("Saving playlist as: $saveName")
-        spotifyApi.changePlaylistDetails(playlist.id, FrySpotifyService.getPlaylistDetailsBody(saveName))
+        if (playlistName.isNotEmpty()) {
+            Timber.d("Saving playlist as: $playlistName")
+            actionStream.accept(UpdatePlaylistName(playlistName))
+        }
 
         shutdownQueue()
     }
 
     fun hostRequestSong(uri: String) {
         if (uri.isNotEmpty()) {
-            val user = UserPublic(
-                    hostUser.display_name,
-                    hostUser.id,
-                    emptyList(),
-                    hostUser.type,
-                    hostUser.uri
-            )
-            handleSongRequest(SongRequestData(uri, user))
+            actionStream.accept(HostTrackRequested(uri))
         }
     }
 
-    fun requestInitiation() {
-        listener?.initiateView(queueTitle, createDisplayList(playlistTracks.subList(currentPlaylistIndex, playlistTracks.size)), isPlaying)
+    fun requestPlayPauseToggle() {
+        actionStream.accept(RequestTogglePlayPause)
     }
 
-    override fun playlistRefreshComplete() {
-        // Start advertising since base playlist load is complete
-        startNearbyAdvertising(queueTitle)
-
-        // If a base playlist has been loaded we should display the first track
-        if (playlistTracks.size > 0) {
-            addActionsToNotificationBuilder(false)
-            showTrackInNotification(playlistTracks[0].track, true)
-        }
-        notifyQueueChanged()
+    fun requestPlayNext() {
+        actionStream.accept(RequestNext)
     }
 
-    override fun newTrackRetrievalComplete(newTrackIndex: Int) {
-        if (listener != null) {
-            listener?.onQueueUpdated(createDisplayList(playlistTracks.subList(currentPlaylistIndex, playlistTracks.size)))
-        }
+    // TODO: Might need if activity is lost/recreated
+//    fun requestInitiation() {
+//        listener?.initiateView(queueTitle, createDisplayList(playlistTracks.subList(currentPlaylistIndex, playlistTracks.size)), isPlaying)
+//    }
 
-        if (playlistTracks.size - currentPlaylistIndex == 1) {
-            addActionsToNotificationBuilder(false)
-            showTrackInNotification(playlistTracks[currentPlaylistIndex].track, true)
-        }
-
-        notifyClientsTrackWasAdded(newTrackIndex)
-    }
-
-    private fun clearTrackInfoFromNotification() {
+    private fun clearTrackInfoFromNotification(queueTitle: String) {
         mediaSession.setMetadata(null)
 
         // Update session playback state
@@ -1400,4 +666,42 @@ class HostService : SpotifyAccessService(), ConnectionStateCallback, Player.Noti
         notificationManager.notify(AppConstants.HOST_SERVICE_ID, notificationBuilder.build())
     }
 
+    /**
+     * Sets up metadata for displaying a track in the service notification and updates that notification.
+     * WARNING: Notification manager and builder need to be setup by child class before using this method.
+     */
+    private fun showTrackInNotification(trackToShow: Track) {
+        // Update metadata for media session
+        metaDataBuilder.putString(MediaMetadataCompat.METADATA_KEY_ALBUM, trackToShow.album?.name)
+        metaDataBuilder.putString(MediaMetadataCompat.METADATA_KEY_TITLE, trackToShow.name)
+        metaDataBuilder.putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_TITLE, trackToShow.name)
+        metaDataBuilder.putString(MediaMetadataCompat.METADATA_KEY_ARTIST, DisplayUtils.getTrackArtistString(trackToShow))
+
+        // Attempt to update album art in notification and metadata
+        if (trackToShow.album.images.isNotEmpty()) {
+            try {
+                val url = URL(trackToShow.album.images[0].url)
+                // Retrieve album art bitmap
+                val albumArtBitmap = BitmapFactory.decodeStream(url.openConnection().getInputStream())
+
+                // Set bitmap data for lock screen display
+                metaDataBuilder.putBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART, albumArtBitmap)
+                // Set bitmap data for notification
+                notificationBuilder.setLargeIcon(albumArtBitmap)
+            } catch (exception: IOException) {
+                Timber.e("Error retrieving image bitmap: ${exception.message.toString()}")
+                System.out.println(exception)
+            }
+        }
+        mediaSession.setMetadata(metaDataBuilder.build())
+
+        // Update notification data
+        notificationBuilder.setContentTitle(trackToShow.name)
+        notificationBuilder.setContentText(DisplayUtils.getTrackArtistString(trackToShow))
+
+        val notificationId = AppConstants.HOST_SERVICE_ID
+
+        // Display updated notification
+        notificationManager.notify(notificationId, notificationBuilder.build())
+    }
 }

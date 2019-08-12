@@ -12,12 +12,12 @@ import io.reactivex.schedulers.Schedulers
 import timber.log.Timber
 
 abstract class BaseProcessor<State, Action>(
-        private val lifecycle: Lifecycle,
+        private val lifecycle: Lifecycle?,
         val subscriptions: CompositeDisposable
 ) : LifecycleObserver {
 
     init {
-        lifecycle.addObserver(this)
+        lifecycle?.addObserver(this)
     }
     /**
      * Relay to push out states
@@ -43,12 +43,19 @@ abstract class BaseProcessor<State, Action>(
     }
 
     /**
+     * Clear any subscriptions and remove instance from lifecycle (it not null)
+     */
+    open fun detach() {
+        subscriptions.clear()
+        lifecycle?.removeObserver(this)
+    }
+
+    /**
      * Acts as a detach for a view with a lifecycle
      */
     @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
     fun onDestory() {
-        subscriptions.clear()
-        lifecycle.removeObserver(this)
+        detach()
     }
 
     abstract fun handleAction(action: Action)

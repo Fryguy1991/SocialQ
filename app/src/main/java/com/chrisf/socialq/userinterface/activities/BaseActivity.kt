@@ -11,6 +11,7 @@ import com.chrisf.socialq.R
 import com.chrisf.socialq.dagger.components.ActivityComponent
 import com.chrisf.socialq.dagger.components.ActivityComponentHolder
 import com.chrisf.socialq.dagger.modules.ActivityModule
+import com.chrisf.socialq.extensions.addTo
 import com.chrisf.socialq.processor.BaseProcessor
 import com.chrisf.socialq.userinterface.App
 import com.jakewharton.rxrelay2.PublishRelay
@@ -55,11 +56,10 @@ abstract class BaseActivity<State, Action, Processor : BaseProcessor<State, Acti
         super.onCreate(savedInstanceState)
 
         subscriptions.add(processor.attach(actionStream))
-        @Suppress("CheckResult")
         processor.stateObservable
-                .doOnSubscribe{ subscriptions.add(it) }
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(this::handleState)
+                .addTo(subscriptions)
 
 
         // Ensure when app is in recents a white title bar is displayed
