@@ -143,21 +143,23 @@ class HostProcessor @Inject constructor(
     }
 
     private fun handlePlay() {
-        if (audioDeliveryDoneFlag) {
-            if (currentPlaylistIndex < playlistTracks.size) {
-                // If audio has previously been completed (or never started)
-                // start the playlist at the current index
-                Timber.d("Audio previously finished.\nStarting playlist from index: $currentPlaylistIndex")
-                spotifyPlayer.playUri(this, playlist.uri, currentPlaylistIndex, 0)
-                audioDeliveryDoneFlag = false
-                incorrectMetaDataFlag = false
-            } else {
-                Timber.d("Nothing to play")
+        if (requestAudioFocus()) {
+            if (audioDeliveryDoneFlag) {
+                if (currentPlaylistIndex < playlistTracks.size) {
+                    // If audio has previously been completed (or never started)
+                    // start the playlist at the current index
+                    Timber.d("Audio previously finished.\nStarting playlist from index: $currentPlaylistIndex")
+                    spotifyPlayer.playUri(this, playlist.uri, currentPlaylistIndex, 0)
+                    audioDeliveryDoneFlag = false
+                    incorrectMetaDataFlag = false
+                } else {
+                    Timber.d("Nothing to play")
+                }
+                return
             }
-            return
-        }
 
-        spotifyPlayer.resume(this)
+            spotifyPlayer.resume(this)
+        }
     }
 
     private fun handlePause() {
