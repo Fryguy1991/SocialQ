@@ -39,8 +39,6 @@ class HostProcessor @Inject constructor(
         Player.NotificationCallback,
         Player.OperationCallback,
         AudioManager.OnAudioFocusChangeListener {
-    // User object for host's Spotify account
-    private var playlistOwnerUserId: String = ""
     // Playlist object for the queue
     private lateinit var playlist: Playlist
     // Tracks from queue playlist
@@ -65,8 +63,6 @@ class HostProcessor @Inject constructor(
     private var userRequestedPause = false
     // Boolean flag for if the player is active
     private var isPlayerActive = false
-    // Boolean flag for indicating if the player is playing (used for view initiation)
-    private var isPlaying = false
 
     // QUEUE SORTING/FAIR PLAY ELEMENTS
     // Boolean flag to store if queue should be "fair play"
@@ -282,34 +278,30 @@ class HostProcessor @Inject constructor(
     }
 
     private fun initHost() {
-        if (playlistOwnerUserId.isEmpty()) {
-            Timber.d("Initializing Host (init player, create playlist, load base playlist if selected")
+        Timber.d("Initializing Host (init player, create playlist, load base playlist if selected")
 
-            if (AccessModel.getCurrentUser() == null) {
-                spotifyService.getCurrentUser()
-                        .subscribeOn(Schedulers.io())
-                        .subscribe { response ->
-                            if (response.body() != null) {
-                                hostUser = response.body()!!
-                                playlistOwnerUserId = hostUser.id
-                                createPlaylistForQueue()
-                            } else {
-                                Timber.e("Error retrieving current user")
-                            }
+        if (AccessModel.getCurrentUser() == null) {
+            spotifyService.getCurrentUser()
+                    .subscribeOn(Schedulers.io())
+                    .subscribe { response ->
+                        if (response.body() != null) {
+                            hostUser = response.body()!!
+                            createPlaylistForQueue()
+                        } else {
+                            Timber.e("Error retrieving current user")
                         }
-                        .addTo(subscriptions)
+                    }
+                    .addTo(subscriptions)
 
-            } else {
-                hostUser = AccessModel.getCurrentUser()
-                playlistOwnerUserId = hostUser.id
-                createPlaylistForQueue()
-            }
+        } else {
+            hostUser = AccessModel.getCurrentUser()
+            createPlaylistForQueue()
         }
     }
 
     private fun createPlaylistForQueue() {
         Timber.d("Creating playlist for the SocialQ")
-        spotifyService.createSocialQPlaylist(playlistOwnerUserId)
+        spotifyService.createSocialQPlaylist(hostUser.id)
                 .subscribeOn(Schedulers.io())
                 .subscribe({ response ->
                     if (response.body() == null) {
@@ -758,7 +750,6 @@ class HostProcessor @Inject constructor(
 
                 // Started/resumed playing, reset flag for resume audio on focus
                 resumeOnAudioFocus = false
-                isPlaying = true
 
                 stateStream.accept(PlaybackResumed)
             }
@@ -768,7 +759,6 @@ class HostProcessor @Inject constructor(
                 Timber.d("Player has paused")
 
                 // If meta data is incorrect we won't actually pause (unless user requested pause)
-                isPlaying = false
                 if (userRequestedPause || !incorrectMetaDataFlag) {
                     stateStream.accept(PlaybackPaused(currentPlaylistIndex < playlistTracks.size))
                     userRequestedPause = false
