@@ -90,27 +90,27 @@ open class ClientActivity : ServiceActivity(), ClientService.ClientServiceListen
     }
 
     // Object for connecting to/from client service
-    private val clientServiceConnection = object : ServiceConnection {
-        override fun onServiceConnected(componentName: ComponentName, iBinder: IBinder) {
-            Log.d(TAG, "Client service Connected")
-            val binder = iBinder as ClientService.ClientServiceBinder
-
-            clientService = binder.getService()
-            clientService.setClientServiceListener(this@ClientActivity)
-            isServiceBound = true
-
-            if (hostEnpointId.isNullOrEmpty()) {
-                clientService.requestInitiation()
-            }
-        }
-
-        override fun onServiceDisconnected(componentName: ComponentName) {
-            Log.d(TAG, "Client service disconnected")
-            unbindService(this)
-            isServiceBound = false
-            finish()
-        }
-    }
+//    private val clientServiceConnection = object : ServiceConnection {
+//        override fun onServiceConnected(componentName: ComponentName, iBinder: IBinder) {
+//            Log.d(TAG, "Client service Connected")
+//            val binder = iBinder as ClientService.ClientServiceBinder
+//
+//            clientService = binder.getService()
+//            clientService.setClientServiceListener(this@ClientActivity)
+//            isServiceBound = true
+//
+//            if (hostEnpointId.isNullOrEmpty()) {
+//                clientService.requestInitiation()
+//            }
+////        }
+//
+//        override fun onServiceDisconnected(componentName: ComponentName) {
+//            Log.d(TAG, "Client service disconnected")
+//            unbindService(this)
+//            isServiceBound = false
+//            finish()
+//        }
+//    }
 
     private fun initUi() {
         // Initialize UI elements
@@ -136,11 +136,11 @@ open class ClientActivity : ServiceActivity(), ClientService.ClientServiceListen
         // If we can't find a client service to bind to, start the client service then bind
         if (App.hasServiceBeenStarted) {
             Log.d(TAG, "Attempting to bind to client service")
-            bindService(startClientIntent, clientServiceConnection, Context.BIND_AUTO_CREATE)
+//            bindService(startClientIntent, clientServiceConnection, Context.BIND_AUTO_CREATE)
         } else {
             Log.d(TAG, "Starting and binding to client service")
             ContextCompat.startForegroundService(this, startClientIntent)
-            bindService(startClientIntent, clientServiceConnection, Context.BIND_AUTO_CREATE)
+//            bindService(startClientIntent, clientServiceConnection, Context.BIND_AUTO_CREATE)
         }
     }
 
@@ -148,7 +148,7 @@ open class ClientActivity : ServiceActivity(), ClientService.ClientServiceListen
         Log.d(TAG, "Unbinding from and stopping client service")
 
         if (isServiceBound) {
-            unbindService(clientServiceConnection)
+//            unbindService(clientServiceConnection)
             isServiceBound = false
         }
 
@@ -168,7 +168,7 @@ open class ClientActivity : ServiceActivity(), ClientService.ClientServiceListen
                 val trackUri = data!!.getStringExtra(AppConstants.SEARCH_RESULTS_EXTRA_KEY)
                 if (trackUri != null && !trackUri.isEmpty()) {
                     Log.d(TAG, "Client adding track to queue playlist")
-                    clientService.sendTrackToHost(trackUri)
+//                    clientService.sendTrackToHost(trackUri)
                 }
             }
             RequestType.SPOTIFY_AUTHENTICATION_REQUEST,
@@ -196,9 +196,9 @@ open class ClientActivity : ServiceActivity(), ClientService.ClientServiceListen
             // If follow is checked follow playlist with client user
             if (followCheckbox.isChecked) {
                 Log.d(TAG, "User chose to follow the playlist")
-                clientService.followPlaylist()
+//                clientService.followPlaylist()
             } else {
-                clientService.requestDisconnect()
+//                clientService.requestDisconnect()
             }
         }
 
@@ -214,8 +214,8 @@ open class ClientActivity : ServiceActivity(), ClientService.ClientServiceListen
         Log.d(TAG, "Client activity is being destroyed")
 
         if (isServiceBound) {
-            clientService.removeClientServiceListener()
-            unbindService(clientServiceConnection)
+//            clientService.removeClientServiceListener()
+//            unbindService(clientServiceConnection)
             isServiceBound = false
         }
 
@@ -272,7 +272,7 @@ open class ClientActivity : ServiceActivity(), ClientService.ClientServiceListen
             dialog.dismiss()
 
             // If yes, follow the Spotify playlist
-            clientService.followPlaylist()
+//            clientService.followPlaylist()
         }
 
         dialogBuilder.setNegativeButton(R.string.no) { dialog, which ->
@@ -299,7 +299,7 @@ open class ClientActivity : ServiceActivity(), ClientService.ClientServiceListen
     }
 
     override fun closeClient() {
-        clientService.removeClientServiceListener()
+//        clientService.removeClientServiceListener()
         stopClientService()
         finish()
     }
