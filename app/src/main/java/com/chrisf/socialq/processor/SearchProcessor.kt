@@ -52,7 +52,7 @@ class SearchProcessor @Inject constructor(
         @Suppress("CheckResult")
         Single.zip(
                 spotifyService.getArtist(artistId),
-                spotifyService.getArtistAlbums(artistId, 4),
+                spotifyService.getArtistAlbums(artistId, 5),
                 spotifyService.getArtistTopTracks(artistId),
                 Function3<
                         Response<Artist>,

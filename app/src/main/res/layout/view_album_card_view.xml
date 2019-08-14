@@ -32,23 +32,5 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/albumArt"
             tools:text="The Best Alum in the World" />
-
-        <TextView
-            android:id="@+id/artistName"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:layout_marginEnd="8dp"
-            android:ellipsize="end"
-            android:gravity="center_horizontal"
-            android:maxLines="1"
-            android:textSize="12sp"
-            android:textStyle="italic"
-            android:visibility="visible"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/albumName"
-            tools:text="The Artist Formally Known as Chris Fry" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 </merge>

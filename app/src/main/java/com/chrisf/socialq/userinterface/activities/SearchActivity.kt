@@ -13,10 +13,7 @@ import com.chrisf.socialq.processor.SearchProcessor.SearchAction
 import com.chrisf.socialq.processor.SearchProcessor.SearchAction.*
 import com.chrisf.socialq.processor.SearchProcessor.SearchState
 import com.chrisf.socialq.processor.SearchProcessor.SearchState.*
-import com.chrisf.socialq.userinterface.fragments.SearchAlbumsFragment
-import com.chrisf.socialq.userinterface.fragments.SearchSingleAlbumFragment
-import com.chrisf.socialq.userinterface.fragments.SearchResultsFragment
-import com.chrisf.socialq.userinterface.fragments.SearchTracksFragment
+import com.chrisf.socialq.userinterface.fragments.*
 import kotlinx.android.synthetic.main.activity_search.*
 
 class SearchActivity : BaseActivity<SearchState, SearchAction, SearchProcessor>(), TitleActivity {
@@ -33,6 +30,7 @@ class SearchActivity : BaseActivity<SearchState, SearchAction, SearchProcessor>(
             is DisplayAlbum -> navigateToAlbum(state.album)
             is NavigateToAllTracks -> navigateToViewAllTracks(state.initialTrackList)
             is NavigateToAllAlbums -> navigateToViewAllAlbums(state.initialAlbumList)
+            is DisplayArtist -> navigateToArtist(state)
         }
     }
 
@@ -73,6 +71,15 @@ class SearchActivity : BaseActivity<SearchState, SearchAction, SearchProcessor>(
 
     private fun navigateToAlbum(album: Album) {
         val fragment = SearchSingleAlbumFragment.getInstance(album)
+        addFragmentToBackstack(fragment)
+    }
+
+    private fun navigateToArtist(state: DisplayArtist) {
+        val fragment = SearchArtistFragment.getInstance(
+                state.artist,
+                state.artistTopTracks,
+                state.artistAlbums
+        )
         addFragmentToBackstack(fragment)
     }
 
