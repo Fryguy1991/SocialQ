@@ -517,6 +517,8 @@ class HostProcessor @Inject constructor(
                         stateStream.accept(
                                 TrackAdded(
                                         newTrackIndex,
+                                        newTrackIndex == currentPlaylistIndex,
+                                        spotifyPlayer.playbackState.isPlaying,
                                         createDisplayList(playlistTracks.subList(
                                                 currentPlaylistIndex,
                                                 playlistTracks.size)
@@ -893,6 +895,8 @@ class HostProcessor @Inject constructor(
         object AudioDeliveryDone : HostState()
         data class TrackAdded(
                 val newTrackIndex: Int,
+                val needDisplay: Boolean,
+                val isPlaying: Boolean,
                 val trackRequestData: List<ClientRequestData>
         ) : HostState()
 

@@ -41,7 +41,7 @@ import java.net.URL
 import java.util.*
 import java.util.regex.Pattern
 
-class HostService : BaseService<HostState, HostAction, HostProcessor>(){
+class HostService : BaseService<HostState, HostAction, HostProcessor>() {
 
     inner class HostServiceBinder : Binder() {
         fun getService(): HostService {
@@ -54,14 +54,13 @@ class HostService : BaseService<HostState, HostAction, HostProcessor>(){
 
     // NOTIFICATION ELEMENTS
     // Reference to notification manager
-    protected lateinit var notificationManager: NotificationManager
+    private lateinit var notificationManager: NotificationManager
     // Builder for foreground notification
-    protected lateinit var notificationBuilder: NotificationCompat.Builder
+    private lateinit var notificationBuilder: NotificationCompat.Builder
     // Reference to media session
-    protected lateinit var mediaSession: MediaSessionCompat
+    private lateinit var mediaSession: MediaSessionCompat
     // Reference to meta data builder
-    protected val metaDataBuilder = MediaMetadataCompat.Builder()
-
+    private val metaDataBuilder = MediaMetadataCompat.Builder()
 
     // SERVICE ELEMENTS
     // Binder for talking from bound activity to host
@@ -72,8 +71,7 @@ class HostService : BaseService<HostState, HostAction, HostProcessor>(){
     private var listener: HostServiceListener? = null
 
     // NOTIFICATION ELEMENTS
-    // Reference to playback state and it's builder
-    private lateinit var playbackState: PlaybackStateCompat
+    // Reference to playback state builder
     private val playbackStateBuilder = PlaybackStateCompat.Builder()
     // Reference to notification style
     private val mediaStyle = androidx.media.app.NotificationCompat.MediaStyle()
@@ -83,29 +81,6 @@ class HostService : BaseService<HostState, HostAction, HostProcessor>(){
     private var clientEndpoints = ArrayList<String>()
     // Flag indicating success of advertising (used during activity destruction)
     private var successfulAdvertisingFlag = false
-
-
-//    // Callback for media session calls (ex: media buttons)
-//    private val mediaSessionCallback = object : MediaSessionCompat.Callback() {
-//        override fun onPlay() {
-//            requestPlay()
-//        }
-//
-//        override fun onSkipToNext() {
-//            requestPlayNext()
-//        }
-//
-//        override fun onPause() {
-//            requestPause()
-//        }
-//
-//        // TODO: May need this method for earlier versions of Android
-////        override fun onMediaButtonEvent(mediaButtonEvent: Intent?): Boolean {
-////            if (mediaButtonEvent != null) {
-////            }
-////            return false
-////        }
-//    }
 
     private val hostServiceBroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -236,7 +211,6 @@ class HostService : BaseService<HostState, HostAction, HostProcessor>(){
     override fun handleState(state: HostState) {
         when (state) {
             is QueueInitiationComplete -> onQueueInitiationComplete(state)
-//            is ShowTrackInNotification -> TODO()
             is PlaybackResumed -> onPlaybackResumed(state)
             is PlaybackPaused -> onPlaybackPaused(state)
             is PlaybackNext -> onPlaybackNext(state)
@@ -247,26 +221,21 @@ class HostService : BaseService<HostState, HostAction, HostProcessor>(){
     }
 
     private fun onQueueInitiationComplete(state: QueueInitiationComplete) {
-
-        // TODO: Show track in notification
-
-        // Initialize playback state, allow play, pause, play/pause toggle and next
-        playbackState = playbackStateBuilder
-                .setActions(PlaybackStateCompat.ACTION_PLAY_PAUSE
-                        or PlaybackStateCompat.ACTION_SKIP_TO_NEXT
-                        or PlaybackStateCompat.ACTION_PLAY
-                        or PlaybackStateCompat.ACTION_PAUSE)
-                .build()
-
         // Initialize media session
         mediaSession = MediaSessionCompat(baseContext, AppConstants.HOST_MEDIA_SESSION_TAG)
+        mediaSession.setPlaybackState(
+                playbackStateBuilder.setState(
+                        PlaybackStateCompat.STATE_PAUSED,
+                        PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN,
+                        0F
+                ).build())
         mediaSession.isActive = true
-        mediaSession.setFlags(MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS)
-//        mediaSession.setCallback(mediaSessionCallback)
-        mediaSession.setPlaybackState(playbackState)
-
         mediaStyle.setMediaSession(mediaSession.sessionToken)
 
+        if (state.requestDataList.isNotEmpty()) {
+            addActionsToNotificationBuilder(false)
+            showTrackInNotification(state.requestDataList[0].track.track)
+        }
         startNearbyAdvertising(state)
 
         listener?.onQueueUpdated(state.requestDataList)
@@ -274,9 +243,12 @@ class HostService : BaseService<HostState, HostAction, HostProcessor>(){
 
     private fun onPlaybackResumed(state: PlaybackResumed) {
         // Update session playback state
-        mediaSession.setPlaybackState(playbackStateBuilder
-                .setState(PlaybackStateCompat.STATE_PLAYING, PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN, 1F)
-                .build())
+        mediaSession.setPlaybackState(
+                playbackStateBuilder.setState(
+                        PlaybackStateCompat.STATE_PLAYING,
+                        PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN,
+                        1F
+                ).build())
 
         // Update notification builder action buttons for playing
         addActionsToNotificationBuilder(true)
@@ -287,9 +259,12 @@ class HostService : BaseService<HostState, HostAction, HostProcessor>(){
 
     private fun onPlaybackPaused(state: PlaybackPaused) {
         // Update session playback state
-        mediaSession.setPlaybackState(playbackStateBuilder
-                .setState(PlaybackStateCompat.STATE_PAUSED, PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN, 0F)
-                .build())
+        mediaSession.setPlaybackState(
+                playbackStateBuilder.setState(
+                        PlaybackStateCompat.STATE_PAUSED,
+                        PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN,
+                        0F
+                ).build())
 
         if (state.tracksRemaining) {
             addActionsToNotificationBuilder(false)
@@ -416,23 +391,6 @@ class HostService : BaseService<HostState, HostAction, HostProcessor>(){
         notificationBuilder.setStyle(style)
     }
 
-//    override fun authorizationFailed() {
-//        Timber.d("Host service is ending due to authorization failure")
-//
-//        // Stop advertising and alert clients we have disconnected
-//        if (successfulAdvertisingFlag) {
-//            Timber.d("Stop advertising host")
-//
-//            Nearby.getConnectionsClient(applicationContext).stopAdvertising()
-//            Nearby.getConnectionsClient(applicationContext).stopAllEndpoints()
-//        }
-//
-//        listener?.closeHost()
-//
-//        // Let app know that the service has ended
-//        App.hasServiceBeenStarted = false
-//    }
-
     private val mConnectionLifecycleCallback = object : ConnectionLifecycleCallback() {
         override fun onConnectionInitiated(endpointId: String, connectionInfo: ConnectionInfo) {
             Nearby.getConnectionsClient(applicationContext).acceptConnection(endpointId, mPayloadCallback)
@@ -526,6 +484,11 @@ class HostService : BaseService<HostState, HostAction, HostProcessor>(){
 
     private fun onTrackAdded(state: TrackAdded) {
         listener?.onQueueUpdated(state.trackRequestData)
+
+        if (state.needDisplay && state.trackRequestData.isNotEmpty()) {
+            addActionsToNotificationBuilder(state.isPlaying)
+            showTrackInNotification(state.trackRequestData[0].track.track)
+        }
 
         if (state.newTrackIndex >= 0) {
             for (endpointId: String in clientEndpoints) {
@@ -649,9 +612,12 @@ class HostService : BaseService<HostState, HostAction, HostProcessor>(){
         mediaSession.setMetadata(null)
 
         // Update session playback state
-        mediaSession.setPlaybackState(playbackStateBuilder
-                .setState(PlaybackStateCompat.STATE_STOPPED, PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN, 0F)
-                .build())
+        mediaSession.setPlaybackState(
+                playbackStateBuilder.setState(
+                        PlaybackStateCompat.STATE_STOPPED,
+                        PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN,
+                        0F
+                ).build())
 
         @Suppress("RestrictedApi")
         notificationBuilder.mActions.clear()
@@ -668,11 +634,11 @@ class HostService : BaseService<HostState, HostAction, HostProcessor>(){
 
     /**
      * Sets up metadata for displaying a track in the service notification and updates that notification.
-     * WARNING: Notification manager and builder need to be setup by child class before using this method.
+     * WARNING: Notification manager and builder need to be setup before using this method.
      */
     private fun showTrackInNotification(trackToShow: Track) {
         // Update metadata for media session
-        metaDataBuilder.putString(MediaMetadataCompat.METADATA_KEY_ALBUM, trackToShow.album?.name)
+        metaDataBuilder.putString(MediaMetadataCompat.METADATA_KEY_ALBUM, trackToShow.album.name)
         metaDataBuilder.putString(MediaMetadataCompat.METADATA_KEY_TITLE, trackToShow.name)
         metaDataBuilder.putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_TITLE, trackToShow.name)
         metaDataBuilder.putString(MediaMetadataCompat.METADATA_KEY_ARTIST, DisplayUtils.getTrackArtistString(trackToShow))
@@ -690,7 +656,7 @@ class HostService : BaseService<HostState, HostAction, HostProcessor>(){
                 notificationBuilder.setLargeIcon(albumArtBitmap)
             } catch (exception: IOException) {
                 Timber.e("Error retrieving image bitmap: ${exception.message.toString()}")
-                System.out.println(exception)
+                Timber.e(exception)
             }
         }
         mediaSession.setMetadata(metaDataBuilder.build())
