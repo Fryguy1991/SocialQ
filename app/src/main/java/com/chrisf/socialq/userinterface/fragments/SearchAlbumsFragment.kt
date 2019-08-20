@@ -10,7 +10,9 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
 import com.chrisf.socialq.R
 import com.chrisf.socialq.dagger.components.FragmentComponent
+import com.chrisf.socialq.extensions.addTo
 import com.chrisf.socialq.model.spotify.AlbumSimple
+import com.chrisf.socialq.model.spotify.Artist
 import com.chrisf.socialq.processor.SearchProcessor
 import com.chrisf.socialq.processor.SearchProcessor.SearchAction
 import com.chrisf.socialq.processor.SearchProcessor.SearchState
@@ -48,7 +50,12 @@ class SearchAlbumsFragment : BaseFragment<SearchState, SearchAction, SearchProce
 
     override fun onResume() {
         super.onResume()
-        (activity as TitleActivity).setTitle(getString(R.string.albums))
+        val artist = arguments?.getParcelable<Artist>(ARTIST_KEY)
+        if (artist != null) {
+            (activity as TitleActivity).setTitle(artist.name)
+        } else {
+            (activity as TitleActivity).setTitle(getString(R.string.albums))
+        }
     }
 
     private fun initViews() {
@@ -61,8 +68,8 @@ class SearchAlbumsFragment : BaseFragment<SearchState, SearchAction, SearchProce
         }
 
         albumsAdapter.clickObservable
-                .doOnSubscribe { subscriptions.add(it) }
                 .subscribe { actionStream.accept(SearchAction.AlbumSelected(it.albumId)) }
+                .addTo(subscriptions)
 
         albumsRecyclerView.adapter = albumsAdapter
         albumsRecyclerView.addItemDecoration(AlbumGridDecorator())
@@ -71,15 +78,24 @@ class SearchAlbumsFragment : BaseFragment<SearchState, SearchAction, SearchProce
 
     companion object {
         private const val INITIAL_ALBUM_KEY = "initial_albums"
+        private const val ARTIST_KEY = "albums_artist"
 
         fun getInstance(initialAlbumList: List<AlbumSimple>): SearchAlbumsFragment {
+            return getInstance(null, initialAlbumList)
+        }
+
+        fun getInstance(artist: Artist?, initialAlbumList: List<AlbumSimple>): SearchAlbumsFragment {
             val fragment = SearchAlbumsFragment()
 
             val arrayList = ArrayList<AlbumSimple>()
             arrayList.addAll(initialAlbumList)
 
-            val args = Bundle()
-            args.putParcelableArrayList(INITIAL_ALBUM_KEY, arrayList)
+            val args = Bundle().apply {
+                putParcelableArrayList(INITIAL_ALBUM_KEY, arrayList)
+                if (artist != null) {
+                    putParcelable(ARTIST_KEY, artist)
+                }
+            }
             fragment.arguments = args
 
             return fragment

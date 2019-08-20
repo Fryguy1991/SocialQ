@@ -1,6 +1,7 @@
 package com.chrisf.socialq.processor
 
 import androidx.lifecycle.Lifecycle
+import com.chrisf.socialq.extensions.addTo
 import com.chrisf.socialq.model.spotify.*
 import com.chrisf.socialq.model.spotify.pager.AlbumSimplePager
 import com.chrisf.socialq.model.spotify.pager.ArtistPager
@@ -22,34 +23,30 @@ class SearchProcessor @Inject constructor(
         private val spotifyService: FrySpotifyService,
         lifecycle: Lifecycle,
         subscriptions: CompositeDisposable
-): BaseProcessor<SearchState, SearchAction>(lifecycle, subscriptions) {
+) : BaseProcessor<SearchState, SearchAction>(lifecycle, subscriptions) {
 
     override fun handleAction(action: SearchAction) {
         when (action) {
             ViewCreated -> stateStream.accept(DisplayBaseView)
-//            ViewResumed -> pushSearchResultsToView()
             is SearchTermModified -> searchForMusic(action.term)
             is TrackSelected -> stateStream.accept(ReportTrackResult(action.id))
             is ArtistSelected -> retrieveArtistDetails(action.id)
             is AlbumSelected -> retrieveAlbumDetails(action.id)
             is ViewAllTracksSelected -> stateStream.accept(NavigateToAllTracks(action.initialTrackList))
             is ViewAllAlbumsSelected -> stateStream.accept(NavigateToAllAlbums(action.initialAlbumList))
+            is ViewArtistAlbumsSelected -> retrieveArtistAlbums(action)
         }
     }
 
     private fun retrieveAlbumDetails(albumId: String) {
-        @Suppress("CheckResult")
         spotifyService.getFullAlbum(albumId)
                 .subscribeOn(Schedulers.io())
-                .doOnSubscribe { subscriptions.add(it) }
-                .subscribe { response ->
-                    stateStream.accept(DisplayAlbum(response.body()!!))
-                }
+                .subscribe { response -> stateStream.accept(DisplayAlbum(response.body()!!)) }
+                .addTo(subscriptions)
     }
 
     private fun retrieveArtistDetails(artistId: String) {
 
-        @Suppress("CheckResult")
         Single.zip(
                 spotifyService.getArtist(artistId),
                 spotifyService.getArtistAlbums(artistId, 5),
@@ -61,18 +58,26 @@ class SearchProcessor @Inject constructor(
                         SearchState> { artist, albums, topTracks ->
                     // TODO: Ensure our response is good
 //                    if (artist.isSuccessful && albums.isSuccessful && topTracks.isSuccessful) {
-                        DisplayArtist(
-                                artist.body()!!,
-                                topTracks.body()!!.tracks,
-                                albums.body()!!.items!!
-                        )
+                    DisplayArtist(
+                            artist.body()!!,
+                            topTracks.body()!!.tracks,
+                            albums.body()!!.items!!
+                    )
 //                    }
                 })
                 .subscribeOn(Schedulers.io())
-                .doOnSubscribe{ subscriptions.add(it) }
-                .subscribe { state ->
-                    stateStream.accept(state)
+                .subscribe { state -> stateStream.accept(state) }
+                .addTo(subscriptions)
+    }
+
+    private fun retrieveArtistAlbums(state: ViewArtistAlbumsSelected) {
+        spotifyService.getArtistAlbums(state.artist.id)
+                .subscribeOn(Schedulers.io())
+                .subscribe { response ->
+                    // TODO: Ensure our response is good
+                    stateStream.accept(NavigateToArtistAlbums(state.artist, response.body()!!.items))
                 }
+                .addTo(subscriptions)
     }
 
     private fun searchForMusic(term: String) {
@@ -81,7 +86,6 @@ class SearchProcessor @Inject constructor(
             return
         }
 
-        @Suppress("CheckResult")
         Single.zip(
                 spotifyService.searchTracks(term),
                 spotifyService.searchArtists(term),
@@ -106,37 +110,37 @@ class SearchProcessor @Inject constructor(
                     }
                 })
                 .subscribeOn(Schedulers.io())
-                .doOnSubscribe{ subscriptions.add(it) }
+                .doOnSubscribe { subscriptions.add(it) }
                 .subscribe { state ->
                     stateStream.accept(state)
                 }
-    }
-
-    private enum class SearchNavStep {
-        BASE,
-        ALL_TRACKS,
-        ALL_ARTIST, ARTIST,
-        ALL_ALBUMS, ALBUM
+                .addTo(subscriptions)
     }
 
     sealed class SearchState {
-        object DisplayBaseView: SearchState()
-        data class ReportTrackResult(val trackUri: String): SearchState()
-        data class DisplayNoResults(val searchTerm: String): SearchState()
+        object DisplayBaseView : SearchState()
+        data class ReportTrackResult(val trackUri: String) : SearchState()
+        data class DisplayNoResults(val searchTerm: String) : SearchState()
         data class DisplayBaseResults(
                 val searchTerm: String,
                 val trackList: List<Track>,
                 val artistList: List<Artist>,
                 val albumList: List<AlbumSimple>
-        ): SearchState()
+        ) : SearchState()
+
         data class DisplayArtist(
                 val artist: Artist,
                 val artistTopTracks: List<Track>,
                 val artistAlbums: List<AlbumSimple>
-        ): SearchState()
+        ) : SearchState()
+
         data class DisplayAlbum(val album: Album): SearchState()
         data class NavigateToAllTracks(val initialTrackList: List<Track>): SearchState()
         data class NavigateToAllAlbums(val initialAlbumList: List<AlbumSimple>): SearchState()
+        data class NavigateToArtistAlbums(
+                val artist: Artist,
+                val initialAlbumList: List<AlbumSimple>
+        ) : SearchState()
     }
 
     sealed class SearchAction {
@@ -149,6 +153,7 @@ class SearchProcessor @Inject constructor(
         data class AlbumSelected(val id: String): SearchAction()
         data class ArtistSelected(val id: String): SearchAction()
         data class ViewAllTracksSelected(val initialTrackList: List<Track>): SearchAction()
+        data class ViewArtistAlbumsSelected(val artist: Artist) : SearchAction()
         object ViewAllArtistsSelected: SearchAction()
         data class ViewAllAlbumsSelected(val initialAlbumList: List<AlbumSimple>): SearchAction()
     }

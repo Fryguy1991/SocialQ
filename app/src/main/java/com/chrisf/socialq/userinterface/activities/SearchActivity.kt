@@ -30,6 +30,7 @@ class SearchActivity : BaseActivity<SearchState, SearchAction, SearchProcessor>(
             is DisplayAlbum -> navigateToAlbum(state.album)
             is NavigateToAllTracks -> navigateToViewAllTracks(state.initialTrackList)
             is NavigateToAllAlbums -> navigateToViewAllAlbums(state.initialAlbumList)
+            is NavigateToArtistAlbums -> navigateToArtistAlbums(state)
             is DisplayArtist -> navigateToArtist(state)
         }
     }
@@ -90,6 +91,11 @@ class SearchActivity : BaseActivity<SearchState, SearchAction, SearchProcessor>(
 
     private fun navigateToViewAllAlbums(initialAlbums: List<AlbumSimple>) {
         val fragment = SearchAlbumsFragment.getInstance(initialAlbums)
+        addFragmentToBackstack(fragment)
+    }
+
+    private fun navigateToArtistAlbums(state: NavigateToArtistAlbums) {
+        val fragment = SearchAlbumsFragment.getInstance(state.artist, state.initialAlbumList)
         addFragmentToBackstack(fragment)
     }
 

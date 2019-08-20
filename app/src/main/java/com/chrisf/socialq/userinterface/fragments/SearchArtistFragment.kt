@@ -124,6 +124,10 @@ class SearchArtistFragment : BaseFragment<SearchState, SearchAction, SearchProce
 
         if (artistInfo.initialArtistAlbums.size > 4) {
             allAlbumsHeader.visibility = View.VISIBLE
+            allAlbumsHeader.clicks()
+                    .throttleFirst(300, TimeUnit.MILLISECONDS)
+                    .subscribe { actionStream.accept(SearchAction.ViewArtistAlbumsSelected(artistInfo.artist)) }
+                    .addTo(subscriptions)
         }
     }
     companion object {
@@ -152,9 +156,4 @@ class SearchArtistFragment : BaseFragment<SearchState, SearchAction, SearchProce
             val topTracks: List<Track>,
             val initialArtistAlbums: List<AlbumSimple>
     ) : Parcelable
-
-    sealed class ArtistFragmentClick {
-        data class TrackClick(val trackUri: String) : ArtistFragmentClick()
-        data class AlbumClick(val albumId: String) : ArtistFragmentClick()
-    }
 }
