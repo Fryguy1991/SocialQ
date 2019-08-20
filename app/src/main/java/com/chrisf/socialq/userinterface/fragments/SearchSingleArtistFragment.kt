@@ -26,7 +26,7 @@ import java.lang.IllegalStateException
 import java.util.concurrent.TimeUnit
 import kotlin.math.min
 
-class SearchArtistFragment : BaseFragment<SearchState, SearchAction, SearchProcessor>() {
+class SearchSingleArtistFragment : BaseFragment<SearchState, SearchAction, SearchProcessor>() {
     private lateinit var artistInfo: ArtistInfo
     private lateinit var topTrackViews: List<TextView>
     private lateinit var albumViews: List<AlbumCardView>
@@ -137,8 +137,8 @@ class SearchArtistFragment : BaseFragment<SearchState, SearchAction, SearchProce
                 artist: Artist,
                 topTracks: List<Track>,
                 initialArtistAlbums: List<AlbumSimple>
-        ): SearchArtistFragment {
-            val fragment = SearchArtistFragment()
+        ): SearchSingleArtistFragment {
+            val fragment = SearchSingleArtistFragment()
 
             val artistInfo = ArtistInfo(artist, topTracks, initialArtistAlbums)
 

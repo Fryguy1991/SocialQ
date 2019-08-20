@@ -34,6 +34,7 @@ class SearchProcessor @Inject constructor(
             is AlbumSelected -> retrieveAlbumDetails(action.id)
             is ViewAllTracksSelected -> stateStream.accept(NavigateToAllTracks(action.initialTrackList))
             is ViewAllAlbumsSelected -> stateStream.accept(NavigateToAllAlbums(action.initialAlbumList))
+            is ViewAllArtistsSelected -> stateStream.accept(NavigateToAllArtists(action.initialArtistList))
             is ViewArtistAlbumsSelected -> retrieveArtistAlbums(action)
         }
     }
@@ -137,6 +138,7 @@ class SearchProcessor @Inject constructor(
         data class DisplayAlbum(val album: Album): SearchState()
         data class NavigateToAllTracks(val initialTrackList: List<Track>): SearchState()
         data class NavigateToAllAlbums(val initialAlbumList: List<AlbumSimple>): SearchState()
+        data class NavigateToAllArtists(val initialArtistList: List<Artist>): SearchState()
         data class NavigateToArtistAlbums(
                 val artist: Artist,
                 val initialAlbumList: List<AlbumSimple>
@@ -154,7 +156,7 @@ class SearchProcessor @Inject constructor(
         data class ArtistSelected(val id: String): SearchAction()
         data class ViewAllTracksSelected(val initialTrackList: List<Track>): SearchAction()
         data class ViewArtistAlbumsSelected(val artist: Artist) : SearchAction()
-        object ViewAllArtistsSelected: SearchAction()
+        data class ViewAllArtistsSelected(val initialArtistList: List<Artist>): SearchAction()
         data class ViewAllAlbumsSelected(val initialAlbumList: List<AlbumSimple>): SearchAction()
     }
 }

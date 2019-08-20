@@ -52,7 +52,7 @@ class SearchAlbumsFragment : BaseFragment<SearchState, SearchAction, SearchProce
         super.onResume()
         val artist = arguments?.getParcelable<Artist>(ARTIST_KEY)
         if (artist != null) {
-            (activity as TitleActivity).setTitle(artist.name)
+            (activity as TitleActivity).setTitle(getString(R.string.artist_albums, artist.name))
         } else {
             (activity as TitleActivity).setTitle(getString(R.string.albums))
         }

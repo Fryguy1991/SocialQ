@@ -10,5 +10,6 @@ interface FragmentComponent {
     fun inject(fragment: SearchTracksFragment)
     fun inject(fragment: SearchSingleAlbumFragment)
     fun inject(fragment: SearchAlbumsFragment)
-    fun inject(fragment: SearchArtistFragment)
+    fun inject(fragment: SearchSingleArtistFragment)
+    fun inject(fragment: SearchArtistsFragment)
 }

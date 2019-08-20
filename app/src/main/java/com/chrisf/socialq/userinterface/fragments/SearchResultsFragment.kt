@@ -103,7 +103,7 @@ class SearchResultsFragment : BaseFragment<SearchState, SearchAction, SearchProc
     private fun handleViewAllClick(resourceId: String) {
         when (resourceId) {
             R.string.see_all_songs.toString() -> actionStream.accept(ViewAllTracksSelected(baseResultsAdapter.trackList))
-            R.string.see_all_artists.toString() -> actionStream.accept(ViewAllArtistsSelected)
+            R.string.see_all_artists.toString() -> actionStream.accept(ViewAllArtistsSelected(baseResultsAdapter.artistList))
             R.string.see_all_albums.toString() -> actionStream.accept(ViewAllAlbumsSelected(baseResultsAdapter.albumList))
         }
     }

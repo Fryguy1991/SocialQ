@@ -145,6 +145,8 @@ class HostService : BaseService<HostState, HostAction, HostProcessor>() {
                             .setOnlyAlertOnce(true)
                             .setShowWhen(false)
 
+                    mediaSession = MediaSessionCompat(baseContext, AppConstants.HOST_MEDIA_SESSION_TAG)
+
                     // Register to receive access token update events
                     LocalBroadcastManager.getInstance(applicationContext).registerReceiver(
                             hostServiceBroadcastReceiver, IntentFilter(AppConstants.BR_INTENT_ACCESS_TOKEN_UPDATED))
@@ -221,8 +223,6 @@ class HostService : BaseService<HostState, HostAction, HostProcessor>() {
     }
 
     private fun onQueueInitiationComplete(state: QueueInitiationComplete) {
-        // Initialize media session
-        mediaSession = MediaSessionCompat(baseContext, AppConstants.HOST_MEDIA_SESSION_TAG)
         mediaSession.setPlaybackState(
                 playbackStateBuilder.setState(
                         PlaybackStateCompat.STATE_PAUSED,
