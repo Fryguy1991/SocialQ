@@ -10,6 +10,7 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
 import com.chrisf.socialq.R
 import com.chrisf.socialq.dagger.components.FragmentComponent
+import com.chrisf.socialq.extensions.addTo
 import com.chrisf.socialq.model.spotify.AlbumSimple
 import com.chrisf.socialq.model.spotify.Artist
 import com.chrisf.socialq.model.spotify.Track
@@ -18,9 +19,11 @@ import com.chrisf.socialq.processor.SearchProcessor.SearchAction
 import com.chrisf.socialq.processor.SearchProcessor.SearchState
 import com.chrisf.socialq.userinterface.activities.TitleActivity
 import com.chrisf.socialq.userinterface.views.AlbumCardView
+import com.jakewharton.rxbinding3.view.clicks
 import kotlinx.android.parcel.Parcelize
 import kotlinx.android.synthetic.main.fragment_search_artist.*
 import java.lang.IllegalStateException
+import java.util.concurrent.TimeUnit
 import kotlin.math.min
 
 class SearchArtistFragment : BaseFragment<SearchState, SearchAction, SearchProcessor>() {
@@ -82,9 +85,17 @@ class SearchArtistFragment : BaseFragment<SearchState, SearchAction, SearchProce
                 val trackView = topTrackViews[i]
                 trackView.visibility = View.VISIBLE
                 trackView.text = artistInfo.topTracks[i].name
-                // TODO: Listen for track selection clicks
             }
         }
+
+        topTrack1.clicks().map { 0 }
+                .mergeWith(topTrack2.clicks().map { 1 })
+                .mergeWith(topTrack3.clicks().map { 2 })
+                .mergeWith(topTrack4.clicks().map { 3 })
+                .mergeWith(topTrack5.clicks().map { 4 })
+                .throttleFirst(300, TimeUnit.MILLISECONDS)
+                .subscribe { actionStream.accept(SearchAction.TrackSelected(artistInfo.topTracks[it].uri)) }
+                .addTo(subscriptions)
 
         if (artistInfo.initialArtistAlbums.isEmpty()) {
             artistAlbumsHeader.visibility = View.GONE
@@ -94,13 +105,22 @@ class SearchArtistFragment : BaseFragment<SearchState, SearchAction, SearchProce
             val albumView = albumViews[i]
             if (i < artistInfo.initialArtistAlbums.size) {
                 albumView.visibility = View.VISIBLE
+                albumView.isClickable = true
                 albumView.bind(artistInfo.initialArtistAlbums[i])
                 if (i % 2 == 0) {
                     albumViews[i + 1].visibility = View.INVISIBLE
+                    albumViews[i + 1].isClickable = false
                 }
-                // TODO: List for album selection clicks
             }
         }
+
+        artistAlbum1.clicks
+                .mergeWith(artistAlbum2.clicks)
+                .mergeWith(artistAlbum3.clicks)
+                .mergeWith(artistAlbum4.clicks)
+                .throttleFirst(300, TimeUnit.MILLISECONDS)
+                .subscribe { actionStream.accept(SearchAction.AlbumSelected(it.albumId)) }
+                .addTo(subscriptions)
 
         if (artistInfo.initialArtistAlbums.size > 4) {
             allAlbumsHeader.visibility = View.VISIBLE

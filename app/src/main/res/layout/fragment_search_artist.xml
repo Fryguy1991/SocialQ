@@ -129,7 +129,7 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/artistAlbumsHeader"
             app:layout_constraintBottom_toTopOf="@id/artistAlbum3"
-            android:visibility="visible"/>
+            android:visibility="gone"/>
 
         <com.chrisf.socialq.userinterface.views.AlbumCardView
             android:id="@+id/artistAlbum2"
@@ -142,7 +142,7 @@
             app:layout_constraintStart_toEndOf="@+id/artistAlbum1"
             app:layout_constraintTop_toBottomOf="@id/artistAlbumsHeader"
             app:layout_constraintBottom_toBottomOf="@id/artistAlbum1"
-            android:visibility="visible"/>
+            android:visibility="gone"/>
 
         <com.chrisf.socialq.userinterface.views.AlbumCardView
             android:id="@+id/artistAlbum3"
