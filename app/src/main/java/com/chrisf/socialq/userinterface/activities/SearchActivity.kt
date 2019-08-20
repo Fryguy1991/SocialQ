@@ -50,6 +50,11 @@ class SearchActivity : BaseActivity<SearchState, SearchAction, SearchProcessor>(
         actionStream.accept(ViewResumed)
     }
 
+    override fun finish() {
+        super.finish()
+        overridePendingTransition(R.anim.fade_in, R.anim.slide_out_to_bottom)
+    }
+
     private fun initViews() {
         // Setup the app toolbar
         setSupportActionBar(appToolbar)

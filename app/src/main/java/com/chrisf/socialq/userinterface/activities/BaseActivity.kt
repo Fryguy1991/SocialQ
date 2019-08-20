@@ -106,6 +106,11 @@ abstract class BaseActivity<State, Action, Processor : BaseProcessor<State, Acti
 
     protected fun addFragmentToBackstack(fragment: Fragment, transactionId: String?) {
         supportFragmentManager.beginTransaction()
+                .setCustomAnimations(
+                        R.anim.slide_in_from_right,
+                        R.anim.slide_out_to_left,
+                        R.anim.slide_in_from_left,
+                        R.anim.slide_out_to_right)
                 .replace(FRAGMENT_HOLDER_ID, fragment)
                 .addToBackStack(transactionId)
                 .commit()

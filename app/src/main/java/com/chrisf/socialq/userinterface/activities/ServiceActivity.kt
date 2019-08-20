@@ -42,6 +42,7 @@ abstract class ServiceActivity : AppCompatActivity(), View.OnClickListener {
     protected fun startSearchActivity() {
         val searchIntent = Intent(this, SearchActivity::class.java)
         startActivityForResult(searchIntent, RequestType.SEARCH_REQUEST.requestCode)
+        overridePendingTransition(R.anim.slide_in_from_bottom, R.anim.fade_out)
     }
 
     override fun onClick(v: View?) {
