@@ -91,15 +91,14 @@ class SearchArtistFragment : BaseFragment<SearchState, SearchAction, SearchProce
         }
 
         for (i in 0..3) {
+            val albumView = albumViews[i]
             if (i < artistInfo.initialArtistAlbums.size) {
-                val albumView = albumViews[i]
                 albumView.visibility = View.VISIBLE
                 albumView.bind(artistInfo.initialArtistAlbums[i])
+                if (i % 2 == 0) {
+                    albumViews[i + 1].visibility = View.INVISIBLE
+                }
                 // TODO: List for album selection clicks
-            }
-
-            if (i % 2 == 0) {
-                albumViews[i + 1].visibility = View.INVISIBLE
             }
         }
 

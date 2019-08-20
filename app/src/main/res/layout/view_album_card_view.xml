@@ -31,6 +31,6 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/albumArt"
-            tools:text="The Best Alum in the World" />
+            tools:text="The Best Album in the World" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 </merge>
