@@ -102,7 +102,8 @@ interface FrySpotifyService {
             @Body body: Map<String, Any>
     ): Single<Response<SnapshotId>>
 
-    @PUT("playlist/{playlist_id}/followers")
+    @Headers("Content-Type: application/json")
+    @PUT("playlists/{playlist_id}/followers")
     fun followPlaylist(@Path("playlist_id") playlistId: String): Single<Response<Void>>
 
     @DELETE("playlists/{playlist_id}/followers")

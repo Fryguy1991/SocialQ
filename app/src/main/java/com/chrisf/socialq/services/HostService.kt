@@ -403,9 +403,7 @@ class HostService : BaseService<HostState, HostAction, HostProcessor>() {
                     Timber.d("Established connection with a client ($endPoint), initiate client")
 
                     // Notify activity a client connected
-                    if (listener != null) {
-                        listener?.showClientConnected()
-                    }
+                    listener?.showClientConnected()
                     clientEndpoints.add(endPoint)
                     actionStream.accept(ClientConnected(endPoint))
                 }
@@ -419,9 +417,7 @@ class HostService : BaseService<HostState, HostAction, HostProcessor>() {
             Timber.d("Client $endPoint disconnected")
 
             // Notify activity a client disconnected
-            if (listener != null) {
-                listener?.showClientDisconnected()
-            }
+            listener?.showClientDisconnected()
             clientEndpoints.remove(endPoint)
         }
     }
@@ -436,6 +432,7 @@ class HostService : BaseService<HostState, HostAction, HostProcessor>() {
         }
 
         private fun handleClientPayload(payload: Payload) {
+            // TODO: Should move this processing to processor XD
             if (payload.asBytes() != null) {
                 val payloadString = String(payload.asBytes()!!)
                 val payloadType = ApplicationUtils.getMessageTypeFromPayload(payloadString)
@@ -467,6 +464,7 @@ class HostService : BaseService<HostState, HostAction, HostProcessor>() {
     }
 
     private fun handlePayloadData(payloadString: String) {
+        // TODO: Should move this processing to processor XD
         val matcher = Pattern.compile(AppConstants.FULL_SONG_REQUEST_REGEX).matcher(payloadString)
         // Ensure a proper format has been sent for the track request
         if (matcher.find()) {
