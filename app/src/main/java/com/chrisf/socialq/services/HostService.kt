@@ -14,6 +14,7 @@ import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
 import androidx.core.app.NotificationCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
+import androidx.media.app.NotificationCompat.MediaStyle
 import com.chrisf.socialq.R
 import com.chrisf.socialq.AppConstants
 import com.chrisf.socialq.dagger.components.ServiceComponent
@@ -74,7 +75,7 @@ class HostService : BaseService<HostState, HostAction, HostProcessor>() {
     // Reference to playback state builder
     private val playbackStateBuilder = PlaybackStateCompat.Builder()
     // Reference to notification style
-    private val mediaStyle = androidx.media.app.NotificationCompat.MediaStyle()
+    private val mediaStyle = MediaStyle()
 
     // NEARBY CONNECTION ELEMENTS
     // List of the client endpoints that are currently connected to the host service
@@ -100,6 +101,18 @@ class HostService : BaseService<HostState, HostAction, HostProcessor>() {
 
     override fun resolveDependencies(serviceComponent: ServiceComponent) {
         serviceComponent.inject(this)
+    }
+
+    override fun handleState(state: HostState) {
+        when (state) {
+            is QueueInitiationComplete -> onQueueInitiationComplete(state)
+            is PlaybackResumed -> onPlaybackResumed(state)
+            is PlaybackPaused -> onPlaybackPaused(state)
+            is PlaybackNext -> onPlaybackNext(state)
+            is AudioDeliveryDone -> onAudioDeliveryDone(state)
+            is TrackAdded -> onTrackAdded(state)
+            is InitiateNewClient -> initiateNewClient(state)
+        }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -208,18 +221,6 @@ class HostService : BaseService<HostState, HostAction, HostProcessor>() {
         LocalBroadcastManager.getInstance(applicationContext).unregisterReceiver(hostServiceBroadcastReceiver)
 
         super.onDestroy()
-    }
-
-    override fun handleState(state: HostState) {
-        when (state) {
-            is QueueInitiationComplete -> onQueueInitiationComplete(state)
-            is PlaybackResumed -> onPlaybackResumed(state)
-            is PlaybackPaused -> onPlaybackPaused(state)
-            is PlaybackNext -> onPlaybackNext(state)
-            is AudioDeliveryDone -> onAudioDeliveryDone(state)
-            is TrackAdded -> onTrackAdded(state)
-            is InitiateNewClient -> initiateNewClient(state)
-        }
     }
 
     private fun onQueueInitiationComplete(state: QueueInitiationComplete) {
