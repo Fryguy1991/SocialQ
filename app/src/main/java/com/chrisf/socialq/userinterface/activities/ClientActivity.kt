@@ -57,11 +57,6 @@ open class ClientActivity : ServiceActivity(), ClientService.ClientServiceListen
 
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
-        // Allow network operation in main thread
-        val policy = StrictMode.ThreadPolicy.Builder()
-                .permitAll().build()
-        StrictMode.setThreadPolicy(policy)
-
         // Get queue title from intent
         val titleString = intent?.getStringExtra(AppConstants.QUEUE_TITLE_KEY)
         if (titleString.isNullOrEmpty()) {

@@ -93,11 +93,6 @@ open class HostActivity : ServiceActivity(), HostService.HostServiceListener, Pl
         initUi()
         setupQueueList()
 
-        // Allow network operation in main thread
-        val policy = StrictMode.ThreadPolicy.Builder()
-                .permitAll().build()
-        StrictMode.setThreadPolicy(policy)
-
         startHostService()
     }
 
