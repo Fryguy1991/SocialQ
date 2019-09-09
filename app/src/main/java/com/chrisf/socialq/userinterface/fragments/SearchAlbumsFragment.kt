@@ -16,7 +16,7 @@ import com.chrisf.socialq.model.spotify.Artist
 import com.chrisf.socialq.processor.SearchProcessor
 import com.chrisf.socialq.processor.SearchProcessor.SearchAction
 import com.chrisf.socialq.processor.SearchProcessor.SearchState
-import com.chrisf.socialq.userinterface.AlbumGridDecorator
+import com.chrisf.socialq.userinterface.views.AlbumGridDecorator
 import com.chrisf.socialq.userinterface.activities.TitleActivity
 import com.chrisf.socialq.userinterface.adapters.BaseRecyclerViewAdapter
 import com.chrisf.socialq.userinterface.fragments.SearchAlbumAdapter.AlbumViewholder

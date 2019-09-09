@@ -113,11 +113,6 @@ dependencies {
         exclude group: "com.android.support"
     }
 
-    // Nav Architecture
-    implementation "android.arch.navigation:navigation-fragment-ktx:$navVersion"
-    implementation "android.arch.navigation:navigation-ui-ktx:$navVersion"
-    androidTestImplementation 'android.arch.navigation:navigation-testing-ktx:1.0.0-alpha06'
-
     // Android-KTX
     implementation 'androidx.core:core-ktx:1.0.1'
 

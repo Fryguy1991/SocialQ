@@ -9,7 +9,7 @@ import com.chrisf.socialq.model.QueueModel
 import com.jakewharton.rxbinding3.view.clicks
 import com.jakewharton.rxrelay2.PublishRelay
 import io.reactivex.Observable
-import kotlinx.android.synthetic.main.holder_joinable_queue.view.*
+import kotlinx.android.synthetic.main.holder_queue.view.*
 import java.util.concurrent.TimeUnit
 
 class QueueDisplayAdapter : BaseRecyclerViewAdapter<QueueDisplayHolder, QueueModel>(), QueueClickHandler{
@@ -18,7 +18,7 @@ class QueueDisplayAdapter : BaseRecyclerViewAdapter<QueueDisplayHolder, QueueMod
     val queueSelection: Observable<QueueModel> = queueSelectionRelay.hide()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): QueueDisplayHolder {
-        return QueueDisplayHolder(LayoutInflater.from(parent.context).inflate(R.layout.holder_joinable_queue, parent, false))
+        return QueueDisplayHolder(LayoutInflater.from(parent.context).inflate(R.layout.holder_queue, parent, false))
     }
 
     override fun onBindViewHolder(holder: QueueDisplayHolder, position: Int) {

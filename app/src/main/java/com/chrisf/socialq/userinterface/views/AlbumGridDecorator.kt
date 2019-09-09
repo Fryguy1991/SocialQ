@@ -1,4 +1,4 @@
-package com.chrisf.socialq.userinterface
+package com.chrisf.socialq.userinterface.views
 
 import android.graphics.Rect
 import android.view.View

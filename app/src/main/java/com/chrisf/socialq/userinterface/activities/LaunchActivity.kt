@@ -36,7 +36,8 @@ import com.jakewharton.rxbinding3.view.clicks
 import com.spotify.sdk.android.authentication.AuthenticationClient
 import com.spotify.sdk.android.authentication.AuthenticationRequest
 import com.spotify.sdk.android.authentication.AuthenticationResponse
-import kotlinx.android.synthetic.main.fragment_launch.*
+import kotlinx.android.synthetic.main.activity_launch.*
+import org.jetbrains.anko.startActivity
 import timber.log.Timber
 import java.util.concurrent.TimeUnit
 
@@ -45,7 +46,7 @@ class LaunchActivity : BaseActivity<LaunchState, LaunchAction, LaunchProcessor>(
 
     private val adapter = QueueDisplayAdapter()
 
-    private lateinit var alertDialog: AlertDialog
+    private var alertDialog: AlertDialog? = null
 
     private lateinit var scheduler: JobScheduler
 
@@ -68,10 +69,8 @@ class LaunchActivity : BaseActivity<LaunchState, LaunchAction, LaunchProcessor>(
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.fragment_launch)
-
-        setSupportActionBar(launchToolbar)
-        title = getString(R.string.available_queues)
+        setContentView(R.layout.activity_launch)
+        setSupportActionBar(toolbar)
 
         scheduler = getSystemService(Context.JOB_SCHEDULER_SERVICE) as JobScheduler
 
@@ -228,7 +227,7 @@ class LaunchActivity : BaseActivity<LaunchState, LaunchAction, LaunchProcessor>(
                 .throttleFirst(300, TimeUnit.MILLISECONDS)
                 .subscribe {
                     if (state.canHost) {
-                        // TODO: Start queue setup activity
+                        startActivity<HostQueueOptionsActivity>()
                     } else {
                         showPremiumRequiredDialog()
                     }
@@ -246,7 +245,7 @@ class LaunchActivity : BaseActivity<LaunchState, LaunchAction, LaunchProcessor>(
     }
 
     private fun showAuthFailedDialog() {
-        if (!alertDialog.isShowing) {
+        if (alertDialog == null || alertDialog?.isShowing == false) {
             alertDialog = AlertDialog.Builder(this)
                     .setView(R.layout.dialog_auth_fail)
                     .setPositiveButton(R.string.retry) { dialog, which ->
@@ -259,19 +258,19 @@ class LaunchActivity : BaseActivity<LaunchState, LaunchAction, LaunchProcessor>(
                         finish()
                     }
                     .create()
-            alertDialog.show()
+            alertDialog!!.show()
         }
     }
 
     private fun showPremiumRequiredDialog() {
-        if (!alertDialog.isShowing) {
+        if (alertDialog == null || alertDialog?.isShowing == false) {
             alertDialog = AlertDialog.Builder(this)
                     .setView(R.layout.dialog_premium_required)
                     .setPositiveButton(R.string.ok) { dialog, which ->
                         dialog.dismiss()
                     }
                     .create()
-            alertDialog.show()
+            alertDialog!!.show()
         }
     }
 
