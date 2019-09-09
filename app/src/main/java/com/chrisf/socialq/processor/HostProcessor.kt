@@ -186,6 +186,7 @@ class HostProcessor @Inject constructor(
 
     private fun unfollowPlaylist(action: UnfollowPlaylist) {
         spotifyService.unfollowPlaylist(playlist.id)
+                .subscribeOn(Schedulers.io())
                 .subscribe({
                     if (it.code() == 200) {
                         Timber.d("Successfully unfollowed playlist")
@@ -243,7 +244,8 @@ class HostProcessor @Inject constructor(
                                     hostUser.display_name ?: "",
                                     hostUser.id,
                                     isQueueFairPlay,
-                                    createDisplayList(playlistTracks.subList(currentPlaylistIndex, playlistTracks.size))))
+                                    createDisplayList(playlistTracks.subList(currentPlaylistIndex, playlistTracks.size))
+                            ))
                         }
                     }
                 }
@@ -337,7 +339,6 @@ class HostProcessor @Inject constructor(
 
         wasBasePlaylistLoaded = true
 
-        // TODO: Shouldn't assume success
         getBasePlaylistTracks(playlistId)
     }
 
@@ -386,6 +387,8 @@ class HostProcessor @Inject constructor(
         )
 
         // Add tracks (100 at a time) to playlist and add request date
+        var addRequestCount = 0
+        var successfulAdds = 0
         while (shuffledTracks.size > 0) {
             val urisArray = JsonArray()
             // Can only add max 100 tracks
@@ -401,13 +404,18 @@ class HostProcessor @Inject constructor(
             }
 
             // TODO: Wait for success responses before sending more track to ensure order
+            addRequestCount++
             spotifyService.addTracksToPlaylist(
                     playlist.id,
                     FrySpotifyService.getAddTracksToPlaylistBody(urisArray)
             )
+                    .subscribeOn(Schedulers.io())
                     .subscribe({
                         Timber.d(it.body().toString())
-                        if (shuffledTracks.isEmpty()) {
+                        successfulAdds++
+                        // TODO: This will cause base playlist to not load correctly if one of the
+                        // add requests fails. Need to implement a more elegant solution.
+                        if (successfulAdds == addRequestCount) {
                             refreshPlaylist()
                         }
                     }, {
@@ -493,6 +501,7 @@ class HostProcessor @Inject constructor(
 
         var newTrackPosition = if (position < 0) null else position
         spotifyService.addTrackToPlaylist(playlist.id, uri, newTrackPosition)
+                .subscribeOn(Schedulers.io())
                 .subscribe({
                     if (newTrackPosition == null) {
                         newTrackPosition = playlistTracks.size

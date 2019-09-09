@@ -6,7 +6,9 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.os.AsyncTask
 import android.os.Binder
 import android.os.IBinder
 import android.support.v4.media.MediaMetadataCompat
@@ -42,7 +44,7 @@ import java.net.URL
 import java.util.*
 import java.util.regex.Pattern
 
-class HostService : BaseService<HostState, HostAction, HostProcessor>() {
+class HostService : BaseService<HostState, HostAction, HostProcessor>(), BitmapListener {
 
     inner class HostServiceBinder : Binder() {
         fun getService(): HostService {
@@ -125,7 +127,7 @@ class HostService : BaseService<HostState, HostAction, HostProcessor>() {
                     var queueTitle = getString(R.string.queue_title_default_value)
 
                     // Check intent for storage of queue settings
-                    if (intent.getStringExtra(AppConstants.QUEUE_TITLE_KEY) != null) {
+                    if (!intent.getStringExtra(AppConstants.QUEUE_TITLE_KEY).isNullOrBlank()) {
                         queueTitle = intent.getStringExtra(AppConstants.QUEUE_TITLE_KEY)
                     }
                     val isQueueFairPlay = intent.getBooleanExtra(AppConstants.FAIR_PLAY_KEY, resources.getBoolean(R.bool.fair_play_default))
@@ -334,6 +336,7 @@ class HostService : BaseService<HostState, HostAction, HostProcessor>() {
                 })
                 .addOnFailureListener(object : OnFailureListener {
                     override fun onFailure(p0: Exception) {
+                        Timber.e(p0)
                         Timber.e("Failed to start advertising the host")
                         stopSelf()
                     }
@@ -644,19 +647,8 @@ class HostService : BaseService<HostState, HostAction, HostProcessor>() {
 
         // Attempt to update album art in notification and metadata
         if (trackToShow.album.images.isNotEmpty()) {
-            try {
-                val url = URL(trackToShow.album.images[0].url)
-                // Retrieve album art bitmap
-                val albumArtBitmap = BitmapFactory.decodeStream(url.openConnection().getInputStream())
-
-                // Set bitmap data for lock screen display
-                metaDataBuilder.putBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART, albumArtBitmap)
-                // Set bitmap data for notification
-                notificationBuilder.setLargeIcon(albumArtBitmap)
-            } catch (exception: IOException) {
-                Timber.e("Error retrieving image bitmap: ${exception.message.toString()}")
-                Timber.e(exception)
-            }
+           val task = GetBitmapTask(this)
+            task.execute(trackToShow.album.images[0].url)
         }
         mediaSession.setMetadata(metaDataBuilder.build())
 
@@ -664,9 +656,39 @@ class HostService : BaseService<HostState, HostAction, HostProcessor>() {
         notificationBuilder.setContentTitle(trackToShow.name)
         notificationBuilder.setContentText(DisplayUtils.getTrackArtistString(trackToShow))
 
-        val notificationId = AppConstants.HOST_SERVICE_ID
-
         // Display updated notification
-        notificationManager.notify(notificationId, notificationBuilder.build())
+        notificationManager.notify(AppConstants.HOST_SERVICE_ID, notificationBuilder.build())
     }
+
+    override fun displayBitmap(bitmap: Bitmap?) {
+        // Set bitmap data for lock screen display
+        metaDataBuilder.putBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART, bitmap)
+        // Set bitmap data for notification
+        notificationBuilder.setLargeIcon(bitmap)
+        // Display updated notification
+        notificationManager.notify(AppConstants.HOST_SERVICE_ID, notificationBuilder.build())
+    }
+}
+
+class GetBitmapTask(private val listener: BitmapListener) : AsyncTask<String, Void, Bitmap>() {
+    override fun doInBackground(vararg params: String?): Bitmap? {
+        try {
+            if (!params[0].isNullOrBlank()) {
+                val url = URL(params[0])
+                return BitmapFactory.decodeStream(url.openConnection().getInputStream())
+            }
+            Timber.e("Failed to retrieve bitmap")
+        } catch (e: IOException) {
+            Timber.e(e)
+        }
+        return null
+    }
+
+    override fun onPostExecute(result: Bitmap?) {
+        listener.displayBitmap(result)
+    }
+}
+
+interface BitmapListener {
+    fun displayBitmap(bitmap: Bitmap?)
 }

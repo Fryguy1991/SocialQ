@@ -1,9 +1,9 @@
 package com.chrisf.socialq.userinterface.activities
 
+import android.app.Activity
 import android.content.*
 import android.os.*
 import android.view.View
-import android.view.WindowManager
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import androidx.constraintlayout.widget.ConstraintLayout
@@ -19,6 +19,8 @@ import com.chrisf.socialq.userinterface.App
 import com.chrisf.socialq.userinterface.adapters.HostTrackListAdapter
 import com.chrisf.socialq.userinterface.views.PlaybackControlView
 import com.chrisf.socialq.userinterface.views.QueueItemDecoration
+import kotlinx.android.synthetic.main.activity_host_screen.*
+import org.jetbrains.anko.startActivity
 import timber.log.Timber
 
 open class HostActivity : ServiceActivity(), HostService.HostServiceListener, PlaybackControlView.IPlaybackControlListener {
@@ -33,8 +35,6 @@ open class HostActivity : ServiceActivity(), HostService.HostServiceListener, Pl
     private lateinit var emptyQueueMessage: View
 
     private lateinit var hostService: HostService
-    // Boolean flag to store if queue should be "fair play"
-    private var isQueueFairPlay = false
     // Flag to determine if the service is bound or not
     private var isServiceBound = false
 
@@ -80,19 +80,11 @@ open class HostActivity : ServiceActivity(), HostService.HostServiceListener, Pl
         setContentView(R.layout.activity_host_screen)
 
         // Setup the app toolbar
-        val toolbar = findViewById<androidx.appcompat.widget.Toolbar>(R.id.app_toolbar)
-        if (toolbar != null) {
-            setSupportActionBar(toolbar)
-        }
-
+        setSupportActionBar(app_toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
-
-        // Set fair play flag from intent (or default to app boolean default)
-        isQueueFairPlay = intent.getBooleanExtra(AppConstants.FAIR_PLAY_KEY, resources.getBoolean(R.bool.fair_play_default))
 
         initUi()
         setupQueueList()
-
         startHostService()
     }
 
@@ -114,10 +106,9 @@ open class HostActivity : ServiceActivity(), HostService.HostServiceListener, Pl
         playbackControlView.setOnClickListener(this)
 
         // Show queue title as activity title
-        title = intent.getStringExtra(AppConstants.QUEUE_TITLE_KEY)
-
-        // Stop soft keyboard from pushing UI up
-        window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING)
+        var queueName = intent.getStringExtra(QUEUE_NAME_KEY)
+        if (queueName.isNullOrBlank()) queueName = getString(R.string.queue_title_default_value)
+        title = queueName
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -144,9 +135,9 @@ open class HostActivity : ServiceActivity(), HostService.HostServiceListener, Pl
 
     private fun startHostService() {
         val startHostIntent = Intent(this, HostService::class.java)
-        startHostIntent.putExtra(AppConstants.QUEUE_TITLE_KEY, intent.getStringExtra(AppConstants.QUEUE_TITLE_KEY))
-        startHostIntent.putExtra(AppConstants.FAIR_PLAY_KEY, intent.getBooleanExtra(AppConstants.FAIR_PLAY_KEY, resources.getBoolean(R.bool.fair_play_default)))
-        startHostIntent.putExtra(AppConstants.BASE_PLAYLIST_ID_KEY, intent.getStringExtra(AppConstants.BASE_PLAYLIST_ID_KEY))
+        startHostIntent.putExtra(AppConstants.QUEUE_TITLE_KEY, intent.getStringExtra(QUEUE_NAME_KEY))
+        startHostIntent.putExtra(AppConstants.FAIR_PLAY_KEY, intent.getBooleanExtra(IS_FAIRPLAY_KEY, resources.getBoolean(R.bool.fair_play_default)))
+        startHostIntent.putExtra(AppConstants.BASE_PLAYLIST_ID_KEY, intent.getStringExtra(BASE_PLAYLIST_ID))
 
         // If we can't find a host service to bind to, start the host service then bind
         if (App.hasServiceBeenStarted) {
@@ -307,5 +298,24 @@ open class HostActivity : ServiceActivity(), HostService.HostServiceListener, Pl
 
     override fun requestSkip() {
         hostService.requestPlayNext()
+    }
+
+    companion object {
+        private const val QUEUE_NAME_KEY = "queue_name"
+        private const val IS_FAIRPLAY_KEY = "is_fairplay"
+        private const val BASE_PLAYLIST_ID = "base_playlist"
+
+        fun start(
+                fromActivity: Activity,
+                queueName: String = "",
+                isFairplay: Boolean = false,
+                basePlaylistId: String = ""
+        ) {
+            fromActivity.startActivity<HostActivity>(
+                    QUEUE_NAME_KEY to queueName,
+                    IS_FAIRPLAY_KEY to isFairplay,
+                    BASE_PLAYLIST_ID to basePlaylistId
+            )
+        }
     }
 }
