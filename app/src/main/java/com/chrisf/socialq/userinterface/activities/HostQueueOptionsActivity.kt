@@ -2,6 +2,7 @@ package com.chrisf.socialq.userinterface.activities
 
 import android.os.Bundle
 import android.view.View
+import androidx.appcompat.app.AlertDialog
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.chrisf.socialq.R
@@ -13,6 +14,8 @@ import com.chrisf.socialq.processor.HostQueueOptionsProcessor.HostQueueOptionsAc
 import com.chrisf.socialq.processor.HostQueueOptionsProcessor.HostQueueOptionsState
 import com.chrisf.socialq.processor.HostQueueOptionsProcessor.HostQueueOptionsState.DisplayBasePlaylists
 import com.chrisf.socialq.processor.HostQueueOptionsProcessor.HostQueueOptionsState.NavigateToHostActivity
+import com.chrisf.socialq.userinterface.activities.HostQueueOptionsActivity.InfoClick.BasePlaylistInfoClick
+import com.chrisf.socialq.userinterface.activities.HostQueueOptionsActivity.InfoClick.FairplayInfoClick
 import com.chrisf.socialq.userinterface.adapters.PlaylistAdapter
 import com.chrisf.socialq.userinterface.views.QueueItemDecoration
 import com.jakewharton.rxbinding3.view.clicks
@@ -24,6 +27,8 @@ class HostQueueOptionsActivity : BaseActivity<HostQueueOptionsState, HostQueueOp
     override val FRAGMENT_HOLDER_ID = View.NO_ID
 
     private lateinit var basePlaylistAdapter: PlaylistAdapter
+
+    private var alertDialog: AlertDialog? = null
 
     override fun resolveDependencies(activityComponent: ActivityComponent) {
         activityComponent.inject(this)
@@ -83,7 +88,16 @@ class HostQueueOptionsActivity : BaseActivity<HostQueueOptionsState, HostQueueOp
                 }
                 .addTo(subscriptions)
 
-        // TODO: Detect clicks on fair play and base playlist info icons and display dialogs
+        fairplayInfoIcon.clicks().map { FairplayInfoClick as InfoClick }
+                .mergeWith(basePlaylistInfoIcon.clicks().map { BasePlaylistInfoClick })
+                .throttleFirst(300, TimeUnit.MILLISECONDS)
+                .subscribe {
+                    when (it) {
+                        FairplayInfoClick -> showFairplayInfoDialog()
+                        BasePlaylistInfoClick -> showBasePlaylistInfoDialog()
+                    }
+                }
+                .addTo(subscriptions)
     }
 
     private fun updatePlaylistDisplay(state: DisplayBasePlaylists) {
@@ -93,5 +107,34 @@ class HostQueueOptionsActivity : BaseActivity<HostQueueOptionsState, HostQueueOp
     private fun navigateToHostActivity(state: NavigateToHostActivity) {
         HostActivity.start(this, state.queueTitle, state.isFairPlay, state.basePlaylistId)
         finish()
+    }
+
+    private fun showFairplayInfoDialog() {
+        if (alertDialog == null || alertDialog?.isShowing == false) {
+            alertDialog = AlertDialog.Builder(this)
+                    .setView(R.layout.dialog_fair_play)
+                    .setPositiveButton(R.string.ok) { dialog, which ->
+                        dialog.dismiss()
+                    }
+                    .create()
+            alertDialog!!.show()
+        }
+    }
+
+    private fun showBasePlaylistInfoDialog() {
+        if (alertDialog == null || alertDialog?.isShowing == false) {
+            alertDialog = AlertDialog.Builder(this)
+                    .setView(R.layout.dialog_base_playlist)
+                    .setPositiveButton(R.string.ok) { dialog, which ->
+                        dialog.dismiss()
+                    }
+                    .create()
+            alertDialog!!.show()
+        }
+    }
+
+    sealed class InfoClick {
+        object FairplayInfoClick : InfoClick()
+        object BasePlaylistInfoClick : InfoClick()
     }
 }

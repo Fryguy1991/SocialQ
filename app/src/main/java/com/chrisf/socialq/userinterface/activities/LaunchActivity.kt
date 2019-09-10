@@ -64,6 +64,7 @@ class LaunchActivity : BaseActivity<LaunchState, LaunchAction, LaunchProcessor>(
             NoQueuesFound -> onNoQueuesFound()
             is DisplayAvailableQueues -> displayQueues(state)
             is DisplayCanHostQueue -> displayCanHostQueue(state)
+            is LaunchClientActivity -> launchClientActivity(state)
         }
     }
 
@@ -75,7 +76,11 @@ class LaunchActivity : BaseActivity<LaunchState, LaunchAction, LaunchProcessor>(
         scheduler = getSystemService(Context.JOB_SCHEDULER_SERVICE) as JobScheduler
 
         setupViews()
-        actionStream.accept(ViewCreated(hasLocationPermission()))
+    }
+
+    override fun onResume() {
+        super.onResume()
+        actionStream.accept(ViewResumed(hasLocationPermission()))
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -125,8 +130,8 @@ class LaunchActivity : BaseActivity<LaunchState, LaunchAction, LaunchProcessor>(
         }
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
+    override fun onPause() {
+        super.onPause()
         Nearby.getConnectionsClient(this).stopDiscovery()
     }
 
@@ -199,6 +204,8 @@ class LaunchActivity : BaseActivity<LaunchState, LaunchAction, LaunchProcessor>(
     private fun searchForQueues() {
         hostSwipeRefreshLayout.isRefreshing = true
         swipeRefreshText.text = getString(R.string.queue_searching_message)
+        swipeRefreshText.visibility = View.VISIBLE
+        availableQueueRecyclerView.visibility = View.GONE
 
         val options = DiscoveryOptions.Builder().setStrategy(Strategy.P2P_STAR).build()
 
@@ -237,11 +244,18 @@ class LaunchActivity : BaseActivity<LaunchState, LaunchAction, LaunchProcessor>(
 
     private fun displayQueues(state: DisplayAvailableQueues) {
         adapter.updateAdapter(state.queueList)
+        availableQueueRecyclerView.visibility = View.VISIBLE
+        swipeRefreshText.visibility = View.GONE
     }
 
     private fun onNoQueuesFound() {
         adapter.updateAdapter(emptyList())
         swipeRefreshText.text = getString(R.string.no_host_found_message)
+        swipeRefreshText.visibility = View.VISIBLE
+    }
+
+    private fun launchClientActivity(state: LaunchClientActivity) {
+        ClientActivity.start(this, state.hostEndpoint, state.queueTitle)
     }
 
     private fun showAuthFailedDialog() {

@@ -1,9 +1,10 @@
 package com.chrisf.socialq.userinterface.activities
 
+import android.app.Activity
 import android.content.*
 import android.os.Bundle
 import android.os.IBinder
-import android.os.StrictMode
+import android.view.MenuItem
 import android.view.View
 import android.widget.CheckBox
 import android.widget.Toast
@@ -20,6 +21,7 @@ import com.chrisf.socialq.userinterface.App
 import com.chrisf.socialq.userinterface.adapters.BasicTrackListAdapter
 import com.chrisf.socialq.userinterface.views.PlaybackControlView
 import com.chrisf.socialq.userinterface.views.QueueItemDecoration
+import org.jetbrains.anko.startActivity
 import timber.log.Timber
 
 open class ClientActivity : ServiceActivity(), ClientService.ClientServiceListener {
@@ -59,15 +61,15 @@ open class ClientActivity : ServiceActivity(), ClientService.ClientServiceListen
 
         // Get queue title from intent
         val titleString = intent?.getStringExtra(AppConstants.QUEUE_TITLE_KEY)
-        if (titleString.isNullOrEmpty()) {
-            hostQueueTitle = getString(R.string.queue_title_default_value)
+        hostQueueTitle = if (titleString.isNullOrBlank()) {
+            getString(R.string.queue_title_default_value)
         } else {
-            hostQueueTitle = titleString
+            titleString
         }
 
         // Ensure we receive an endpoint before trying to start service
         val endpointString = intent?.getStringExtra(AppConstants.ND_ENDPOINT_ID_EXTRA_KEY)
-        if (!App.hasServiceBeenStarted && endpointString.isNullOrEmpty()) {
+        if (!App.hasServiceBeenStarted && endpointString.isNullOrBlank()) {
             Timber.e("Error, trying to start client with invalid endpointId")
             finish()
             return
@@ -81,6 +83,14 @@ open class ClientActivity : ServiceActivity(), ClientService.ClientServiceListen
         setupQueueList()
 
         startClientService()
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        if (item.itemId == android.R.id.home) {
+            onBackPressed()
+            return true
+        }
+        return super.onOptionsItemSelected(item)
     }
 
     // Object for connecting to/from client service
@@ -301,5 +311,18 @@ open class ClientActivity : ServiceActivity(), ClientService.ClientServiceListen
     override fun failedToConnect() {
         Toast.makeText(this, R.string.toast_failed_to_connect_to_host, Toast.LENGTH_LONG).show()
         closeClient()
+    }
+
+    companion object {
+        fun start(
+                fromActivity: Activity,
+                hostEndpointId: String,
+                hostQueueName: String = ""
+        ) {
+            fromActivity.startActivity<ClientActivity>(
+                    AppConstants.QUEUE_TITLE_KEY to hostQueueName,
+                    AppConstants.ND_ENDPOINT_ID_EXTRA_KEY to hostEndpointId
+            )
+        }
     }
 }

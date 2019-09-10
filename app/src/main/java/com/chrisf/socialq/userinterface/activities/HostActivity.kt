@@ -3,6 +3,7 @@ package com.chrisf.socialq.userinterface.activities
 import android.app.Activity
 import android.content.*
 import android.os.*
+import android.view.MenuItem
 import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
@@ -88,9 +89,12 @@ open class HostActivity : ServiceActivity(), HostService.HostServiceListener, Pl
         startHostService()
     }
 
-    override fun onNavigateUp(): Boolean {
-        onBackPressed()
-        return true
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        if (item.itemId == android.R.id.home) {
+            onBackPressed()
+            return true
+        }
+        return super.onOptionsItemSelected(item)
     }
 
     private fun initUi() {

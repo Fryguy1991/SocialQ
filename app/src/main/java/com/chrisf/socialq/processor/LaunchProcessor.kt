@@ -39,19 +39,28 @@ class LaunchProcessor @Inject constructor(
 
     override fun handleAction(action: LaunchAction) {
         when (action) {
-            is ViewCreated -> onViewCreated(action)
+            is ViewResumed -> onViewResumed(action)
             QueueRefreshRequested -> onRefreshRequested()
             is EndpointFound -> onEndpointFound(action)
             is EndpointLost -> onEndpointLost(action)
             is AuthCodeRetrieved -> onAuthCodeRetrieved(action)
             is LocationPermissionRequestComplete -> handlePermissionRequest(action)
+            is QueueSelected -> handleQueueSelected(action)
         }
     }
 
-    private fun onViewCreated(action: ViewCreated) {
+    private fun onViewResumed(action: ViewResumed) {
         if (AccessModel.getAccessToken().isNullOrEmpty()) {
             stateStream.accept(RequestAuthorization)
             return
+        }
+
+        val user = AccessModel.getCurrentUser()
+        if (user == null) {
+            getCurrentUser()
+        } else {
+            val isPremium = SpotifyUserType.getSpotifyUserTypeFromProductType(user.product) == SpotifyUserType.PREMIUM
+            stateStream.accept(DisplayCanHostQueue(isPremium))
         }
 
         if (action.hasLocationPermission) {
@@ -59,7 +68,6 @@ class LaunchProcessor @Inject constructor(
         } else {
             stateStream.accept(RequestLocationPermission)
         }
-        getCurrentUser()
     }
 
     private fun handlePermissionRequest(action: LocationPermissionRequestComplete) {
@@ -122,7 +130,12 @@ class LaunchProcessor @Inject constructor(
     }
 
     private fun searchForQueues() {
+        if (isNearbySearching) {
+            return
+        }
+
         joinableQueues.clear()
+        isNearbySearching = true
         stateStream.accept(SearchForQueues)
         Observable.just(Unit)
                 .delay(5, TimeUnit.SECONDS)
@@ -137,6 +150,10 @@ class LaunchProcessor @Inject constructor(
                     }
                 }
                 .addTo(subscriptions)
+    }
+
+    private fun handleQueueSelected(action: QueueSelected) {
+        stateStream.accept(LaunchClientActivity(action.queue.endpointId, action.queue.queueName))
     }
 
     private fun onAuthCodeRetrieved(action: AuthCodeRetrieved) {
@@ -193,10 +210,14 @@ class LaunchProcessor @Inject constructor(
         object RequestAuthorization : LaunchState()
         object RequestLocationPermission : LaunchState()
         object StartAuthRefreshJob : LaunchState()
+        data class LaunchClientActivity(
+                val hostEndpoint: String,
+                val queueTitle: String
+        ) : LaunchState()
     }
 
     sealed class LaunchAction {
-        data class ViewCreated(val hasLocationPermission: Boolean) : LaunchAction()
+        data class ViewResumed(val hasLocationPermission: Boolean) : LaunchAction()
         object QueueRefreshRequested : LaunchAction()
         data class StartedNearbySearch(val wasSuccessful: Boolean) : LaunchAction()
         data class EndpointFound(

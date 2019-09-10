@@ -4,7 +4,7 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import android.graphics.BitmapFactory
+import android.graphics.Bitmap
 import android.os.Binder
 import android.os.Build
 import android.os.IBinder
@@ -18,6 +18,8 @@ import com.chrisf.socialq.dagger.components.ServiceComponent
 import com.chrisf.socialq.enums.PayloadTransferUpdateStatus
 import com.chrisf.socialq.model.spotify.PlaylistTrack
 import com.chrisf.socialq.model.spotify.Track
+import com.chrisf.socialq.network.BitmapListener
+import com.chrisf.socialq.network.GetBitmapTask
 import com.chrisf.socialq.processor.ClientProcessor
 import com.chrisf.socialq.processor.ClientProcessor.ClientAction
 import com.chrisf.socialq.processor.ClientProcessor.ClientAction.*
@@ -30,9 +32,8 @@ import com.google.android.gms.nearby.Nearby
 import com.google.android.gms.nearby.connection.*
 import timber.log.Timber
 import java.io.IOException
-import java.net.URL
 
-class ClientService : BaseService<ClientState, ClientAction, ClientProcessor>() {
+class ClientService : BaseService<ClientState, ClientAction, ClientProcessor>(), BitmapListener {
 
     inner class ClientServiceBinder : Binder() {
         fun getService(): ClientService {
@@ -124,7 +125,6 @@ class ClientService : BaseService<ClientState, ClientAction, ClientProcessor>() 
                     .setContentText(notificationSubtext)
                     .setSmallIcon(R.drawable.app_notification_icon)
                     .setContentIntent(pendingIntent)
-                    .setColor(colorResInt)
                     .setColorized(true)
                     .setShowWhen(false)
                     .setOnlyAlertOnce(true)
@@ -293,14 +293,11 @@ class ClientService : BaseService<ClientState, ClientAction, ClientProcessor>() 
         // Attempt to update album art in notification and metadata
         if (trackToShow.album.images.isNotEmpty()) {
             try {
-                val url = URL(trackToShow.album.images[0].url)
-                // Retrieve album art bitmap
-                val albumArtBitmap = BitmapFactory.decodeStream(url.openConnection().getInputStream())
-
-                // Set bitmap data for lock screen display
-                metaDataBuilder.putBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART, albumArtBitmap)
-                // Set bitmap data for notification
-                notificationBuilder.setLargeIcon(albumArtBitmap)
+                // Attempt to update album art in notification and metadata
+                if (trackToShow.album.images.isNotEmpty()) {
+                    val task = GetBitmapTask(this)
+                    task.execute(trackToShow.album.images[0].url)
+                }
             } catch (exception: IOException) {
                 Timber.e("Error retrieving image bitmap: ${exception.message.toString()}")
                 Timber.e(exception)
@@ -331,6 +328,15 @@ class ClientService : BaseService<ClientState, ClientAction, ClientProcessor>() 
         notificationBuilder.setLargeIcon(null)
         notificationBuilder.setStyle(null)
 
+        // Display updated notification
+        notificationManager.notify(AppConstants.CLIENT_SERVICE_ID, notificationBuilder.build())
+    }
+
+    override fun displayBitmap(bitmap: Bitmap?) {
+        // Set bitmap data for lock screen display
+        metaDataBuilder.putBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART, bitmap)
+        // Set bitmap data for notification
+        notificationBuilder.setLargeIcon(bitmap)
         // Display updated notification
         notificationManager.notify(AppConstants.CLIENT_SERVICE_ID, notificationBuilder.build())
     }

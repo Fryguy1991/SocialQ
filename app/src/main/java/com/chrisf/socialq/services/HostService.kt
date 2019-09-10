@@ -24,6 +24,8 @@ import com.chrisf.socialq.enums.NearbyDevicesMessage
 import com.chrisf.socialq.enums.PayloadTransferUpdateStatus
 import com.chrisf.socialq.model.ClientRequestData
 import com.chrisf.socialq.model.spotify.Track
+import com.chrisf.socialq.network.BitmapListener
+import com.chrisf.socialq.network.GetBitmapTask
 import com.chrisf.socialq.processor.HostProcessor
 import com.chrisf.socialq.processor.HostProcessor.HostAction
 import com.chrisf.socialq.processor.HostProcessor.HostAction.*
@@ -38,9 +40,7 @@ import com.google.android.gms.nearby.connection.*
 import com.google.android.gms.tasks.OnFailureListener
 import com.google.android.gms.tasks.OnSuccessListener
 import timber.log.Timber
-import java.io.IOException
 import java.lang.Exception
-import java.net.URL
 import java.util.*
 import java.util.regex.Pattern
 
@@ -668,27 +668,4 @@ class HostService : BaseService<HostState, HostAction, HostProcessor>(), BitmapL
         // Display updated notification
         notificationManager.notify(AppConstants.HOST_SERVICE_ID, notificationBuilder.build())
     }
-}
-
-class GetBitmapTask(private val listener: BitmapListener) : AsyncTask<String, Void, Bitmap>() {
-    override fun doInBackground(vararg params: String?): Bitmap? {
-        try {
-            if (!params[0].isNullOrBlank()) {
-                val url = URL(params[0])
-                return BitmapFactory.decodeStream(url.openConnection().getInputStream())
-            }
-            Timber.e("Failed to retrieve bitmap")
-        } catch (e: IOException) {
-            Timber.e(e)
-        }
-        return null
-    }
-
-    override fun onPostExecute(result: Bitmap?) {
-        listener.displayBitmap(result)
-    }
-}
-
-interface BitmapListener {
-    fun displayBitmap(bitmap: Bitmap?)
 }
