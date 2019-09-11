@@ -12,7 +12,7 @@ import retrofit2.http.*
 import java.util.HashMap
 
 @JvmSuppressWildcards
-interface FrySpotifyService {
+interface SpotifyService {
 
     @GET("search?type=track&market=from_token")
     fun searchTracks(

@@ -7,7 +7,7 @@ import com.chrisf.socialq.enums.NearbyDevicesMessage.*
 import com.chrisf.socialq.extensions.addTo
 import com.chrisf.socialq.model.spotify.PlaylistTrack
 import com.chrisf.socialq.model.spotify.UserPrivate
-import com.chrisf.socialq.network.FrySpotifyService
+import com.chrisf.socialq.network.SpotifyService
 import com.chrisf.socialq.processor.ClientProcessor.ClientAction
 import com.chrisf.socialq.processor.ClientProcessor.ClientAction.*
 import com.chrisf.socialq.processor.ClientProcessor.ClientState
@@ -21,7 +21,7 @@ import java.util.regex.Pattern
 import javax.inject.Inject
 
 class ClientProcessor @Inject constructor(
-        private val spotifyService: FrySpotifyService,
+        private val spotifyService: SpotifyService,
         lifecycle: Lifecycle?,
         subscriptions: CompositeDisposable
 ) : BaseProcessor<ClientState, ClientAction>(lifecycle, subscriptions) {

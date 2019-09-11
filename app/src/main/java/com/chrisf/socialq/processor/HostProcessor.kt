@@ -16,7 +16,7 @@ import com.chrisf.socialq.model.spotify.Playlist
 import com.chrisf.socialq.model.spotify.PlaylistTrack
 import com.chrisf.socialq.model.spotify.UserPrivate
 import com.chrisf.socialq.model.spotify.UserPublic
-import com.chrisf.socialq.network.FrySpotifyService
+import com.chrisf.socialq.network.SpotifyService
 import com.chrisf.socialq.processor.HostProcessor.HostAction
 import com.chrisf.socialq.processor.HostProcessor.HostAction.*
 import com.chrisf.socialq.processor.HostProcessor.HostState
@@ -31,7 +31,7 @@ import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 class HostProcessor @Inject constructor(
-        private val spotifyService: FrySpotifyService,
+        private val spotifyService: SpotifyService,
         lifecycle: Lifecycle?,
         subscriptions: CompositeDisposable
 ) : BaseProcessor<HostState, HostAction>(lifecycle, subscriptions),
@@ -204,7 +204,7 @@ class HostProcessor @Inject constructor(
     private fun updatePlaylistName(action: UpdatePlaylistName) {
         spotifyService.changePlaylistDetails(
                 playlist.id,
-                FrySpotifyService.getPlaylistDetailsBody(action.newPlaylistName)
+                SpotifyService.getPlaylistDetailsBody(action.newPlaylistName)
         )
                 .subscribeOn(Schedulers.io())
                 .subscribe({
@@ -409,7 +409,7 @@ class HostProcessor @Inject constructor(
             addRequestCount++
             spotifyService.addTracksToPlaylist(
                     playlist.id,
-                    FrySpotifyService.getAddTracksToPlaylistBody(urisArray)
+                    SpotifyService.getAddTracksToPlaylistBody(urisArray)
             )
                     .subscribeOn(Schedulers.io())
                     .subscribe({

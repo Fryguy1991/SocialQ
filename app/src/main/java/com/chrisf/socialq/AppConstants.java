@@ -32,11 +32,9 @@ public class AppConstants {
     // Intent extra key strings
     public static final String SEARCH_RESULTS_EXTRA_KEY = "search_results_key";
     public static final String ND_ENDPOINT_ID_EXTRA_KEY = "hostEndpointId";
-    public static final String SERVICE_PLAYLIST_ID_KEY = "playlist_key";
     public static final String QUEUE_TITLE_KEY = "queueTitle";
     public static final String FAIR_PLAY_KEY = "isFairplay";
     public static final String BASE_PLAYLIST_ID_KEY = "basePlaylistId";
-    public static final String IS_HOST_KEY = "is_socialq_host_key";
 
     // Message Prefix Strings
     private static final String PLAYLIST_ID_PREFIX = "#PLAYLIST_ID#";
@@ -72,32 +70,10 @@ public class AppConstants {
     public static final String NEW_SONG_ADDED_REGEX = NEW_SONG_ADDED_PREFIX + "([0-9]+)";
     // Regex for SocialQ host advertising name
     public static final String NEARBY_HOST_NAME_REGEX = QUEUE_NAME_PREFIX + "(.*)" + OWNER_NAME_PREFIX + "(.*)" + IS_FAIR_PLAY_PREFIX + "([" + FAIR_PLAY_TRUE_CHARACTER + FAIR_PLAY_FALSE_CHARACTER + "]{1})";
-
-    // Spotify URL Regexs
-    public static final String URL_TRACK_SEARCH = "https:\\/\\/api.spotify.com\\/v1\\/search\\?type=track&q=([^&]+).+";
-    // Example:  https://api.spotify.com/v1/search?type=track&q=avenged+sevenfold&limit=50
-    public static final String URL_ARTIST_SEARCH = "https:\\/\\/api.spotify.com\\/v1\\/search\\?type=artist&q=([^&]+).+";
-    // Example: https://api.spotify.com/v1/search?type=artist&q=avenged+sevenfold&limit=50
-    public static final String URL_ALBUM_SEARCH = "https:\\/\\/api\\.spotify\\.com\\/v1\\/search\\?type=album&q=([^&]+).+";
-    // Example: https://api.spotify.com/v1/search?type=album&q=avenged+sevenfold&limit=50
     // END REGULAR EXPRESSIONS
 
     // Common Strings
     public static final String INVALID = "INVALID";
-
-    // Handler Message Types
-    public static final int HANDLER_ACCESS_TOKEN_REFRESH = 1;
-    public static final int HANDLER_SEARCH_BY_TEXT = 2;
-
-    // Spotify URI prefixes
-    public static final String SPOTIFY_ALBUM_PREFIX = "spotify:album:";
-    public static final String SPOTIFY_ARTIST_PREFIX = "spotify:artist:";
-    public static final String SPOTIFY_TRACK_PREFIX = "spotify:track:";
-
-    // Spotify search limits
-    public static final int SPOTIFY_SEARCH_LIMIT = 50;
-    public static final int PLAYLIST_LIMIT = 50;
-    public static final int PLAYLIST_TRACK_LIMIT = 100;
 
     // Service IDs
     public static final int HOST_SERVICE_ID = 1;
@@ -110,12 +86,7 @@ public class AppConstants {
     public static final String JSON_REFRESH_TOEKN_KEY = "refresh_token";
     public static final String JSON_EXPIRES_IN_KEY = "expires_in";
 
-    // Spotify Parameters
-    public static final String PARAM_FROM_TOKEN = "from_token";
-
     // Notification Pending Intent Request Codes
-    public static final String ACTION_REQUEST_PLAY = "socialq_notification_play";
-    public static final String ACTION_REQUEST_PAUSE = "socialq_notification_pause";
     public static final String ACTION_REQUEST_NEXT = "socialq_notification_next";
     public static final String ACTION_REQUEST_PLAY_PAUSE = "socialq_notification_play_pause";
     public static final String ACTION_NOTIFICATION_SEARCH = "socialq_notification_search";

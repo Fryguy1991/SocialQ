@@ -4,7 +4,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.content.res.Resources
 import com.chrisf.socialq.model.AccessModel
-import com.chrisf.socialq.network.FrySpotifyService
+import com.chrisf.socialq.network.SpotifyService
 import com.google.gson.GsonBuilder
 import dagger.Module
 import dagger.Provides
@@ -36,7 +36,7 @@ class AppModule(private val app: Context) {
 
     @Provides
     @Singleton
-    fun providesFrySpotifyApi(): FrySpotifyService {
+    fun providesSpotifyApi(): SpotifyService {
         val builder = OkHttpClient.Builder()
         builder.addInterceptor { chain ->
             val request = chain.request()
@@ -56,10 +56,10 @@ class AppModule(private val app: Context) {
         return Retrofit.Builder()
                 .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
                 .addConverterFactory(GsonConverterFactory.create(gson))
-                .baseUrl(FrySpotifyService.SPOTIFY_BASE_API_ENDPOINT)
+                .baseUrl(SpotifyService.SPOTIFY_BASE_API_ENDPOINT)
                 .client(builder.build())
                 .build()
-                .create(FrySpotifyService::class.java)
+                .create(SpotifyService::class.java)
     }
 
     @Provides

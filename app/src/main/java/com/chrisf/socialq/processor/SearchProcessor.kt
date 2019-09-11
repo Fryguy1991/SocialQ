@@ -7,7 +7,7 @@ import com.chrisf.socialq.model.spotify.pager.AlbumSimplePager
 import com.chrisf.socialq.model.spotify.pager.ArtistPager
 import com.chrisf.socialq.model.spotify.pager.Pager
 import com.chrisf.socialq.model.spotify.pager.TrackPager
-import com.chrisf.socialq.network.FrySpotifyService
+import com.chrisf.socialq.network.SpotifyService
 import com.chrisf.socialq.processor.SearchProcessor.SearchAction
 import com.chrisf.socialq.processor.SearchProcessor.SearchAction.*
 import com.chrisf.socialq.processor.SearchProcessor.SearchState
@@ -20,7 +20,7 @@ import retrofit2.Response
 import javax.inject.Inject
 
 class SearchProcessor @Inject constructor(
-        private val spotifyService: FrySpotifyService,
+        private val spotifyService: SpotifyService,
         lifecycle: Lifecycle,
         subscriptions: CompositeDisposable
 ) : BaseProcessor<SearchState, SearchAction>(lifecycle, subscriptions) {
