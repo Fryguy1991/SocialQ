@@ -7,7 +7,6 @@ import android.view.MenuItem
 import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
-import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -26,14 +25,7 @@ import timber.log.Timber
 
 open class HostActivity : ServiceActivity(), HostService.HostServiceListener, PlaybackControlView.IPlaybackControlListener {
 
-    // UI ELEMENTS
-    private lateinit var rootLayout: ConstraintLayout
-    private lateinit var addButton: View
-    private lateinit var playbackControlView: PlaybackControlView
-    // Track list elements
-    private lateinit var queueList: RecyclerView
     private lateinit var trackDisplayAdapter: HostTrackListAdapter
-    private lateinit var emptyQueueMessage: View
 
     private lateinit var hostService: HostService
     // Flag to determine if the service is bound or not
@@ -81,7 +73,7 @@ open class HostActivity : ServiceActivity(), HostService.HostServiceListener, Pl
         setContentView(R.layout.activity_host_screen)
 
         // Setup the app toolbar
-        setSupportActionBar(app_toolbar)
+        setSupportActionBar(toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
         initUi()
@@ -99,13 +91,7 @@ open class HostActivity : ServiceActivity(), HostService.HostServiceListener, Pl
 
     private fun initUi() {
         // Initialize UI
-        rootLayout = findViewById(R.id.cl_host_layout_base)
-        queueList = findViewById(R.id.rv_queue_list_view)
-        playbackControlView = findViewById(R.id.cv_playback_control_view)
-        addButton = findViewById(R.id.btn_add_track)
-        emptyQueueMessage = findViewById(R.id.tv_empty_queue_text)
-
-        addButton.setOnClickListener(this)
+        addTrackButton.setOnClickListener(this)
         playbackControlView.setListener(this)
         playbackControlView.setOnClickListener(this)
 
@@ -222,10 +208,10 @@ open class HostActivity : ServiceActivity(), HostService.HostServiceListener, Pl
 
     private fun setupQueueList() {
         trackDisplayAdapter = HostTrackListAdapter(applicationContext)
-        queueList.adapter = trackDisplayAdapter
+        queueListRecyclerView.adapter = trackDisplayAdapter
         val layoutManager = LinearLayoutManager(this, RecyclerView.VERTICAL, false)
-        queueList.layoutManager = layoutManager
-        queueList.addItemDecoration(QueueItemDecoration(applicationContext))
+        queueListRecyclerView.layoutManager = layoutManager
+        queueListRecyclerView.addItemDecoration(QueueItemDecoration(applicationContext))
     }
 
     override fun onQueuePause() {
@@ -242,27 +228,27 @@ open class HostActivity : ServiceActivity(), HostService.HostServiceListener, Pl
     }
 
     private fun displayTrackList(songRequests: List<ClientRequestData>) {
+        loadingRoot.visibility = View.GONE
+        queueListRecyclerView.visibility = View.VISIBLE
+
         when {
-            songRequests.size < 0 -> {
-                Timber.e("Error invalid song request list sent")
-            }
             songRequests.isEmpty() -> {
                 playbackControlView.shrinkLayout()
                 playbackControlView.visibility = View.GONE
                 trackDisplayAdapter.updateAdapter(mutableListOf())
-                emptyQueueMessage.visibility = View.VISIBLE
+                emptyQueueText.visibility = View.VISIBLE
             }
             songRequests.size == 1 -> {
                 playbackControlView.visibility = View.VISIBLE
                 playbackControlView.displayRequest(songRequests[0])
                 trackDisplayAdapter.updateAdapter(mutableListOf())
-                emptyQueueMessage.visibility = View.GONE
+                emptyQueueText.visibility = View.GONE
             }
             songRequests.size > 1 -> {
                 playbackControlView.visibility = View.VISIBLE
                 playbackControlView.displayRequest(songRequests[0])
                 trackDisplayAdapter.updateAdapter(songRequests.subList(1, songRequests.size))
-                emptyQueueMessage.visibility = View.GONE
+                emptyQueueText.visibility = View.GONE
             }
         }
     }
@@ -273,15 +259,19 @@ open class HostActivity : ServiceActivity(), HostService.HostServiceListener, Pl
     }
 
     override fun showClientConnected() {
-        Toast.makeText(this, getString(R.string.client_joined), Toast.LENGTH_SHORT).show()
+        Toast.makeText(this, getString(R.string.client_joined), Toast.LENGTH_LONG).show()
     }
 
     override fun showClientDisconnected() {
-        Toast.makeText(this, getString(R.string.client_disconnected), Toast.LENGTH_SHORT).show()
+        Toast.makeText(this, getString(R.string.client_disconnected), Toast.LENGTH_LONG).show()
     }
 
     override fun showLoadingScreen() {
-        // TODO: Show a loading screen when service is doing long data retrieval
+        loadingRoot.visibility = View.VISIBLE
+
+        emptyQueueText.visibility = View.GONE
+        queueListRecyclerView.visibility = View.GONE
+        playbackControlView.visibility = View.GONE
     }
 
     override fun initiateView(title: String, songRequests: List<ClientRequestData>, isPlaying: Boolean) {

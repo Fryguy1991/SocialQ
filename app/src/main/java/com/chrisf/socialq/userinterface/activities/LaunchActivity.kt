@@ -65,6 +65,7 @@ class LaunchActivity : BaseActivity<LaunchState, LaunchAction, LaunchProcessor>(
             is DisplayAvailableQueues -> displayQueues(state)
             is DisplayCanHostQueue -> displayCanHostQueue(state)
             is LaunchClientActivity -> launchClientActivity(state)
+            AuthorizationFailed -> showAuthFailedDialog()
         }
     }
 

@@ -123,6 +123,8 @@ class HostProcessor @Inject constructor(
     }
 
     private fun initiateHostService(action: ServiceStarted) {
+        stateStream.accept(DisplayLoading)
+
         queueTitle = action.queueTitle
         isQueueFairPlay = action.isQueueFairPlay
         basePlaylistId = action.basePlaylistId
@@ -915,6 +917,8 @@ class HostProcessor @Inject constructor(
                 val playlistId: String,
                 val currentPlaylistIndex: Int
         ) : HostState()
+
+        object DisplayLoading : HostState()
     }
 
     sealed class HostAction {

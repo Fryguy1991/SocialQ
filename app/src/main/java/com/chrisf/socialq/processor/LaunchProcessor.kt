@@ -36,6 +36,7 @@ class LaunchProcessor @Inject constructor(
     private val joinableQueues = mutableListOf<QueueModel>()
 
     private var isNearbySearching = false
+    private var isRequestingAuth = false
 
     override fun handleAction(action: LaunchAction) {
         when (action) {
@@ -50,7 +51,12 @@ class LaunchProcessor @Inject constructor(
     }
 
     private fun onViewResumed(action: ViewResumed) {
+        if (isRequestingAuth) {
+            return
+        }
+
         if (AccessModel.getAccessToken().isNullOrEmpty()) {
+            isRequestingAuth = true
             stateStream.accept(RequestAuthorization)
             return
         }
@@ -160,6 +166,8 @@ class LaunchProcessor @Inject constructor(
         AccessModel.setAuthorizationCode(action.code)
         if (AccessModel.getAuthorizationCode().isNullOrEmpty()) {
             Timber.e("Error invalid authorization code")
+            isRequestingAuth = false
+            stateStream.accept(AuthorizationFailed)
         } else {
             Timber.d("Have authorization code. Request access/refresh tokens")
             val client = OkHttpClient()
@@ -193,6 +201,8 @@ class LaunchProcessor @Inject constructor(
                 // Set access token and expire time into model
                 AccessModel.setAccess(accessToken, expireTime)
 
+                isRequestingAuth = false
+
                 // Schedule access token refresh to occur every 20 minutes
                 stateStream.accept(StartAuthRefreshJob)
                 searchForQueues()
@@ -214,6 +224,7 @@ class LaunchProcessor @Inject constructor(
                 val hostEndpoint: String,
                 val queueTitle: String
         ) : LaunchState()
+        object AuthorizationFailed : LaunchState()
     }
 
     sealed class LaunchAction {

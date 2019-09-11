@@ -10,9 +10,6 @@ import com.chrisf.socialq.R
 import com.chrisf.socialq.enums.RequestType
 
 abstract class ServiceActivity : AppCompatActivity(), View.OnClickListener {
-    companion object {
-        val TAG = ServiceActivity::class.java.name
-    }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         super.onCreateOptionsMenu(menu)
@@ -48,7 +45,7 @@ abstract class ServiceActivity : AppCompatActivity(), View.OnClickListener {
     override fun onClick(v: View?) {
         if (v != null) {
             when {
-                v.id == R.id.btn_add_track -> {
+                v.id == R.id.addTrackButton -> {
                     startSearchActivity()
                 }
                 else -> {

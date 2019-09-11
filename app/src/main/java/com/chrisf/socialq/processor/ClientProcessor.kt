@@ -61,6 +61,8 @@ class ClientProcessor @Inject constructor(
             stateStream.accept(ShutdownService(R.string.toast_failed_to_connect_to_host))
             return
         } else {
+            stateStream.accept(DisplayLoading)
+
             hostEndpoint = action.hostEndpoint
             queueTitle = action.queueTitle
 
@@ -312,6 +314,7 @@ class ClientProcessor @Inject constructor(
 
         object CloseClient : ClientState()
         data class ClientInitiationComplete(val queueTitle: String) : ClientState()
+        object DisplayLoading : ClientState()
     }
 
     sealed class ClientAction {

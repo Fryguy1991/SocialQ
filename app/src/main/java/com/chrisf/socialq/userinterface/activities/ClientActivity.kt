@@ -19,8 +19,8 @@ import com.chrisf.socialq.model.spotify.PlaylistTrack
 import com.chrisf.socialq.services.ClientService
 import com.chrisf.socialq.userinterface.App
 import com.chrisf.socialq.userinterface.adapters.BasicTrackListAdapter
-import com.chrisf.socialq.userinterface.views.PlaybackControlView
 import com.chrisf.socialq.userinterface.views.QueueItemDecoration
+import kotlinx.android.synthetic.main.activity_client_screen.*
 import org.jetbrains.anko.startActivity
 import timber.log.Timber
 
@@ -28,14 +28,7 @@ open class ClientActivity : ServiceActivity(), ClientService.ClientServiceListen
 
     // UI ELEMENTS
     // Queue display elements
-    private lateinit var queueList: RecyclerView
     private lateinit var trackDisplayAdapter: BasicTrackListAdapter
-    // Button for adding a new track
-    private lateinit var addButton: View
-    // View for displaying currently playing track
-    private lateinit var playbackControlView: PlaybackControlView
-    // View for displaying message that the queue is empty
-    private lateinit var emptyQueueMessage: View
 
     // Reference to host endpoint ID
     private var hostEnpointId = ""
@@ -52,7 +45,7 @@ open class ClientActivity : ServiceActivity(), ClientService.ClientServiceListen
         setContentView(R.layout.activity_client_screen)
 
         // Setup the app toolbar
-        val toolbar = findViewById<androidx.appcompat.widget.Toolbar>(R.id.app_toolbar)
+        val toolbar = findViewById<androidx.appcompat.widget.Toolbar>(R.id.toolbar)
         if (toolbar != null) {
             setSupportActionBar(toolbar)
         }
@@ -118,16 +111,10 @@ open class ClientActivity : ServiceActivity(), ClientService.ClientServiceListen
     }
 
     private fun initUi() {
-        // Initialize UI elements
-        queueList = findViewById(R.id.rv_queue_list_view)
-        addButton = findViewById(R.id.btn_add_track)
-        playbackControlView = findViewById(R.id.cv_playback_control_view)
-        emptyQueueMessage = findViewById(R.id.tv_empty_queue_text)
-
         playbackControlView.hideControls()
         playbackControlView.hideUser()
 
-        addButton.setOnClickListener(this)
+        addTrackButton.setOnClickListener(this)
 
         // Show queue title as activity title
         title = hostQueueTitle
@@ -229,10 +216,10 @@ open class ClientActivity : ServiceActivity(), ClientService.ClientServiceListen
 
     private fun setupQueueList() {
         trackDisplayAdapter = BasicTrackListAdapter()
-        queueList.adapter = trackDisplayAdapter
+        queueListRecyclerView.adapter = trackDisplayAdapter
         val layoutManager = LinearLayoutManager(this, RecyclerView.VERTICAL, false)
-        queueList.layoutManager = layoutManager
-        queueList.addItemDecoration(QueueItemDecoration(applicationContext))
+        queueListRecyclerView.layoutManager = layoutManager
+        queueListRecyclerView.addItemDecoration(QueueItemDecoration(applicationContext))
     }
 
     override fun onQueueUpdated(queueTracks: List<PlaylistTrack>) {
@@ -240,30 +227,30 @@ open class ClientActivity : ServiceActivity(), ClientService.ClientServiceListen
     }
 
     private fun displayTrackList(queueTracks: List<PlaylistTrack>) {
+        loadingRoot.visibility = View.GONE
+        queueListRecyclerView.visibility = View.VISIBLE
+
         when {
-            queueTracks.size < 0 -> {
-                Timber.e("Error invalid song request list sent")
-            }
             queueTracks.isEmpty() -> {
                 playbackControlView.shrinkLayout()
                 playbackControlView.visibility = View.GONE
                 trackDisplayAdapter.updateAdapter(mutableListOf())
 
-                emptyQueueMessage.visibility = View.VISIBLE
+                emptyQueueText.visibility = View.VISIBLE
             }
             queueTracks.size == 1 -> {
                 playbackControlView.visibility = View.VISIBLE
                 playbackControlView.displayTrack(queueTracks[0])
                 trackDisplayAdapter.updateAdapter(mutableListOf())
 
-                emptyQueueMessage.visibility = View.GONE
+                emptyQueueText.visibility = View.GONE
             }
             queueTracks.size > 1 -> {
                 playbackControlView.visibility = View.VISIBLE
                 playbackControlView.displayTrack(queueTracks[0])
                 trackDisplayAdapter.updateAdapter(queueTracks.subList(1, queueTracks.size))
 
-                emptyQueueMessage.visibility = View.GONE
+                emptyQueueText.visibility = View.GONE
             }
         }
     }
@@ -295,7 +282,11 @@ open class ClientActivity : ServiceActivity(), ClientService.ClientServiceListen
     }
 
     override fun showLoadingScreen() {
-        TODO("not implemented")
+        loadingRoot.visibility = View.VISIBLE
+
+        emptyQueueText.visibility = View.GONE
+        queueListRecyclerView.visibility = View.GONE
+        playbackControlView.visibility = View.GONE
     }
 
     override fun initiateView(queueTitle: String) {

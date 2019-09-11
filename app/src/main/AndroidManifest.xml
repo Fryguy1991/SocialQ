@@ -36,7 +36,9 @@
 
         <!-- Activity for setting up a host queue -->
         <activity android:name=".userinterface.activities.HostQueueOptionsActivity"
-            android:parentActivityName=".userinterface.activities.LaunchActivity"/>
+            android:parentActivityName=".userinterface.activities.LaunchActivity"
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="adjustResize"/>
 
         <!-- Activity for host screen -->
         <activity

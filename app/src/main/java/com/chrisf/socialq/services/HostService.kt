@@ -114,6 +114,7 @@ class HostService : BaseService<HostState, HostAction, HostProcessor>(), BitmapL
             is AudioDeliveryDone -> onAudioDeliveryDone(state)
             is TrackAdded -> onTrackAdded(state)
             is InitiateNewClient -> initiateNewClient(state)
+            DisplayLoading -> listener?.showLoadingScreen()
         }
     }
 
@@ -666,6 +667,7 @@ class HostService : BaseService<HostState, HostAction, HostProcessor>(), BitmapL
         // Set bitmap data for notification
         notificationBuilder.setLargeIcon(bitmap)
         // Display updated notification
+        mediaSession.setMetadata(metaDataBuilder.build())
         notificationManager.notify(AppConstants.HOST_SERVICE_ID, notificationBuilder.build())
     }
 }

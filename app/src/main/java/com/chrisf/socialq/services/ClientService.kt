@@ -76,6 +76,7 @@ class ClientService : BaseService<ClientState, ClientAction, ClientProcessor>(),
             CloseClient -> handleCloseClient()
             is DisplayTracks -> displayTrackList(state)
             is ClientInitiationComplete -> handleClientInitiationComplete(state)
+            DisplayLoading -> listener?.showLoadingScreen()
         }
     }
 
