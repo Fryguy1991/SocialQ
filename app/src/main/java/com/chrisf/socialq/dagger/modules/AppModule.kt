@@ -46,7 +46,7 @@ class AppModule(private val app: Context) {
             chain.proceed(request)
         }
         builder.addInterceptor (
-            HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BASIC)
+            HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY)
         )
 
         val gson = GsonBuilder()

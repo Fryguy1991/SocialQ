@@ -7,8 +7,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import android.os.AsyncTask
 import android.os.Binder
 import android.os.IBinder
 import android.support.v4.media.MediaMetadataCompat
@@ -114,7 +112,8 @@ class HostService : BaseService<HostState, HostAction, HostProcessor>(), BitmapL
             is AudioDeliveryDone -> onAudioDeliveryDone(state)
             is TrackAdded -> onTrackAdded(state)
             is InitiateNewClient -> initiateNewClient(state)
-            DisplayLoading -> listener?.showLoadingScreen()
+            is DisplayLoading -> listener?.showLoadingScreen()
+            is CloseQueue -> closeQueue()
         }
     }
 
@@ -571,11 +570,9 @@ class HostService : BaseService<HostState, HostAction, HostProcessor>(), BitmapL
     fun unfollowQueuePlaylist() {
         // Unfollow the playlist created for SocialQ
         actionStream.accept(UnfollowPlaylist)
-
-        shutdownQueue()
     }
 
-    private fun shutdownQueue() {
+    private fun closeQueue() {
         notifyClientsHostDisconnecting()
 
         listener?.closeHost()
@@ -584,12 +581,12 @@ class HostService : BaseService<HostState, HostAction, HostProcessor>(), BitmapL
 
 
     fun savePlaylistAs(playlistName: String) {
-        if (playlistName.isNotEmpty()) {
+        if (playlistName.isNotBlank()) {
             Timber.d("Saving playlist as: $playlistName")
             actionStream.accept(UpdatePlaylistName(playlistName))
+        } else {
+            closeQueue()
         }
-
-        shutdownQueue()
     }
 
     fun hostRequestSong(uri: String) {

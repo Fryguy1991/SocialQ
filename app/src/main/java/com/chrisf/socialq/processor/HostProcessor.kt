@@ -16,12 +16,12 @@ import com.chrisf.socialq.model.spotify.Playlist
 import com.chrisf.socialq.model.spotify.PlaylistTrack
 import com.chrisf.socialq.model.spotify.UserPrivate
 import com.chrisf.socialq.model.spotify.UserPublic
-import com.chrisf.socialq.network.SpotifyApi
+import com.chrisf.socialq.network.ApiResponse
+import com.chrisf.socialq.network.SpotifyService
 import com.chrisf.socialq.processor.HostProcessor.HostAction
 import com.chrisf.socialq.processor.HostProcessor.HostAction.*
 import com.chrisf.socialq.processor.HostProcessor.HostState
 import com.chrisf.socialq.processor.HostProcessor.HostState.*
-import com.google.gson.JsonArray
 import com.spotify.sdk.android.player.*
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
@@ -31,14 +31,14 @@ import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 class HostProcessor @Inject constructor(
-        private val spotifyService: SpotifyApi,
-        lifecycle: Lifecycle?,
-        subscriptions: CompositeDisposable
+    private val spotifyService: SpotifyService,
+    lifecycle: Lifecycle?,
+    subscriptions: CompositeDisposable
 ) : BaseProcessor<HostState, HostAction>(lifecycle, subscriptions),
-        ConnectionStateCallback,
-        Player.NotificationCallback,
-        Player.OperationCallback,
-        AudioManager.OnAudioFocusChangeListener {
+    ConnectionStateCallback,
+    Player.NotificationCallback,
+    Player.OperationCallback,
+    AudioManager.OnAudioFocusChangeListener {
     // Playlist object for the queue
     private lateinit var playlist: Playlist
     // Tracks from queue playlist
@@ -72,7 +72,7 @@ class HostProcessor @Inject constructor(
     // Flag for storing if a base playlist has been loaded
     private var wasBasePlaylistLoaded = false
     // List of shuffled tracks to be added to the playlist
-    private val shuffledTracks = mutableListOf<PlaylistTrack>()
+    private var shuffledTracks = mutableListOf<PlaylistTrack>()
 
     // Title of the SocialQ
     private lateinit var queueTitle: String
@@ -177,38 +177,50 @@ class HostProcessor @Inject constructor(
 
     private fun initiateNewClient(action: ClientConnected) {
         stateStream.accept(
-                InitiateNewClient(
-                        action.newClientId,
-                        hostUser.id,
-                        playlist.id,
-                        currentPlaylistIndex
-                )
+            InitiateNewClient(
+                newClientId = action.newClientId,
+                hostUserId = hostUser.id,
+                playlistId = playlist.id,
+                currentPlaylistIndex = currentPlaylistIndex
+            )
         )
     }
 
     private fun unfollowPlaylist(action: UnfollowPlaylist) {
         spotifyService.unfollowPlaylist(playlist.id)
-                .subscribeOn(Schedulers.io())
-                .subscribe({
-                    Timber.d("Successfully unfollowed playlist")
-                }, {
-                    Timber.e(it)
-                })
-                .addTo(subscriptions)
+            .subscribeOn(Schedulers.io())
+            .map {
+                when (it) {
+                    is ApiResponse.Success -> CloseQueue
+                    else -> {
+                        // TODO: Show a dialog in the failure case
+                        Timber.e("Failed to unfollow playlist")
+                        CloseQueue
+                    }
+                }
+            }
+            .subscribe(stateStream)
+            .addTo(subscriptions)
     }
 
     private fun updatePlaylistName(action: UpdatePlaylistName) {
-        spotifyService.changePlaylistDetails(
-                playlist.id,
-                SpotifyApi.getPlaylistDetailsBody(action.newPlaylistName)
+        spotifyService.changePlaylistName(
+            playlistId = playlist.id,
+            playlistName = action.newPlaylistName
         )
-                .subscribeOn(Schedulers.io())
-                .subscribe({
-                    Timber.d("Successfully changed playlist name")
-                }, {
-                    Timber.e(it)
-                })
-                .addTo(subscriptions)
+            .subscribeOn(Schedulers.io())
+            .map {
+                when (it) {
+                    is ApiResponse.Success -> CloseQueue
+                    else -> {
+                        // TODO: Show a dialog in the failure case
+                        Timber.e("Failed update change playlist name")
+                        CloseQueue
+                    }
+                }
+            }
+            .subscribe(stateStream)
+            .addTo(subscriptions)
     }
 
 
@@ -216,34 +228,45 @@ class HostProcessor @Inject constructor(
         Timber.d("Refreshing playlist")
 
         playlistTracks.clear()
-        getPlaylistTracks(playlist.id)
+        getPlaylistTracks(playlistId = playlist.id)
     }
 
     private fun getPlaylistTracks(playlistId: String, offset: Int = 0) {
-        spotifyService.getPlaylistTracks(playlistId, 50, offset)
-                .subscribeOn(Schedulers.io())
-                .subscribe { response ->
-                    if (response.body() == null) {
-                        // TODO: Try again?
-                    } else {
-                        val tracks = response.body()!!
-                        playlistTracks.addAll(tracks.items)
+        spotifyService.getPlaylistTracks(
+            playlistId = playlistId,
+            offset = offset
+        )
+            .subscribeOn(Schedulers.io())
+            .subscribe { response ->
+                when (response) {
+                    is ApiResponse.Success -> {
+                        val tracksPager = response.body
 
-                        if (tracks.next != null) {
-                            val nextOffset = tracks.offset + tracks.items.size
-                            getPlaylistTracks(playlistId, nextOffset)
+                        playlistTracks.addAll(tracksPager.items)
+
+                        if (response.body.next != null) {
+                            val nextOffset = tracksPager.offset + tracksPager.items.size
+                            getPlaylistTracks(
+                                playlistId = playlistId,
+                                offset = nextOffset
+                            )
                         } else {
                             stateStream.accept(QueueInitiationComplete(
-                                    queueTitle,
-                                    hostUser.display_name ?: "",
-                                    hostUser.id,
-                                    isQueueFairPlay,
-                                    createDisplayList(playlistTracks.subList(currentPlaylistIndex, playlistTracks.size))
+                                queueTitle = queueTitle,
+                                hostDisplayName = hostUser.display_name ?: "",
+                                hostId = hostUser.id,
+                                isFairPlay = isQueueFairPlay,
+                                requestDataList = createDisplayList(playlistTracks.subList(currentPlaylistIndex, playlistTracks.size))
                             ))
                         }
                     }
+                    else -> {
+                        Timber.e("Failed to get playlist tracks")
+                        // TODO: Try again?
+                    }
                 }
-                .addTo(subscriptions)
+            }
+            .addTo(subscriptions)
     }
 
     private fun onAccessTokenUpdated() {
@@ -262,7 +285,7 @@ class HostProcessor @Inject constructor(
                 audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
 
                 player.setConnectivityStatus(connectivityCallback,
-                        getNetworkConnectivity(context))
+                    getNetworkConnectivity(context))
                 player.addConnectionStateCallback(this@HostProcessor)
                 player.addNotificationCallback(this@HostProcessor)
             }
@@ -278,16 +301,20 @@ class HostProcessor @Inject constructor(
 
         if (AccessModel.getCurrentUser() == null) {
             spotifyService.getCurrentUser()
-                    .subscribeOn(Schedulers.io())
-                    .subscribe { response ->
-                        if (response.body() != null) {
-                            hostUser = response.body()!!
+                .subscribeOn(Schedulers.io())
+                .subscribe { response ->
+                    when (response) {
+                        is ApiResponse.Success -> {
+                            hostUser = response.body
                             createPlaylistForQueue()
-                        } else {
+                        }
+                        else -> {
+                            // TODO actively handle errors
                             Timber.e("Error retrieving current user")
                         }
                     }
-                    .addTo(subscriptions)
+                }
+                .addTo(subscriptions)
 
         } else {
             hostUser = AccessModel.getCurrentUser()
@@ -297,15 +324,14 @@ class HostProcessor @Inject constructor(
 
     private fun createPlaylistForQueue() {
         Timber.d("Creating playlist for the SocialQ")
-        spotifyService.createPlaylist(hostUser.id)
-                .subscribeOn(Schedulers.io())
-                .subscribe({ response ->
-                    if (response.body() == null) {
-                        Timber.e("Created playlist returned null")
-                        createPlaylistForQueue()
-                    } else {
+        spotifyService.createSocialQPlaylist(hostUser.id)
+            .subscribeOn(Schedulers.io())
+            .subscribe { response ->
+
+                when (response) {
+                    is ApiResponse.Success -> {
                         Timber.d("Successfully created playlist for queue")
-                        playlist = response.body()!!
+                        playlist = response.body
 
                         // If we have a base playlist ID load it up
                         if (basePlaylistId.isNotEmpty()) {
@@ -313,19 +339,23 @@ class HostProcessor @Inject constructor(
                             basePlaylistId = ""
                         } else {
                             stateStream.accept(QueueInitiationComplete(
-                                    queueTitle,
-                                    hostUser.display_name ?: "",
-                                    hostUser.id,
-                                    isQueueFairPlay,
-                                    emptyList()))
+                                queueTitle,
+                                hostUser.display_name ?: "",
+                                hostUser.id,
+                                isQueueFairPlay,
+                                emptyList()))
                         }
+
                     }
-                }, {
-                    // TODO: Stop after too many errors?
-                    Timber.e(it)
-                    createPlaylistForQueue()
-                })
-                .addTo(subscriptions)
+                    else -> {
+                        // TODO: Stop after too many errors?
+                        Timber.e("Failed to create playlist")
+                        createPlaylistForQueue()
+                    }
+                }
+
+            }
+            .addTo(subscriptions)
     }
 
     private fun loadBasePlaylist(playlistId: String) {
@@ -337,13 +367,15 @@ class HostProcessor @Inject constructor(
     }
 
     private fun getBasePlaylistTracks(playlistId: String, offset: Int = 0) {
-        spotifyService.getPlaylistTracks(playlistId, 50, offset)
-                .subscribeOn(Schedulers.io())
-                .subscribe { response ->
-                    if (response.body() == null) {
-                        // TODO: Try again?
-                    } else {
-                        val basePlaylistTracks = response.body()!!
+        spotifyService.getPlaylistTracks(
+            playlistId = playlistId,
+            offset = offset
+        )
+            .subscribeOn(Schedulers.io())
+            .subscribe { response ->
+                when (response) {
+                    is ApiResponse.Success -> {
+                        val basePlaylistTracks = response.body
                         for (playlistTrack in basePlaylistTracks.items) {
                             if (!playlistTrack.track.is_local) {
                                 playlistTracks.add(playlistTrack)
@@ -359,63 +391,65 @@ class HostProcessor @Inject constructor(
                             while (playlistTracks.size > 0) {
                                 val trackIndexToAdd = randomGenerator.nextInt(playlistTracks.size)
 
-                                Timber.d("123 - Adding to shuffled tracks")
+                                Timber.d("Adding to shuffled tracks")
                                 shuffledTracks.add(playlistTracks.removeAt(trackIndexToAdd))
                             }
+                            // Adding with base user ensure host added tracks are sorted within the base playlist
+                            // TODO: Should avoid hard coded strings here
+                            val baseUser = UserPublic(
+                                display_name = "Base Playlist",
+                                id = AppConstants.BASE_USER_ID,
+                                images = emptyList(),
+                                type = "",
+                                uri = ""
+                            )
+                            songRequests.addAll(shuffledTracks.map { SongRequestData(it.track.uri, baseUser) })
                             addPlaylistTracks()
                         }
                     }
+                    else -> {
+                        // TODO: Actively handle errors
+                    }
                 }
-                .addTo(subscriptions)
+            }
+            .addTo(subscriptions)
     }
 
     private fun addPlaylistTracks() {
-        // Adding with base user ensure host added tracks are sorted within the base playlist
-        // TODO: Should avoid string constancts here
-        val baseUser = UserPublic(
-                "Base Playlist",
-                AppConstants.BASE_USER_ID,
-                emptyList(),
-                "",
-                ""
-        )
-
         // Add tracks (100 at a time) to playlist and add request date
         var addRequestCount = 0
         var successfulAdds = 0
         while (shuffledTracks.size > 0) {
-            val urisArray = JsonArray()
             // Can only add max 100 tracks
-            for (i in 0..99) {
-                if (shuffledTracks.size == 0) {
-                    break
-                }
-                val track = shuffledTracks.removeAt(0)
-                val requestData = SongRequestData(track.track.uri, baseUser)
-                songRequests.add(requestData)
+            val tracksToAdd = shuffledTracks.take(100)
+            shuffledTracks = shuffledTracks.drop(100).toMutableList()
 
-                urisArray.add(track.track.uri)
-            }
-
-            // TODO: Wait for success responses before sending more track to ensure order
+            // TODO: Wait for success responses before sending more tracks to ensure order
             addRequestCount++
             spotifyService.addTracksToPlaylist(
-                    playlist.id,
-                    SpotifyApi.getAddTracksToPlaylistBody(urisArray)
+                playlist.id,
+                tracksToAdd.map { it.track.uri }
             )
-                    .subscribeOn(Schedulers.io())
-                    .subscribe({
-                        Timber.d(it.body().toString())
-                        successfulAdds++
-                        // TODO: This will cause base playlist to not load correctly if one of the
-                        // add requests fails. Need to implement a more elegant solution.
-                        if (successfulAdds == addRequestCount) {
-                            refreshPlaylist()
+                .subscribeOn(Schedulers.io())
+                .subscribe { response ->
+                    when (response) {
+                        is ApiResponse.Success -> {
+                            Timber.d(response.body.toString())
+                            successfulAdds++
+                            // TODO: This will cause base playlist to not load correctly if one of the
+                            // add requests fails. Need to implement a more elegant solution.
+                            if (successfulAdds == addRequestCount) {
+                                refreshPlaylist()
+                            }
                         }
-                    }, {
-                        Timber.e(it)
-                    })
-                    .addTo(subscriptions)
+                        else -> {
+                            // TODO actively handle errors
+                            Timber.e("Failed to add tracks to playlist")
+                        }
+                    }
+
+                }
+                .addTo(subscriptions)
         }
     }
 
@@ -443,12 +477,11 @@ class HostProcessor @Inject constructor(
             Timber.d("Received request for URI: " + action.trackUri + ", from User ID: " + action.userId)
 
             spotifyService.getUserById(action.userId)
-                    .subscribeOn(Schedulers.io())
-                    .subscribe({
-                        val user = it.body()
-
-                        if (user != null) {
-                            val songRequest = SongRequestData(action.trackUri, user)
+                .subscribeOn(Schedulers.io())
+                .subscribe { response ->
+                    when (response) {
+                        is ApiResponse.Success -> {
+                            val songRequest = SongRequestData(action.trackUri, response.body)
                             // Add track to request list
                             songRequests.add(songRequest)
 
@@ -468,11 +501,13 @@ class HostProcessor @Inject constructor(
                                 spotifyPlayer.queue(this, songRequest.uri)
                             }
                         }
-                    }, {
-                        Timber.e("Could not retrieve user for song request")
-                        Timber.e(it)
-                    })
-                    .addTo(subscriptions)
+                        else -> {
+                            // TODO: actively handle errors
+                            Timber.e("Could not retrieve user for song request, User ID: ${action.userId}")
+                        }
+                    }
+                }
+                .addTo(subscriptions)
         }
     }
 
@@ -494,43 +529,61 @@ class HostProcessor @Inject constructor(
     private fun addTrackToPlaylistPosition(uri: String, position: Int) {
 
         var newTrackPosition = if (position < 0) null else position
-        spotifyService.addTrackToPlaylist(playlist.id, uri, newTrackPosition)
-                .subscribeOn(Schedulers.io())
-                .subscribe({
-                    if (newTrackPosition == null) {
-                        newTrackPosition = playlistTracks.size
-                    }
+        spotifyService.addTracksToPlaylist(playlist.id, listOf(uri), newTrackPosition)
+            .subscribeOn(Schedulers.io())
+            .subscribe { response ->
+                when (response) {
+                    is ApiResponse.Success -> {
+                        if (newTrackPosition == null) {
+                            newTrackPosition = playlistTracks.size
+                        }
 
-                    pullNewTrack(newTrackPosition!!)
-                }, {
-                    Timber.e(it)
-                })
-                .addTo(subscriptions)
+                        pullNewTrack(newTrackPosition!!)
+                    }
+                    else -> {
+                        // TODO: Actively handle errors
+                        Timber.e("Failed to add track to playlist")
+                    }
+                }
+
+
+            }
+            .addTo(subscriptions)
     }
 
     private fun pullNewTrack(newTrackIndex: Int) {
         Timber.d("Pulling newly added track")
 
-        spotifyService.getPlaylistTracks(playlist.id, 1, newTrackIndex)
-                .subscribeOn(Schedulers.io())
-                .subscribe { response ->
-                    if (response.body() != null) {
-                        val pager = response.body()!!
+        spotifyService.getPlaylistTracks(
+            playlistId = playlist.id,
+            limit = 1,
+            offset = newTrackIndex
+        )
+            .subscribeOn(Schedulers.io())
+            .subscribe { response ->
+                when (response) {
+                    is ApiResponse.Success -> {
+                        val pager = response.body
                         playlistTracks.add(newTrackIndex, pager.items[0])
                         stateStream.accept(
-                                TrackAdded(
-                                        newTrackIndex,
-                                        newTrackIndex == currentPlaylistIndex,
-                                        spotifyPlayer.playbackState.isPlaying,
-                                        createDisplayList(playlistTracks.subList(
-                                                currentPlaylistIndex,
-                                                playlistTracks.size)
-                                        )
+                            TrackAdded(
+                                newTrackIndex,
+                                newTrackIndex == currentPlaylistIndex,
+                                spotifyPlayer.playbackState.isPlaying,
+                                createDisplayList(playlistTracks.subList(
+                                    currentPlaylistIndex,
+                                    playlistTracks.size)
                                 )
+                            )
                         )
                     }
+                    else -> {
+                        // TODO: Actively handle errors
+                        Timber.e("Failed to pull new track")
+                    }
                 }
-                .addTo(subscriptions)
+            }
+            .addTo(subscriptions)
     }
 
     /**
@@ -722,14 +775,14 @@ class HostProcessor @Inject constructor(
         var audioFocusResult = -1
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val playbackAttributes = AudioAttributes.Builder()
-                    .setUsage(AudioAttributes.USAGE_MEDIA)
-                    .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
-                    .build()
+                .setUsage(AudioAttributes.USAGE_MEDIA)
+                .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                .build()
             val request = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
-                    .setAudioAttributes(playbackAttributes)
-                    .setAcceptsDelayedFocusGain(true)
-                    .setOnAudioFocusChangeListener(this)
-                    .build()
+                .setAudioAttributes(playbackAttributes)
+                .setAcceptsDelayedFocusGain(true)
+                .setOnAudioFocusChangeListener(this)
+                .build()
             audioFocusResult = audioManager.requestAudioFocus(request)
         } else {
             audioFocusResult = audioManager.requestAudioFocus(this, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN)
@@ -793,11 +846,11 @@ class HostProcessor @Inject constructor(
                     currentPlaylistIndex++
                     Timber.d("UPDATING CURRENT PLAYING INDEX TO: $currentPlaylistIndex")
                     stateStream.accept(
-                            PlaybackNext(
-                                    createDisplayList(playlistTracks.subList(currentPlaylistIndex, playlistTracks.size)),
-                                    currentPlaylistIndex,
-                                    queueTitle
-                            )
+                        PlaybackNext(
+                            createDisplayList(playlistTracks.subList(currentPlaylistIndex, playlistTracks.size)),
+                            currentPlaylistIndex,
+                            queueTitle
+                        )
                     )
                 }
             }
@@ -835,8 +888,8 @@ class HostProcessor @Inject constructor(
             nextTrack = metadata.nextTrack.name
         }
         Timber.i("META DATA:\nFinished/Skipped: " + previousTrack
-                + "\nNow Playing : " + currentTrack
-                + "\nNext Track: " + nextTrack)
+            + "\nNow Playing : " + currentTrack
+            + "\nNext Track: " + nextTrack)
     }
 
     override fun onPlaybackError(error: Error) {
@@ -880,59 +933,70 @@ class HostProcessor @Inject constructor(
 
     sealed class HostState {
         data class QueueInitiationComplete(
-                val queueTitle: String,
-                val hostDisplayName: String,
-                val hostId: String,
-                val isFairPlay: Boolean,
-                val requestDataList: List<ClientRequestData>
+            val queueTitle: String,
+            val hostDisplayName: String,
+            val hostId: String,
+            val isFairPlay: Boolean,
+            val requestDataList: List<ClientRequestData>
         ) : HostState()
 
         object PlaybackResumed : HostState()
+
         data class PlaybackPaused(val tracksRemaining: Boolean) : HostState()
+
         data class PlaybackNext(
-                val trackRequestData: List<ClientRequestData>,
-                val currentPlaylistIndex: Int,
-                val queueTitle: String
+            val trackRequestData: List<ClientRequestData>,
+            val currentPlaylistIndex: Int,
+            val queueTitle: String
         ) : HostState()
 
         object AudioDeliveryDone : HostState()
+
         data class TrackAdded(
-                val newTrackIndex: Int,
-                val needDisplay: Boolean,
-                val isPlaying: Boolean,
-                val trackRequestData: List<ClientRequestData>
+            val newTrackIndex: Int,
+            val needDisplay: Boolean,
+            val isPlaying: Boolean,
+            val trackRequestData: List<ClientRequestData>
         ) : HostState()
 
         data class InitiateNewClient(
-                val newClientId: String,
-                val hostUserId: String,
-                val playlistId: String,
-                val currentPlaylistIndex: Int
+            val newClientId: String,
+            val hostUserId: String,
+            val playlistId: String,
+            val currentPlaylistIndex: Int
         ) : HostState()
 
         object DisplayLoading : HostState()
+
+        object CloseQueue : HostState()
     }
 
     sealed class HostAction {
         // TODO: See if we can avoid passing context
         data class ServiceStarted(
-                val context: Context,
-                val queueTitle: String,
-                val isQueueFairPlay: Boolean,
-                val basePlaylistId: String
+            val context: Context,
+            val queueTitle: String,
+            val isQueueFairPlay: Boolean,
+            val basePlaylistId: String
         ) : HostAction()
 
         object AccessTokenUpdated : HostAction()
+
         object RequestTogglePlayPause : HostAction()
+
         object RequestNext : HostAction()
+
         data class TrackRequested(
-                val userId: String,
-                val trackUri: String
+            val userId: String,
+            val trackUri: String
         ) : HostAction()
 
         data class HostTrackRequested(val trackUri: String) : HostAction()
+
         data class ClientConnected(val newClientId: String) : HostAction()
+
         object UnfollowPlaylist : HostAction()
+
         data class UpdatePlaylistName(val newPlaylistName: String) : HostAction()
     }
 }

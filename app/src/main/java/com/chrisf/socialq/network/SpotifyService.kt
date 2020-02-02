@@ -9,6 +9,7 @@ import com.chrisf.socialq.model.spotify.pager.ArtistPager
 import com.chrisf.socialq.model.spotify.pager.Pager
 import com.chrisf.socialq.model.spotify.pager.TrackPager
 import com.chrisf.socialq.network.ApiResponse.*
+import com.google.gson.JsonArray
 import io.reactivex.Completable
 import io.reactivex.Single
 import io.reactivex.schedulers.Schedulers
@@ -103,16 +104,17 @@ class SpotifyService @Inject constructor(
 
     fun getPlaylistTracks(
             playlistId: String,
+            limit: Int = 50,
             offset: Int = 0
     ): Single<ApiResponse<Pager<PlaylistTrack>>> {
-        return responseWrapper.wrap(spotifyApi.getPlaylistTracks(playlistId, 50, offset))
+        return responseWrapper.wrap(spotifyApi.getPlaylistTracks(playlistId, limit, offset))
     }
 
     fun createSocialQPlaylist(userId: String): Single<ApiResponse<Playlist>> {
         val requestBody = mapOf(
                 Pair("name", resources.getString(R.string.default_playlist_name)),
                 Pair("public", true),
-                Pair("collaborative", true),
+                Pair("collaborative", false),
                 Pair("description", resources.getString(R.string.default_playlist_description))
         )
 
@@ -137,7 +139,7 @@ class SpotifyService @Inject constructor(
         if (position != null) {
             requestBody["position"] = position
         }
-        requestBody["uris"] = trackUris.joinToString(separator = ",")
+        requestBody["uris"] = JsonArray().apply { trackUris.forEach { add(it) } }
 
         return responseWrapper.wrap(spotifyApi.addTracksToPlaylist(playlistId, requestBody.toMap()))
     }
@@ -146,7 +148,7 @@ class SpotifyService @Inject constructor(
         return responseWrapper.wrapEmptyResponse(spotifyApi.followPlaylist(playlistId))
     }
 
-    fun unFollowPlaylist(playlistId: String): Single<ApiResponse<Unit>> {
+    fun unfollowPlaylist(playlistId: String): Single<ApiResponse<Unit>> {
         return responseWrapper.wrapEmptyResponse(spotifyApi.unfollowPlaylist(playlistId))
     }
 }
