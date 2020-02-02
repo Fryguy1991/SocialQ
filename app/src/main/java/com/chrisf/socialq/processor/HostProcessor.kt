@@ -16,7 +16,7 @@ import com.chrisf.socialq.model.spotify.Playlist
 import com.chrisf.socialq.model.spotify.PlaylistTrack
 import com.chrisf.socialq.model.spotify.UserPrivate
 import com.chrisf.socialq.model.spotify.UserPublic
-import com.chrisf.socialq.network.SpotifyService
+import com.chrisf.socialq.network.SpotifyApi
 import com.chrisf.socialq.processor.HostProcessor.HostAction
 import com.chrisf.socialq.processor.HostProcessor.HostAction.*
 import com.chrisf.socialq.processor.HostProcessor.HostState
@@ -31,7 +31,7 @@ import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 class HostProcessor @Inject constructor(
-        private val spotifyService: SpotifyService,
+        private val spotifyService: SpotifyApi,
         lifecycle: Lifecycle?,
         subscriptions: CompositeDisposable
 ) : BaseProcessor<HostState, HostAction>(lifecycle, subscriptions),
@@ -190,11 +190,7 @@ class HostProcessor @Inject constructor(
         spotifyService.unfollowPlaylist(playlist.id)
                 .subscribeOn(Schedulers.io())
                 .subscribe({
-                    if (it.code() == 200) {
-                        Timber.d("Successfully unfollowed playlist")
-                    } else {
-                        Timber.e("Error Unfollowing playlist")
-                    }
+                    Timber.d("Successfully unfollowed playlist")
                 }, {
                     Timber.e(it)
                 })
@@ -204,15 +200,11 @@ class HostProcessor @Inject constructor(
     private fun updatePlaylistName(action: UpdatePlaylistName) {
         spotifyService.changePlaylistDetails(
                 playlist.id,
-                SpotifyService.getPlaylistDetailsBody(action.newPlaylistName)
+                SpotifyApi.getPlaylistDetailsBody(action.newPlaylistName)
         )
                 .subscribeOn(Schedulers.io())
                 .subscribe({
-                    if (it.code() == 200) {
-                        Timber.d("Successfully changed playlist name")
-                    } else {
-                        Timber.e("Error updating playlist name")
-                    }
+                    Timber.d("Successfully changed playlist name")
                 }, {
                     Timber.e(it)
                 })
@@ -305,7 +297,7 @@ class HostProcessor @Inject constructor(
 
     private fun createPlaylistForQueue() {
         Timber.d("Creating playlist for the SocialQ")
-        spotifyService.createSocialQPlaylist(hostUser.id)
+        spotifyService.createPlaylist(hostUser.id)
                 .subscribeOn(Schedulers.io())
                 .subscribe({ response ->
                     if (response.body() == null) {
@@ -409,7 +401,7 @@ class HostProcessor @Inject constructor(
             addRequestCount++
             spotifyService.addTracksToPlaylist(
                     playlist.id,
-                    SpotifyService.getAddTracksToPlaylistBody(urisArray)
+                    SpotifyApi.getAddTracksToPlaylistBody(urisArray)
             )
                     .subscribeOn(Schedulers.io())
                     .subscribe({

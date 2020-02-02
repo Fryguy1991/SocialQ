@@ -113,4 +113,7 @@
     <string name="auth_fail_description">Spotify authentication failed. Retry?</string>
     <string name="retry">Retry</string>
     <string name="close_app">Close App</string>
+
+    <!-- Network String -->
+    <string name="default_playlist_description">A playlist created by the SocialQ app</string>
 </resources>

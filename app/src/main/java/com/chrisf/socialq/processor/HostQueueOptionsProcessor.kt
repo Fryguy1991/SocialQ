@@ -5,7 +5,7 @@ import androidx.lifecycle.Lifecycle
 import com.chrisf.socialq.R
 import com.chrisf.socialq.extensions.addTo
 import com.chrisf.socialq.model.spotify.PlaylistSimple
-import com.chrisf.socialq.network.SpotifyService
+import com.chrisf.socialq.network.SpotifyApi
 import com.chrisf.socialq.processor.HostQueueOptionsProcessor.HostQueueOptionsAction
 import com.chrisf.socialq.processor.HostQueueOptionsProcessor.HostQueueOptionsAction.*
 import com.chrisf.socialq.processor.HostQueueOptionsProcessor.HostQueueOptionsState
@@ -18,7 +18,7 @@ import javax.inject.Inject
 
 class HostQueueOptionsProcessor @Inject constructor(
         private val resources: Resources,
-        private val spotifyService: SpotifyService,
+        private val spotifyService: SpotifyApi,
         lifecycle: Lifecycle,
         subscriptions: CompositeDisposable
 ) : BaseProcessor<HostQueueOptionsState, HostQueueOptionsAction>(lifecycle, subscriptions) {

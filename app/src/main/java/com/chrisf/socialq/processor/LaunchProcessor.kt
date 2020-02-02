@@ -7,7 +7,7 @@ import com.chrisf.socialq.enums.SpotifyUserType
 import com.chrisf.socialq.extensions.addTo
 import com.chrisf.socialq.model.AccessModel
 import com.chrisf.socialq.model.QueueModel
-import com.chrisf.socialq.network.SpotifyService
+import com.chrisf.socialq.network.SpotifyApi
 import com.chrisf.socialq.processor.LaunchProcessor.LaunchAction
 import com.chrisf.socialq.processor.LaunchProcessor.LaunchAction.*
 import com.chrisf.socialq.processor.LaunchProcessor.LaunchState
@@ -28,7 +28,7 @@ import java.util.regex.Pattern
 import javax.inject.Inject
 
 class LaunchProcessor @Inject constructor(
-        private val spotifyService: SpotifyService,
+        private val spotifyService: SpotifyApi,
         lifecycle: Lifecycle,
         subscriptions: CompositeDisposable
 ) : BaseProcessor<LaunchState, LaunchAction>(lifecycle, subscriptions) {

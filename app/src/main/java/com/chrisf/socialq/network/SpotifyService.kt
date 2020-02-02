@@ -1,139 +1,206 @@
 package com.chrisf.socialq.network
 
+import android.content.res.Resources
+import androidx.annotation.Size
+import com.chrisf.socialq.R
 import com.chrisf.socialq.model.spotify.*
 import com.chrisf.socialq.model.spotify.pager.AlbumSimplePager
 import com.chrisf.socialq.model.spotify.pager.ArtistPager
 import com.chrisf.socialq.model.spotify.pager.Pager
 import com.chrisf.socialq.model.spotify.pager.TrackPager
-import com.google.gson.JsonArray
+import com.chrisf.socialq.network.ApiResponse.*
+import io.reactivex.Completable
 import io.reactivex.Single
+import io.reactivex.schedulers.Schedulers
 import retrofit2.Response
-import retrofit2.http.*
-import java.util.HashMap
+import java.lang.IllegalStateException
+import java.net.SocketTimeoutException
+import javax.inject.Inject
 
-@JvmSuppressWildcards
-interface SpotifyService {
-
-    @GET("search?type=track&market=from_token")
+class SpotifyService @Inject constructor(
+        private val spotifyApi: SpotifyApi,
+        private val responseWrapper: ResponseWrapper,
+        private val resources: Resources
+) {
+    /**
+     * ##########
+     * # SEARCH #
+     * ##########
+     */
     fun searchTracks(
-            @Query("q") term: String,
-            @Query("limit") limit: Int = 50,
-            @Query("offset") offset: Int = 0
-            ) : Single<Response<TrackPager>>
-
-    @GET("search?type=album&market=from_token")
-    fun searchAlbums(
-            @Query("q") term: String,
-            @Query("limit") limit: Int = 50,
-            @Query("offset") offset: Int = 0
-    ) : Single<Response<AlbumSimplePager>>
-
-    @GET("search?type=artist&market=from_token")
-    fun searchArtists(
-            @Query("q") term: String,
-            @Query("limit") limit: Int = 50,
-            @Query("offset") offset: Int = 0
-    ) : Single<Response<ArtistPager>>
-
-    @GET("artists/{artist_id}")
-    fun getArtist(
-            @Path("artist_id") artistId: String
-    ) : Single<Response<Artist>>
-
-    @GET("artists/{artist_id}/albums?country=from_token")
-    fun getArtistAlbums(
-            @Path("artist_id") artistId: String,
-            @Query("limit") limit: Int = 50,
-            @Query("offset") offset: Int = 0
-    ) : Single<Response<Pager<AlbumSimple>>>
-
-    @GET("artists/{artist_id}/top-tracks?country=from_token")
-    fun getArtistTopTracks(@Path("artist_id") artistId: String) : Single<Response<TracksObject>>
-
-    @GET("albums/{album_id}")
-    fun getFullAlbum(@Path("album_id") albumId: String) : Single<Response<Album>>
-
-    @GET("me")
-    fun getCurrentUser(): Single<Response<UserPrivate>>
-
-    @GET("me/playlists")
-    fun getCurrentUsersPlaylists(
-            @Query("limit") limit: Int = 50,
-            @Query("offset") offset: Int = 0
-    ): Single<Response<Pager<PlaylistSimple>>>
-
-    @GET("playlists/{playlist_id}/tracks")
-    fun getPlaylistTracks(
-            @Path("playlist_id") playlistId: String,
-            @Query("limit") limit: Int = 50,
-            @Query("offset") offset: Int = 0
-            // market
-    ): Single<Response<Pager<PlaylistTrack>>>
-
-    @GET("users/{user_id}")
-    fun getUserById(@Path("user_id") userId: String) : Single<Response<UserPublic>>
-
-    @Headers("Content-Type: application/json")
-    @POST("users/{user_id}/playlists")
-    fun createSocialQPlaylist(
-            @Path("user_id") userId: String,
-            @Body body: Map<String, Any> = getCreatePlaylistBody()
-    ): Single<Response<Playlist>>
-
-    @Headers("Content-Type: application/json")
-    @PUT("playlists/{playlist_id}")
-    fun changePlaylistDetails(
-            @Path("playlist_id") playlistId: String,
-            @Body body: Map<String, Any>
-    ): Single<Response<Void>>
-
-    @Headers("Content-Type: application/json")
-    @POST("playlists/{playlist_id}/tracks")
-    fun addTrackToPlaylist(
-            @Path("playlist_id") playlistId: String,
-            @Query("uris") trackUri: String,
-            @Query("position") position: Int? = null
-    ): Single<Response<SnapshotId>>
-
-    @Headers("Content-Type: application/json")
-    @POST("playlists/{playlist_id}/tracks")
-    fun addTracksToPlaylist(
-            @Path("playlist_id") playlistId: String,
-            @Body body: Map<String, Any>
-    ): Single<Response<SnapshotId>>
-
-    @Headers("Content-Type: application/json")
-    @PUT("playlists/{playlist_id}/followers")
-    fun followPlaylist(@Path("playlist_id") playlistId: String): Single<Response<Void>>
-
-    @DELETE("playlists/{playlist_id}/followers")
-    fun unfollowPlaylist(@Path("playlist_id") playlistId: String): Single<Response<Void>>
-
-    companion object {
-        const val SPOTIFY_BASE_API_ENDPOINT = "https://api.spotify.com/v1/"
-
-        fun getCreatePlaylistBody() : Map<String, Any> {
-            val requestBody = HashMap<String, Any>()
-            requestBody["name"] = "SocialQ Playlist"
-            requestBody["public"] = true
-            requestBody["collaborative"] = false
-            requestBody["description"] = "Playlist created by the SocialQ App."
-            return requestBody
-        }
-
-        fun getPlaylistDetailsBody(playlistName: String) : Map<String, Any> {
-            val requestBody = HashMap<String, Any>()
-            requestBody["name"] = playlistName
-            return requestBody
-        }
-
-        fun getAddTracksToPlaylistBody(tracksArray: JsonArray, position: Int? = null) : Map<String, Any>{
-            val requestBody = HashMap<String, Any>()
-            requestBody["uris"] = tracksArray
-            if (position != null) {
-                requestBody["position"] = position
-            }
-            return requestBody
-        }
+            searchTerm: String,
+            offset: Int = 0
+    ): Single<ApiResponse<TrackPager>> {
+        return responseWrapper.wrap(spotifyApi.searchTracks(searchTerm, 50, offset))
     }
+
+    fun searchAlbums(
+            searchTerm: String,
+            offset: Int = 0
+    ): Single<ApiResponse<AlbumSimplePager>> {
+        return responseWrapper.wrap(spotifyApi.searchAlbums(searchTerm, 50, offset))
+    }
+
+    fun searchArtists(
+            searchTerm: String,
+            offset: Int = 0
+    ): Single<ApiResponse<ArtistPager>> {
+        return responseWrapper.wrap(spotifyApi.searchArtists(searchTerm, 50, offset))
+    }
+
+    /**
+     * ###########
+     * # Artists #
+     * ###########
+     */
+    fun getArtist(artistId: String): Single<ApiResponse<Artist>> {
+        return responseWrapper.wrap(spotifyApi.getArtist(artistId))
+    }
+
+    fun getArtistAlbums(
+            artistId: String,
+            offset: Int = 0
+    ): Single<ApiResponse<Pager<AlbumSimple>>> {
+        return responseWrapper.wrap(spotifyApi.getArtistAlbums(artistId, 50, offset))
+    }
+
+    fun getArtistTopTracks(
+            artistId: String
+    ): Single<ApiResponse<TracksObject>> {
+        return responseWrapper.wrap(spotifyApi.getArtistTopTracks(artistId))
+    }
+
+    /**
+     * ##########
+     * # ALBUMS #
+     * ##########
+     */
+    fun getFullAlbum(albumId: String): Single<ApiResponse<Album>> {
+        return responseWrapper.wrap(spotifyApi.getFullAlbum(albumId))
+    }
+
+    /**
+     * #########
+     * # USERS #
+     * #########
+     */
+    fun getCurrentUser(): Single<ApiResponse<UserPrivate>> {
+        return responseWrapper.wrap(spotifyApi.getCurrentUser())
+    }
+
+    fun getUserById(userId: String): Single<ApiResponse<UserPublic>> {
+        return responseWrapper.wrap(spotifyApi.getUserById(userId))
+    }
+
+    /**
+     * #############
+     * # PLAYLISTS #
+     * #############
+     */
+    fun getCurrentUserPlaylist(offset: Int = 0): Single<ApiResponse<Pager<PlaylistSimple>>> {
+        return responseWrapper.wrap(spotifyApi.getCurrentUsersPlaylists(50, offset))
+    }
+
+    fun getPlaylistTracks(
+            playlistId: String,
+            offset: Int = 0
+    ): Single<ApiResponse<Pager<PlaylistTrack>>> {
+        return responseWrapper.wrap(spotifyApi.getPlaylistTracks(playlistId, 50, offset))
+    }
+
+    fun createSocialQPlaylist(userId: String): Single<ApiResponse<Playlist>> {
+        val requestBody = mapOf(
+                Pair("name", resources.getString(R.string.default_playlist_name)),
+                Pair("public", true),
+                Pair("collaborative", true),
+                Pair("description", resources.getString(R.string.default_playlist_description))
+        )
+
+        return responseWrapper.wrap(spotifyApi.createPlaylist(userId, requestBody))
+    }
+
+    fun changePlaylistName(
+            playlistId: String,
+            playlistName: String
+    ): Single<ApiResponse<Unit>> {
+        val requestBody = mapOf<String, Any>(Pair("name", playlistName))
+
+        return responseWrapper.wrapEmptyResponse(spotifyApi.changePlaylistDetails(playlistId, requestBody))
+    }
+
+    fun addTracksToPlaylist(
+            playlistId: String,
+            @Size(min = 1, max = 100) trackUris: List<String>,
+            position: Int? = null
+    ): Single<ApiResponse<SnapshotId>> {
+        val requestBody = mutableMapOf<String, Any>()
+        if (position != null) {
+            requestBody["position"] = position
+        }
+        requestBody["uris"] = trackUris.joinToString(separator = ",")
+
+        return responseWrapper.wrap(spotifyApi.addTracksToPlaylist(playlistId, requestBody.toMap()))
+    }
+
+    fun followPlaylist(playlistId: String): Single<ApiResponse<Unit>> {
+        return responseWrapper.wrapEmptyResponse(spotifyApi.followPlaylist(playlistId))
+    }
+
+    fun unFollowPlaylist(playlistId: String): Single<ApiResponse<Unit>> {
+        return responseWrapper.wrapEmptyResponse(spotifyApi.unfollowPlaylist(playlistId))
+    }
+}
+
+class ResponseWrapper @Inject constructor() {
+    fun <T> wrap(stream: Single<Response<T>>): Single<ApiResponse<T>> {
+        return stream.subscribeOn(Schedulers.io())
+                .map {
+                    when {
+                        !it.isSuccessful -> NetworkError(it.code())
+                        it.body() == null -> UnknownError(IllegalStateException("Bad Response"))
+                        else -> Success(it.body()!!)
+                    }
+                }
+                .onErrorResumeNext {
+                    Single.just(
+                            if (it is SocketTimeoutException) {
+                                NetworkTimeout
+                            } else {
+                                UnknownError(it)
+                            }
+                    )
+                }
+    }
+
+    fun wrapEmptyResponse(stream: Completable): Single<ApiResponse<Unit>> {
+        return stream.toSingleDefault(Success(Unit) as ApiResponse<Unit>)
+                .onErrorResumeNext {
+                    Single.just(
+                            if (it is SocketTimeoutException) {
+                                NetworkTimeout
+                            } else {
+                                UnknownError(it)
+                            }
+                    )
+                }
+    }
+}
+
+sealed class ApiResponse<out T> {
+    data class Success<out T>(val body: T) : ApiResponse<T>()
+    data class NetworkError(val code: Int) : ApiResponse<Nothing>()
+    object NetworkTimeout : ApiResponse<Nothing>()
+    data class UnknownError(val exception: Throwable) : ApiResponse<Nothing>()
+}
+
+enum class SpotifyErrorCodes(val code: Int) {
+    NOT_MODIFIED(304),
+    BAD_REQUEST(400),
+    UNAUTHORIZED(401),
+    FORBIDDEN(403),
+    NOT_FOUND(404),
+    TOO_MANY_REQUESTS(429),
+    INTERNAL_SERVICE_ERROR(500),
+    BAD_GATEWAY(502),
+    SERVICE_UNAVAILABLE(503)
 }

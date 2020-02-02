@@ -7,7 +7,7 @@ import com.chrisf.socialq.enums.NearbyDevicesMessage.*
 import com.chrisf.socialq.extensions.addTo
 import com.chrisf.socialq.model.spotify.PlaylistTrack
 import com.chrisf.socialq.model.spotify.UserPrivate
-import com.chrisf.socialq.network.SpotifyService
+import com.chrisf.socialq.network.SpotifyApi
 import com.chrisf.socialq.processor.ClientProcessor.ClientAction
 import com.chrisf.socialq.processor.ClientProcessor.ClientAction.*
 import com.chrisf.socialq.processor.ClientProcessor.ClientState
@@ -21,7 +21,7 @@ import java.util.regex.Pattern
 import javax.inject.Inject
 
 class ClientProcessor @Inject constructor(
-        private val spotifyService: SpotifyService,
+        private val spotifyService: SpotifyApi,
         lifecycle: Lifecycle?,
         subscriptions: CompositeDisposable
 ) : BaseProcessor<ClientState, ClientAction>(lifecycle, subscriptions) {
@@ -284,11 +284,7 @@ class ClientProcessor @Inject constructor(
         spotifyService.followPlaylist(playlistId)
                 .subscribeOn(Schedulers.io())
                 .subscribe({
-                    if (it.isSuccessful) {
-                        Timber.d("Successfully followed playlist")
-                    } else {
-                        Timber.e("Failed to follow playlist")
-                    }
+                    Timber.d("Successfully followed playlist")
 
                     if (!hostDisconnect) {
                         successfulConnectionFlag = false

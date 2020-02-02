@@ -132,4 +132,7 @@ dependencies {
 
     // Anko references
     implementation 'org.jetbrains.anko:anko:0.10.8'
+
+    // Rx Permissions
+    implementation 'com.github.tbruyelle:rxpermissions:0.10.2'
 }
