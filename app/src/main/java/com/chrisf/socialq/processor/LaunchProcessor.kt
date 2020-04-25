@@ -1,12 +1,12 @@
 package com.chrisf.socialq.processor
 
-import android.os.SystemClock
 import androidx.lifecycle.Lifecycle
 import com.chrisf.socialq.AppConstants
+import com.chrisf.socialq.SocialQPreferences
 import com.chrisf.socialq.enums.SpotifyUserType
-import com.chrisf.socialq.model.AccessModel
 import com.chrisf.socialq.model.QueueModel
-import com.chrisf.socialq.network.SpotifyApi
+import com.chrisf.socialq.network.ApiResponse
+import com.chrisf.socialq.network.SpotifyService
 import com.chrisf.socialq.processor.LaunchProcessor.LaunchAction
 import com.chrisf.socialq.processor.LaunchProcessor.LaunchAction.*
 import com.chrisf.socialq.processor.LaunchProcessor.LaunchState
@@ -28,7 +28,8 @@ import java.util.regex.Pattern
 import javax.inject.Inject
 
 class LaunchProcessor @Inject constructor(
-        private val spotifyService: SpotifyApi,
+        private val preferences: SocialQPreferences,
+        private val spotifyService: SpotifyService,
         lifecycle: Lifecycle,
         subscriptions: CompositeDisposable
 ) : BaseProcessor<LaunchState, LaunchAction>(lifecycle, subscriptions) {
@@ -55,19 +56,13 @@ class LaunchProcessor @Inject constructor(
             return
         }
 
-        if (AccessModel.getAccessToken().isNullOrEmpty()) {
+        if (preferences.authCode.isNullOrBlank()) {
             isRequestingAuth = true
             stateStream.accept(RequestAuthorization)
             return
         }
 
-        val user = AccessModel.getCurrentUser()
-        if (user == null) {
-            getCurrentUser()
-        } else {
-            val isPremium = SpotifyUserType.getSpotifyUserTypeFromProductType(user.product) == SpotifyUserType.PREMIUM
-            stateStream.accept(DisplayCanHostQueue(isPremium))
-        }
+        getCurrentUser()
 
         if (action.hasLocationPermission) {
             searchForQueues()
@@ -87,22 +82,20 @@ class LaunchProcessor @Inject constructor(
     private fun getCurrentUser() {
         spotifyService.getCurrentUser()
                 .subscribeOn(Schedulers.io())
-                .subscribe({
-                    val user = it.body()
-
-                    if (user == null) {
-                        Timber.e("Error retrieving current user")
-                        // TODO: Try again?
-                    } else {
-                        AccessModel.setCurrentUser(user)
-
-                        val isPremium = SpotifyUserType.getSpotifyUserTypeFromProductType(user.product) == SpotifyUserType.PREMIUM
-                        stateStream.accept(DisplayCanHostQueue(isPremium))
+                .map {
+                    when (it) {
+                        is ApiResponse.Success -> {
+                            val isPremium = SpotifyUserType
+                                    .getSpotifyUserTypeFromProductType(it.body.product) == SpotifyUserType.PREMIUM
+                            DisplayCanHostQueue(isPremium)
+                        }
+                        is ApiResponse.NetworkError -> TODO()
+                        ApiResponse.NetworkTimeout -> TODO()
+                        ApiResponse.Unauthorized -> TODO()
+                        ApiResponse.UnknownError -> TODO()
                     }
-                }, {
-                    Timber.e(it)
-                    Timber.e("Error retrieving current user")
-                })
+                }
+                .subscribe(stateStream)
                 .addTo(subscriptions)
     }
 
@@ -163,15 +156,15 @@ class LaunchProcessor @Inject constructor(
     }
 
     private fun onAuthCodeRetrieved(action: AuthCodeRetrieved) {
-        AccessModel.setAuthorizationCode(action.code)
-        if (AccessModel.getAuthorizationCode().isNullOrEmpty()) {
+        preferences.authCode = action.code
+        if (action.code.isBlank()) {
             Timber.e("Error invalid authorization code")
             isRequestingAuth = false
             stateStream.accept(AuthorizationFailed)
         } else {
             Timber.d("Have authorization code. Request access/refresh tokens")
             val client = OkHttpClient()
-            val request = Request.Builder().url(String.format(AppConstants.AUTH_REQ_URL_FORMAT, AccessModel.getAuthorizationCode())).build()
+            val request = Request.Builder().url(String.format(AppConstants.AUTH_REQ_URL_FORMAT, action.code)).build()
 
             client.newCall(request).enqueue(authCallback)
         }
@@ -184,7 +177,7 @@ class LaunchProcessor @Inject constructor(
 
         override fun onResponse(call: Call, response: okhttp3.Response) {
             val responseString = response.body()?.string()
-            if (response.isSuccessful && responseString!= null) {
+            if (response.isSuccessful && responseString != null) {
                 val bodyJson = JSONObject(responseString).getJSONObject(AppConstants.JSON_BODY_KEY)
 
                 val accessToken = bodyJson.getString(AppConstants.JSON_ACCESS_TOKEN_KEY)
@@ -193,17 +186,13 @@ class LaunchProcessor @Inject constructor(
 
                 Timber.d("Received authorization:\nAccess Token: $accessToken\nRefresh Token: $refreshToken\nExpires In: $expiresIn seconds")
 
-                // Store refresh token
-                AccessModel.setRefreshToken(refreshToken)
-
-                // Calculate when access token expires (response "ExpiresIn" is in seconds, subtract a minute to worry less about timing)
-                val expireTime = SystemClock.elapsedRealtime() + (expiresIn - 60) * 1000
-                // Set access token and expire time into model
-                AccessModel.setAccess(accessToken, expireTime)
+                preferences.accessToken = accessToken
+                preferences.refreshToken = refreshToken
 
                 isRequestingAuth = false
 
-                // Schedule access token refresh to occur every 20 minutes
+                // Schedule access token refresh to occur every 20 minutes. Access expires every 60 minutes, this
+                // should ensure that a user never loses access
                 stateStream.accept(StartAuthRefreshJob)
                 searchForQueues()
                 getCurrentUser()
@@ -224,6 +213,7 @@ class LaunchProcessor @Inject constructor(
                 val hostEndpoint: String,
                 val queueTitle: String
         ) : LaunchState()
+
         object AuthorizationFailed : LaunchState()
     }
 
@@ -235,6 +225,7 @@ class LaunchProcessor @Inject constructor(
                 val endpointId: String,
                 val endpointInfo: DiscoveredEndpointInfo
         ) : LaunchAction()
+
         data class EndpointLost(val endpointId: String) : LaunchAction()
         data class QueueSelected(val queue: QueueModel) : LaunchAction()
         data class AuthCodeRetrieved(val code: String) : LaunchAction()

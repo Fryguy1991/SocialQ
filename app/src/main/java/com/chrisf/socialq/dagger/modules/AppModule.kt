@@ -3,7 +3,9 @@ package com.chrisf.socialq.dagger.modules
 import android.content.Context
 import android.content.SharedPreferences
 import android.content.res.Resources
-import com.chrisf.socialq.model.AccessModel
+import com.chrisf.socialq.DefaultSocialQPreferences
+import com.chrisf.socialq.SocialQPreferences
+import com.chrisf.socialq.network.AuthInterceptor
 import com.chrisf.socialq.network.SpotifyApi
 import com.google.gson.GsonBuilder
 import dagger.Module
@@ -30,21 +32,22 @@ class AppModule(private val app: Context) {
     }
 
     @Provides
+    @Singleton
     fun providesSharedPrefs(): SharedPreferences {
         return app.getSharedPreferences("socialq_prefs", Context.MODE_PRIVATE)
     }
 
     @Provides
     @Singleton
-    fun providesSpotifyApi(): SpotifyApi {
+    fun providesSocialQSharedPrefs(preferences: SharedPreferences): SocialQPreferences {
+        return DefaultSocialQPreferences(preferences)
+    }
+
+    @Provides
+    @Singleton
+    fun providesSpotifyApi(authInterceptor: AuthInterceptor): SpotifyApi {
         val builder = OkHttpClient.Builder()
-        builder.addInterceptor { chain ->
-            val request = chain.request()
-                    .newBuilder()
-                    .addHeader("Authorization", "Bearer " + AccessModel.getAccessToken())
-                    .build()
-            chain.proceed(request)
-        }
+        builder.addInterceptor(authInterceptor)
         builder.addInterceptor (
             HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY)
         )

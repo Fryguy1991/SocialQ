@@ -83,22 +83,6 @@ class HostService : BaseService<HostState, HostAction, HostProcessor>(), BitmapL
     // Flag indicating success of advertising (used during activity destruction)
     private var successfulAdvertisingFlag = false
 
-    private val hostServiceBroadcastReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context?, intent: Intent?) {
-            if (intent != null) {
-                when (intent.action) {
-                    AppConstants.BR_INTENT_ACCESS_TOKEN_UPDATED -> {
-                        Timber.d("Access token has been refreshed, update player access token")
-                        actionStream.accept(AccessTokenUpdated)
-                    }
-                    else -> {
-                        // Not handling other actions here, do nothing
-                    }
-                }
-            }
-        }
-    }
-
     override fun resolveDependencies(serviceComponent: ServiceComponent) {
         serviceComponent.inject(this)
     }
@@ -162,10 +146,6 @@ class HostService : BaseService<HostState, HostAction, HostProcessor>(), BitmapL
 
                     mediaSession = MediaSessionCompat(baseContext, AppConstants.HOST_MEDIA_SESSION_TAG)
 
-                    // Register to receive access token update events
-                    LocalBroadcastManager.getInstance(applicationContext).registerReceiver(
-                            hostServiceBroadcastReceiver, IntentFilter(AppConstants.BR_INTENT_ACCESS_TOKEN_UPDATED))
-
                     // Start service in the foreground
                     startForeground(AppConstants.HOST_SERVICE_ID, notificationBuilder.build())
 
@@ -218,9 +198,6 @@ class HostService : BaseService<HostState, HostAction, HostProcessor>(), BitmapL
 
         // Let app know that the service has ended
         App.hasServiceBeenStarted = false
-
-        // Unregister broadcast receiver
-        LocalBroadcastManager.getInstance(applicationContext).unregisterReceiver(hostServiceBroadcastReceiver)
 
         super.onDestroy()
     }

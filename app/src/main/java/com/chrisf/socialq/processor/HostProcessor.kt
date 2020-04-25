@@ -6,9 +6,8 @@ import android.media.AudioFocusRequest
 import android.media.AudioManager
 import android.net.ConnectivityManager
 import android.os.Build
-import androidx.lifecycle.Lifecycle
 import com.chrisf.socialq.AppConstants
-import com.chrisf.socialq.model.AccessModel
+import com.chrisf.socialq.SocialQPreferences
 import com.chrisf.socialq.model.ClientRequestData
 import com.chrisf.socialq.model.SongRequestData
 import com.chrisf.socialq.model.spotify.Playlist
@@ -31,53 +30,67 @@ import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 class HostProcessor @Inject constructor(
-    private val spotifyService: SpotifyService,
-    lifecycle: Lifecycle?,
+        private val preferences: SocialQPreferences,
+        private val spotifyService: SpotifyService,
     subscriptions: CompositeDisposable
-) : BaseProcessor<HostState, HostAction>(lifecycle, subscriptions),
+) : BaseProcessor<HostState, HostAction>(null, subscriptions),
     ConnectionStateCallback,
     Player.NotificationCallback,
     Player.OperationCallback,
     AudioManager.OnAudioFocusChangeListener {
     // Playlist object for the queue
     private lateinit var playlist: Playlist
+
     // Tracks from queue playlist
     private val playlistTracks = mutableListOf<PlaylistTrack>()
 
     // AUDIO ELEMENTS
     // Reference to system audio manager
     private lateinit var audioManager: AudioManager
+
     // Flag to resume playback when audio focus is returned
     private var resumeOnAudioFocus = false
+
     // Reference to current audio focus state
     private var audioFocusState = -1
+
     // Member player object used for playing audio
     private lateinit var spotifyPlayer: SpotifyPlayer
+
     // Integer to keep track of song index in the queue
     private var currentPlaylistIndex = 0
+
     // Boolean flag to store when when delivery is done
     private var audioDeliveryDoneFlag = true
+
     // Boolean flag to store if MetaData is incorrect
     private var incorrectMetaDataFlag = false
+
     // Boolean flag for if a pause event was requested by the user
     private var userRequestedPause = false
+
     // Boolean flag for if the player is active
     private var isPlayerActive = false
 
     // QUEUE SORTING/FAIR PLAY ELEMENTS
     // Boolean flag to store if queue should be "fair play"
     private var isQueueFairPlay: Boolean = false
+
     // List containing client song requests
     private val songRequests = mutableListOf<SongRequestData>()
+
     // Flag for storing if a base playlist has been loaded
     private var wasBasePlaylistLoaded = false
+
     // List of shuffled tracks to be added to the playlist
     private var shuffledTracks = mutableListOf<PlaylistTrack>()
 
     // Title of the SocialQ
     private lateinit var queueTitle: String
+
     // ID of the base playlist to load
     private var basePlaylistId: String = ""
+
     // User object of the host's Spotify account
     private lateinit var hostUser: UserPrivate
 
@@ -105,7 +118,6 @@ class HostProcessor @Inject constructor(
             is UnfollowPlaylist -> unfollowPlaylist(action)
             is UpdatePlaylistName -> updatePlaylistName(action)
             is HostTrackRequested -> handleHostTrackRequest(action)
-            is AccessTokenUpdated -> onAccessTokenUpdated()
         }
     }
 
@@ -269,14 +281,9 @@ class HostProcessor @Inject constructor(
             .addTo(subscriptions)
     }
 
-    private fun onAccessTokenUpdated() {
-        spotifyPlayer.login(AccessModel.getAccessToken())
-    }
-
-
     private fun initPlayer(context: Context) {
         // Setup Spotify player
-        val playerConfig = Config(context, AccessModel.getAccessToken(), AppConstants.CLIENT_ID)
+        val playerConfig = Config(context, preferences.accessToken, AppConstants.CLIENT_ID)
         spotifyPlayer = Spotify.getPlayer(playerConfig, this, object : SpotifyPlayer.InitializationObserver {
             override fun onInitialized(player: SpotifyPlayer) {
                 Timber.d("Player initialized")
@@ -288,6 +295,11 @@ class HostProcessor @Inject constructor(
                     getNetworkConnectivity(context))
                 player.addConnectionStateCallback(this@HostProcessor)
                 player.addNotificationCallback(this@HostProcessor)
+
+                // Ensure player always has the latest access token
+                preferences.accessTokenObservable
+                        .subscribe { spotifyPlayer.login(it) }
+                        .addTo(subscriptions)
             }
 
             override fun onError(error: Throwable) {
@@ -299,8 +311,7 @@ class HostProcessor @Inject constructor(
     private fun initHost() {
         Timber.d("Initializing Host (init player, create playlist, load base playlist if selected")
 
-        if (AccessModel.getCurrentUser() == null) {
-            spotifyService.getCurrentUser()
+        spotifyService.getCurrentUser()
                 .subscribeOn(Schedulers.io())
                 .subscribe { response ->
                     when (response) {
@@ -315,11 +326,6 @@ class HostProcessor @Inject constructor(
                     }
                 }
                 .addTo(subscriptions)
-
-        } else {
-            hostUser = AccessModel.getCurrentUser()
-            createPlaylistForQueue()
-        }
     }
 
     private fun createPlaylistForQueue() {
@@ -979,8 +985,6 @@ class HostProcessor @Inject constructor(
             val isQueueFairPlay: Boolean,
             val basePlaylistId: String
         ) : HostAction()
-
-        object AccessTokenUpdated : HostAction()
 
         object RequestTogglePlayPause : HostAction()
 

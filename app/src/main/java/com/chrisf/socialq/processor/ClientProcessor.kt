@@ -22,9 +22,8 @@ import javax.inject.Inject
 
 class ClientProcessor @Inject constructor(
         private val spotifyService: SpotifyApi,
-        lifecycle: Lifecycle?,
         subscriptions: CompositeDisposable
-) : BaseProcessor<ClientState, ClientAction>(lifecycle, subscriptions) {
+) : BaseProcessor<ClientState, ClientAction>(null, subscriptions) {
 
     // Host Values
     private lateinit var hostEndpoint: String
