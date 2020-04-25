@@ -1,7 +1,6 @@
 package com.chrisf.socialq.processor
 
 import androidx.lifecycle.Lifecycle
-import com.chrisf.socialq.extensions.addTo
 import com.chrisf.socialq.model.spotify.*
 import com.chrisf.socialq.model.spotify.pager.AlbumSimplePager
 import com.chrisf.socialq.model.spotify.pager.ArtistPager
@@ -15,6 +14,7 @@ import com.chrisf.socialq.processor.SearchProcessor.SearchState.*
 import io.reactivex.Single
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.functions.Function3
+import io.reactivex.rxkotlin.addTo
 import io.reactivex.schedulers.Schedulers
 import retrofit2.Response
 import javax.inject.Inject

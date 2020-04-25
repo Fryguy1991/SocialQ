@@ -3,7 +3,7 @@ package com.chrisf.socialq.userinterface.views
 import android.graphics.Rect
 import android.view.View
 import androidx.recyclerview.widget.RecyclerView
-import org.jetbrains.anko.dip
+import com.chrisf.socialq.extensions.dip
 
 class AlbumGridDecorator : RecyclerView.ItemDecoration() {
 

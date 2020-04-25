@@ -10,7 +10,6 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
 import com.chrisf.socialq.R
 import com.chrisf.socialq.dagger.components.FragmentComponent
-import com.chrisf.socialq.extensions.addTo
 import com.chrisf.socialq.model.spotify.AlbumSimple
 import com.chrisf.socialq.model.spotify.Artist
 import com.chrisf.socialq.model.spotify.Track
@@ -20,6 +19,7 @@ import com.chrisf.socialq.processor.SearchProcessor.SearchState
 import com.chrisf.socialq.userinterface.activities.TitleActivity
 import com.chrisf.socialq.userinterface.views.AlbumCardView
 import com.jakewharton.rxbinding3.view.clicks
+import io.reactivex.rxkotlin.addTo
 import kotlinx.android.parcel.Parcelize
 import kotlinx.android.synthetic.main.fragment_search_artist.*
 import java.lang.IllegalStateException

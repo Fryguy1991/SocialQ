@@ -3,12 +3,12 @@ package com.chrisf.socialq.services
 import android.app.Service
 import com.chrisf.socialq.dagger.components.ServiceComponent
 import com.chrisf.socialq.dagger.modules.ServiceModule
-import com.chrisf.socialq.extensions.addTo
 import com.chrisf.socialq.processor.BaseProcessor
 import com.chrisf.socialq.userinterface.App
 import com.jakewharton.rxrelay2.PublishRelay
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.rxkotlin.addTo
 import javax.inject.Inject
 
 abstract class BaseService<State, Action, Processor : BaseProcessor<State, Action>> : Service() {

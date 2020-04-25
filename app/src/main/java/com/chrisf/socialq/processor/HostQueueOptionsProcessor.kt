@@ -3,7 +3,6 @@ package com.chrisf.socialq.processor
 import android.content.res.Resources
 import androidx.lifecycle.Lifecycle
 import com.chrisf.socialq.R
-import com.chrisf.socialq.extensions.addTo
 import com.chrisf.socialq.model.spotify.PlaylistSimple
 import com.chrisf.socialq.network.SpotifyApi
 import com.chrisf.socialq.processor.HostQueueOptionsProcessor.HostQueueOptionsAction
@@ -12,6 +11,7 @@ import com.chrisf.socialq.processor.HostQueueOptionsProcessor.HostQueueOptionsSt
 import com.chrisf.socialq.processor.HostQueueOptionsProcessor.HostQueueOptionsState.DisplayBasePlaylists
 import com.chrisf.socialq.processor.HostQueueOptionsProcessor.HostQueueOptionsState.NavigateToHostActivity
 import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.rxkotlin.addTo
 import io.reactivex.schedulers.Schedulers
 import timber.log.Timber
 import javax.inject.Inject

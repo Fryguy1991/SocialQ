@@ -4,7 +4,6 @@ import android.os.SystemClock
 import androidx.lifecycle.Lifecycle
 import com.chrisf.socialq.AppConstants
 import com.chrisf.socialq.enums.SpotifyUserType
-import com.chrisf.socialq.extensions.addTo
 import com.chrisf.socialq.model.AccessModel
 import com.chrisf.socialq.model.QueueModel
 import com.chrisf.socialq.network.SpotifyApi
@@ -15,6 +14,7 @@ import com.chrisf.socialq.processor.LaunchProcessor.LaunchState.*
 import com.google.android.gms.nearby.connection.DiscoveredEndpointInfo
 import io.reactivex.Observable
 import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.rxkotlin.addTo
 import io.reactivex.schedulers.Schedulers
 import okhttp3.Call
 import okhttp3.Callback

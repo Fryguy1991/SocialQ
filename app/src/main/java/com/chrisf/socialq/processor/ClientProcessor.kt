@@ -4,7 +4,6 @@ import androidx.lifecycle.Lifecycle
 import com.chrisf.socialq.R
 import com.chrisf.socialq.enums.NearbyDevicesMessage
 import com.chrisf.socialq.enums.NearbyDevicesMessage.*
-import com.chrisf.socialq.extensions.addTo
 import com.chrisf.socialq.model.spotify.PlaylistTrack
 import com.chrisf.socialq.model.spotify.UserPrivate
 import com.chrisf.socialq.network.SpotifyApi
@@ -14,6 +13,7 @@ import com.chrisf.socialq.processor.ClientProcessor.ClientState
 import com.chrisf.socialq.processor.ClientProcessor.ClientState.*
 import com.google.android.gms.nearby.connection.Payload
 import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.rxkotlin.addTo
 import io.reactivex.schedulers.Schedulers
 import timber.log.Timber
 import java.lang.NumberFormatException

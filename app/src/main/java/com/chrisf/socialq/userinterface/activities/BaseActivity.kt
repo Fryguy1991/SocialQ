@@ -11,12 +11,12 @@ import com.chrisf.socialq.R
 import com.chrisf.socialq.dagger.components.ActivityComponent
 import com.chrisf.socialq.dagger.components.ActivityComponentHolder
 import com.chrisf.socialq.dagger.modules.ActivityModule
-import com.chrisf.socialq.extensions.addTo
 import com.chrisf.socialq.processor.BaseProcessor
 import com.chrisf.socialq.userinterface.App
 import com.jakewharton.rxrelay2.PublishRelay
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.rxkotlin.addTo
 import javax.inject.Inject
 
 abstract class BaseActivity<State, Action, Processor : BaseProcessor<State, Action>> :

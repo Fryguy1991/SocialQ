@@ -18,7 +18,6 @@ import com.chrisf.socialq.AppConstants
 import com.chrisf.socialq.R
 import com.chrisf.socialq.dagger.components.ActivityComponent
 import com.chrisf.socialq.enums.RequestType
-import com.chrisf.socialq.extensions.addTo
 import com.chrisf.socialq.processor.LaunchProcessor
 import com.chrisf.socialq.processor.LaunchProcessor.LaunchAction
 import com.chrisf.socialq.processor.LaunchProcessor.LaunchAction.*
@@ -36,8 +35,8 @@ import com.jakewharton.rxbinding3.view.clicks
 import com.spotify.sdk.android.authentication.AuthenticationClient
 import com.spotify.sdk.android.authentication.AuthenticationRequest
 import com.spotify.sdk.android.authentication.AuthenticationResponse
+import io.reactivex.rxkotlin.addTo
 import kotlinx.android.synthetic.main.activity_launch.*
-import org.jetbrains.anko.startActivity
 import timber.log.Timber
 import java.util.concurrent.TimeUnit
 
@@ -235,7 +234,7 @@ class LaunchActivity : BaseActivity<LaunchState, LaunchAction, LaunchProcessor>(
                 .throttleFirst(300, TimeUnit.MILLISECONDS)
                 .subscribe {
                     if (state.canHost) {
-                        startActivity<HostQueueOptionsActivity>()
+                        startActivity(Intent(this, HostQueueOptionsActivity::class.java))
                     } else {
                         showPremiumRequiredDialog()
                     }

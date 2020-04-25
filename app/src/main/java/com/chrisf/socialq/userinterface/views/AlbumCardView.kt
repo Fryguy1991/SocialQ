@@ -7,11 +7,11 @@ import androidx.cardview.widget.CardView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
 import com.chrisf.socialq.R
+import com.chrisf.socialq.extensions.dip
 import com.chrisf.socialq.model.spotify.AlbumSimple
 import com.jakewharton.rxrelay2.PublishRelay
 import io.reactivex.Observable
 import kotlinx.android.synthetic.main.view_album_card_view.view.*
-import org.jetbrains.anko.dip
 
 class AlbumCardView : CardView {
     constructor(context: Context) : super(context)

@@ -21,7 +21,6 @@ import com.chrisf.socialq.userinterface.App
 import com.chrisf.socialq.userinterface.adapters.BasicTrackListAdapter
 import com.chrisf.socialq.userinterface.views.QueueItemDecoration
 import kotlinx.android.synthetic.main.activity_client_screen.*
-import org.jetbrains.anko.startActivity
 import timber.log.Timber
 
 open class ClientActivity : ServiceActivity(), ClientService.ClientServiceListener {
@@ -310,10 +309,11 @@ open class ClientActivity : ServiceActivity(), ClientService.ClientServiceListen
                 hostEndpointId: String,
                 hostQueueName: String = ""
         ) {
-            fromActivity.startActivity<ClientActivity>(
-                    AppConstants.QUEUE_TITLE_KEY to hostQueueName,
-                    AppConstants.ND_ENDPOINT_ID_EXTRA_KEY to hostEndpointId
-            )
+            val intent = Intent(fromActivity, ClientActivity::class.java).apply {
+                putExtra(AppConstants.QUEUE_TITLE_KEY, hostQueueName)
+                putExtra(AppConstants.ND_ENDPOINT_ID_EXTRA_KEY, hostEndpointId)
+            }
+            fromActivity.startActivity(intent)
         }
     }
 }

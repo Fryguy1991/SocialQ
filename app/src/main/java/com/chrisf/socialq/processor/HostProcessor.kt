@@ -8,7 +8,6 @@ import android.net.ConnectivityManager
 import android.os.Build
 import androidx.lifecycle.Lifecycle
 import com.chrisf.socialq.AppConstants
-import com.chrisf.socialq.extensions.addTo
 import com.chrisf.socialq.model.AccessModel
 import com.chrisf.socialq.model.ClientRequestData
 import com.chrisf.socialq.model.SongRequestData
@@ -24,6 +23,7 @@ import com.chrisf.socialq.processor.HostProcessor.HostState
 import com.chrisf.socialq.processor.HostProcessor.HostState.*
 import com.spotify.sdk.android.player.*
 import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.rxkotlin.addTo
 import io.reactivex.schedulers.Schedulers
 import timber.log.Timber
 import java.util.*

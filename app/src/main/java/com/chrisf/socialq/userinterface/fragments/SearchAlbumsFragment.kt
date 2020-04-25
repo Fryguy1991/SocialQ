@@ -10,7 +10,6 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
 import com.chrisf.socialq.R
 import com.chrisf.socialq.dagger.components.FragmentComponent
-import com.chrisf.socialq.extensions.addTo
 import com.chrisf.socialq.model.spotify.AlbumSimple
 import com.chrisf.socialq.model.spotify.Artist
 import com.chrisf.socialq.processor.SearchProcessor
@@ -23,6 +22,7 @@ import com.chrisf.socialq.userinterface.fragments.SearchAlbumAdapter.AlbumViewho
 import com.chrisf.socialq.utils.DisplayUtils
 import com.jakewharton.rxrelay2.PublishRelay
 import io.reactivex.Observable
+import io.reactivex.rxkotlin.addTo
 import kotlinx.android.synthetic.main.fragment_search_albums.*
 import kotlinx.android.synthetic.main.holder_album.view.*
 import java.util.concurrent.TimeUnit

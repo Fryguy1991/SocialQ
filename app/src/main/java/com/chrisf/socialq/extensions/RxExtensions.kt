@@ -1,8 +1,10 @@
 package com.chrisf.socialq.extensions
 
-import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.disposables.Disposable
+import io.reactivex.Observable
+import java.util.concurrent.TimeUnit
 
-fun Disposable.addTo(subscriptions: CompositeDisposable) {
-    subscriptions.add(this)
-}
+/**
+ * Throttle emissions every 300ms. Useful for avoiding double clicks and such
+ */
+fun <T> Observable<T>.filterEmissions() : Observable<T> =
+        this.throttleFirst(300, TimeUnit.MILLISECONDS)

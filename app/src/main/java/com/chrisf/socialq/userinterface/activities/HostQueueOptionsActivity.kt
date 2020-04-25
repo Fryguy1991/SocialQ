@@ -7,7 +7,6 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.chrisf.socialq.R
 import com.chrisf.socialq.dagger.components.ActivityComponent
-import com.chrisf.socialq.extensions.addTo
 import com.chrisf.socialq.processor.HostQueueOptionsProcessor
 import com.chrisf.socialq.processor.HostQueueOptionsProcessor.HostQueueOptionsAction
 import com.chrisf.socialq.processor.HostQueueOptionsProcessor.HostQueueOptionsAction.*
@@ -20,6 +19,7 @@ import com.chrisf.socialq.userinterface.adapters.PlaylistAdapter
 import com.chrisf.socialq.userinterface.views.QueueItemDecoration
 import com.jakewharton.rxbinding3.view.clicks
 import com.jakewharton.rxbinding3.widget.checkedChanges
+import io.reactivex.rxkotlin.addTo
 import kotlinx.android.synthetic.main.activity_new_queue.*
 import java.util.concurrent.TimeUnit
 

@@ -20,7 +20,6 @@ import com.chrisf.socialq.userinterface.adapters.HostTrackListAdapter
 import com.chrisf.socialq.userinterface.views.PlaybackControlView
 import com.chrisf.socialq.userinterface.views.QueueItemDecoration
 import kotlinx.android.synthetic.main.activity_host_screen.*
-import org.jetbrains.anko.startActivity
 import timber.log.Timber
 
 open class HostActivity : ServiceActivity(), HostService.HostServiceListener, PlaybackControlView.IPlaybackControlListener {
@@ -305,11 +304,12 @@ open class HostActivity : ServiceActivity(), HostService.HostServiceListener, Pl
                 isFairplay: Boolean = false,
                 basePlaylistId: String = ""
         ) {
-            fromActivity.startActivity<HostActivity>(
-                    QUEUE_NAME_KEY to queueName,
-                    IS_FAIRPLAY_KEY to isFairplay,
-                    BASE_PLAYLIST_ID to basePlaylistId
-            )
+            val intent = Intent(fromActivity, HostActivity::class.java).apply {
+                putExtra(QUEUE_NAME_KEY, queueName)
+                putExtra(IS_FAIRPLAY_KEY, isFairplay)
+                putExtra(BASE_PLAYLIST_ID, basePlaylistId)
+            }
+            fromActivity.startActivity(intent)
         }
     }
 }
