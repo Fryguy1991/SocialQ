@@ -1,21 +1,22 @@
 package com.chrisf.socialq.processor
 
-import com.chrisf.socialq.AppConstants
 import com.chrisf.socialq.SocialQPreferences
+import com.chrisf.socialq.network.AuthService
+import com.chrisf.socialq.network.AuthService.AuthResponse.*
 import com.chrisf.socialq.processor.AccessProcessor.AccessAction
 import com.chrisf.socialq.processor.AccessProcessor.AccessAction.RequestAccessRefresh
 import com.chrisf.socialq.processor.AccessProcessor.AccessState
 import io.reactivex.disposables.CompositeDisposable
-import okhttp3.*
-import org.json.JSONObject
+import io.reactivex.rxkotlin.addTo
+import io.reactivex.schedulers.Schedulers
 import timber.log.Timber
-import java.io.IOException
 import javax.inject.Inject
 
 /**
  * Processor for refreshing the user's access token (given we have already gotten a refresh token)
  */
 class AccessProcessor @Inject constructor(
+        private val authService: AuthService,
         private val preferences: SocialQPreferences,
         subscriptions: CompositeDisposable
 ) : BaseProcessor<AccessState, AccessAction>(null, subscriptions) {
@@ -27,35 +28,24 @@ class AccessProcessor @Inject constructor(
     }
 
     private fun handleRequestAccessRefresh() {
-        if (preferences.refreshToken.isNullOrBlank()) {
+        val token = preferences.refreshToken
+        if (token.isNullOrBlank()) {
             Timber.e("Error invalid refresh token")
+            // TODO: Should get a new refresh token and try again
         } else {
-            Timber.d("Request new access token")
-            // TODO: Should be able to support requesting multiple AWS instances
-            val client = OkHttpClient()
-            val request = Request.Builder().url(String.format(AppConstants.AUTH_REQ_URL_FORMAT, preferences.refreshToken)).build()
-
-            client.newCall(request).enqueue(object : Callback {
-                override fun onResponse(call: Call, response: Response) {
-                    val responseString = response.body()?.string()
-
-                    if (response.isSuccessful && !responseString.isNullOrEmpty()) {
-                        val bodyJson = JSONObject(responseString).getJSONObject(AppConstants.JSON_BODY_KEY)
-                        val accessToken = bodyJson.getString(AppConstants.JSON_ACCESS_TOKEN_KEY)
-                        val expiresIn = bodyJson.getInt(AppConstants.  JSON_EXPIRES_IN_KEY)
-
-                        preferences.accessToken = accessToken
-
-                        Timber.d("Received new access token:\nAccess Token: $accessToken\nExpires In: $expiresIn seconds")
-                    } else {
-                        Timber.e("Response was unsuccessful or response string was null")
+            authService.getAccessTokenWithRefreshToken(token)
+                    .subscribeOn(Schedulers.io())
+                    .onErrorReturn { Failure(Throwable("Unknown error")) }
+                    .subscribe { response ->
+                        when (response) {
+                            is Success -> {
+                                preferences.accessToken = response.body
+                            }
+                            is Failure,
+                            is Timeout -> Unit // TODO: Future should probably exit wherever user is and go back to launch
+                        }
                     }
-                }
-
-                override fun onFailure(call: Call, exception: IOException) {
-                    Timber.e(exception)
-                }
-            })
+                    .addTo(subscriptions)
         }
     }
 

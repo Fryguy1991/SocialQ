@@ -5,6 +5,7 @@ import android.content.SharedPreferences
 import android.content.res.Resources
 import com.chrisf.socialq.DefaultSocialQPreferences
 import com.chrisf.socialq.SocialQPreferences
+import com.chrisf.socialq.network.AuthApi
 import com.chrisf.socialq.network.AuthInterceptor
 import com.chrisf.socialq.network.SpotifyApi
 import com.google.gson.GsonBuilder
@@ -59,10 +60,31 @@ class AppModule(private val app: Context) {
         return Retrofit.Builder()
                 .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
                 .addConverterFactory(GsonConverterFactory.create(gson))
-                .baseUrl(SpotifyApi.SPOTIFY_BASE_API_ENDPOINT)
+                .baseUrl(SpotifyApi.SPOTIFY_API_BASE_URL)
                 .client(builder.build())
                 .build()
                 .create(SpotifyApi::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun providesAuthApi(): AuthApi {
+        val builder = OkHttpClient.Builder()
+        builder.addInterceptor (
+                HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY)
+        )
+
+        val gson = GsonBuilder()
+                .setPrettyPrinting()
+                .create()
+
+        return Retrofit.Builder()
+                .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
+                .addConverterFactory(GsonConverterFactory.create(gson))
+                .baseUrl(AuthApi.AUTH_SERVER_BASE_URL)
+                .client(builder.build())
+                .build()
+                .create(AuthApi::class.java)
     }
 
     @Provides

@@ -18,13 +18,11 @@ import okhttp3.ResponseBody
 import retrofit2.HttpException
 import retrofit2.Response
 import java.io.IOException
-import java.lang.UnknownError
 import java.net.SocketTimeoutException
 import javax.inject.Inject
 
 class SpotifyService @Inject constructor(
         private val spotifyApi: SpotifyApi,
-        private val responseWrapper: ResponseWrapper,
         private val resources: Resources
 ) {
     /**
@@ -36,21 +34,21 @@ class SpotifyService @Inject constructor(
             searchTerm: String,
             offset: Int = 0
     ): Single<ApiResponse<TrackPager>> {
-        return responseWrapper.wrap(spotifyApi.searchTracks(searchTerm, 50, offset))
+        return wrap(spotifyApi.searchTracks(searchTerm, 50, offset))
     }
 
     fun searchAlbums(
             searchTerm: String,
             offset: Int = 0
     ): Single<ApiResponse<AlbumSimplePager>> {
-        return responseWrapper.wrap(spotifyApi.searchAlbums(searchTerm, 50, offset))
+        return wrap(spotifyApi.searchAlbums(searchTerm, 50, offset))
     }
 
     fun searchArtists(
             searchTerm: String,
             offset: Int = 0
     ): Single<ApiResponse<ArtistPager>> {
-        return responseWrapper.wrap(spotifyApi.searchArtists(searchTerm, 50, offset))
+        return wrap(spotifyApi.searchArtists(searchTerm, 50, offset))
     }
 
     /**
@@ -59,20 +57,20 @@ class SpotifyService @Inject constructor(
      * ###########
      */
     fun getArtist(artistId: String): Single<ApiResponse<Artist>> {
-        return responseWrapper.wrap(spotifyApi.getArtist(artistId))
+        return wrap(spotifyApi.getArtist(artistId))
     }
 
     fun getArtistAlbums(
             artistId: String,
             offset: Int = 0
     ): Single<ApiResponse<Pager<AlbumSimple>>> {
-        return responseWrapper.wrap(spotifyApi.getArtistAlbums(artistId, 50, offset))
+        return wrap(spotifyApi.getArtistAlbums(artistId, 50, offset))
     }
 
     fun getArtistTopTracks(
             artistId: String
     ): Single<ApiResponse<TracksObject>> {
-        return responseWrapper.wrap(spotifyApi.getArtistTopTracks(artistId))
+        return wrap(spotifyApi.getArtistTopTracks(artistId))
     }
 
     /**
@@ -81,7 +79,7 @@ class SpotifyService @Inject constructor(
      * ##########
      */
     fun getFullAlbum(albumId: String): Single<ApiResponse<Album>> {
-        return responseWrapper.wrap(spotifyApi.getFullAlbum(albumId))
+        return wrap(spotifyApi.getFullAlbum(albumId))
     }
 
     /**
@@ -90,11 +88,11 @@ class SpotifyService @Inject constructor(
      * #########
      */
     fun getCurrentUser(): Single<ApiResponse<UserPrivate>> {
-        return responseWrapper.wrap(spotifyApi.getCurrentUser())
+        return wrap(spotifyApi.getCurrentUser())
     }
 
     fun getUserById(userId: String): Single<ApiResponse<UserPublic>> {
-        return responseWrapper.wrap(spotifyApi.getUserById(userId))
+        return wrap(spotifyApi.getUserById(userId))
     }
 
     /**
@@ -103,7 +101,7 @@ class SpotifyService @Inject constructor(
      * #############
      */
     fun getCurrentUserPlaylist(offset: Int = 0): Single<ApiResponse<Pager<PlaylistSimple>>> {
-        return responseWrapper.wrap(spotifyApi.getCurrentUsersPlaylists(50, offset))
+        return wrap(spotifyApi.getCurrentUsersPlaylists(50, offset))
     }
 
     fun getPlaylistTracks(
@@ -111,7 +109,7 @@ class SpotifyService @Inject constructor(
             limit: Int = 50,
             offset: Int = 0
     ): Single<ApiResponse<Pager<PlaylistTrack>>> {
-        return responseWrapper.wrap(spotifyApi.getPlaylistTracks(playlistId, limit, offset))
+        return wrap(spotifyApi.getPlaylistTracks(playlistId, limit, offset))
     }
 
     fun createSocialQPlaylist(userId: String): Single<ApiResponse<Playlist>> {
@@ -122,7 +120,7 @@ class SpotifyService @Inject constructor(
                 Pair("description", resources.getString(R.string.default_playlist_description))
         )
 
-        return responseWrapper.wrap(spotifyApi.createPlaylist(userId, requestBody))
+        return wrap(spotifyApi.createPlaylist(userId, requestBody))
     }
 
     fun changePlaylistName(
@@ -131,7 +129,7 @@ class SpotifyService @Inject constructor(
     ): Single<ApiResponse<Unit>> {
         val requestBody = mapOf<String, Any>(Pair("name", playlistName))
 
-        return responseWrapper.wrapEmptyResponse(spotifyApi.changePlaylistDetails(playlistId, requestBody))
+        return wrapEmptyResponse(spotifyApi.changePlaylistDetails(playlistId, requestBody))
     }
 
     fun addTracksToPlaylist(
@@ -145,20 +143,18 @@ class SpotifyService @Inject constructor(
         }
         requestBody["uris"] = JsonArray().apply { trackUris.forEach { add(it) } }
 
-        return responseWrapper.wrap(spotifyApi.addTracksToPlaylist(playlistId, requestBody.toMap()))
+        return wrap(spotifyApi.addTracksToPlaylist(playlistId, requestBody.toMap()))
     }
 
     fun followPlaylist(playlistId: String): Single<ApiResponse<Unit>> {
-        return responseWrapper.wrapEmptyResponse(spotifyApi.followPlaylist(playlistId))
+        return wrapEmptyResponse(spotifyApi.followPlaylist(playlistId))
     }
 
     fun unfollowPlaylist(playlistId: String): Single<ApiResponse<Unit>> {
-        return responseWrapper.wrapEmptyResponse(spotifyApi.unfollowPlaylist(playlistId))
+        return wrapEmptyResponse(spotifyApi.unfollowPlaylist(playlistId))
     }
-}
 
-class ResponseWrapper @Inject constructor() {
-    fun <T> wrap(stream: Single<Response<T>>): Single<ApiResponse<T>> {
+    private fun <T> wrap(stream: Single<Response<T>>): Single<ApiResponse<T>> {
         return stream.map {
             val body = it.body()
 
@@ -184,7 +180,7 @@ class ResponseWrapper @Inject constructor() {
         }
     }
 
-    fun wrapEmptyResponse(stream: Completable): Single<ApiResponse<Unit>> {
+    private fun wrapEmptyResponse(stream: Completable): Single<ApiResponse<Unit>> {
         return stream.toSingleDefault(Success(Unit) as ApiResponse<Unit>)
                 .onErrorReturn {
                     when (it) {

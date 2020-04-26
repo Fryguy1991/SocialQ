@@ -73,7 +73,7 @@
     <string name="album_track_with_position_number">%1$s. %2$s</string>
     <string name="artist_albums">%1$s Albums</string>
 
-    <!-- Start Screen Strings -->
+    <!-- Launch Screen Strings -->
     <string name="start_queue">Start Queue</string>
     <string name="join_queue">Join Queue</string>
     <string name="available_queues">Available Queues</string>
@@ -81,6 +81,8 @@
     <string name="no_host_found_message">No available queues were found. Pull down to retry, or start your own!</string>
     <string name="host_search_failed_message">Queue search failed. Pull down to retry, or start your own!</string>
     <string name="queue_searching_message">Searching for available queues.</string>
+    <string name="location_permission_required_title">Location permission required</string>
+    <string name="location_permission_required_message">Location permissions are required to host, join, and add songs to queues.</string>
 
     <!-- Join Queue Fragment -->
     <string name="queue_details">Queue Details</string>

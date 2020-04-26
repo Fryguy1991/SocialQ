@@ -5,7 +5,8 @@
         <!-- Major Theme Colors -->
         <item name="colorPrimary">@color/Deep_Blue</item>
         <item name="colorPrimaryDark">@color/Dark_Deep_Blue</item>
-        <item name="colorAccent">@color/BurntOrangeLight2</item>
+        <item name="colorAccent">@color/BurntOrangeLight</item>
+        <item name="colorSurface">@color/Ice_White</item>
 
         <!-- Theme Background Color -->
         <item name="android:windowBackground">@color/Ice_White</item>
@@ -28,15 +29,13 @@
         <!-- Theme Widget Styles -->
         <item name="checkboxStyle">@style/AppCheckboxStyle</item>
         <item name="buttonStyle">@style/DefaultButtonStyle</item>
-        <item name="alertDialogTheme">@style/AppDialog</item>
+        <item name="alertDialogTheme">@style/IceTheme.Dialog.Alert</item>
     </style>
 
-    <style name="AppDialog" parent="Theme.AppCompat.Light.Dialog.Alert">
-        <item name="colorPrimary">@color/Deep_Blue</item>
+    <style name="IceTheme.Dialog.Alert" parent="Theme.AppCompat.Light.Dialog.Alert">
         <item name="colorAccent">@color/BurntOrangeLight</item>
-        <item name="android:textColorPrimary">@color/Slate2</item>
+        <item name="android:textColorPrimary">@color/Black</item>
         <item name="editTextColor">@color/Slate2</item>
-        <item name="android:windowBackground">@color/Ice_White</item>
     </style>
     <style name="DialogTitleText">
         <item name="android:layout_width">match_parent</item>

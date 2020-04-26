@@ -1,17 +1,21 @@
 package com.chrisf.socialq.network
 
+import com.chrisf.socialq.model.AuthCodeServerResponse
+import com.chrisf.socialq.model.AuthRefreshTokenServerResponse
 import com.chrisf.socialq.model.spotify.*
 import com.chrisf.socialq.model.spotify.pager.AlbumSimplePager
 import com.chrisf.socialq.model.spotify.pager.ArtistPager
 import com.chrisf.socialq.model.spotify.pager.Pager
 import com.chrisf.socialq.model.spotify.pager.TrackPager
-import com.google.gson.JsonArray
 import io.reactivex.Completable
 import io.reactivex.Single
 import retrofit2.Response
 import retrofit2.http.*
 import java.util.HashMap
 
+/**
+ * Api for interacting with Spotify's web API
+ */
 @JvmSuppressWildcards
 interface SpotifyApi {
     /**
@@ -152,7 +156,7 @@ interface SpotifyApi {
     fun unfollowPlaylist(@Path("playlist_id") playlistId: String): Completable
 
     companion object {
-        const val SPOTIFY_BASE_API_ENDPOINT = "https://api.spotify.com/v1/"
+        const val SPOTIFY_API_BASE_URL = "https://api.spotify.com/v1/"
 
         fun getCreatePlaylistBody() : Map<String, Any> {
             val requestBody = HashMap<String, Any>()
@@ -162,20 +166,29 @@ interface SpotifyApi {
             requestBody["description"] = "Playlist created by the SocialQ App."
             return requestBody
         }
+    }
+}
 
-        fun getPlaylistDetailsBody(playlistName: String) : Map<String, Any> {
-            val requestBody = HashMap<String, Any>()
-            requestBody["name"] = playlistName
-            return requestBody
-        }
+/**
+ * Api for interacting with the SocialQ auth server
+ */
+interface AuthApi {
+    /**
+     * Send an auth code or refresh token to the SocialQ auth server.
+     */
+    @GET("app/socialq/code/{code}")
+    // TODO: Should update server to only get refdata.body of spotify API auth request
+    fun getAuthTokens(@Path("code") code: String): Single<Response<AuthCodeServerResponse>>
 
-        fun getAddTracksToPlaylistBody(tracksArray: JsonArray, position: Int? = null) : Map<String, Any>{
-            val requestBody = HashMap<String, Any>()
-            requestBody["uris"] = tracksArray
-            if (position != null) {
-                requestBody["position"] = position
-            }
-            return requestBody
-        }
+    /**
+     * Send an auth code or refresh token to the SocialQ auth server.
+     */
+    @GET("app/socialq/code/{refreshToken}")
+    // TODO: Should update server to only get refdata.body of spotify API auth request
+    fun getAccessToken(@Path("refreshToken") refreshToken: String): Single<Response<AuthRefreshTokenServerResponse>>
+
+    companion object {
+        // TODO: Should probably get direct line to server out of here
+        const val AUTH_SERVER_BASE_URL = "http://54.86.80.241/"
     }
 }
