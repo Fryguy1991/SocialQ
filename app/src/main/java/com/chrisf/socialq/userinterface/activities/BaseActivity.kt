@@ -125,12 +125,15 @@ abstract class BaseActivity<State, Action, Processor : BaseProcessor<State, Acti
         val dialogBuilder = MaterialAlertDialogBuilder(this)
             .setTitle(binding.title)
             .setMessage(binding.message)
+            .setOnCancelListener {
+                binding.cancelAction?.let { actionStream.accept(it) }
+            }
             .setOnDismissListener { alertDialog = null }
             .setPositiveButton(
                 binding.positiveButtonText
             ) { _, _ ->
                 val positiveAction = binding.positiveAction
-                if (positiveAction != null) actionStream.accept(positiveAction)
+                positiveAction?.let { actionStream.accept(it) }
             }
 
         binding.negativeButtonText?.let { negativeButtonText ->
@@ -138,7 +141,7 @@ abstract class BaseActivity<State, Action, Processor : BaseProcessor<State, Acti
                 negativeButtonText
             ) { _, _ ->
                 val negativeAction = binding.negativeAction
-                if (negativeAction != null) actionStream.accept(negativeAction)
+                negativeAction?.let { actionStream.accept(it) }
             }
         }
 
@@ -147,11 +150,14 @@ abstract class BaseActivity<State, Action, Processor : BaseProcessor<State, Acti
                 neutralButtonText
             ) { _, _ ->
                 val neutralAction = binding.neutralAction
-                if (neutralAction != null) actionStream.accept(neutralAction)
+                neutralAction?.let { actionStream.accept(it) }
             }
         }
 
-        alertDialog = dialogBuilder.create()
+        val dialog = dialogBuilder.create()
+        dialog.setCancelable(binding.isCancelable)
+        dialog.setCanceledOnTouchOutside(binding.isCancelable)
+        alertDialog = dialog
         alertDialog?.show()
     }
 

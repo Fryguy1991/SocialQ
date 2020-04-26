@@ -66,8 +66,10 @@ class LaunchActivity : BaseActivity<LaunchState, LaunchAction, LaunchProcessor>(
             is DisplayAvailableQueues -> displayQueues(state)
             is DisplayCanHostQueue -> displayCanHostQueue(state)
             is LaunchClientActivity -> launchClientActivity(state)
-            is AuthorizationFailed -> showAuthFailedDialog()
+            is AuthorizationFailed -> showAuthFailedDialog(state)
             is ShowAlertDialog -> showAlertDialog(state.binding)
+            is ShowQueueRefreshFailed -> showQueueRefreshFailed()
+            is CloseApp -> finishAndRemoveTask()
         }
     }
 
@@ -87,6 +89,8 @@ class LaunchActivity : BaseActivity<LaunchState, LaunchAction, LaunchProcessor>(
 
         if (rxPermissions.isGranted(Manifest.permission.ACCESS_COARSE_LOCATION)) {
             actionStream.accept(QueueRefreshRequested)
+        } else {
+            showQueueRefreshFailed()
         }
     }
 
@@ -103,8 +107,7 @@ class LaunchActivity : BaseActivity<LaunchState, LaunchAction, LaunchProcessor>(
                     actionStream.accept(AuthCodeRetrieved(response.code))
                     return
                 } else {
-                    // Show authorization failed dialog
-                    showAuthFailedDialog()
+                    actionStream.accept(AuthCodeRetrievalFailed)
                 }
             }
         }
@@ -122,7 +125,7 @@ class LaunchActivity : BaseActivity<LaunchState, LaunchAction, LaunchProcessor>(
                 .singleOrError()
                 .onErrorReturn { false }
                 .map { hasPermission ->
-                    if (hasPermission) QueueRefreshRequested else LocationPermissionDenied(true)
+                    if (hasPermission) QueueRefreshRequested else LocationPermissionDenied
                 }
                 .subscribe(actionStream)
                 .addTo(subscriptions)
@@ -205,15 +208,33 @@ class LaunchActivity : BaseActivity<LaunchState, LaunchAction, LaunchProcessor>(
     }
 
     private fun displayQueues(state: DisplayAvailableQueues) {
+        // Hide Views
+        swipeRefreshText.visibility = View.GONE
+
+        // Show Views
         adapter.updateAdapter(state.queueList)
         availableQueueRecyclerView.visibility = View.VISIBLE
-        swipeRefreshText.visibility = View.GONE
     }
 
     private fun onNoQueuesFound() {
+        // Hide Views
         adapter.updateAdapter(emptyList())
+        availableQueueRecyclerView.visibility = View.GONE
         hostSwipeRefreshLayout.isRefreshing = false
+
+        // Show Views
         swipeRefreshText.text = getString(R.string.no_host_found_message)
+        swipeRefreshText.visibility = View.VISIBLE
+    }
+
+    private fun showQueueRefreshFailed() {
+        // Hide Views
+        adapter.updateAdapter(emptyList())
+        availableQueueRecyclerView.visibility = View.GONE
+        hostSwipeRefreshLayout.isRefreshing = false
+
+        // Show Views
+        swipeRefreshText.text = getString(R.string.host_search_failed_message)
         swipeRefreshText.visibility = View.VISIBLE
     }
 
@@ -221,23 +242,7 @@ class LaunchActivity : BaseActivity<LaunchState, LaunchAction, LaunchProcessor>(
         ClientActivity.start(this, state.hostEndpoint, state.queueTitle)
     }
 
-    private fun showAuthFailedDialog() {
-        if (alertDialog == null || alertDialog?.isShowing == false) {
-            alertDialog = AlertDialog.Builder(this)
-                .setView(R.layout.dialog_auth_fail)
-                .setPositiveButton(R.string.retry) { dialog, which ->
-                    requestAuthorization()
-                }
-                .setNegativeButton(R.string.close_app) { dialog, which ->
-                    finish()
-                }
-                .setOnCancelListener {
-                    finish()
-                }
-                .create()
-            alertDialog!!.show()
-        }
-    }
+    private fun showAuthFailedDialog(state: AuthorizationFailed) = showAlertDialog(state.binding)
 
     private fun showPremiumRequiredDialog() {
         if (alertDialog == null || alertDialog?.isShowing == false) {

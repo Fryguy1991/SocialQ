@@ -112,7 +112,7 @@
 
     <!-- Authentication Failed Dialog Strings -->
     <string name="auth_fail_title">Authentication Failed</string>
-    <string name="auth_fail_description">Spotify authentication failed. Retry?</string>
+    <string name="auth_fail_message">Spotify authentication failed. Retry?</string>
     <string name="retry">Retry</string>
     <string name="close_app">Close App</string>
 

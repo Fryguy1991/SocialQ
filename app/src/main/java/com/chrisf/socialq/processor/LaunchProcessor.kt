@@ -38,6 +38,21 @@ class LaunchProcessor @Inject constructor(
 
     private var isNearbySearching = false
 
+    private val authFailedDialogBinding: AlertDialogBinding<LaunchAction> by lazy {
+        AlertDialogBinding(
+            title = resources.getString(R.string.auth_fail_title),
+            message = resources.getString(R.string.auth_fail_message),
+            positiveButtonText = resources.getString(R.string.retry),
+            positiveAction = RetryAuthDialogButtonTouched,
+            negativeButtonText = resources.getString(R.string.close_app),
+            negativeAction = CloseAppDialogButtonTouched,
+            neutralButtonText = null,
+            neutralAction = null,
+            isCancelable = false,
+            cancelAction = CloseAppDialogButtonTouched
+        )
+    }
+
     override fun handleAction(action: LaunchAction) {
         when (action) {
             is ViewCreated -> handleViewCreated(action)
@@ -45,7 +60,10 @@ class LaunchProcessor @Inject constructor(
             is EndpointFound -> handleEndpointFound(action)
             is EndpointLost -> handleEndpointLost(action)
             is AuthCodeRetrieved -> handleAuthCodeRetrieved(action)
-            is LocationPermissionDenied -> handleLocationPermissionDenied(action)
+            is AuthCodeRetrievalFailed -> handleAuthCodeRetrievalFailed()
+            is RetryAuthDialogButtonTouched -> stateStream.accept(RequestAuthorization)
+            is CloseAppDialogButtonTouched -> stateStream.accept(CloseApp)
+            is LocationPermissionDenied -> handleLocationPermissionDenied()
             is QueueSelected -> handleQueueSelected(action)
         }
     }
@@ -65,10 +83,10 @@ class LaunchProcessor @Inject constructor(
                             StartAuthRefreshJob
                         }
                         is AuthService.AuthResponse.Failure,
-                        AuthService.AuthResponse.Timeout -> AuthorizationFailed
+                        AuthService.AuthResponse.Timeout -> AuthorizationFailed(authFailedDialogBinding)
                     }
                 }
-                .onErrorReturn { AuthorizationFailed }
+                .onErrorReturn { AuthorizationFailed(authFailedDialogBinding) }
                 .subscribe(stateStream)
                 .addTo(subscriptions)
         }
@@ -86,35 +104,34 @@ class LaunchProcessor @Inject constructor(
                         StartAuthRefreshJob
                     }
                     is AuthService.AuthResponse.Failure,
-                    AuthService.AuthResponse.Timeout -> AuthorizationFailed
+                    AuthService.AuthResponse.Timeout -> AuthorizationFailed(authFailedDialogBinding)
                 }
             }
-            .onErrorReturn { AuthorizationFailed }
+            .onErrorReturn { AuthorizationFailed(authFailedDialogBinding) }
             .subscribe(stateStream)
             .addTo(subscriptions)
     }
 
-    private fun handleLocationPermissionDenied(action: LocationPermissionDenied) {
-        stateStream.accept(NoQueuesFound)
+    private fun handleAuthCodeRetrievalFailed() = stateStream.accept(AuthorizationFailed(authFailedDialogBinding))
 
-        // Don't want to show dialogs during start up or when view is resumed. Only launch when event is specifically
-        // launching from a refresh UI event
-        if (action.fromRefresh) {
-            stateStream.accept(
-                ShowAlertDialog(
-                    AlertDialogBinding(
-                        title = resources.getString(R.string.location_permission_required_title),
-                        message = resources.getString(R.string.location_permission_required_message),
-                        positiveButtonText = resources.getString(R.string.ok),
-                        positiveAction = null,
-                        negativeButtonText = null,
-                        negativeAction = null,
-                        neutralButtonText = null,
-                        neutralAction = null
-                    )
+    private fun handleLocationPermissionDenied() {
+        stateStream.accept(ShowQueueRefreshFailed)
+        stateStream.accept(
+            ShowAlertDialog(
+                AlertDialogBinding(
+                    title = resources.getString(R.string.location_permission_required_title),
+                    message = resources.getString(R.string.location_permission_required_message),
+                    positiveButtonText = resources.getString(R.string.ok),
+                    positiveAction = null,
+                    negativeButtonText = null,
+                    negativeAction = null,
+                    neutralButtonText = null,
+                    neutralAction = null,
+                    isCancelable = true,
+                    cancelAction = null
                 )
             )
-        }
+        )
     }
 
     private fun handleQueueRefreshRequested() {
@@ -202,11 +219,11 @@ class LaunchProcessor @Inject constructor(
 
         object NoQueuesFound : LaunchState()
 
+        object ShowQueueRefreshFailed : LaunchState()
+
         data class DisplayAvailableQueues(val queueList: List<QueueModel>) : LaunchState()
 
         object RequestAuthorization : LaunchState()
-
-        object RequestLocationPermission : LaunchState()
 
         object StartAuthRefreshJob : LaunchState()
 
@@ -215,9 +232,11 @@ class LaunchProcessor @Inject constructor(
             val queueTitle: String
         ) : LaunchState()
 
-        object AuthorizationFailed : LaunchState()
+        data class AuthorizationFailed(val binding: AlertDialogBinding<LaunchAction>) : LaunchState()
 
         data class ShowAlertDialog(val binding: AlertDialogBinding<LaunchAction>) : LaunchState()
+
+        object CloseApp : LaunchState()
     }
 
     sealed class LaunchAction {
@@ -238,6 +257,12 @@ class LaunchProcessor @Inject constructor(
 
         data class AuthCodeRetrieved(val code: String) : LaunchAction()
 
-        data class LocationPermissionDenied(val fromRefresh: Boolean) : LaunchAction()
+        object AuthCodeRetrievalFailed : LaunchAction()
+
+        object LocationPermissionDenied : LaunchAction()
+
+        object RetryAuthDialogButtonTouched : LaunchAction()
+
+        object CloseAppDialogButtonTouched : LaunchAction()
     }
 }

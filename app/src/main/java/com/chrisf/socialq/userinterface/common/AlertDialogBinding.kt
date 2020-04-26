@@ -11,5 +11,7 @@ data class AlertDialogBinding<Action>(
     val negativeButtonText: String?,
     val negativeAction: Action?,
     val neutralButtonText: String?,
-    val neutralAction: Action?
+    val neutralAction: Action?,
+    val isCancelable: Boolean,
+    val cancelAction: Action?
 )
