@@ -108,7 +108,7 @@
 
     <!-- Premium Required Dialog Strings -->
     <string name="premium_required_title">Spotify Premium Required</string>
-    <string name="premium_required_description">Spotify premium is required in order to host a SocialQ!</string>
+    <string name="premium_required_message">Spotify premium is required in order to host a SocialQ.</string>
 
     <!-- Authentication Failed Dialog Strings -->
     <string name="auth_fail_title">Authentication Failed</string>

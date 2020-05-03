@@ -42,13 +42,11 @@ class LaunchProcessor @Inject constructor(
         AlertDialogBinding(
             title = resources.getString(R.string.auth_fail_title),
             message = resources.getString(R.string.auth_fail_message),
+            isCancelable = false,
             positiveButtonText = resources.getString(R.string.retry),
             positiveAction = RetryAuthDialogButtonTouched,
             negativeButtonText = resources.getString(R.string.close_app),
             negativeAction = CloseAppDialogButtonTouched,
-            neutralButtonText = null,
-            neutralAction = null,
-            isCancelable = false,
             cancelAction = CloseAppDialogButtonTouched
         )
     }
@@ -65,6 +63,7 @@ class LaunchProcessor @Inject constructor(
             is CloseAppDialogButtonTouched -> stateStream.accept(CloseApp)
             is LocationPermissionDenied -> handleLocationPermissionDenied()
             is QueueSelected -> handleQueueSelected(action)
+            is StartNewQueueButtonTouched -> handleStartNewQueueButtonTouched(action)
         }
     }
 
@@ -101,6 +100,7 @@ class LaunchProcessor @Inject constructor(
                     is AuthService.AuthResponse.Success -> {
                         preferences.accessToken = response.body.accessToken
                         preferences.refreshToken = response.body.refreshToken
+                        getCurrentUser()
                         StartAuthRefreshJob
                     }
                     is AuthService.AuthResponse.Failure,
@@ -117,18 +117,12 @@ class LaunchProcessor @Inject constructor(
     private fun handleLocationPermissionDenied() {
         stateStream.accept(ShowQueueRefreshFailed)
         stateStream.accept(
-            ShowAlertDialog(
+            ShowLocationPermissionRequiredDialog(
                 AlertDialogBinding(
                     title = resources.getString(R.string.location_permission_required_title),
                     message = resources.getString(R.string.location_permission_required_message),
-                    positiveButtonText = resources.getString(R.string.ok),
-                    positiveAction = null,
-                    negativeButtonText = null,
-                    negativeAction = null,
-                    neutralButtonText = null,
-                    neutralAction = null,
                     isCancelable = true,
-                    cancelAction = null
+                    positiveButtonText = resources.getString(R.string.ok)
                 )
             )
         )
@@ -171,7 +165,7 @@ class LaunchProcessor @Inject constructor(
                     is ApiResponse.Success -> {
                         val isPremium = SpotifyUserType
                             .getSpotifyUserTypeFromProductType(it.body.product) == SpotifyUserType.PREMIUM
-                        DisplayCanHostQueue(isPremium)
+                        EnableNewQueueButton(isPremium)
                     }
                     is ApiResponse.NetworkError -> TODO()
                     ApiResponse.NetworkTimeout -> TODO()
@@ -210,12 +204,28 @@ class LaunchProcessor @Inject constructor(
         stateStream.accept(LaunchClientActivity(action.queue.endpointId, action.queue.queueName))
     }
 
+    private fun handleStartNewQueueButtonTouched(action: StartNewQueueButtonTouched) {
+        stateStream.accept(
+            if (action.isUserPremium) {
+                NavigateToNewQueue
+            } else {
+                val dialogBinding = AlertDialogBinding<LaunchAction>(
+                    title = resources.getString(R.string.premium_required_title),
+                    message = resources.getString(R.string.premium_required_message),
+                    isCancelable = true,
+                    positiveButtonText = resources.getString(R.string.ok)
+                )
+                ShowPremiumRequiredDialog(dialogBinding)
+            }
+        )
+    }
+
     sealed class LaunchState {
         object SearchForQueues : LaunchState()
 
         object StopSearchingForQueues : LaunchState()
 
-        data class DisplayCanHostQueue(val canHost: Boolean) : LaunchState()
+        data class EnableNewQueueButton(val isUserPremium: Boolean) : LaunchState()
 
         object NoQueuesFound : LaunchState()
 
@@ -234,7 +244,11 @@ class LaunchProcessor @Inject constructor(
 
         data class AuthorizationFailed(val binding: AlertDialogBinding<LaunchAction>) : LaunchState()
 
-        data class ShowAlertDialog(val binding: AlertDialogBinding<LaunchAction>) : LaunchState()
+        data class ShowLocationPermissionRequiredDialog(val binding: AlertDialogBinding<LaunchAction>) : LaunchState()
+
+        data class ShowPremiumRequiredDialog(val binding: AlertDialogBinding<LaunchAction>) : LaunchState()
+
+        object NavigateToNewQueue : LaunchState()
 
         object CloseApp : LaunchState()
     }
@@ -264,5 +278,7 @@ class LaunchProcessor @Inject constructor(
         object RetryAuthDialogButtonTouched : LaunchAction()
 
         object CloseAppDialogButtonTouched : LaunchAction()
+
+        data class StartNewQueueButtonTouched(val isUserPremium: Boolean) : LaunchAction()
     }
 }

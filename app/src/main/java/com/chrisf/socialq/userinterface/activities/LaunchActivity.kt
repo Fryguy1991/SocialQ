@@ -8,7 +8,6 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
-import androidx.appcompat.app.AlertDialog
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.chrisf.socialq.AppConstants
@@ -34,6 +33,7 @@ import com.spotify.sdk.android.authentication.AuthenticationClient
 import com.spotify.sdk.android.authentication.AuthenticationRequest
 import com.spotify.sdk.android.authentication.AuthenticationResponse
 import com.tbruyelle.rxpermissions2.RxPermissions
+import io.reactivex.Observable
 import io.reactivex.rxkotlin.addTo
 import kotlinx.android.synthetic.main.activity_launch.*
 import timber.log.Timber
@@ -45,12 +45,12 @@ class LaunchActivity : BaseActivity<LaunchState, LaunchAction, LaunchProcessor>(
 
     private val adapter = QueueDisplayAdapter()
 
-    private var alertDialog: AlertDialog? = null
-
     private lateinit var scheduler: JobScheduler
 
     @Inject
     lateinit var rxPermissions: RxPermissions
+
+    private var isUserPremium = false
 
     override fun resolveDependencies(activityComponent: ActivityComponent) {
         activityComponent.inject(this)
@@ -64,12 +64,14 @@ class LaunchActivity : BaseActivity<LaunchState, LaunchAction, LaunchProcessor>(
             is StopSearchingForQueues -> stopSearchingForQueues()
             is NoQueuesFound -> onNoQueuesFound()
             is DisplayAvailableQueues -> displayQueues(state)
-            is DisplayCanHostQueue -> displayCanHostQueue(state)
+            is EnableNewQueueButton -> enableNewQueueButton(state)
             is LaunchClientActivity -> launchClientActivity(state)
             is AuthorizationFailed -> showAuthFailedDialog(state)
-            is ShowAlertDialog -> showAlertDialog(state.binding)
+            is ShowLocationPermissionRequiredDialog -> showAlertDialog(state.binding)
+            is ShowPremiumRequiredDialog -> showAlertDialog(state.binding)
             is ShowQueueRefreshFailed -> showQueueRefreshFailed()
             is CloseApp -> finishAndRemoveTask()
+            is NavigateToNewQueue -> navigateToNewQueue()
         }
     }
 
@@ -132,8 +134,10 @@ class LaunchActivity : BaseActivity<LaunchState, LaunchAction, LaunchProcessor>(
         }
         hostSwipeRefreshLayout.setColorSchemeResources(R.color.BurntOrangeLight2)
 
-        adapter.queueSelection
-            .map { QueueSelected(it) }
+        Observable.merge(
+            adapter.queueSelection.map { QueueSelected(it) },
+            newQueueButton.clicks().map { StartNewQueueButtonTouched(isUserPremium) }
+        ).filterEmissions()
             .subscribe(actionStream)
             .addTo(subscriptions)
 
@@ -193,18 +197,9 @@ class LaunchActivity : BaseActivity<LaunchState, LaunchAction, LaunchProcessor>(
         Nearby.getConnectionsClient(this).stopDiscovery()
     }
 
-    private fun displayCanHostQueue(state: DisplayCanHostQueue) {
+    private fun enableNewQueueButton(state: EnableNewQueueButton) {
+        isUserPremium = state.isUserPremium
         newQueueButton.isEnabled = true
-        newQueueButton.clicks()
-            .filterEmissions()
-            .subscribe {
-                if (state.canHost) {
-                    startActivity(Intent(this, HostQueueOptionsActivity::class.java))
-                } else {
-                    showPremiumRequiredDialog()
-                }
-            }
-            .addTo(subscriptions)
     }
 
     private fun displayQueues(state: DisplayAvailableQueues) {
@@ -238,23 +233,15 @@ class LaunchActivity : BaseActivity<LaunchState, LaunchAction, LaunchProcessor>(
         swipeRefreshText.visibility = View.VISIBLE
     }
 
+    private fun navigateToNewQueue() {
+        startActivity(Intent(this, HostQueueOptionsActivity::class.java))
+    }
+
     private fun launchClientActivity(state: LaunchClientActivity) {
         ClientActivity.start(this, state.hostEndpoint, state.queueTitle)
     }
 
     private fun showAuthFailedDialog(state: AuthorizationFailed) = showAlertDialog(state.binding)
-
-    private fun showPremiumRequiredDialog() {
-        if (alertDialog == null || alertDialog?.isShowing == false) {
-            alertDialog = AlertDialog.Builder(this)
-                .setView(R.layout.dialog_premium_required)
-                .setPositiveButton(R.string.ok) { dialog, which ->
-                    dialog.dismiss()
-                }
-                .create()
-            alertDialog!!.show()
-        }
-    }
 
     private val endpointDiscoveryCallback = object : EndpointDiscoveryCallback() {
         override fun onEndpointFound(endpointId: String, discoveredEndpointInfo: DiscoveredEndpointInfo) {

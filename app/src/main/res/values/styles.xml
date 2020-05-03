@@ -34,7 +34,7 @@
 
     <style name="IceTheme.Dialog.Alert" parent="Theme.AppCompat.Light.Dialog.Alert">
         <item name="colorAccent">@color/BurntOrangeLight</item>
-        <item name="android:textColorPrimary">@color/Black</item>
+        <item name="android:textColorPrimary">@color/Slate2</item>
         <item name="editTextColor">@color/Slate2</item>
     </style>
     <style name="DialogTitleText">
