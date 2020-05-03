@@ -12,7 +12,6 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.chrisf.socialq.R
 import com.chrisf.socialq.AppConstants
-import com.chrisf.socialq.enums.RequestType
 import com.chrisf.socialq.model.ClientRequestData
 import com.chrisf.socialq.services.HostService
 import com.chrisf.socialq.userinterface.App
@@ -103,21 +102,13 @@ open class HostActivity : ServiceActivity(), HostService.HostServiceListener, Pl
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
 
-        val requestType = RequestType.getRequestTypeFromRequestCode(requestCode)
-        Timber.d("Received request type: $requestType")
-
         // Handle request result
-        when (requestType) {
-            RequestType.SEARCH_REQUEST -> if (resultCode == RESULT_OK) {
-                val trackUri = data!!.getStringExtra(AppConstants.SEARCH_RESULTS_EXTRA_KEY)
-                hostService.hostRequestSong(trackUri)
-            }
-            RequestType.SPOTIFY_AUTHENTICATION_REQUEST,
-            RequestType.LOCATION_PERMISSION_REQUEST -> {
-                Timber.e("Host activity should not receive $requestType")
-            }
-            RequestType.NONE -> {
-                Timber.e("Unhandled request code: $requestCode")
+        when (requestCode) {
+            SEARCH_REQUEST_CODE -> {
+                if (resultCode == RESULT_OK) {
+                    val trackUri = data?.getStringExtra(SearchActivity.SEARCH_RESULT_TRACK_EXTRA_KEY) ?: return
+                    hostService.hostRequestSong(trackUri)
+                }
             }
         }
     }

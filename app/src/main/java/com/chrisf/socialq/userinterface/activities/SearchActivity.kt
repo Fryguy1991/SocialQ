@@ -112,13 +112,15 @@ class SearchActivity : BaseActivity<SearchState, SearchAction, SearchProcessor>(
 
     private fun sendTrackResult(uri: String) {
         val resultIntent = Intent()
-        resultIntent.putExtra(AppConstants.SEARCH_RESULTS_EXTRA_KEY, uri)
+        resultIntent.putExtra(SEARCH_RESULT_TRACK_EXTRA_KEY, uri)
         setResult(RESULT_OK, resultIntent)
         finish()
     }
 
     companion object {
         private const val RESULTS_ID = "results"
+
+        const val SEARCH_RESULT_TRACK_EXTRA_KEY = "search_result_track"
     }
 }
 

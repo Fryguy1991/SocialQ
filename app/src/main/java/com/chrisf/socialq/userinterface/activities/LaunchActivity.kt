@@ -91,7 +91,7 @@ class LaunchActivity : BaseActivity<LaunchState, LaunchAction, LaunchProcessor>(
         super.onActivityResult(requestCode, resultCode, data)
 
         when (requestCode) {
-            SPOTIFY_AUTH_REFRESH_CODE-> {
+            SPOTIFY_AUTH_REFRESH_CODE -> {
                 val response = AuthenticationClient.getResponse(resultCode, data)
                 if (response.type == AuthenticationResponse.Type.CODE) {
                     Timber.d("Authorization code granted")
@@ -216,8 +216,7 @@ class LaunchActivity : BaseActivity<LaunchState, LaunchAction, LaunchProcessor>(
             JobInfo.Builder(
                 AppConstants.ACCESS_SERVICE_ID,
                 ComponentName(this, AccessService::class.java)
-            )
-                .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
+            ).setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
                 .setPeriodic(TimeUnit.MINUTES.toMillis(20))
                 .build()
         )

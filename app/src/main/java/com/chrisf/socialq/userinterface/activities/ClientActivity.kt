@@ -14,7 +14,6 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.chrisf.socialq.R
 import com.chrisf.socialq.AppConstants
-import com.chrisf.socialq.enums.RequestType
 import com.chrisf.socialq.model.spotify.PlaylistTrack
 import com.chrisf.socialq.services.ClientService
 import com.chrisf.socialq.userinterface.App
@@ -150,24 +149,16 @@ open class ClientActivity : ServiceActivity(), ClientService.ClientServiceListen
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
 
-        val requestType = RequestType.getRequestTypeFromRequestCode(requestCode)
-        Timber.d("Received request type: $requestType")
-
         // Handle request result
-        when (requestType) {
-            RequestType.SEARCH_REQUEST -> if (resultCode == RESULT_OK) {
-                val trackUri = data!!.getStringExtra(AppConstants.SEARCH_RESULTS_EXTRA_KEY)
-                if (trackUri != null && !trackUri.isEmpty()) {
-                    Timber.d("Client adding track to queue playlist")
-                    clientService.sendTrackToHost(trackUri)
+        when (requestCode) {
+            SEARCH_REQUEST_CODE-> {
+                if (resultCode == RESULT_OK) {
+                    val trackUri = data?.getStringExtra(SearchActivity.SEARCH_RESULT_TRACK_EXTRA_KEY)
+                    if (!trackUri.isNullOrBlank()) {
+                        Timber.d("Client adding track to queue playlist")
+                        clientService.sendTrackToHost(trackUri)
+                    }
                 }
-            }
-            RequestType.SPOTIFY_AUTHENTICATION_REQUEST,
-            RequestType.LOCATION_PERMISSION_REQUEST -> {
-                Timber.e("Client activity should not receive $requestType")
-            }
-            RequestType.NONE -> {
-                Timber.e("Unhandled request code: $requestCode")
             }
         }
     }

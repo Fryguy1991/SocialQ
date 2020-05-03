@@ -7,14 +7,6 @@ import java.util.UUID;
  */
 
 public class AppConstants {
-    // UUID Information
-    public static final String UUID_STRING = "2c865811-87e4-498b-9a95-b961edf2440d";
-    public static final UUID APPLICATION_UUID = UUID.fromString(UUID_STRING);
-
-    // AUTH Server Request Values
-    public static final String AWS_SERVER_URL = "http://54.86.80.241/";
-    public static final String AUTH_REQ_URL_FORMAT = AWS_SERVER_URL + "app/socialq/code/%1$s";
-
     // Service Name
     public static final String SERVICE_NAME = "com.chrisf.socialq";
     // Client ID specific to this application
@@ -30,7 +22,6 @@ public class AppConstants {
     public static final String BASE_USER_ID = "social_queue_base_user";
 
     // Intent extra key strings
-    public static final String SEARCH_RESULTS_EXTRA_KEY = "search_results_key";
     public static final String ND_ENDPOINT_ID_EXTRA_KEY = "hostEndpointId";
     public static final String QUEUE_TITLE_KEY = "queueTitle";
     public static final String FAIR_PLAY_KEY = "isFairplay";
@@ -80,17 +71,8 @@ public class AppConstants {
     public static final int CLIENT_SERVICE_ID = 2;
     public static final int ACCESS_SERVICE_ID = 3;
 
-    // Auth JSON Keys
-    public static final String JSON_BODY_KEY = "body";
-    public static final String JSON_ACCESS_TOKEN_KEY = "access_token";
-    public static final String JSON_REFRESH_TOEKN_KEY = "refresh_token";
-    public static final String JSON_EXPIRES_IN_KEY = "expires_in";
-
     // Notification Pending Intent Request Codes
     public static final String ACTION_REQUEST_NEXT = "socialq_notification_next";
     public static final String ACTION_REQUEST_PLAY_PAUSE = "socialq_notification_play_pause";
     public static final String ACTION_NOTIFICATION_SEARCH = "socialq_notification_search";
-
-    // Broadcast Receiver Intent Strings
-    public static final String BR_INTENT_ACCESS_TOKEN_UPDATED = "access_token_updated";
 }

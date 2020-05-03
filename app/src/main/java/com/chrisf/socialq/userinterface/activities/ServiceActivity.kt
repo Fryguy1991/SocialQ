@@ -7,7 +7,6 @@ import android.view.MenuItem
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import com.chrisf.socialq.R
-import com.chrisf.socialq.enums.RequestType
 
 abstract class ServiceActivity : AppCompatActivity(), View.OnClickListener {
 
@@ -38,7 +37,7 @@ abstract class ServiceActivity : AppCompatActivity(), View.OnClickListener {
 
     protected fun startSearchActivity() {
         val searchIntent = Intent(this, SearchActivity::class.java)
-        startActivityForResult(searchIntent, RequestType.SEARCH_REQUEST.requestCode)
+        startActivityForResult(searchIntent, SEARCH_REQUEST_CODE)
         overridePendingTransition(R.anim.slide_in_from_bottom, R.anim.fade_out)
     }
 
@@ -53,5 +52,9 @@ abstract class ServiceActivity : AppCompatActivity(), View.OnClickListener {
                 }
             }
         }
+    }
+
+    companion object {
+        const val SEARCH_REQUEST_CODE = 100
     }
 }
