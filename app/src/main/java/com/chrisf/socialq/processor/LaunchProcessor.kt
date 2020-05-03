@@ -53,12 +53,12 @@ class LaunchProcessor @Inject constructor(
 
     override fun handleAction(action: LaunchAction) {
         when (action) {
-            is ViewCreated -> handleViewCreated(action)
+            is ViewCreated -> handleViewCreated()
             is QueueRefreshRequested -> handleQueueRefreshRequested()
             is EndpointFound -> handleEndpointFound(action)
             is EndpointLost -> handleEndpointLost(action)
             is AuthCodeRetrieved -> handleAuthCodeRetrieved(action)
-            is AuthCodeRetrievalFailed -> handleAuthCodeRetrievalFailed()
+            is AuthCodeRetrievalFailed -> stateStream.accept(ShowAuthFailedDialog(authFailedDialogBinding))
             is RetryAuthDialogButtonTouched -> stateStream.accept(RequestAuthorization)
             is CloseAppDialogButtonTouched -> stateStream.accept(CloseApp)
             is LocationPermissionDenied -> handleLocationPermissionDenied()
@@ -67,7 +67,7 @@ class LaunchProcessor @Inject constructor(
         }
     }
 
-    private fun handleViewCreated(action: ViewCreated) {
+    private fun handleViewCreated() {
         val refreshToken = preferences.refreshToken
         if (refreshToken.isNullOrBlank()) {
             stateStream.accept(RequestAuthorization)
@@ -82,10 +82,10 @@ class LaunchProcessor @Inject constructor(
                             StartAuthRefreshJob
                         }
                         is AuthService.AuthResponse.Failure,
-                        AuthService.AuthResponse.Timeout -> AuthorizationFailed(authFailedDialogBinding)
+                        AuthService.AuthResponse.Timeout -> ShowAuthFailedDialog(authFailedDialogBinding)
                     }
                 }
-                .onErrorReturn { AuthorizationFailed(authFailedDialogBinding) }
+                .onErrorReturn { ShowAuthFailedDialog(authFailedDialogBinding) }
                 .subscribe(stateStream)
                 .addTo(subscriptions)
         }
@@ -104,15 +104,13 @@ class LaunchProcessor @Inject constructor(
                         StartAuthRefreshJob
                     }
                     is AuthService.AuthResponse.Failure,
-                    AuthService.AuthResponse.Timeout -> AuthorizationFailed(authFailedDialogBinding)
+                    AuthService.AuthResponse.Timeout -> ShowAuthFailedDialog(authFailedDialogBinding)
                 }
             }
-            .onErrorReturn { AuthorizationFailed(authFailedDialogBinding) }
+            .onErrorReturn { ShowAuthFailedDialog(authFailedDialogBinding) }
             .subscribe(stateStream)
             .addTo(subscriptions)
     }
-
-    private fun handleAuthCodeRetrievalFailed() = stateStream.accept(AuthorizationFailed(authFailedDialogBinding))
 
     private fun handleLocationPermissionDenied() {
         stateStream.accept(ShowQueueRefreshFailed)
@@ -129,9 +127,26 @@ class LaunchProcessor @Inject constructor(
     }
 
     private fun handleQueueRefreshRequested() {
-        if (!isNearbySearching) {
-            searchForQueues()
+        if (isNearbySearching) {
+            return
         }
+
+        joinableQueues.clear()
+        isNearbySearching = true
+        stateStream.accept(SearchForQueues)
+        Observable.just(Unit)
+            .delay(5, TimeUnit.SECONDS)
+            .subscribe {
+                isNearbySearching = false
+                stateStream.accept(StopSearchingForQueues)
+
+                if (joinableQueues.size > 0) {
+                    stateStream.accept(DisplayAvailableQueues(joinableQueues.toList()))
+                } else {
+                    stateStream.accept(NoQueuesFound)
+                }
+            }
+            .addTo(subscriptions)
     }
 
     private fun handleEndpointFound(state: EndpointFound) {
@@ -157,49 +172,6 @@ class LaunchProcessor @Inject constructor(
         joinableQueues.removeAll { it.endpointId == state.endpointId }
     }
 
-    private fun getCurrentUser() {
-        spotifyService.getCurrentUser()
-            .subscribeOn(Schedulers.io())
-            .map {
-                when (it) {
-                    is ApiResponse.Success -> {
-                        val isPremium = SpotifyUserType
-                            .getSpotifyUserTypeFromProductType(it.body.product) == SpotifyUserType.PREMIUM
-                        EnableNewQueueButton(isPremium)
-                    }
-                    is ApiResponse.NetworkError -> TODO()
-                    ApiResponse.NetworkTimeout -> TODO()
-                    ApiResponse.Unauthorized -> TODO()
-                    ApiResponse.UnknownError -> TODO()
-                }
-            }
-            .subscribe(stateStream)
-            .addTo(subscriptions)
-    }
-
-    private fun searchForQueues() {
-        if (isNearbySearching) {
-            return
-        }
-
-        joinableQueues.clear()
-        isNearbySearching = true
-        stateStream.accept(SearchForQueues)
-        Observable.just(Unit)
-            .delay(5, TimeUnit.SECONDS)
-            .subscribe {
-                isNearbySearching = false
-                stateStream.accept(StopSearchingForQueues)
-
-                if (joinableQueues.size > 0) {
-                    stateStream.accept(DisplayAvailableQueues(joinableQueues.toList()))
-                } else {
-                    stateStream.accept(NoQueuesFound)
-                }
-            }
-            .addTo(subscriptions)
-    }
-
     private fun handleQueueSelected(action: QueueSelected) {
         stateStream.accept(LaunchClientActivity(action.queue.endpointId, action.queue.queueName))
     }
@@ -218,6 +190,26 @@ class LaunchProcessor @Inject constructor(
                 ShowPremiumRequiredDialog(dialogBinding)
             }
         )
+    }
+
+    private fun getCurrentUser() {
+        spotifyService.getCurrentUser()
+            .subscribeOn(Schedulers.io())
+            .map {
+                when (it) {
+                    is ApiResponse.Success -> {
+                        val isPremium = SpotifyUserType
+                            .getSpotifyUserTypeFromProductType(it.body.product) == SpotifyUserType.PREMIUM
+                        EnableNewQueueButton(isPremium)
+                    }
+                    is ApiResponse.NetworkError -> TODO()
+                    ApiResponse.NetworkTimeout -> TODO()
+                    ApiResponse.Unauthorized -> TODO()
+                    ApiResponse.UnknownError -> TODO()
+                }
+            }
+            .subscribe(stateStream)
+            .addTo(subscriptions)
     }
 
     sealed class LaunchState {
@@ -242,7 +234,7 @@ class LaunchProcessor @Inject constructor(
             val queueTitle: String
         ) : LaunchState()
 
-        data class AuthorizationFailed(val binding: AlertDialogBinding<LaunchAction>) : LaunchState()
+        data class ShowAuthFailedDialog(val binding: AlertDialogBinding<LaunchAction>) : LaunchState()
 
         data class ShowLocationPermissionRequiredDialog(val binding: AlertDialogBinding<LaunchAction>) : LaunchState()
 

@@ -13,7 +13,6 @@ import androidx.recyclerview.widget.RecyclerView
 import com.chrisf.socialq.AppConstants
 import com.chrisf.socialq.R
 import com.chrisf.socialq.dagger.components.ActivityComponent
-import com.chrisf.socialq.enums.RequestType
 import com.chrisf.socialq.extensions.filterEmissions
 import com.chrisf.socialq.processor.LaunchProcessor
 import com.chrisf.socialq.processor.LaunchProcessor.LaunchAction
@@ -45,42 +44,34 @@ class LaunchActivity : BaseActivity<LaunchState, LaunchAction, LaunchProcessor>(
 
     private val adapter = QueueDisplayAdapter()
 
-    private lateinit var scheduler: JobScheduler
+    private val scheduler: JobScheduler by lazy { getSystemService(Context.JOB_SCHEDULER_SERVICE) as JobScheduler }
 
     @Inject
     lateinit var rxPermissions: RxPermissions
 
     private var isUserPremium = false
 
-    override fun resolveDependencies(activityComponent: ActivityComponent) {
-        activityComponent.inject(this)
+    private val endpointDiscoveryCallback = object : EndpointDiscoveryCallback() {
+        override fun onEndpointFound(endpointId: String, discoveredEndpointInfo: DiscoveredEndpointInfo) {
+            Timber.d("Endpoint Found")
+
+            actionStream.accept(EndpointFound(endpointId, discoveredEndpointInfo))
+        }
+
+        override fun onEndpointLost(endpointId: String) {
+            Timber.d("Endpoint Lost")
+            actionStream.accept(EndpointLost(endpointId))
+        }
     }
 
-    override fun handleState(state: LaunchState) {
-        when (state) {
-            is StartAuthRefreshJob -> startPeriodicAccessRefresh()
-            is RequestAuthorization -> requestAuthorization()
-            is SearchForQueues -> searchForQueues()
-            is StopSearchingForQueues -> stopSearchingForQueues()
-            is NoQueuesFound -> onNoQueuesFound()
-            is DisplayAvailableQueues -> displayQueues(state)
-            is EnableNewQueueButton -> enableNewQueueButton(state)
-            is LaunchClientActivity -> launchClientActivity(state)
-            is AuthorizationFailed -> showAuthFailedDialog(state)
-            is ShowLocationPermissionRequiredDialog -> showAlertDialog(state.binding)
-            is ShowPremiumRequiredDialog -> showAlertDialog(state.binding)
-            is ShowQueueRefreshFailed -> showQueueRefreshFailed()
-            is CloseApp -> finishAndRemoveTask()
-            is NavigateToNewQueue -> navigateToNewQueue()
-        }
+    override fun resolveDependencies(activityComponent: ActivityComponent) {
+        activityComponent.inject(this)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_launch)
         setSupportActionBar(toolbar)
-
-        scheduler = getSystemService(Context.JOB_SCHEDULER_SERVICE) as JobScheduler
 
         setupViews()
         actionStream.accept(ViewCreated)
@@ -99,9 +90,8 @@ class LaunchActivity : BaseActivity<LaunchState, LaunchAction, LaunchProcessor>(
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
 
-        val requestType = RequestType.getRequestTypeFromRequestCode(requestCode)
-        when (requestType) {
-            RequestType.SPOTIFY_AUTHENTICATION_REQUEST -> {
+        when (requestCode) {
+            SPOTIFY_AUTH_REFRESH_CODE-> {
                 val response = AuthenticationClient.getResponse(resultCode, data)
                 if (response.type == AuthenticationResponse.Type.CODE) {
                     Timber.d("Authorization code granted")
@@ -117,6 +107,124 @@ class LaunchActivity : BaseActivity<LaunchState, LaunchAction, LaunchProcessor>(
 
     override fun onPause() {
         super.onPause()
+        Nearby.getConnectionsClient(this).stopDiscovery()
+    }
+
+    override fun handleState(state: LaunchState) {
+        when (state) {
+            is CloseApp -> finishAndRemoveTask()
+            is DisplayAvailableQueues -> displayQueues(state)
+            is EnableNewQueueButton -> enableNewQueueButton(state)
+            is LaunchClientActivity -> launchClientActivity(state)
+            is NavigateToNewQueue -> navigateToNewQueue()
+            is NoQueuesFound -> onNoQueuesFound()
+            is RequestAuthorization -> requestAuthorization()
+            is SearchForQueues -> searchForQueues()
+            is ShowAuthFailedDialog -> showAlertDialog(state.binding)
+            is ShowLocationPermissionRequiredDialog -> showAlertDialog(state.binding)
+            is ShowPremiumRequiredDialog -> showAlertDialog(state.binding)
+            is ShowQueueRefreshFailed -> showQueueRefreshFailed()
+            is StartAuthRefreshJob -> startPeriodicAccessRefresh()
+            is StopSearchingForQueues -> stopSearchingForQueues()
+        }
+    }
+
+    private fun displayQueues(state: DisplayAvailableQueues) {
+        // Hide Views
+        swipeRefreshText.visibility = View.GONE
+
+        // Show Views
+        adapter.updateAdapter(state.queueList)
+        availableQueueRecyclerView.visibility = View.VISIBLE
+    }
+
+    private fun enableNewQueueButton(state: EnableNewQueueButton) {
+        isUserPremium = state.isUserPremium
+        newQueueButton.isEnabled = true
+    }
+
+    private fun launchClientActivity(state: LaunchClientActivity) {
+        ClientActivity.start(this, state.hostEndpoint, state.queueTitle)
+    }
+
+    private fun navigateToNewQueue() {
+        startActivity(Intent(this, HostQueueOptionsActivity::class.java))
+    }
+
+    private fun onNoQueuesFound() {
+        // Hide Views
+        adapter.updateAdapter(emptyList())
+        availableQueueRecyclerView.visibility = View.GONE
+        hostSwipeRefreshLayout.isRefreshing = false
+
+        // Show Views
+        swipeRefreshText.text = getString(R.string.no_host_found_message)
+        swipeRefreshText.visibility = View.VISIBLE
+    }
+
+    private fun requestAuthorization() {
+        val accessScopes = arrayOf("user-read-private", "streaming", "playlist-modify-private", "playlist-modify-public", "playlist-read-private")
+        val builder = AuthenticationRequest.Builder(
+            AppConstants.CLIENT_ID,
+            AuthenticationResponse.Type.CODE,
+            AppConstants.REDIRECT_URI)
+        builder.setScopes(accessScopes)
+        val request = builder.build()
+
+        AuthenticationClient.openLoginActivity(
+            this,
+            SPOTIFY_AUTH_REFRESH_CODE,
+            request
+        )
+    }
+
+    private fun searchForQueues() {
+        hostSwipeRefreshLayout.isRefreshing = true
+        swipeRefreshText.text = getString(R.string.queue_searching_message)
+        swipeRefreshText.visibility = View.VISIBLE
+        availableQueueRecyclerView.visibility = View.GONE
+
+        val options = DiscoveryOptions.Builder().setStrategy(Strategy.P2P_STAR).build()
+
+        Nearby.getConnectionsClient(this)
+            .startDiscovery(
+                AppConstants.SERVICE_NAME,
+                endpointDiscoveryCallback,
+                options
+            )
+            .addOnSuccessListener {
+                actionStream.accept(StartedNearbySearch(true))
+            }
+            .addOnFailureListener {
+                actionStream.accept(StartedNearbySearch(false))
+            }
+    }
+
+    private fun showQueueRefreshFailed() {
+        // Hide Views
+        adapter.updateAdapter(emptyList())
+        availableQueueRecyclerView.visibility = View.GONE
+        hostSwipeRefreshLayout.isRefreshing = false
+
+        // Show Views
+        swipeRefreshText.text = getString(R.string.host_search_failed_message)
+        swipeRefreshText.visibility = View.VISIBLE
+    }
+
+    private fun startPeriodicAccessRefresh() {
+        scheduler.schedule(
+            JobInfo.Builder(
+                AppConstants.ACCESS_SERVICE_ID,
+                ComponentName(this, AccessService::class.java)
+            )
+                .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
+                .setPeriodic(TimeUnit.MINUTES.toMillis(20))
+                .build()
+        )
+    }
+
+    private fun stopSearchingForQueues() {
+        hostSwipeRefreshLayout.isRefreshing = false
         Nearby.getConnectionsClient(this).stopDiscovery()
     }
 
@@ -147,112 +255,7 @@ class LaunchActivity : BaseActivity<LaunchState, LaunchAction, LaunchProcessor>(
         availableQueueRecyclerView.adapter = adapter
     }
 
-    private fun requestAuthorization() {
-        val accessScopes = arrayOf("user-read-private", "streaming", "playlist-modify-private", "playlist-modify-public", "playlist-read-private")
-        val builder = AuthenticationRequest.Builder(
-            AppConstants.CLIENT_ID,
-            AuthenticationResponse.Type.CODE,
-            AppConstants.REDIRECT_URI)
-        builder.setScopes(accessScopes)
-        val request = builder.build()
-        AuthenticationClient.openLoginActivity(this, RequestType.SPOTIFY_AUTHENTICATION_REQUEST.requestCode, request)
-    }
-
-    private fun startPeriodicAccessRefresh() {
-        scheduler.schedule(
-            JobInfo.Builder(
-                AppConstants.ACCESS_SERVICE_ID,
-                ComponentName(this, AccessService::class.java)
-            )
-                .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
-                .setPeriodic(TimeUnit.MINUTES.toMillis(20))
-                .build()
-        )
-    }
-
-    private fun searchForQueues() {
-        hostSwipeRefreshLayout.isRefreshing = true
-        swipeRefreshText.text = getString(R.string.queue_searching_message)
-        swipeRefreshText.visibility = View.VISIBLE
-        availableQueueRecyclerView.visibility = View.GONE
-
-        val options = DiscoveryOptions.Builder().setStrategy(Strategy.P2P_STAR).build()
-
-        Nearby.getConnectionsClient(this)
-            .startDiscovery(
-                AppConstants.SERVICE_NAME,
-                endpointDiscoveryCallback,
-                options
-            )
-            .addOnSuccessListener {
-                actionStream.accept(StartedNearbySearch(true))
-            }
-            .addOnFailureListener {
-                actionStream.accept(StartedNearbySearch(false))
-            }
-    }
-
-    private fun stopSearchingForQueues() {
-        hostSwipeRefreshLayout.isRefreshing = false
-        Nearby.getConnectionsClient(this).stopDiscovery()
-    }
-
-    private fun enableNewQueueButton(state: EnableNewQueueButton) {
-        isUserPremium = state.isUserPremium
-        newQueueButton.isEnabled = true
-    }
-
-    private fun displayQueues(state: DisplayAvailableQueues) {
-        // Hide Views
-        swipeRefreshText.visibility = View.GONE
-
-        // Show Views
-        adapter.updateAdapter(state.queueList)
-        availableQueueRecyclerView.visibility = View.VISIBLE
-    }
-
-    private fun onNoQueuesFound() {
-        // Hide Views
-        adapter.updateAdapter(emptyList())
-        availableQueueRecyclerView.visibility = View.GONE
-        hostSwipeRefreshLayout.isRefreshing = false
-
-        // Show Views
-        swipeRefreshText.text = getString(R.string.no_host_found_message)
-        swipeRefreshText.visibility = View.VISIBLE
-    }
-
-    private fun showQueueRefreshFailed() {
-        // Hide Views
-        adapter.updateAdapter(emptyList())
-        availableQueueRecyclerView.visibility = View.GONE
-        hostSwipeRefreshLayout.isRefreshing = false
-
-        // Show Views
-        swipeRefreshText.text = getString(R.string.host_search_failed_message)
-        swipeRefreshText.visibility = View.VISIBLE
-    }
-
-    private fun navigateToNewQueue() {
-        startActivity(Intent(this, HostQueueOptionsActivity::class.java))
-    }
-
-    private fun launchClientActivity(state: LaunchClientActivity) {
-        ClientActivity.start(this, state.hostEndpoint, state.queueTitle)
-    }
-
-    private fun showAuthFailedDialog(state: AuthorizationFailed) = showAlertDialog(state.binding)
-
-    private val endpointDiscoveryCallback = object : EndpointDiscoveryCallback() {
-        override fun onEndpointFound(endpointId: String, discoveredEndpointInfo: DiscoveredEndpointInfo) {
-            Timber.d("Endpoint Found")
-
-            actionStream.accept(EndpointFound(endpointId, discoveredEndpointInfo))
-        }
-
-        override fun onEndpointLost(endpointId: String) {
-            Timber.d("Endpoint Lost")
-            actionStream.accept(EndpointLost(endpointId))
-        }
+    companion object {
+        private const val SPOTIFY_AUTH_REFRESH_CODE = 100
     }
 }
