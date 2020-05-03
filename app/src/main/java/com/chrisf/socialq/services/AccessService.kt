@@ -4,7 +4,9 @@ import android.app.job.JobParameters
 import com.chrisf.socialq.dagger.components.JobServiceComponent
 import com.chrisf.socialq.processor.AccessProcessor
 import com.chrisf.socialq.processor.AccessProcessor.AccessAction
+import com.chrisf.socialq.processor.AccessProcessor.AccessAction.RequestAccessRefresh
 import com.chrisf.socialq.processor.AccessProcessor.AccessState
+import com.chrisf.socialq.processor.AccessProcessor.AccessState.AccessRefreshComplete
 
 class AccessService : BaseJobService<AccessState, AccessAction, AccessProcessor>() {
 
@@ -13,15 +15,18 @@ class AccessService : BaseJobService<AccessState, AccessAction, AccessProcessor>
     }
 
     override fun handleState(state: AccessState) {
-        TODO("Currently not receiving any states")
+        when (state) {
+            is AccessRefreshComplete -> jobFinished(state.jobParameters, true)
+        }
     }
 
-    override fun onStartJob(params: JobParameters?): Boolean {
-        actionStream.accept(AccessAction.RequestAccessRefresh)
-        return false
+    override fun onStartJob(params: JobParameters): Boolean {
+        actionStream.accept(RequestAccessRefresh(params))
+        return true
     }
 
-    override fun onStopJob(params: JobParameters?): Boolean {
+    override fun onStopJob(params: JobParameters): Boolean {
+        stopSelf()
         return true
     }
 }

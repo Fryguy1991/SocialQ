@@ -82,7 +82,7 @@
     <string name="host_search_failed_message">Queue search failed. Pull down to retry, or start your own!</string>
     <string name="queue_searching_message">Searching for available queues.</string>
     <string name="location_permission_required_title">Location permission required</string>
-    <string name="location_permission_required_message">Location permissions are required to host, join, and add songs to queues.</string>
+    <string name="location_permission_required_message">Location permission is required to host, join, and add songs to queues.</string>
 
     <!-- Join Queue Fragment -->
     <string name="queue_details">Queue Details</string>
