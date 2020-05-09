@@ -18,9 +18,9 @@ import com.chrisf.socialq.userinterface.common.AlertDialogBinding
 import com.google.android.gms.nearby.connection.DiscoveredEndpointInfo
 import io.reactivex.Observable
 import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.disposables.Disposable
 import io.reactivex.rxkotlin.addTo
 import io.reactivex.schedulers.Schedulers
-import timber.log.Timber
 import java.util.concurrent.TimeUnit
 import java.util.regex.Pattern
 import javax.inject.Inject
@@ -33,11 +33,6 @@ class LaunchProcessor @Inject constructor(
     lifecycle: Lifecycle,
     subscriptions: CompositeDisposable
 ) : BaseProcessor<LaunchState, LaunchAction>(lifecycle, subscriptions) {
-
-    private val joinableQueues = mutableListOf<QueueModel>()
-
-    private var isNearbySearching = false
-
     private val authFailedDialogBinding: AlertDialogBinding<LaunchAction> by lazy {
         AlertDialogBinding(
             title = resources.getString(R.string.auth_fail_title),
@@ -51,12 +46,13 @@ class LaunchProcessor @Inject constructor(
         )
     }
 
+    private var queueSearchDisposable: Disposable? = null
+
     override fun handleAction(action: LaunchAction) {
         when (action) {
             is ViewCreated -> handleViewCreated()
+            is ViewPausing -> handleViewPausing()
             is QueueRefreshRequested -> handleQueueRefreshRequested()
-            is EndpointFound -> handleEndpointFound(action)
-            is EndpointLost -> handleEndpointLost(action)
             is AuthCodeRetrieved -> handleAuthCodeRetrieved(action)
             is AuthCodeRetrievalFailed -> stateStream.accept(ShowAuthFailedDialog(authFailedDialogBinding))
             is RetryAuthDialogButtonTouched -> stateStream.accept(RequestAuthorization)
@@ -64,6 +60,7 @@ class LaunchProcessor @Inject constructor(
             is LocationPermissionDenied -> handleLocationPermissionDenied()
             is QueueSelected -> handleQueueSelected(action)
             is StartNewQueueButtonTouched -> handleStartNewQueueButtonTouched(action)
+            is EndpointListUpdated -> handleEndpointListUpdated(action)
         }
     }
 
@@ -89,6 +86,10 @@ class LaunchProcessor @Inject constructor(
                 .subscribe(stateStream)
                 .addTo(subscriptions)
         }
+    }
+
+    private fun handleViewPausing() {
+        queueSearchDisposable?.dispose()
     }
 
     private fun handleAuthCodeRetrieved(action: AuthCodeRetrieved) {
@@ -127,49 +128,37 @@ class LaunchProcessor @Inject constructor(
     }
 
     private fun handleQueueRefreshRequested() {
-        if (isNearbySearching) {
-            return
-        }
-
-        joinableQueues.clear()
-        isNearbySearching = true
         stateStream.accept(SearchForQueues)
-        Observable.just(Unit)
-            .delay(5, TimeUnit.SECONDS)
-            .subscribe {
-                isNearbySearching = false
-                stateStream.accept(StopSearchingForQueues)
 
-                if (joinableQueues.size > 0) {
-                    stateStream.accept(DisplayAvailableQueues(joinableQueues.toList()))
-                } else {
-                    stateStream.accept(NoQueuesFound)
-                }
-            }
+        queueSearchDisposable = Observable.just(Unit)
+            .delay(5, TimeUnit.SECONDS)
+            .map { StopSearchingForQueues }
+            .subscribe(stateStream)
             .addTo(subscriptions)
     }
 
-    private fun handleEndpointFound(state: EndpointFound) {
-        if (state.endpointInfo.serviceId == AppConstants.SERVICE_NAME) {
-            Timber.d("Found a SocialQ host with endpoint ID ${state.endpointId}")
+    private fun handleEndpointListUpdated(action: EndpointListUpdated) {
+        val displayList = action.updatedList.filter {
+            Pattern.compile(AppConstants.NEARBY_HOST_NAME_REGEX)
+                .matcher(it.endpointInfo.endpointName)
+                .matches()
+        }.map {
+            val hostNameMatcher = Pattern.compile(AppConstants.NEARBY_HOST_NAME_REGEX).matcher(it.endpointInfo.endpointName)
+            hostNameMatcher.find()
+            val queueName = hostNameMatcher.group(1) ?: resources.getString(R.string.unknown_queue)
+            val ownerName = hostNameMatcher.group(2) ?: resources.getString(R.string.unknown_host)
+            val isFairPlayCharacter = hostNameMatcher.group(3)
+            val isFairPlay = isFairPlayCharacter == AppConstants.FAIR_PLAY_TRUE_CHARACTER
 
-            val hostNameMatcher = Pattern.compile(AppConstants.NEARBY_HOST_NAME_REGEX).matcher(state.endpointInfo.endpointName)
-
-            if (hostNameMatcher.find()) {
-                val queueName = hostNameMatcher.group(1)
-                val ownerName = hostNameMatcher.group(2)
-                val isFairplayCharacter = hostNameMatcher.group(3)
-
-                val isFairplay = isFairplayCharacter == AppConstants.FAIR_PLAY_TRUE_CHARACTER
-                joinableQueues.add(QueueModel(state.endpointId, queueName, ownerName, isFairplay))
-            } else {
-                Timber.e("Endpoint ID ${state.endpointId} has an invalid name")
-            }
+            QueueModel(
+                endpointId = it.endpointId,
+                queueName = queueName,
+                ownerName = ownerName,
+                isFairPlayActive = isFairPlay
+            )
         }
-    }
 
-    private fun handleEndpointLost(state: EndpointLost) {
-        joinableQueues.removeAll { it.endpointId == state.endpointId }
+        stateStream.accept(DisplayAvailableQueues(displayList))
     }
 
     private fun handleQueueSelected(action: QueueSelected) {
@@ -248,16 +237,11 @@ class LaunchProcessor @Inject constructor(
     sealed class LaunchAction {
         object ViewCreated : LaunchAction()
 
+        object ViewPausing : LaunchAction()
+
         object QueueRefreshRequested : LaunchAction()
 
         data class StartedNearbySearch(val wasSuccessful: Boolean) : LaunchAction()
-
-        data class EndpointFound(
-            val endpointId: String,
-            val endpointInfo: DiscoveredEndpointInfo
-        ) : LaunchAction()
-
-        data class EndpointLost(val endpointId: String) : LaunchAction()
 
         data class QueueSelected(val queue: QueueModel) : LaunchAction()
 
@@ -272,5 +256,15 @@ class LaunchProcessor @Inject constructor(
         object CloseAppDialogButtonTouched : LaunchAction()
 
         data class StartNewQueueButtonTouched(val isUserPremium: Boolean) : LaunchAction()
+
+        data class EndpointListUpdated(val updatedList: List<SocialQEndpoint>) : LaunchAction()
     }
 }
+
+/**
+ * SocialQ supporting endpoint found by the view
+ */
+data class SocialQEndpoint(
+    val endpointId: String,
+    val endpointInfo: DiscoveredEndpointInfo
+)

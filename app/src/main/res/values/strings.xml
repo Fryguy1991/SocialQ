@@ -83,6 +83,8 @@
     <string name="queue_searching_message">Searching for available queues.</string>
     <string name="location_permission_required_title">Location permission required</string>
     <string name="location_permission_required_message">Location permission is required to host, join, and add songs to queues.</string>
+    <string name="unknown_queue">Unknown Queue</string>
+    <string name="unknown_host">Unknown Host</string>
 
     <!-- Join Queue Fragment -->
     <string name="queue_details">Queue Details</string>

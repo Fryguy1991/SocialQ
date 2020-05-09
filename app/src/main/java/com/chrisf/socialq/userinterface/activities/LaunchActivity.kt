@@ -19,6 +19,7 @@ import com.chrisf.socialq.processor.LaunchProcessor.LaunchAction
 import com.chrisf.socialq.processor.LaunchProcessor.LaunchAction.*
 import com.chrisf.socialq.processor.LaunchProcessor.LaunchState
 import com.chrisf.socialq.processor.LaunchProcessor.LaunchState.*
+import com.chrisf.socialq.processor.SocialQEndpoint
 import com.chrisf.socialq.services.AccessService
 import com.chrisf.socialq.userinterface.adapters.QueueDisplayAdapter
 import com.chrisf.socialq.userinterface.views.QueueItemDecoration
@@ -46,6 +47,8 @@ class LaunchActivity : BaseActivity<LaunchState, LaunchAction, LaunchProcessor>(
 
     private val scheduler: JobScheduler by lazy { getSystemService(Context.JOB_SCHEDULER_SERVICE) as JobScheduler }
 
+    private val socialQEndpoints: MutableList<SocialQEndpoint> = mutableListOf()
+
     @Inject
     lateinit var rxPermissions: RxPermissions
 
@@ -55,12 +58,22 @@ class LaunchActivity : BaseActivity<LaunchState, LaunchAction, LaunchProcessor>(
         override fun onEndpointFound(endpointId: String, discoveredEndpointInfo: DiscoveredEndpointInfo) {
             Timber.d("Endpoint Found")
 
-            actionStream.accept(EndpointFound(endpointId, discoveredEndpointInfo))
+            socialQEndpoints.add(
+                SocialQEndpoint(
+                    endpointId = endpointId,
+                    endpointInfo = discoveredEndpointInfo
+                )
+            )
+            actionStream.accept(EndpointListUpdated(socialQEndpoints))
         }
 
         override fun onEndpointLost(endpointId: String) {
             Timber.d("Endpoint Lost")
-            actionStream.accept(EndpointLost(endpointId))
+
+            val endpointsToRemove = socialQEndpoints.filter { it.endpointId == endpointId }
+            socialQEndpoints.removeAll(endpointsToRemove)
+
+            actionStream.accept(EndpointListUpdated(socialQEndpoints))
         }
     }
 
@@ -108,6 +121,9 @@ class LaunchActivity : BaseActivity<LaunchState, LaunchAction, LaunchProcessor>(
     override fun onPause() {
         super.onPause()
         Nearby.getConnectionsClient(this).stopDiscovery()
+        hostSwipeRefreshLayout.isRefreshing = false
+
+        actionStream.accept(ViewPausing)
     }
 
     override fun handleState(state: LaunchState) {
@@ -179,6 +195,7 @@ class LaunchActivity : BaseActivity<LaunchState, LaunchAction, LaunchProcessor>(
     }
 
     private fun searchForQueues() {
+        socialQEndpoints.clear()
         hostSwipeRefreshLayout.isRefreshing = true
         swipeRefreshText.text = getString(R.string.queue_searching_message)
         swipeRefreshText.visibility = View.VISIBLE
@@ -225,6 +242,8 @@ class LaunchActivity : BaseActivity<LaunchState, LaunchAction, LaunchProcessor>(
     private fun stopSearchingForQueues() {
         hostSwipeRefreshLayout.isRefreshing = false
         Nearby.getConnectionsClient(this).stopDiscovery()
+
+        actionStream.accept(EndpointListUpdated(socialQEndpoints))
     }
 
     private fun setupViews() {
