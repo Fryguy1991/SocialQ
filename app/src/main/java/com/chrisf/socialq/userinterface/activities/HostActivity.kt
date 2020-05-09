@@ -12,20 +12,25 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.chrisf.socialq.R
 import com.chrisf.socialq.AppConstants
+import com.chrisf.socialq.extensions.filterEmissions
 import com.chrisf.socialq.model.ClientRequestData
 import com.chrisf.socialq.services.HostService
 import com.chrisf.socialq.userinterface.App
 import com.chrisf.socialq.userinterface.adapters.HostTrackListAdapter
-import com.chrisf.socialq.userinterface.views.PlaybackControlView
+import com.chrisf.socialq.userinterface.views.PlaybackControlEvent.PlayPauseButtonTouched
+import com.chrisf.socialq.userinterface.views.PlaybackControlEvent.SkipButtonTouched
 import com.chrisf.socialq.userinterface.views.QueueItemDecoration
+import com.jakewharton.rxbinding3.view.clicks
+import io.reactivex.rxkotlin.addTo
 import kotlinx.android.synthetic.main.activity_host_screen.*
 import timber.log.Timber
 
-open class HostActivity : ServiceActivity(), HostService.HostServiceListener, PlaybackControlView.IPlaybackControlListener {
+open class HostActivity : ServiceActivity(), HostService.HostServiceListener {
 
     private lateinit var trackDisplayAdapter: HostTrackListAdapter
 
     private lateinit var hostService: HostService
+
     // Flag to determine if the service is bound or not
     private var isServiceBound = false
 
@@ -89,9 +94,20 @@ open class HostActivity : ServiceActivity(), HostService.HostServiceListener, Pl
 
     private fun initUi() {
         // Initialize UI
-        addTrackButton.setOnClickListener(this)
-        playbackControlView.setListener(this)
-        playbackControlView.setOnClickListener(this)
+        addTrackButton.clicks()
+            .filterEmissions()
+            .subscribe { startSearchActivity() }
+            .addTo(subscriptions)
+
+        playbackControlView.eventStream
+            .filterEmissions()
+            .subscribe { event ->
+                when (event) {
+                    PlayPauseButtonTouched -> hostService.requestPlayPauseToggle()
+                    SkipButtonTouched -> hostService.requestPlayNext()
+                }
+            }
+            .addTo(subscriptions)
 
         // Show queue title as activity title
         var queueName = intent.getStringExtra(QUEUE_NAME_KEY)
@@ -197,7 +213,7 @@ open class HostActivity : ServiceActivity(), HostService.HostServiceListener, Pl
     }
 
     private fun setupQueueList() {
-        trackDisplayAdapter = HostTrackListAdapter(applicationContext)
+        trackDisplayAdapter = HostTrackListAdapter()
         queueListRecyclerView.adapter = trackDisplayAdapter
         val layoutManager = LinearLayoutManager(this, RecyclerView.VERTICAL, false)
         queueListRecyclerView.layoutManager = layoutManager
@@ -276,24 +292,16 @@ open class HostActivity : ServiceActivity(), HostService.HostServiceListener, Pl
         }
     }
 
-    override fun requestPlayPause() {
-        hostService.requestPlayPauseToggle()
-    }
-
-    override fun requestSkip() {
-        hostService.requestPlayNext()
-    }
-
     companion object {
         private const val QUEUE_NAME_KEY = "queue_name"
         private const val IS_FAIRPLAY_KEY = "is_fairplay"
         private const val BASE_PLAYLIST_ID = "base_playlist"
 
         fun start(
-                fromActivity: Activity,
-                queueName: String = "",
-                isFairplay: Boolean = false,
-                basePlaylistId: String = ""
+            fromActivity: Activity,
+            queueName: String = "",
+            isFairplay: Boolean = false,
+            basePlaylistId: String = ""
         ) {
             val intent = Intent(fromActivity, HostActivity::class.java).apply {
                 putExtra(QUEUE_NAME_KEY, queueName)

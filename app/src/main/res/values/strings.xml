@@ -102,6 +102,9 @@
     <string name="base_playlist_description">Selecting a base playlist will load an existing Spotify playlist into the new queue.</string>
     <string name="default_playlist_name">SocialQ Playlist</string>
     <string name="none">None</string>
+    <string name="base_playlist_info_content_description">Base playlist info</string>
+    <string name="fair_play_info_content_description">Fair play info</string>
+
 
     <!-- Queue Connect Screen Strings -->
     <string name="join">Join</string>

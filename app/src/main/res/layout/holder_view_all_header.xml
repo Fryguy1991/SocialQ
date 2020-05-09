@@ -4,10 +4,10 @@
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="@dimen/see_all_button_size"
-    android:layout_marginStart="@dimen/default_margin_x2"
-    android:layout_marginEnd="@dimen/default_margin_x2"
-    android:layout_marginTop="@dimen/default_margin"
-    android:layout_marginBottom="@dimen/default_margin_x2">
+    android:layout_marginStart="@dimen/default_margin"
+    android:layout_marginEnd="@dimen/default_margin"
+    android:layout_marginTop="@dimen/default_margin_half"
+    android:layout_marginBottom="@dimen/default_margin">
 
     <TextView
         android:id="@+id/viewAllButton"
@@ -17,7 +17,7 @@
         style="@style/SeeAllText"
         android:gravity="center_vertical"
         android:background="@color/Ice_White"
-        android:layout_marginEnd="@dimen/default_margin_x2"
+        android:layout_marginEnd="@dimen/default_margin"
         android:layout_gravity="center_vertical"/>
 
 </FrameLayout>

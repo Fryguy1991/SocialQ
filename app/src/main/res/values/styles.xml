@@ -79,16 +79,27 @@
         <item name="android:colorControlNormal">@color/White</item>
         <item name="android:titleTextStyle">@color/White</item>
     </style>
+
     <style name="DefaultButtonStyle" parent="Widget.AppCompat.Button">
         <item name="android:background">@drawable/rectangle_button</item>
         <item name="android:textColor">?android:textColorPrimaryInverse</item>
     </style>
+
     <style name="RoundButtonStyle" parent="Widget.AppCompat.Button">
         <item name="android:elevation">@dimen/standard_elevation</item>
         <item name="android:layout_width">@dimen/round_button_size</item>
         <item name="android:layout_height">@dimen/round_button_size</item>
     </style>
+
     <style name="AppCheckboxStyle" parent="Widget.AppCompat.CompoundButton.CheckBox">
         <item name="android:textColor">?android:textColorPrimary</item>
+    </style>
+
+    <style name="FloatingActionButtonStyle">
+        <item name="android:layout_height">56dp</item>
+        <item name="android:layout_width">56dp</item>
+        <item name="android:tint">@color/White</item>
+        <item name="android:backgroundTint">@color/Deep_Blue</item>
+        <item name="rippleColor">@color/Ice_White</item>
     </style>
 </resources>

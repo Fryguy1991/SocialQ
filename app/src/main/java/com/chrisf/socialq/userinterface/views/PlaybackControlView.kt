@@ -1,61 +1,44 @@
 package com.chrisf.socialq.userinterface.views
 
 import android.content.Context
-import android.os.Build
 import android.transition.TransitionManager
 import android.util.AttributeSet
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
-import android.widget.ImageView
-import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
 import com.bumptech.glide.Glide
 import com.chrisf.socialq.R
 import com.chrisf.socialq.model.ClientRequestData
 import com.chrisf.socialq.model.spotify.PlaylistTrack
+import com.chrisf.socialq.userinterface.views.PlaybackControlEvent.PlayPauseButtonTouched
+import com.chrisf.socialq.userinterface.views.PlaybackControlEvent.SkipButtonTouched
 import com.chrisf.socialq.utils.DisplayUtils
+import com.jakewharton.rxbinding3.view.clicks
+import com.jakewharton.rxrelay2.PublishRelay
+import io.reactivex.Observable
+import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.rxkotlin.addTo
+import kotlinx.android.synthetic.main.playback_control_layout.view.*
+import timber.log.Timber
 
-class PlaybackControlView : ConstraintLayout {
-    companion object {
-        val TAG = PlaybackControlView::class.java.name
-    }
+class PlaybackControlView @JvmOverloads constructor(
+    context: Context,
+    attributeSet: AttributeSet? = null,
+    defStyle: Int = 0
+) : ConstraintLayout(context, attributeSet, defStyle) {
 
-    constructor(context: Context) : super(context)
-    constructor(context: Context, attributeSet: AttributeSet) : super(context, attributeSet)
-    constructor(context: Context, attributeSet: AttributeSet, defStyle: Int) : super(context, attributeSet, defStyle)
-
-    // UI ELEMENTS
-    // Root constraint layout
-    private val rootLayout: ConstraintLayout
-    // Current track information
-    private val albumArtImage: ImageView
-    private val trackNameText: TextView
-    private val artistNameText: TextView
-    private val userNameText: TextView
-    // Playback control buttons
-    private val playPauseButton: View
-    private val skipButton: View
-
-    // Listener for communicating button presses
-    private lateinit var listener: IPlaybackControlListener
     // Flag for keeping track of if view is expanded or not
     private var isExpanded = false
+
+    private val eventRelay: PublishRelay<PlaybackControlEvent> = PublishRelay.create()
+    val eventStream: Observable<PlaybackControlEvent> = eventRelay.hide()
+
+    val subscriptions = CompositeDisposable()
 
     init {
         LayoutInflater.from(context).inflate(R.layout.playback_control_layout, this)
 
-        rootLayout = findViewById(R.id.cl_playback_root)
-
-        albumArtImage = findViewById(R.id.cv_playback_control_album_image)
-        trackNameText = findViewById(R.id.tv_playback_control_track_name)
-        artistNameText = findViewById(R.id.tv_playback_control_artist_name)
-        userNameText = findViewById(R.id.tv_playback_control_user_name)
-
-        playPauseButton = findViewById(R.id.btn_playback_control_play_pause)
-        skipButton = findViewById(R.id.btn_playback_control_skip)
-
-        rootLayout.setOnClickListener {
+        playbackControlRoot.setOnClickListener {
             if (isExpanded) {
                 shrinkLayout()
             } else {
@@ -63,90 +46,79 @@ class PlaybackControlView : ConstraintLayout {
             }
         }
 
-        playPauseButton.setOnClickListener {
-            listener.requestPlayPause()
-        }
-
-        skipButton.setOnClickListener {
-            listener.requestSkip()
-        }
-    }
-
-    fun setListener(listener: IPlaybackControlListener) {
-        this.listener = listener
+        Observable.merge(
+            playbackControlPlayPauseButton.clicks().map { PlayPauseButtonTouched },
+            playbackControlSkipButton.clicks().map { SkipButtonTouched }
+        ).subscribe(eventRelay)
+            .addTo(subscriptions)
     }
 
     fun shrinkLayout() {
-        Log.d(TAG, "Shrinking playback control layout")
+        Timber.d("Shrinking playback control layout")
 
-        trackNameText.maxLines = 1
-        artistNameText.maxLines = 1
-        userNameText.maxLines = 1
+        playbackControlTrackName.maxLines = 1
+        playbackControlArtistName.maxLines = 1
+        playbackControlUserName.maxLines = 1
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            TransitionManager.beginDelayedTransition(rootLayout)
-        }
+        TransitionManager.beginDelayedTransition(playbackControlRoot)
 
         isExpanded = false
     }
 
     private fun expandLayout() {
-        Log.d(TAG, "Expanding playback control layout")
+        Timber.d("Expanding playback control layout")
 
-        trackNameText.maxLines = Integer.MAX_VALUE
-        artistNameText.maxLines = Integer.MAX_VALUE
-        userNameText.maxLines = Integer.MAX_VALUE
+        playbackControlTrackName.maxLines = Integer.MAX_VALUE
+        playbackControlArtistName.maxLines = Integer.MAX_VALUE
+        playbackControlUserName.maxLines = Integer.MAX_VALUE
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            TransitionManager.beginDelayedTransition(rootLayout)
-        }
+        TransitionManager.beginDelayedTransition(playbackControlRoot)
 
         isExpanded = true
     }
 
     fun setPlaying() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            playPauseButton.background = resources.getDrawable(R.drawable.rectangle_pause_button, context.theme)
-        } else {
-            playPauseButton.background = resources.getDrawable(R.drawable.rectangle_pause_button)
-        }
+        playbackControlPlayPauseButton.background =
+            resources.getDrawable(R.drawable.rectangle_pause_button, context.theme)
     }
 
     fun setPaused() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            playPauseButton.background = resources.getDrawable(R.drawable.rectangle_play_button, context.theme)
-        } else {
-            playPauseButton.background = resources.getDrawable(R.drawable.rectangle_play_button)
-        }
+        playbackControlPlayPauseButton.background =
+            resources.getDrawable(R.drawable.rectangle_play_button, context.theme)
     }
 
     fun displayRequest(request: ClientRequestData) {
-        userNameText.text = request.user.display_name
+        playbackControlUserName.text = request.user.display_name
 
         displayTrack(request.track)
     }
 
     fun displayTrack(track: PlaylistTrack) {
-        trackNameText.text = track.track.name
-        artistNameText.text = DisplayUtils.getTrackArtistString(track)
+        playbackControlTrackName.text = track.track.name
+        playbackControlArtistName.text = DisplayUtils.getTrackArtistString(track)
 
         if (track.track.album.images.isNotEmpty()) {
-            Glide.with(albumArtImage).load(track.track.album.images[0].url).into(albumArtImage)
+            Glide.with(playbackControlAlbumImage)
+                .load(track.track.album.images[0].url)
+                .into(playbackControlAlbumImage)
         }
     }
 
     fun hideControls() {
-        playPauseButton.visibility = View.GONE
-        skipButton.visibility = View.GONE
+        playbackControlPlayPauseButton.visibility = View.GONE
+        playbackControlSkipButton.visibility = View.GONE
     }
 
     fun hideUser() {
-        userNameText.visibility = View.GONE
+        playbackControlUserName.visibility = View.GONE
     }
+}
 
-    interface IPlaybackControlListener {
-        fun requestPlayPause()
+/**
+ * Events that can be received from the playback control view event observable
+ */
+sealed class PlaybackControlEvent {
+    object PlayPauseButtonTouched : PlaybackControlEvent()
 
-        fun requestSkip()
-    }
+    object SkipButtonTouched : PlaybackControlEvent()
 }

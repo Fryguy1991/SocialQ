@@ -14,12 +14,19 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.chrisf.socialq.R
 import com.chrisf.socialq.AppConstants
+import com.chrisf.socialq.extensions.filterEmissions
 import com.chrisf.socialq.model.spotify.PlaylistTrack
 import com.chrisf.socialq.services.ClientService
 import com.chrisf.socialq.userinterface.App
 import com.chrisf.socialq.userinterface.adapters.BasicTrackListAdapter
 import com.chrisf.socialq.userinterface.views.QueueItemDecoration
-import kotlinx.android.synthetic.main.activity_client_screen.*
+import com.jakewharton.rxbinding3.view.clicks
+import io.reactivex.rxkotlin.addTo
+import kotlinx.android.synthetic.main.activity_client_screen.addTrackButton
+import kotlinx.android.synthetic.main.activity_client_screen.emptyQueueText
+import kotlinx.android.synthetic.main.activity_client_screen.loadingRoot
+import kotlinx.android.synthetic.main.activity_client_screen.playbackControlView
+import kotlinx.android.synthetic.main.activity_client_screen.queueListRecyclerView
 import timber.log.Timber
 
 open class ClientActivity : ServiceActivity(), ClientService.ClientServiceListener {
@@ -112,7 +119,10 @@ open class ClientActivity : ServiceActivity(), ClientService.ClientServiceListen
         playbackControlView.hideControls()
         playbackControlView.hideUser()
 
-        addTrackButton.setOnClickListener(this)
+        addTrackButton.clicks()
+            .filterEmissions()
+            .subscribe { startSearchActivity() }
+            .addTo(subscriptions)
 
         // Show queue title as activity title
         title = hostQueueTitle

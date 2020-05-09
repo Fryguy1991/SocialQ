@@ -5,6 +5,8 @@ import android.graphics.BitmapFactory
 import android.os.Build
 import android.os.Bundle
 import android.view.MenuItem
+import android.view.View
+import android.view.inputmethod.InputMethodManager
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
@@ -159,6 +161,16 @@ abstract class BaseActivity<State, Action, Processor : BaseProcessor<State, Acti
         dialog.setCanceledOnTouchOutside(binding.isCancelable)
         alertDialog = dialog
         alertDialog?.show()
+    }
+
+    protected fun hideKeyboard() {
+        val inputMethodManager = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager?
+        currentFocus?.let { inputMethodManager?.hideSoftInputFromWindow(it.windowToken, 0) }
+    }
+
+    protected fun showKeyboard(view: View) {
+        val inputMethodManager = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager?
+        inputMethodManager?.showSoftInput(view, 0)
     }
 
     abstract fun resolveDependencies(activityComponent: ActivityComponent)

@@ -29,11 +29,11 @@ class PlaylistAdapter @Inject constructor(private val resources: Resources) : Ba
 
     override fun onBindViewHolder(holder: PlaylistViewHolder, position: Int) {
         holder.bind(
-                itemList[position],
-                this,
-                resources,
-                position == selectedIndex,
-                position
+            playlist = itemList[position],
+            clickHandler = this,
+            resources = resources,
+            isSelected = position == selectedIndex,
+            position = position
         )
     }
 

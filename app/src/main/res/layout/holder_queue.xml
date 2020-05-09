@@ -3,7 +3,8 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content">
+    android:layout_height="wrap_content"
+    android:padding="16dp">
 
     <TextView
         android:id="@+id/tv_queue_name"
@@ -12,8 +13,6 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginStart="@dimen/default_margin_x2"
-        android:layout_marginEnd="@dimen/default_margin_x2"
         style="@style/HeaderText"
         tools:text="Game Night"/>
 
@@ -23,11 +22,8 @@
         android:layout_height="wrap_content"
         app:layout_constraintTop_toBottomOf="@id/tv_queue_name"
         app:layout_constraintBottom_toBottomOf="parent"
-        android:layout_marginBottom="@dimen/default_margin"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginStart="@dimen/default_margin_x2"
-        android:layout_marginEnd="@dimen/default_margin_x2"
         tools:text="Chris Fry"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

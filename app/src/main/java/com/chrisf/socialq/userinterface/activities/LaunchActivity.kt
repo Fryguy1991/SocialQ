@@ -140,7 +140,7 @@ class LaunchActivity : BaseActivity<LaunchState, LaunchAction, LaunchProcessor>(
 
     private fun enableNewQueueButton(state: EnableNewQueueButton) {
         isUserPremium = state.isUserPremium
-        newQueueButton.isEnabled = true
+        newQueueButton.show()
     }
 
     private fun launchClientActivity(state: LaunchClientActivity) {

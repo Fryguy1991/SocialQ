@@ -3,7 +3,9 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content">
+    android:layout_height="wrap_content"
+    android:paddingHorizontal="16dp"
+    android:paddingVertical="10dp">
 
     <TextView
         android:id="@+id/playlistName"
@@ -14,10 +16,7 @@
         app:layout_constraintTop_toTopOf="parent"
         android:textSize="@dimen/medium_text_2"
         android:textStyle="bold"
-        android:layout_marginTop="@dimen/default_margin"
         tools:text="Thirsty Thursday"
-        android:layout_marginStart="@dimen/default_margin"
-        android:layout_marginEnd="@dimen/default_margin"
         android:textColor="?android:colorPrimary"/>
 
     <TextView
@@ -28,8 +27,5 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginBottom="@dimen/default_margin"
-        android:layout_marginStart="@dimen/default_margin"
-        android:layout_marginEnd="@dimen/default_margin"
         tools:text="10 Tracks"/>
 </androidx.constraintlayout.widget.ConstraintLayout>

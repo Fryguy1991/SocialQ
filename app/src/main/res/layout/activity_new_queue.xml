@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:animateLayoutChanges="true">
@@ -10,38 +9,38 @@
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
-        app:layout_constraintTop_toTopOf="parent"
         android:background="?attr/colorPrimary"
-        app:titleTextColor="@color/White"
+        android:theme="@style/ToolBarStyle"
+        app:layout_constraintTop_toTopOf="parent"
         app:title="@string/new_queue"
-        android:theme="@style/ToolBarStyle"/>
+        app:titleTextColor="@color/White" />
 
     <EditText
         android:id="@+id/queueNameField"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/dialog_side_margin"
+        android:layout_marginStart="16dp"
         android:layout_marginTop="@dimen/default_margin"
-        android:layout_marginEnd="@dimen/dialog_side_margin"
+        android:layout_marginEnd="16dp"
         android:hint="@string/queue_title"
+        android:imeOptions="actionDone"
         android:inputType="textCapWords"
         android:maxLines="1"
         android:selectAllOnFocus="true"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/toolbar"
-        android:imeOptions="actionDone"/>
+        app:layout_constraintTop_toBottomOf="@id/toolbar" />
 
     <androidx.appcompat.widget.AppCompatCheckBox
         android:id="@+id/fairplayCheckbox"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:layout_constraintStart_toStartOf="parent"
-        android:layout_marginStart="@dimen/dialog_side_margin"
+        android:layout_marginStart="16dp"
         android:layout_marginTop="@dimen/standard_spacing"
         android:checked="@bool/fair_play_default"
-        app:layout_constraintTop_toBottomOf="@id/queueNameField"
-        android:text="@string/enable_fair_play" />
+        android:text="@string/enable_fair_play"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/queueNameField" />
 
     <ImageView
         android:id="@+id/fairplayInfoIcon"
@@ -49,20 +48,20 @@
         android:layout_height="40dp"
         android:scaleType="center"
         android:src="@drawable/ic_info_outline"
-        app:layout_constraintStart_toEndOf="@id/fairplayCheckbox"
         app:layout_constraintBottom_toBottomOf="@id/fairplayCheckbox"
+        app:layout_constraintStart_toEndOf="@id/fairplayCheckbox"
         app:layout_constraintTop_toTopOf="@id/fairplayCheckbox" />
 
     <androidx.appcompat.widget.AppCompatCheckBox
         android:id="@+id/basePlaylistCheckbox"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:layout_constraintStart_toStartOf="parent"
-        android:layout_marginStart="@dimen/dialog_side_margin"
+        android:layout_marginStart="16dp"
         android:layout_marginTop="@dimen/standard_spacing"
         android:checked="@bool/load_base_playlist_by_default"
-        app:layout_constraintTop_toBottomOf="@id/fairplayCheckbox"
-        android:text="@string/use_base_playlist"/>
+        android:text="@string/use_base_playlist"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/fairplayCheckbox" />
 
     <ImageView
         android:id="@+id/basePlaylistInfoIcon"
@@ -70,29 +69,29 @@
         android:layout_height="40dp"
         android:scaleType="center"
         android:src="@drawable/ic_info_outline"
-        app:layout_constraintStart_toEndOf="@id/basePlaylistCheckbox"
         app:layout_constraintBottom_toBottomOf="@id/basePlaylistCheckbox"
+        app:layout_constraintStart_toEndOf="@id/basePlaylistCheckbox"
         app:layout_constraintTop_toTopOf="@id/basePlaylistCheckbox" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/basePlaylistRecyclerView"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_marginTop="@dimen/tight_spacing"
-        android:layout_marginStart="@dimen/dialog_side_margin"
-        android:layout_marginEnd="@dimen/dialog_side_margin"
+        android:layout_marginTop="16dp"
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/basePlaylistCheckbox" />
+        app:layout_constraintTop_toBottomOf="@id/basePlaylistInfoIcon"
+        android:paddingBottom="64dp"
+        android:clipToPadding="false"/>
 
-    <Button
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/startQueueButton"
-        style="@style/RoundButtonStyle"
         android:layout_marginEnd="@dimen/default_margin"
         android:layout_marginBottom="@dimen/default_margin"
-        android:background="@drawable/add_queue_button"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent"
+        android:src="@drawable/ic_check"
+        style="@style/FloatingActionButtonStyle"/>
 </androidx.constraintlayout.widget.ConstraintLayout>
