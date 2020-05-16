@@ -6,6 +6,10 @@
     <string name="client_service_description">Service used as a client of a SocialQ</string>
     <string name="access_service_description">Service used to keep SocialQ access token up to date</string>
 
+    <!-- Gate Screen -->
+    <string name="sign_in_with">Sign In With</string>
+    <string name="spotify_button_content_description">Sign in with Spotify</string>
+    
     <!-- Notification Strings -->
     <string name="host_notification_content_text">Hosting \"%1$s\"</string>
     <string name="client_notification_content_text">Connected to \"%1$s\"</string>
@@ -22,6 +26,7 @@
     <string name="cancel">Cancel</string>
     <string name="confirm">Confirm</string>
     <string name="ok">Ok</string>
+    <string name="open_settings">Open Settings</string>
 
     <!-- Host Screen Strings -->
     <string name="next_btn">Next</string>
@@ -81,7 +86,7 @@
     <string name="no_host_found_message">No available queues were found. Pull down to retry, or start your own!</string>
     <string name="host_search_failed_message">Queue search failed. Pull down to retry, or start your own!</string>
     <string name="queue_searching_message">Searching for available queues.</string>
-    <string name="location_permission_required_title">Location permission required</string>
+    <string name="location_permission_required_title">Location Permission Denied</string>
     <string name="location_permission_required_message">Location permission is required to host, join, and add songs to queues.</string>
     <string name="unknown_queue">Unknown Queue</string>
     <string name="unknown_host">Unknown Host</string>
@@ -116,8 +121,8 @@
     <string name="premium_required_message">Spotify premium is required in order to host a SocialQ.</string>
 
     <!-- Authentication Failed Dialog Strings -->
-    <string name="auth_fail_title">Authentication Failed</string>
-    <string name="auth_fail_message">Spotify authentication failed. Retry?</string>
+    <string name="auth_fail_title">Spotify Sign In Failed</string>
+    <string name="auth_fail_message">Spotify sign in failed. Would you like to retry?</string>
     <string name="retry">Retry</string>
     <string name="close_app">Close App</string>
 

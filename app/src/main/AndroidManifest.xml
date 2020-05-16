@@ -16,30 +16,38 @@
         android:name="com.chrisf.socialq.userinterface.App"
         android:allowBackup="true"
         android:icon="@mipmap/app_launcher_icon"
-        android:roundIcon="@mipmap/app_launcher_icon_round"
         android:label="@string/app_name"
+        android:networkSecurityConfig="@xml/network_security_config"
+        android:roundIcon="@mipmap/app_launcher_icon_round"
         android:supportsRtl="true"
         android:theme="@style/IceTheme"
-        tools:ignore="GoogleAppIndexingWarning"
-        android:networkSecurityConfig="@xml/network_security_config">
+        tools:ignore="GoogleAppIndexingWarning">
 
         <!-- START APPLICATION ACTIVITIES -->
-        <!-- Activity for launch screen -->
-        <activity android:name="com.chrisf.socialq.userinterface.activities.LaunchActivity"
-            android:label="@string/app_name"
+        <!-- Splash activity that determines app launch landing -->
+        <activity
+            android:name=".userinterface.activities.SplashActivity"
             android:screenOrientation="portrait"
-            android:launchMode="singleTop">
+            android:theme="@style/IceTheme.Splash">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
+        <!-- Activity for launch screen -->
+        <activity
+            android:name="com.chrisf.socialq.userinterface.activities.LaunchActivity"
+            android:label="@string/app_name"
+            android:launchMode="singleTop"
+            android:screenOrientation="portrait"/>
+
         <!-- Activity for setting up a host queue -->
-        <activity android:name=".userinterface.activities.HostQueueOptionsActivity"
+        <activity
+            android:name=".userinterface.activities.HostQueueOptionsActivity"
             android:parentActivityName=".userinterface.activities.LaunchActivity"
             android:screenOrientation="portrait"
-            android:windowSoftInputMode="adjustResize"/>
+            android:windowSoftInputMode="adjustResize" />
 
         <!-- Activity for host screen -->
         <activity
@@ -56,10 +64,17 @@
             android:screenOrientation="portrait" />
 
         <!-- Activity for search screen -->
-        <activity android:name=".userinterface.activities.SearchActivity"
+        <activity
+            android:name=".userinterface.activities.SearchActivity"
             android:label="@string/search_activity_name"
             android:screenOrientation="portrait"
-            android:windowSoftInputMode="adjustResize"/>
+            android:windowSoftInputMode="adjustResize" />
+
+        <!-- Activity for prompting Spotify sign in -->
+        <activity
+            android:name=".userinterface.activities.GateActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/IceTheme.GradientBackground"/>
 
         <!-- Activity for Spotify login (created by Spotify) -->
         <activity
@@ -69,20 +84,23 @@
 
         <!-- START APPLICATION SERVICES -->
         <!-- Service For host -->
-        <service android:name="com.chrisf.socialq.services.HostService"
+        <service
+            android:name="com.chrisf.socialq.services.HostService"
             android:description="@string/host_service_description"
             android:exported="false" />
 
         <!-- Service For client -->
-        <service android:name="com.chrisf.socialq.services.ClientService"
+        <service
+            android:name="com.chrisf.socialq.services.ClientService"
             android:description="@string/client_service_description"
             android:exported="false" />
 
         <!-- Service For access token refresh -->
-        <service android:name="com.chrisf.socialq.services.AccessService"
+        <service
+            android:name="com.chrisf.socialq.services.AccessService"
             android:description="@string/access_service_description"
-            android:permission="android.permission.BIND_JOB_SERVICE"
-            android:exported="false" />
+            android:exported="false"
+            android:permission="android.permission.BIND_JOB_SERVICE" />
         <!-- END APPLICATION SERVICES -->
     </application>
 </manifest>

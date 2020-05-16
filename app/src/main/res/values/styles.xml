@@ -30,6 +30,17 @@
         <item name="checkboxStyle">@style/AppCheckboxStyle</item>
         <item name="buttonStyle">@style/DefaultButtonStyle</item>
         <item name="alertDialogTheme">@style/IceTheme.Dialog.Alert</item>
+
+        <!-- Theme Settings -->
+        <item name="android:windowActivityTransitions">true</item>
+    </style>
+
+    <style name="IceTheme.GradientBackground" parent="IceTheme">
+        <item name="android:windowBackground">@drawable/gate_gradient</item>
+    </style>
+
+    <style name="IceTheme.Splash" parent="IceTheme">
+        <item name="android:windowBackground">@drawable/background_splash</item>
     </style>
 
     <style name="IceTheme.Dialog.Alert" parent="Theme.AppCompat.Light.Dialog.Alert">

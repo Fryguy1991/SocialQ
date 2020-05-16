@@ -1,12 +1,10 @@
 package com.chrisf.socialq.userinterface.activities
 
 import android.Manifest
-import android.app.job.JobInfo
-import android.app.job.JobScheduler
-import android.content.ComponentName
-import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
+import android.provider.Settings
 import android.view.View
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -20,24 +18,16 @@ import com.chrisf.socialq.processor.LaunchProcessor.LaunchAction.*
 import com.chrisf.socialq.processor.LaunchProcessor.LaunchState
 import com.chrisf.socialq.processor.LaunchProcessor.LaunchState.*
 import com.chrisf.socialq.processor.SocialQEndpoint
-import com.chrisf.socialq.services.AccessService
 import com.chrisf.socialq.userinterface.adapters.QueueDisplayAdapter
 import com.chrisf.socialq.userinterface.views.QueueItemDecoration
 import com.google.android.gms.nearby.Nearby
-import com.google.android.gms.nearby.connection.DiscoveredEndpointInfo
-import com.google.android.gms.nearby.connection.DiscoveryOptions
-import com.google.android.gms.nearby.connection.EndpointDiscoveryCallback
-import com.google.android.gms.nearby.connection.Strategy
+import com.google.android.gms.nearby.connection.*
 import com.jakewharton.rxbinding3.view.clicks
-import com.spotify.sdk.android.authentication.AuthenticationClient
-import com.spotify.sdk.android.authentication.AuthenticationRequest
-import com.spotify.sdk.android.authentication.AuthenticationResponse
 import com.tbruyelle.rxpermissions2.RxPermissions
 import io.reactivex.Observable
 import io.reactivex.rxkotlin.addTo
 import kotlinx.android.synthetic.main.activity_launch.*
 import timber.log.Timber
-import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 class LaunchActivity : BaseActivity<LaunchState, LaunchAction, LaunchProcessor>() {
@@ -45,9 +35,11 @@ class LaunchActivity : BaseActivity<LaunchState, LaunchAction, LaunchProcessor>(
 
     private val adapter = QueueDisplayAdapter()
 
-    private val scheduler: JobScheduler by lazy { getSystemService(Context.JOB_SCHEDULER_SERVICE) as JobScheduler }
-
     private val socialQEndpoints: MutableList<SocialQEndpoint> = mutableListOf()
+
+    private val connectionsClient: ConnectionsClient by lazy { Nearby.getConnectionsClient(this) }
+    private var isDiscovering = false
+    private var isAskingLocationPermission = false
 
     @Inject
     lateinit var rxPermissions: RxPermissions
@@ -88,10 +80,22 @@ class LaunchActivity : BaseActivity<LaunchState, LaunchAction, LaunchProcessor>(
 
         setupViews()
         actionStream.accept(ViewCreated)
+
+        isAskingLocationPermission = true
+        rxPermissions.request(Manifest.permission.ACCESS_COARSE_LOCATION)
+            .map { permissionGranted ->
+                isAskingLocationPermission = false
+                if (permissionGranted) QueueRefreshRequested else LocationPermissionDenied
+            }
+            .subscribe(actionStream)
+            .addTo(subscriptions)
     }
 
     override fun onResume() {
         super.onResume()
+
+        // Don't try to restart queue searching if it's in progress or permissions request is in progress
+        if (isAskingLocationPermission || isDiscovering) return
 
         if (rxPermissions.isGranted(Manifest.permission.ACCESS_COARSE_LOCATION)) {
             actionStream.accept(QueueRefreshRequested)
@@ -100,27 +104,9 @@ class LaunchActivity : BaseActivity<LaunchState, LaunchAction, LaunchProcessor>(
         }
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-
-        when (requestCode) {
-            SPOTIFY_AUTH_REFRESH_CODE -> {
-                val response = AuthenticationClient.getResponse(resultCode, data)
-                if (response.type == AuthenticationResponse.Type.CODE) {
-                    Timber.d("Authorization code granted")
-
-                    actionStream.accept(AuthCodeRetrieved(response.code))
-                    return
-                } else {
-                    actionStream.accept(AuthCodeRetrievalFailed)
-                }
-            }
-        }
-    }
-
     override fun onPause() {
         super.onPause()
-        Nearby.getConnectionsClient(this).stopDiscovery()
+        connectionsClient.stopDiscovery()
         hostSwipeRefreshLayout.isRefreshing = false
 
         actionStream.accept(ViewPausing)
@@ -128,20 +114,18 @@ class LaunchActivity : BaseActivity<LaunchState, LaunchAction, LaunchProcessor>(
 
     override fun handleState(state: LaunchState) {
         when (state) {
-            is CloseApp -> finishAndRemoveTask()
             is DisplayAvailableQueues -> displayQueues(state)
             is EnableNewQueueButton -> enableNewQueueButton(state)
             is LaunchClientActivity -> launchClientActivity(state)
             is NavigateToNewQueue -> navigateToNewQueue()
             is NoQueuesFound -> onNoQueuesFound()
-            is RequestAuthorization -> requestAuthorization()
             is SearchForQueues -> searchForQueues()
             is ShowAuthFailedDialog -> showAlertDialog(state.binding)
             is ShowLocationPermissionRequiredDialog -> showAlertDialog(state.binding)
             is ShowPremiumRequiredDialog -> showAlertDialog(state.binding)
             is ShowQueueRefreshFailed -> showQueueRefreshFailed()
-            is StartAuthRefreshJob -> startPeriodicAccessRefresh()
             is StopSearchingForQueues -> stopSearchingForQueues()
+            is NavigateToAppSettings -> navigateToAppSettings()
         }
     }
 
@@ -178,22 +162,6 @@ class LaunchActivity : BaseActivity<LaunchState, LaunchAction, LaunchProcessor>(
         swipeRefreshText.visibility = View.VISIBLE
     }
 
-    private fun requestAuthorization() {
-        val accessScopes = arrayOf("user-read-private", "streaming", "playlist-modify-private", "playlist-modify-public", "playlist-read-private")
-        val builder = AuthenticationRequest.Builder(
-            AppConstants.CLIENT_ID,
-            AuthenticationResponse.Type.CODE,
-            AppConstants.REDIRECT_URI)
-        builder.setScopes(accessScopes)
-        val request = builder.build()
-
-        AuthenticationClient.openLoginActivity(
-            this,
-            SPOTIFY_AUTH_REFRESH_CODE,
-            request
-        )
-    }
-
     private fun searchForQueues() {
         socialQEndpoints.clear()
         hostSwipeRefreshLayout.isRefreshing = true
@@ -203,18 +171,21 @@ class LaunchActivity : BaseActivity<LaunchState, LaunchAction, LaunchProcessor>(
 
         val options = DiscoveryOptions.Builder().setStrategy(Strategy.P2P_STAR).build()
 
-        Nearby.getConnectionsClient(this)
-            .startDiscovery(
-                AppConstants.SERVICE_NAME,
-                endpointDiscoveryCallback,
-                options
-            )
-            .addOnSuccessListener {
-                actionStream.accept(StartedNearbySearch(true))
-            }
-            .addOnFailureListener {
-                actionStream.accept(StartedNearbySearch(false))
-            }
+        connectionsClient.startDiscovery(
+            AppConstants.SERVICE_NAME,
+            endpointDiscoveryCallback,
+            options
+        ).addOnSuccessListener {
+            actionStream.accept(StartedNearbySearch(true))
+            isDiscovering = true
+        }.addOnFailureListener {
+            actionStream.accept(StartedNearbySearch(false))
+            isDiscovering = false
+        }.addOnCanceledListener {
+            isDiscovering = false
+        }.addOnCompleteListener {
+            isDiscovering = false
+        }
     }
 
     private fun showQueueRefreshFailed() {
@@ -228,22 +199,18 @@ class LaunchActivity : BaseActivity<LaunchState, LaunchAction, LaunchProcessor>(
         swipeRefreshText.visibility = View.VISIBLE
     }
 
-    private fun startPeriodicAccessRefresh() {
-        scheduler.schedule(
-            JobInfo.Builder(
-                AppConstants.ACCESS_SERVICE_ID,
-                ComponentName(this, AccessService::class.java)
-            ).setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
-                .setPeriodic(TimeUnit.MINUTES.toMillis(20))
-                .build()
-        )
-    }
-
     private fun stopSearchingForQueues() {
         hostSwipeRefreshLayout.isRefreshing = false
         Nearby.getConnectionsClient(this).stopDiscovery()
 
-        actionStream.accept(EndpointListUpdated(socialQEndpoints))
+        actionStream.accept(QueueSearchStopped(socialQEndpoints))
+    }
+
+    private fun navigateToAppSettings() {
+        val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+            data = Uri.fromParts("package", packageName, null)
+        }
+        startActivity(intent)
     }
 
     private fun setupViews() {
@@ -258,7 +225,7 @@ class LaunchActivity : BaseActivity<LaunchState, LaunchAction, LaunchProcessor>(
                 .subscribe(actionStream)
                 .addTo(subscriptions)
         }
-        hostSwipeRefreshLayout.setColorSchemeResources(R.color.BurntOrangeLight2)
+        hostSwipeRefreshLayout.setColorSchemeResources(R.color.BurntOrangeLight)
 
         Observable.merge(
             adapter.queueSelection.map { QueueSelected(it) },
@@ -271,9 +238,5 @@ class LaunchActivity : BaseActivity<LaunchState, LaunchAction, LaunchProcessor>(
         availableQueueRecyclerView.layoutManager = layoutManager
         availableQueueRecyclerView.addItemDecoration(QueueItemDecoration(this))
         availableQueueRecyclerView.adapter = adapter
-    }
-
-    companion object {
-        private const val SPOTIFY_AUTH_REFRESH_CODE = 100
     }
 }

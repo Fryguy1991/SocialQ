@@ -56,30 +56,37 @@ class HostService : BaseService<HostState, HostAction, HostProcessor>(), BitmapL
     // NOTIFICATION ELEMENTS
     // Reference to notification manager
     private lateinit var notificationManager: NotificationManager
+
     // Builder for foreground notification
     private lateinit var notificationBuilder: NotificationCompat.Builder
+
     // Reference to media session
     private lateinit var mediaSession: MediaSessionCompat
+
     // Reference to meta data builder
     private val metaDataBuilder = MediaMetadataCompat.Builder()
 
     // SERVICE ELEMENTS
     // Binder for talking from bound activity to host
     private val hostServiceBinder = HostServiceBinder()
+
     // Flag indicating if the service is bound to an activity
     private var isBound = false
+
     // Object listening for events from the service
     private var listener: HostServiceListener? = null
 
     // NOTIFICATION ELEMENTS
     // Reference to playback state builder
     private val playbackStateBuilder = PlaybackStateCompat.Builder()
+
     // Reference to notification style
     private val mediaStyle = MediaStyle()
 
     // NEARBY CONNECTION ELEMENTS
     // List of the client endpoints that are currently connected to the host service
     private var clientEndpoints = ArrayList<String>()
+
     // Flag indicating success of advertising (used during activity destruction)
     private var successfulAdvertisingFlag = false
 
@@ -118,31 +125,27 @@ class HostService : BaseService<HostState, HostAction, HostProcessor>(), BitmapL
                     val basePlaylistId = intent.getStringExtra(AppConstants.BASE_PLAYLIST_ID_KEY)
 
                     actionStream.accept(
-                            ServiceStarted(
-                                    this,
-                                    queueTitle,
-                                    isQueueFairPlay,
-                                    basePlaylistId
-                            )
+                        ServiceStarted(
+                            context = this,
+                            queueTitle = queueTitle,
+                            isQueueFairPlay = isQueueFairPlay,
+                            basePlaylistId = basePlaylistId
+                        )
                     )
 
                     notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
                     // Create intent for touching foreground notification
-                    val pendingIntent = PendingIntent.getActivity(
-                            this,
-                            0,
-                            Intent(this, HostActivity::class.java),
-                            0)
+                    val pendingIntent = PendingIntent.getActivity(this, 0, Intent(this, HostActivity::class.java), 0)
 
                     // Build foreground notification
                     notificationBuilder = NotificationCompat.Builder(this, App.CHANNEL_ID)
-                            .setContentTitle(String.format(getString(R.string.host_notification_content_text), queueTitle))
-                            .setSmallIcon(R.drawable.app_notification_icon)
-                            .setContentIntent(pendingIntent)
-                            .setColorized(true)
-                            .setOnlyAlertOnce(true)
-                            .setShowWhen(false)
+                        .setContentTitle(String.format(getString(R.string.host_notification_content_text), queueTitle))
+                        .setSmallIcon(R.drawable.app_notification_icon)
+                        .setContentIntent(pendingIntent)
+                        .setColorized(true)
+                        .setOnlyAlertOnce(true)
+                        .setShowWhen(false)
 
                     mediaSession = MediaSessionCompat(baseContext, AppConstants.HOST_MEDIA_SESSION_TAG)
 
@@ -204,11 +207,11 @@ class HostService : BaseService<HostState, HostAction, HostProcessor>(), BitmapL
 
     private fun onQueueInitiationComplete(state: QueueInitiationComplete) {
         mediaSession.setPlaybackState(
-                playbackStateBuilder.setState(
-                        PlaybackStateCompat.STATE_PAUSED,
-                        PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN,
-                        0F
-                ).build())
+            playbackStateBuilder.setState(
+                PlaybackStateCompat.STATE_PAUSED,
+                PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN,
+                0F
+            ).build())
         mediaSession.isActive = true
         mediaStyle.setMediaSession(mediaSession.sessionToken)
 
@@ -224,11 +227,11 @@ class HostService : BaseService<HostState, HostAction, HostProcessor>(), BitmapL
     private fun onPlaybackResumed(state: PlaybackResumed) {
         // Update session playback state
         mediaSession.setPlaybackState(
-                playbackStateBuilder.setState(
-                        PlaybackStateCompat.STATE_PLAYING,
-                        PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN,
-                        1F
-                ).build())
+            playbackStateBuilder.setState(
+                PlaybackStateCompat.STATE_PLAYING,
+                PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN,
+                1F
+            ).build())
 
         // Update notification builder action buttons for playing
         addActionsToNotificationBuilder(true)
@@ -240,11 +243,11 @@ class HostService : BaseService<HostState, HostAction, HostProcessor>(), BitmapL
     private fun onPlaybackPaused(state: PlaybackPaused) {
         // Update session playback state
         mediaSession.setPlaybackState(
-                playbackStateBuilder.setState(
-                        PlaybackStateCompat.STATE_PAUSED,
-                        PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN,
-                        0F
-                ).build())
+            playbackStateBuilder.setState(
+                PlaybackStateCompat.STATE_PAUSED,
+                PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN,
+                0F
+            ).build())
 
         if (state.tracksRemaining) {
             addActionsToNotificationBuilder(false)
@@ -271,8 +274,8 @@ class HostService : BaseService<HostState, HostAction, HostProcessor>(), BitmapL
         if (state.currentPlaylistIndex >= 0) {
             for (endpointId: String in clientEndpoints) {
                 Nearby.getConnectionsClient(this).sendPayload(endpointId,
-                        Payload.fromBytes(String.format(NearbyDevicesMessage.CURRENTLY_PLAYING_UPDATE.messageFormat,
-                                state.currentPlaylistIndex.toString()).toByteArray()))
+                    Payload.fromBytes(String.format(NearbyDevicesMessage.CURRENTLY_PLAYING_UPDATE.messageFormat,
+                        state.currentPlaylistIndex.toString()).toByteArray()))
             }
         }
     }
@@ -301,23 +304,18 @@ class HostService : BaseService<HostState, HostAction, HostProcessor>(), BitmapL
 
         // Attempt to start advertising
         Nearby.getConnectionsClient(this).startAdvertising(
-                hostName,
-                AppConstants.SERVICE_NAME,
-                mConnectionLifecycleCallback,
-                options)
-                .addOnSuccessListener(object : OnSuccessListener<Void> {
-                    override fun onSuccess(unusedResult: Void?) {
-                        Timber.d("Successfully advertising the host")
-                        successfulAdvertisingFlag = true
-                    }
-                })
-                .addOnFailureListener(object : OnFailureListener {
-                    override fun onFailure(p0: Exception) {
-                        Timber.e(p0)
-                        Timber.e("Failed to start advertising the host")
-                        stopSelf()
-                    }
-                })
+            hostName,
+            AppConstants.SERVICE_NAME,
+            mConnectionLifecycleCallback,
+            options
+        ).addOnSuccessListener {
+            Timber.d("Successfully advertising the host")
+            successfulAdvertisingFlag = true
+        }.addOnFailureListener { p0 ->
+            Timber.e(p0)
+            Timber.e("Failed to start advertising the host")
+            stopSelf()
+        }
     }
 
 
@@ -335,25 +333,21 @@ class HostService : BaseService<HostState, HostAction, HostProcessor>(), BitmapL
         searchIntent.action = AppConstants.ACTION_NOTIFICATION_SEARCH
 
         // Intent for starting search
-        val searchPendingIntent = PendingIntent.getActivity(
-                this,
-                0,
-                searchIntent,
-                0)
+        val searchPendingIntent = PendingIntent.getActivity(this, 0, searchIntent, 0)
 
         // Intent for toggling play/pause
         val playPausePendingIntent = PendingIntent.getService(
-                this,
-                0,
-                Intent(this, HostService::class.java).setAction(AppConstants.ACTION_REQUEST_PLAY_PAUSE),
-                0)
+            this,
+            0,
+            Intent(this, HostService::class.java).setAction(AppConstants.ACTION_REQUEST_PLAY_PAUSE),
+            0)
 
         // Intent for skipping
         val skipPendingIntent = PendingIntent.getService(
-                this,
-                0,
-                Intent(this, HostService::class.java).setAction(AppConstants.ACTION_REQUEST_NEXT),
-                0)
+            this,
+            0,
+            Intent(this, HostService::class.java).setAction(AppConstants.ACTION_REQUEST_NEXT),
+            0)
 
         // Determine if we need the play or pause icon
         val playPauseResourceId = if (isPlaying) {
@@ -363,9 +357,9 @@ class HostService : BaseService<HostState, HostAction, HostProcessor>(), BitmapL
         }
 
         notificationBuilder
-                .addAction(R.mipmap.search_icon_white, AppConstants.ACTION_NOTIFICATION_SEARCH, searchPendingIntent)
-                .addAction(playPauseResourceId, AppConstants.ACTION_REQUEST_PLAY_PAUSE, playPausePendingIntent)
-                .addAction(R.mipmap.ic_media_next, AppConstants.ACTION_REQUEST_NEXT, skipPendingIntent)
+            .addAction(R.mipmap.search_icon_white, AppConstants.ACTION_NOTIFICATION_SEARCH, searchPendingIntent)
+            .addAction(playPauseResourceId, AppConstants.ACTION_REQUEST_PLAY_PAUSE, playPausePendingIntent)
+            .addAction(R.mipmap.ic_media_next, AppConstants.ACTION_REQUEST_NEXT, skipPendingIntent)
 
         // Display play/pause and next in compat view
         val style = mediaStyle.setShowActionsInCompactView(1, 2)
@@ -472,8 +466,8 @@ class HostService : BaseService<HostState, HostAction, HostProcessor>(), BitmapL
         if (state.newTrackIndex >= 0) {
             for (endpointId: String in clientEndpoints) {
                 Nearby.getConnectionsClient(this).sendPayload(endpointId,
-                        Payload.fromBytes(String.format(NearbyDevicesMessage.NEW_TRACK_ADDED.messageFormat,
-                                state.newTrackIndex.toString()).toByteArray()))
+                    Payload.fromBytes(String.format(NearbyDevicesMessage.NEW_TRACK_ADDED.messageFormat,
+                        state.newTrackIndex.toString()).toByteArray()))
             }
         }
     }
@@ -481,20 +475,20 @@ class HostService : BaseService<HostState, HostAction, HostProcessor>(), BitmapL
     private fun notifyClientsHostDisconnecting() {
         for (endpoint: String in clientEndpoints) {
             Nearby.getConnectionsClient(this).sendPayload(endpoint,
-                    Payload.fromBytes(AppConstants.HOST_DISCONNECT_MESSAGE.toByteArray()))
+                Payload.fromBytes(AppConstants.HOST_DISCONNECT_MESSAGE.toByteArray()))
         }
     }
 
     private fun initiateNewClient(state: InitiateNewClient) {
         if (clientEndpoints.contains(state.newClientId)
-                && state.playlistId.isNotEmpty()
-                && state.hostUserId.isNotEmpty()) {
+            && state.playlistId.isNotEmpty()
+            && state.hostUserId.isNotEmpty()) {
             Timber.d("Sending host ID, playlist id, and current playing index to new client")
             Nearby.getConnectionsClient(this).sendPayload(state.newClientId, Payload.fromBytes(
-                    String.format(NearbyDevicesMessage.INITIATE_CLIENT.messageFormat,
-                            state.hostUserId,
-                            state.playlistId,
-                            state.currentPlaylistIndex).toByteArray()))
+                String.format(NearbyDevicesMessage.INITIATE_CLIENT.messageFormat,
+                    state.hostUserId,
+                    state.playlistId,
+                    state.currentPlaylistIndex).toByteArray()))
         }
     }
 
@@ -590,11 +584,11 @@ class HostService : BaseService<HostState, HostAction, HostProcessor>(), BitmapL
 
         // Update session playback state
         mediaSession.setPlaybackState(
-                playbackStateBuilder.setState(
-                        PlaybackStateCompat.STATE_STOPPED,
-                        PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN,
-                        0F
-                ).build())
+            playbackStateBuilder.setState(
+                PlaybackStateCompat.STATE_STOPPED,
+                PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN,
+                0F
+            ).build())
 
         @Suppress("RestrictedApi")
         notificationBuilder.mActions.clear()
@@ -622,7 +616,7 @@ class HostService : BaseService<HostState, HostAction, HostProcessor>(), BitmapL
 
         // Attempt to update album art in notification and metadata
         if (trackToShow.album.images.isNotEmpty()) {
-           val task = GetBitmapTask(this)
+            val task = GetBitmapTask(this)
             task.execute(trackToShow.album.images[0].url)
         }
         mediaSession.setMetadata(metaDataBuilder.build())

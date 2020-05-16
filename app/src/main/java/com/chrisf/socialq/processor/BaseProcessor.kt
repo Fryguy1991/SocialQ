@@ -8,17 +8,19 @@ import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposable
+import io.reactivex.rxkotlin.addTo
 import io.reactivex.schedulers.Schedulers
 import timber.log.Timber
 
 abstract class BaseProcessor<State, Action>(
-        private val lifecycle: Lifecycle?,
-        val subscriptions: CompositeDisposable
+    private val lifecycle: Lifecycle?,
+    val subscriptions: CompositeDisposable
 ) : LifecycleObserver {
 
     init {
         lifecycle?.addObserver(this)
     }
+
     /**
      * Relay to push out states
      */
@@ -35,11 +37,11 @@ abstract class BaseProcessor<State, Action>(
      */
     fun attach(actionStream: Observable<Action>): Disposable {
         return actionStream
-                .doOnSubscribe { subscriptions.add(it) }
-                .subscribeOn(Schedulers.io())
-                .subscribe(
-                        { handleAction(it) },
-                        { Timber.e(it) })
+            .subscribeOn(Schedulers.io())
+            .subscribe(
+                { handleAction(it) },
+                { Timber.e(it) }
+            ).addTo(subscriptions)
     }
 
     /**
