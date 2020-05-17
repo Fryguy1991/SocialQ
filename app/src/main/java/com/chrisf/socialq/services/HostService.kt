@@ -12,8 +12,8 @@ import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
 import androidx.core.app.NotificationCompat
 import androidx.media.app.NotificationCompat.MediaStyle
-import com.chrisf.socialq.R
 import com.chrisf.socialq.AppConstants
+import com.chrisf.socialq.R
 import com.chrisf.socialq.dagger.components.ServiceComponent
 import com.chrisf.socialq.enums.NearbyDevicesMessage
 import com.chrisf.socialq.enums.PayloadTransferUpdateStatus
@@ -144,14 +144,14 @@ class HostService : BaseService<HostState, HostAction, HostProcessor>(), BitmapL
                     mediaSession = MediaSessionCompat(baseContext, AppConstants.HOST_MEDIA_SESSION_TAG)
 
                     // Start service in the foreground
-                    startForeground(AppConstants.HOST_SERVICE_ID, notificationBuilder.build())
+                    startForeground(HOST_SERVICE_ID, notificationBuilder.build())
 
                     // Let app object know that a service has been started
                     App.hasServiceBeenStarted = true
                 }
 
-                AppConstants.ACTION_REQUEST_PLAY_PAUSE -> actionStream.accept(RequestTogglePlayPause)
-                AppConstants.ACTION_REQUEST_NEXT -> actionStream.accept(RequestNext)
+                ACTION_REQUEST_PLAY_PAUSE -> actionStream.accept(RequestTogglePlayPause)
+                ACTION_REQUEST_NEXT -> actionStream.accept(RequestNext)
                 else -> {
                     Timber.e("Not handling action: ${intent.action}")
                 }
@@ -229,7 +229,7 @@ class HostService : BaseService<HostState, HostAction, HostProcessor>(), BitmapL
 
         // Update notification builder action buttons for playing
         addActionsToNotificationBuilder(true)
-        notificationManager.notify(AppConstants.HOST_SERVICE_ID, notificationBuilder.build())
+        notificationManager.notify(HOST_SERVICE_ID, notificationBuilder.build())
 
         notifyPlayStarted()
     }
@@ -245,7 +245,7 @@ class HostService : BaseService<HostState, HostAction, HostProcessor>(), BitmapL
 
         if (state.tracksRemaining) {
             addActionsToNotificationBuilder(false)
-            notificationManager.notify(AppConstants.HOST_SERVICE_ID, notificationBuilder.build())
+            notificationManager.notify(HOST_SERVICE_ID, notificationBuilder.build())
         }
         notifyPaused()
     }
@@ -324,7 +324,7 @@ class HostService : BaseService<HostState, HostAction, HostProcessor>(), BitmapL
         notificationBuilder.mActions.clear()
 
         val searchIntent = Intent(this, HostActivity::class.java)
-        searchIntent.action = AppConstants.ACTION_NOTIFICATION_SEARCH
+        searchIntent.action = ACTION_NOTIFICATION_SEARCH
 
         // Intent for starting search
         val searchPendingIntent = PendingIntent.getActivity(this, 0, searchIntent, 0)
@@ -333,14 +333,14 @@ class HostService : BaseService<HostState, HostAction, HostProcessor>(), BitmapL
         val playPausePendingIntent = PendingIntent.getService(
             this,
             0,
-            Intent(this, HostService::class.java).setAction(AppConstants.ACTION_REQUEST_PLAY_PAUSE),
+            Intent(this, HostService::class.java).setAction(ACTION_REQUEST_PLAY_PAUSE),
             0)
 
         // Intent for skipping
         val skipPendingIntent = PendingIntent.getService(
             this,
             0,
-            Intent(this, HostService::class.java).setAction(AppConstants.ACTION_REQUEST_NEXT),
+            Intent(this, HostService::class.java).setAction(ACTION_REQUEST_NEXT),
             0)
 
         // Determine if we need the play or pause icon
@@ -351,9 +351,9 @@ class HostService : BaseService<HostState, HostAction, HostProcessor>(), BitmapL
         }
 
         notificationBuilder
-            .addAction(R.mipmap.search_icon_white, AppConstants.ACTION_NOTIFICATION_SEARCH, searchPendingIntent)
-            .addAction(playPauseResourceId, AppConstants.ACTION_REQUEST_PLAY_PAUSE, playPausePendingIntent)
-            .addAction(R.mipmap.ic_media_next, AppConstants.ACTION_REQUEST_NEXT, skipPendingIntent)
+            .addAction(R.mipmap.search_icon_white, ACTION_NOTIFICATION_SEARCH, searchPendingIntent)
+            .addAction(playPauseResourceId, ACTION_REQUEST_PLAY_PAUSE, playPausePendingIntent)
+            .addAction(R.mipmap.ic_media_next, ACTION_REQUEST_NEXT, skipPendingIntent)
 
         // Display play/pause and next in compat view
         val style = mediaStyle.setShowActionsInCompactView(1, 2)
@@ -486,26 +486,6 @@ class HostService : BaseService<HostState, HostAction, HostProcessor>(), BitmapL
         }
     }
 
-    // Inner interface used to cast listeners for service events
-    interface HostServiceListener {
-
-        fun onQueuePause()
-
-        fun onQueuePlay()
-
-        fun onQueueUpdated(songRequests: List<ClientRequestData>)
-
-        fun showLoadingScreen()
-
-        fun closeHost()
-
-        fun showClientConnected()
-
-        fun showClientDisconnected()
-
-        fun initiateView(title: String, songRequests: List<ClientRequestData>, isPlaying: Boolean)
-    }
-
     private fun notifyPaused() {
         if (listener != null) {
             listener?.onQueuePause()
@@ -594,7 +574,7 @@ class HostService : BaseService<HostState, HostAction, HostProcessor>(), BitmapL
         notificationBuilder.setStyle(null)
 
         // Display updated notification
-        notificationManager.notify(AppConstants.HOST_SERVICE_ID, notificationBuilder.build())
+        notificationManager.notify(HOST_SERVICE_ID, notificationBuilder.build())
     }
 
     /**
@@ -620,7 +600,7 @@ class HostService : BaseService<HostState, HostAction, HostProcessor>(), BitmapL
         notificationBuilder.setContentText(DisplayUtils.getTrackArtistString(trackToShow))
 
         // Display updated notification
-        notificationManager.notify(AppConstants.HOST_SERVICE_ID, notificationBuilder.build())
+        notificationManager.notify(HOST_SERVICE_ID, notificationBuilder.build())
     }
 
     override fun displayBitmap(bitmap: Bitmap?) {
@@ -630,6 +610,35 @@ class HostService : BaseService<HostState, HostAction, HostProcessor>(), BitmapL
         notificationBuilder.setLargeIcon(bitmap)
         // Display updated notification
         mediaSession.setMetadata(metaDataBuilder.build())
-        notificationManager.notify(AppConstants.HOST_SERVICE_ID, notificationBuilder.build())
+        notificationManager.notify(HOST_SERVICE_ID, notificationBuilder.build())
+    }
+
+    companion object {
+        // Pending intent actions
+        private const val ACTION_REQUEST_NEXT = "socialq_notification_next"
+        private const val ACTION_REQUEST_PLAY_PAUSE = "socialq_notification_play_pause"
+        private const val ACTION_NOTIFICATION_SEARCH = "socialq_notification_search"
+
+        private const val HOST_SERVICE_ID = 1
+    }
+
+    // Inner interface used to cast listeners for service events
+    interface HostServiceListener {
+
+        fun onQueuePause()
+
+        fun onQueuePlay()
+
+        fun onQueueUpdated(songRequests: List<ClientRequestData>)
+
+        fun showLoadingScreen()
+
+        fun closeHost()
+
+        fun showClientConnected()
+
+        fun showClientDisconnected()
+
+        fun initiateView(title: String, songRequests: List<ClientRequestData>, isPlaying: Boolean)
     }
 }

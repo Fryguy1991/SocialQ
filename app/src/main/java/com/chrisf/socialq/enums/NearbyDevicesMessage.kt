@@ -8,5 +8,5 @@ enum class NearbyDevicesMessage (val regex: String, val messageFormat: String) {
     INITIATE_CLIENT(AppConstants.INITIATE_CLIENT_REGEX, AppConstants.INITIATE_CLIENT_MESSAGE_FORMAT),
     HOST_DISCONNECTING(AppConstants.HOST_DISCONNECT_MESSAGE, AppConstants.HOST_DISCONNECT_MESSAGE),
     NEW_TRACK_ADDED(AppConstants.NEW_SONG_ADDED_REGEX, AppConstants.NEW_SONG_ADDED_MESSAGE_FORMAT),
-    INVALID(AppConstants.INVALID, AppConstants.INVALID)
+    INVALID("INVALID", "INVALID")
 }

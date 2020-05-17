@@ -12,6 +12,7 @@ import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaSessionCompat
 import android.widget.Toast
 import androidx.core.app.NotificationCompat
+import androidx.core.content.ContextCompat
 import com.chrisf.socialq.R
 import com.chrisf.socialq.AppConstants
 import com.chrisf.socialq.dagger.components.ServiceComponent
@@ -110,11 +111,8 @@ class ClientService : BaseService<ClientState, ClientAction, ClientProcessor>(),
             val notificationIntent = Intent(this, ClientActivity::class.java)
             val pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0)
 
-            val colorResInt = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                getColor(R.color.Active_Button_Color)
-            } else {
-                resources.getColor(R.color.Active_Button_Color)
-            }
+            // TODO: DO we need this color?
+            val colorResInt = ContextCompat.getColor(this, R.color.Active_Button_Color)
 
             notificationSubtext = String.format(getString(R.string.client_notification_title_n_plus, titleString))
 
@@ -132,7 +130,7 @@ class ClientService : BaseService<ClientState, ClientAction, ClientProcessor>(),
                     .setCategory(NotificationCompat.CATEGORY_SERVICE)
 
             // Start service in the foreground
-            startForeground(AppConstants.CLIENT_SERVICE_ID, notificationBuilder.build())
+            startForeground(CLIENT_SERVICE_ID, notificationBuilder.build())
 
             // Let app object know that a service has been started
             App.hasServiceBeenStarted = true
@@ -311,7 +309,7 @@ class ClientService : BaseService<ClientState, ClientAction, ClientProcessor>(),
         notificationBuilder.setContentText(DisplayUtils.getTrackArtistString(trackToShow))
         notificationBuilder.setStyle(mediaStyle)
 
-        val notificationId = AppConstants.CLIENT_SERVICE_ID
+        val notificationId = CLIENT_SERVICE_ID
 
         // Display updated notification
         notificationManager.notify(notificationId, notificationBuilder.build())
@@ -330,7 +328,7 @@ class ClientService : BaseService<ClientState, ClientAction, ClientProcessor>(),
         notificationBuilder.setStyle(null)
 
         // Display updated notification
-        notificationManager.notify(AppConstants.CLIENT_SERVICE_ID, notificationBuilder.build())
+        notificationManager.notify(CLIENT_SERVICE_ID, notificationBuilder.build())
     }
 
     override fun displayBitmap(bitmap: Bitmap?) {
@@ -339,7 +337,11 @@ class ClientService : BaseService<ClientState, ClientAction, ClientProcessor>(),
         // Set bitmap data for notification
         notificationBuilder.setLargeIcon(bitmap)
         // Display updated notification
-        notificationManager.notify(AppConstants.CLIENT_SERVICE_ID, notificationBuilder.build())
+        notificationManager.notify(CLIENT_SERVICE_ID, notificationBuilder.build())
+    }
+
+    companion object {
+        private const val CLIENT_SERVICE_ID = 2
     }
 
     // Interface used to cast listeners for client service events

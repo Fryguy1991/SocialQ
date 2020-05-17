@@ -4,6 +4,7 @@ import android.content.res.Resources
 import androidx.lifecycle.Lifecycle
 import com.chrisf.socialq.AppConstants
 import com.chrisf.socialq.R
+import com.chrisf.socialq.SocialQPreferences
 import com.chrisf.socialq.enums.SpotifyUserType
 import com.chrisf.socialq.model.QueueModel
 import com.chrisf.socialq.network.ApiResponse

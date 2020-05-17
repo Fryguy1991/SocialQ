@@ -73,10 +73,11 @@ class GateActivity : BaseActivity<GateState, GateAction, GateProcessor>() {
     }
 
     private fun startAuthRefreshJobAndNavigateToLaunch() {
+        // TODO: Move this to HostService (for Spotify player)
         val scheduler = getSystemService(JOB_SCHEDULER_SERVICE) as JobScheduler?
         scheduler?.schedule(
             JobInfo.Builder(
-                AppConstants.ACCESS_SERVICE_ID,
+                AccessService.ACCESS_SERVICE_ID,
                 ComponentName(this, AccessService::class.java)
             ).setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
                 .setPeriodic(TimeUnit.MINUTES.toMillis(20))

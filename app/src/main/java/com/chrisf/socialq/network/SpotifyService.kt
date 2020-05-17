@@ -22,8 +22,9 @@ import java.net.SocketTimeoutException
 import javax.inject.Inject
 
 class SpotifyService @Inject constructor(
-        private val spotifyApi: SpotifyApi,
-        private val resources: Resources
+    private val spotifyApi: SpotifyApi,
+    private val resources: Resources,
+    private val authService: AuthService
 ) {
     /**
      * ##########
@@ -31,22 +32,22 @@ class SpotifyService @Inject constructor(
      * ##########
      */
     fun searchTracks(
-            searchTerm: String,
-            offset: Int = 0
+        searchTerm: String,
+        offset: Int = 0
     ): Single<ApiResponse<TrackPager>> {
         return wrap(spotifyApi.searchTracks(searchTerm, 50, offset))
     }
 
     fun searchAlbums(
-            searchTerm: String,
-            offset: Int = 0
+        searchTerm: String,
+        offset: Int = 0
     ): Single<ApiResponse<AlbumSimplePager>> {
         return wrap(spotifyApi.searchAlbums(searchTerm, 50, offset))
     }
 
     fun searchArtists(
-            searchTerm: String,
-            offset: Int = 0
+        searchTerm: String,
+        offset: Int = 0
     ): Single<ApiResponse<ArtistPager>> {
         return wrap(spotifyApi.searchArtists(searchTerm, 50, offset))
     }
@@ -61,14 +62,14 @@ class SpotifyService @Inject constructor(
     }
 
     fun getArtistAlbums(
-            artistId: String,
-            offset: Int = 0
+        artistId: String,
+        offset: Int = 0
     ): Single<ApiResponse<Pager<AlbumSimple>>> {
         return wrap(spotifyApi.getArtistAlbums(artistId, 50, offset))
     }
 
     fun getArtistTopTracks(
-            artistId: String
+        artistId: String
     ): Single<ApiResponse<TracksObject>> {
         return wrap(spotifyApi.getArtistTopTracks(artistId))
     }
@@ -105,27 +106,27 @@ class SpotifyService @Inject constructor(
     }
 
     fun getPlaylistTracks(
-            playlistId: String,
-            limit: Int = 50,
-            offset: Int = 0
+        playlistId: String,
+        limit: Int = 50,
+        offset: Int = 0
     ): Single<ApiResponse<Pager<PlaylistTrack>>> {
         return wrap(spotifyApi.getPlaylistTracks(playlistId, limit, offset))
     }
 
     fun createSocialQPlaylist(userId: String): Single<ApiResponse<Playlist>> {
         val requestBody = mapOf(
-                Pair("name", resources.getString(R.string.default_playlist_name)),
-                Pair("public", true),
-                Pair("collaborative", false),
-                Pair("description", resources.getString(R.string.default_playlist_description))
+            Pair("name", resources.getString(R.string.default_playlist_name)),
+            Pair("public", true),
+            Pair("collaborative", false),
+            Pair("description", resources.getString(R.string.default_playlist_description))
         )
 
         return wrap(spotifyApi.createPlaylist(userId, requestBody))
     }
 
     fun changePlaylistName(
-            playlistId: String,
-            playlistName: String
+        playlistId: String,
+        playlistName: String
     ): Single<ApiResponse<Unit>> {
         val requestBody = mapOf<String, Any>(Pair("name", playlistName))
 
@@ -133,9 +134,9 @@ class SpotifyService @Inject constructor(
     }
 
     fun addTracksToPlaylist(
-            playlistId: String,
-            @Size(min = 1, max = 100) trackUris: List<String>,
-            position: Int? = null
+        playlistId: String,
+        @Size(min = 1, max = 100) trackUris: List<String>,
+        position: Int? = null
     ): Single<ApiResponse<SnapshotId>> {
         val requestBody = mutableMapOf<String, Any>()
         if (position != null) {
@@ -155,7 +156,15 @@ class SpotifyService @Inject constructor(
     }
 
     private fun <T> wrap(stream: Single<Response<T>>): Single<ApiResponse<T>> {
-        return stream.map {
+        return stream.flatMap { response ->
+            // If unauthorized, attempt once to refresh the access token and try the call again
+            val spotifyCode = SpotifyErrorCode.parse(response.code())
+            if (spotifyCode == SpotifyErrorCode.UNAUTHORIZED || spotifyCode == SpotifyErrorCode.FORBIDDEN) {
+                authService.attemptAccessTokenRefresh().andThen(stream)
+            } else {
+                stream
+            }
+        }.map {
             val body = it.body()
 
             if (it.isSuccessful && body != null) {
@@ -172,8 +181,8 @@ class SpotifyService @Inject constructor(
                     SpotifyErrorCode.BAD_GATEWAY,
                     SpotifyErrorCode.SERVICE_UNAVAILABLE,
                     SpotifyErrorCode.UNKNOWN -> NetworkError(
-                            code = it.code(),
-                            error = getSpotifyErrorFromErrorBody(it.errorBody())
+                        code = it.code(),
+                        error = getSpotifyErrorFromErrorBody(it.errorBody())
                     )
                 }
             }
@@ -181,30 +190,43 @@ class SpotifyService @Inject constructor(
     }
 
     private fun wrapEmptyResponse(stream: Completable): Single<ApiResponse<Unit>> {
-        return stream.toSingleDefault(Success(Unit) as ApiResponse<Unit>)
-                .onErrorReturn {
-                    when (it) {
-                        is SocketTimeoutException -> NetworkTimeout
-                        is HttpException -> {
-                            when (SpotifyErrorCode.parse(it.code())) {
-                                SpotifyErrorCode.NOT_MODIFIED -> TODO()
-                                SpotifyErrorCode.UNAUTHORIZED,
-                                SpotifyErrorCode.FORBIDDEN -> Unauthorized
-                                SpotifyErrorCode.BAD_REQUEST,
-                                SpotifyErrorCode.NOT_FOUND,
-                                SpotifyErrorCode.TOO_MANY_REQUESTS,
-                                SpotifyErrorCode.INTERNAL_SERVICE_ERROR,
-                                SpotifyErrorCode.BAD_GATEWAY,
-                                SpotifyErrorCode.SERVICE_UNAVAILABLE,
-                                SpotifyErrorCode.UNKNOWN -> NetworkError(
-                                        code = it.code(),
-                                        error = getSpotifyErrorFromErrorBody(it.response()?.errorBody())
-                                )
-                            }
-                        }
-                        else -> UnknownError
-                    }
+        return stream.onErrorResumeNext {
+            if (it is HttpException) {
+                // If unauthorized, attempt once to refresh the access token and try the call again
+                val spotifyError = (SpotifyErrorCode.parse(it.code()))
+                if (spotifyError == SpotifyErrorCode.UNAUTHORIZED || spotifyError == SpotifyErrorCode.FORBIDDEN) {
+                    authService.attemptAccessTokenRefresh().andThen(stream)
+                } else {
+                    stream
                 }
+            } else {
+                stream
+            }
+        }
+            .toSingleDefault(Success(Unit) as ApiResponse<Unit>)
+            .onErrorReturn {
+                when (it) {
+                    is SocketTimeoutException -> NetworkTimeout
+                    is HttpException -> {
+                        when (SpotifyErrorCode.parse(it.code())) {
+                            SpotifyErrorCode.NOT_MODIFIED -> TODO()
+                            SpotifyErrorCode.UNAUTHORIZED,
+                            SpotifyErrorCode.FORBIDDEN -> Unauthorized
+                            SpotifyErrorCode.BAD_REQUEST,
+                            SpotifyErrorCode.NOT_FOUND,
+                            SpotifyErrorCode.TOO_MANY_REQUESTS,
+                            SpotifyErrorCode.INTERNAL_SERVICE_ERROR,
+                            SpotifyErrorCode.BAD_GATEWAY,
+                            SpotifyErrorCode.SERVICE_UNAVAILABLE,
+                            SpotifyErrorCode.UNKNOWN -> NetworkError(
+                                code = it.code(),
+                                error = getSpotifyErrorFromErrorBody(it.response()?.errorBody())
+                            )
+                        }
+                    }
+                    else -> UnknownError
+                }
+            }
     }
 
     /**
@@ -233,8 +255,8 @@ sealed class ApiResponse<out T> {
     data class Success<out T>(val body: T) : ApiResponse<T>()
 
     data class NetworkError(
-            val code: Int,
-            val error: SpotifyError?
+        val code: Int,
+        val error: SpotifyError?
     ) : ApiResponse<Nothing>()
 
     object NetworkTimeout : ApiResponse<Nothing>()

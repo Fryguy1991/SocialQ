@@ -62,17 +62,4 @@ public class AppConstants {
     // Regex for SocialQ host advertising name
     public static final String NEARBY_HOST_NAME_REGEX = QUEUE_NAME_PREFIX + "(.*)" + OWNER_NAME_PREFIX + "(.*)" + IS_FAIR_PLAY_PREFIX + "([" + FAIR_PLAY_TRUE_CHARACTER + FAIR_PLAY_FALSE_CHARACTER + "]{1})";
     // END REGULAR EXPRESSIONS
-
-    // Common Strings
-    public static final String INVALID = "INVALID";
-
-    // Service IDs
-    public static final int HOST_SERVICE_ID = 1;
-    public static final int CLIENT_SERVICE_ID = 2;
-    public static final int ACCESS_SERVICE_ID = 3;
-
-    // Notification Pending Intent Request Codes
-    public static final String ACTION_REQUEST_NEXT = "socialq_notification_next";
-    public static final String ACTION_REQUEST_PLAY_PAUSE = "socialq_notification_play_pause";
-    public static final String ACTION_NOTIFICATION_SEARCH = "socialq_notification_search";
 }
