@@ -65,7 +65,11 @@ class HostQueueOptionsProcessor @Inject constructor(
     }
 
     private fun handleStartQueueClick(action: StartQueueClick) {
-        val queueName = action.queueName ?: resources.getString(R.string.queue_title_default_value)
+        val queueName = if (action.queueName.isBlank()) {
+           resources.getString(R.string.queue_title_default_value)
+        } else {
+            action.queueName
+        }
         stateStream.accept(NavigateToHostActivity(queueName, action.isFairPlay, selectedPlaylistId))
     }
 
@@ -123,7 +127,7 @@ class HostQueueOptionsProcessor @Inject constructor(
         object RequestMorePlaylists : HostQueueOptionsAction()
 
         data class StartQueueClick(
-            val queueName: String?,
+            val queueName: String,
             val isFairPlay: Boolean
         ) : HostQueueOptionsAction()
 

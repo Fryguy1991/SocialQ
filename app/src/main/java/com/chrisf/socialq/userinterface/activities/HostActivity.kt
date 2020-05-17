@@ -33,6 +33,8 @@ open class HostActivity : ServiceActivity(), HostService.HostServiceListener {
 
     // Flag to determine if the service is bound or not
     private var isServiceBound = false
+    // Name of the queue (or null)
+    private val queueName: String? by lazy { intent.getStringExtra(QUEUE_NAME_KEY) }
 
     // Object for connecting to/from play queue service
     private val hostServiceConnection = object : ServiceConnection {
@@ -110,9 +112,7 @@ open class HostActivity : ServiceActivity(), HostService.HostServiceListener {
             .addTo(subscriptions)
 
         // Show queue title as activity title
-        var queueName = intent.getStringExtra(QUEUE_NAME_KEY)
-        if (queueName.isNullOrBlank()) queueName = getString(R.string.queue_title_default_value)
-        title = queueName
+        title = queueName ?: getString(R.string.queue_title_default_value)
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -131,7 +131,7 @@ open class HostActivity : ServiceActivity(), HostService.HostServiceListener {
 
     private fun startHostService() {
         val startHostIntent = Intent(this, HostService::class.java)
-        startHostIntent.putExtra(AppConstants.QUEUE_TITLE_KEY, intent.getStringExtra(QUEUE_NAME_KEY))
+        startHostIntent.putExtra(AppConstants.QUEUE_TITLE_KEY, queueName)
         startHostIntent.putExtra(AppConstants.FAIR_PLAY_KEY, intent.getBooleanExtra(IS_FAIRPLAY_KEY, resources.getBoolean(R.bool.fair_play_default)))
         startHostIntent.putExtra(AppConstants.BASE_PLAYLIST_ID_KEY, intent.getStringExtra(BASE_PLAYLIST_ID))
 
@@ -159,42 +159,20 @@ open class HostActivity : ServiceActivity(), HostService.HostServiceListener {
     }
 
     override fun onBackPressed() {
-
         val dialogBuilder = AlertDialog.Builder(this)
-
-        // Inflate content view and get references to UI elements
-        val contentView = layoutInflater.inflate(R.layout.save_playlist_dialog, null)
-        val playlistNameEditText = contentView.findViewById<EditText>(R.id.et_save_playlist_name)
-        val savePlaylistCheckbox = contentView.findViewById<CheckBox>(R.id.cb_save_playlist)
-
-        dialogBuilder.setView(contentView)
-
-        // If save playlist box is checked, enable edit text for playlist name
-        // If save playlist box is unchecked, disabled edit text and clear field value
-        savePlaylistCheckbox.setOnCheckedChangeListener { buttonView, isChecked ->
-            playlistNameEditText.isEnabled = isChecked
-
-            if (!isChecked) {
-                playlistNameEditText.setText("")
-            }
-        }
-
-        dialogBuilder.setPositiveButton(R.string.confirm) { dialog, which ->
-            if (savePlaylistCheckbox.isChecked) {
-                Timber.d("Updating SocialQ playlist details")
-
-                hostService.savePlaylistAs(playlistNameEditText.text.toString())
-            } else {
+            .setTitle(R.string.close_host_dialog_title)
+            .setMessage(R.string.close_host_dialog_description)
+            .setPositiveButton(R.string.close_host_dialog_close_button) { dialog, _ ->
                 hostService.unfollowQueuePlaylist()
+                dialog.dismiss()
             }
-
-            dialog.dismiss()
-        }
-
-        dialogBuilder.setNegativeButton(R.string.cancel) { dialog, which ->
-            // Don't actually want to close the queue
-            dialog.dismiss()
-        }
+            .setNeutralButton(R.string.cancel) { dialog, _ ->
+                dialog.dismiss()
+            }
+            .setNegativeButton(R.string.close_host_dialog_close_and_save_button) { dialog, _ ->
+                hostService.savePlaylistAs(queueName)
+                dialog.dismiss()
+            }
 
         dialogBuilder.create().show()
     }
@@ -299,7 +277,7 @@ open class HostActivity : ServiceActivity(), HostService.HostServiceListener {
 
         fun start(
             fromActivity: Activity,
-            queueName: String = "",
+            queueName: String,
             isFairplay: Boolean = false,
             basePlaylistId: String = ""
         ) {

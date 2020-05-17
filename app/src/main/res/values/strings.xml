@@ -25,7 +25,7 @@
     <string name="start">Start</string>
     <string name="cancel">Cancel</string>
     <string name="confirm">Confirm</string>
-    <string name="ok">Ok</string>
+    <string name="ok">OK</string>
     <string name="open_settings">Open Settings</string>
 
     <!-- Host Screen Strings -->
@@ -44,8 +44,11 @@
 
     <!-- Close Host Dialog Strings -->
     <string name="close_host_dialog_title">Close Queue?</string>
+    <string name="close_host_dialog_description">Closing the queue will halt music playback and disconnect any clients.</string>
     <string name="save_playlist">Save Spotify Playlist</string>
     <string name="playlist_name_hint">Playlist Name</string>
+    <string name="close_host_dialog_close_button">Close Queue</string>
+    <string name="close_host_dialog_close_and_save_button">Close And Save Playlist</string>
 
     <!-- Client Screen Strings -->
     <string name="toast_authentication_error_client">Authentication Error</string>

@@ -2,10 +2,8 @@ package com.chrisf.socialq.services
 
 import android.app.NotificationManager
 import android.app.PendingIntent
-import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
 import android.graphics.Bitmap
 import android.os.Binder
 import android.os.IBinder
@@ -13,7 +11,6 @@ import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
 import androidx.core.app.NotificationCompat
-import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.media.app.NotificationCompat.MediaStyle
 import com.chrisf.socialq.R
 import com.chrisf.socialq.AppConstants
@@ -35,10 +32,7 @@ import com.chrisf.socialq.utils.ApplicationUtils
 import com.chrisf.socialq.utils.DisplayUtils
 import com.google.android.gms.nearby.Nearby
 import com.google.android.gms.nearby.connection.*
-import com.google.android.gms.tasks.OnFailureListener
-import com.google.android.gms.tasks.OnSuccessListener
 import timber.log.Timber
-import java.lang.Exception
 import java.util.*
 import java.util.regex.Pattern
 
@@ -97,10 +91,10 @@ class HostService : BaseService<HostState, HostAction, HostProcessor>(), BitmapL
     override fun handleState(state: HostState) {
         when (state) {
             is QueueInitiationComplete -> onQueueInitiationComplete(state)
-            is PlaybackResumed -> onPlaybackResumed(state)
+            is PlaybackResumed -> onPlaybackResumed()
             is PlaybackPaused -> onPlaybackPaused(state)
             is PlaybackNext -> onPlaybackNext(state)
-            is AudioDeliveryDone -> onAudioDeliveryDone(state)
+            is AudioDeliveryDone -> onAudioDeliveryDone()
             is TrackAdded -> onTrackAdded(state)
             is InitiateNewClient -> initiateNewClient(state)
             is DisplayLoading -> listener?.showLoadingScreen()
@@ -224,7 +218,7 @@ class HostService : BaseService<HostState, HostAction, HostProcessor>(), BitmapL
         listener?.onQueueUpdated(state.requestDataList)
     }
 
-    private fun onPlaybackResumed(state: PlaybackResumed) {
+    private fun onPlaybackResumed() {
         // Update session playback state
         mediaSession.setPlaybackState(
             playbackStateBuilder.setState(
@@ -280,7 +274,7 @@ class HostService : BaseService<HostState, HostAction, HostProcessor>(), BitmapL
         }
     }
 
-    private fun onAudioDeliveryDone(state: AudioDeliveryDone) {
+    private fun onAudioDeliveryDone() {
         // Stop service if we're not bound and out of songs
         if (!isBound) {
             Timber.d("Out of songs and not bound to host activity. Shutting down service.")
@@ -551,13 +545,13 @@ class HostService : BaseService<HostState, HostAction, HostProcessor>(), BitmapL
     }
 
 
-    fun savePlaylistAs(playlistName: String) {
-        if (playlistName.isNotBlank()) {
-            Timber.d("Saving playlist as: $playlistName")
-            actionStream.accept(UpdatePlaylistName(playlistName))
+    fun savePlaylistAs(playlistName: String?) {
+        val nameToSave = if (playlistName.isNullOrBlank()) {
+            resources.getString(R.string.default_playlist_name)
         } else {
-            closeQueue()
+            playlistName
         }
+        actionStream.accept(UpdatePlaylistName(nameToSave))
     }
 
     fun hostRequestSong(uri: String) {
