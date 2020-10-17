@@ -1,6 +1,5 @@
 package com.chrisf.socialq.userinterface.adapters
 
-import android.content.Context
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import com.chrisf.socialq.R
@@ -11,10 +10,10 @@ import com.chrisf.socialq.utils.DisplayUtils
 /**
  * Adapter for displaying a list of tracks (track name, artists, and client who added track)
  */
-class HostTrackListAdapter(val context : Context) : BaseRecyclerViewAdapter<HostTrackHolder, ClientRequestData>() {
+class HostTrackListAdapter : BaseRecyclerViewAdapter<HostTrackHolder, ClientRequestData>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): HostTrackHolder {
-        return HostTrackHolder(LayoutInflater.from(parent.context).inflate(R.layout.host_track_holder, parent, false))
+        return HostTrackHolder(LayoutInflater.from(parent.context).inflate(R.layout.holder_host_track, parent, false))
     }
 
     override fun onBindViewHolder(holder: HostTrackHolder, position: Int) {

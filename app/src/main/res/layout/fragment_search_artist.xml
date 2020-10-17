@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/artistFragmentRoot"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:scrollbars="none">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/artistScrollView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <ImageView
+            android:id="@+id/artistImage"
+            android:layout_width="0dp"
+            android:layout_height="225dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginEnd="16dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/topTrackHeader"
+            style="@style/HeaderText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginEnd="16dp"
+            android:gravity="center"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp"
+            android:text="@string/top_tracks"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/artistImage" />
+
+        <TextView
+            android:id="@+id/topTrack1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/topTrackHeader"
+            android:background="?attr/selectableItemBackground"
+            tools:text="Where Do We Go"
+            style="@style/TopTrackText"/>
+
+        <TextView
+            android:id="@+id/topTrack2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/topTrack1"
+            android:background="?attr/selectableItemBackground"
+            style="@style/TopTrackText"
+            tools:text="Dr. Funk" />
+
+        <TextView
+            android:id="@+id/topTrack3"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/topTrack2"
+            android:background="?attr/selectableItemBackground"
+            style="@style/TopTrackText"
+            tools:text="I'll Take Another" />
+
+        <TextView
+            android:id="@+id/topTrack4"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
+            android:padding="8dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/topTrack3"
+            android:background="?attr/selectableItemBackground"
+            style="@style/TopTrackText"
+            tools:text="Love Yourself Somebody" />
+
+        <TextView
+            android:id="@+id/topTrack5"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
+            android:padding="8dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/topTrack4"
+            android:background="?attr/selectableItemBackground"
+            style="@style/TopTrackText"
+            tools:text="Where Do We Go" />
+
+        <TextView
+            android:id="@+id/artistAlbumsHeader"
+            style="@style/HeaderText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginEnd="16dp"
+            android:gravity="center"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp"
+            android:text="@string/albums"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/topTrack5" />
+
+        <com.chrisf.socialq.userinterface.views.AlbumCardView
+            android:id="@+id/artistAlbum1"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            app:layout_goneMarginBottom="16dp"
+            app:layout_constraintEnd_toStartOf="@+id/artistAlbum2"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintHorizontal_chainStyle="packed"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/artistAlbumsHeader"
+            app:layout_constraintBottom_toTopOf="@id/artistAlbum3"
+            android:visibility="gone"/>
+
+        <com.chrisf.socialq.userinterface.views.AlbumCardView
+            android:id="@+id/artistAlbum2"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="16dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toEndOf="@+id/artistAlbum1"
+            app:layout_constraintTop_toBottomOf="@id/artistAlbumsHeader"
+            app:layout_constraintBottom_toBottomOf="@id/artistAlbum1"
+            android:visibility="gone"/>
+
+        <com.chrisf.socialq.userinterface.views.AlbumCardView
+            android:id="@+id/artistAlbum3"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginTop="16dp"
+            app:layout_goneMarginBottom="16dp"
+            app:layout_constraintEnd_toStartOf="@+id/artistAlbum4"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintHorizontal_chainStyle="packed"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/artistAlbum1"
+            app:layout_constraintBottom_toTopOf="@id/allAlbumsHeader"
+            android:visibility="gone"/>
+
+        <com.chrisf.socialq.userinterface.views.AlbumCardView
+            android:id="@+id/artistAlbum4"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="16dp"
+            app:layout_goneMarginBottom="16dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toEndOf="@+id/artistAlbum3"
+            app:layout_constraintTop_toTopOf="@id/artistAlbum3"
+            app:layout_constraintBottom_toBottomOf="@id/artistAlbum3"
+            android:visibility="gone"/>
+
+        <TextView
+            android:id="@+id/allAlbumsHeader"
+            style="@style/SeeAllText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="16dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
+            android:padding="8dp"
+            android:text="@string/see_all_albums"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/artistAlbum3"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:background="?attr/selectableItemBackground"
+            android:visibility="gone"/>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</ScrollView>

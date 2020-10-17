@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="@dimen/see_all_button_size"
+    android:layout_marginStart="@dimen/default_margin"
+    android:layout_marginEnd="@dimen/default_margin"
+    android:layout_marginTop="@dimen/default_margin_half"
+    android:layout_marginBottom="@dimen/default_margin">
+
+    <TextView
+        android:id="@+id/viewAllButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        tools:text="See All Songs"
+        style="@style/SeeAllText"
+        android:gravity="center_vertical"
+        android:background="@color/Ice_White"
+        android:layout_marginEnd="@dimen/default_margin"
+        android:layout_gravity="center_vertical"/>
+
+</FrameLayout>

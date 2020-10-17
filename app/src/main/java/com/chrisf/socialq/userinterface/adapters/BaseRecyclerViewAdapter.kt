@@ -4,23 +4,23 @@ import android.view.ViewGroup
 
 /**
  * Base recycle view adapter class with generics for displaying a list of items
- * <T> is the view holder type
- * <E> is the item list type
+ * <Viewholder> is the view holder type
+ * <ItemType> is the item list type
  */
-abstract class BaseRecyclerViewAdapter<T : androidx.recyclerview.widget.RecyclerView.ViewHolder, E> : androidx.recyclerview.widget.RecyclerView.Adapter<T>() {
-    protected var itemList = listOf<E>()
+abstract class BaseRecyclerViewAdapter<ViewHolder : androidx.recyclerview.widget.RecyclerView.ViewHolder, ItemType> : androidx.recyclerview.widget.RecyclerView.Adapter<ViewHolder>() {
+    protected var itemList = listOf<ItemType>()
 
 
     override fun getItemCount(): Int {
         return itemList.size
     }
 
-    fun updateAdapter(newItemList : List<E>) {
+    fun updateAdapter(newItemList : List<ItemType>) {
         itemList = newItemList
         notifyDataSetChanged()
     }
 
-    abstract override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): T
+    abstract override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder
 
-    abstract override fun onBindViewHolder(holder: T, position: Int)
+    abstract override fun onBindViewHolder(holder: ViewHolder, position: Int)
 }

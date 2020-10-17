@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:paddingStart="@dimen/default_margin"
+    android:paddingEnd="@dimen/default_margin"
+    android:paddingTop="@dimen/default_margin_half"
+    android:paddingBottom="@dimen/default_margin_half">
+
+    <ImageView
+        android:id="@+id/albumArt"
+        android:layout_width="@dimen/album_art_small"
+        android:layout_height="@dimen/album_art_small"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"/>
+
+    <TextView
+        android:id="@+id/albumName"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/default_margin_half"
+        android:layout_marginEnd="@dimen/default_margin"
+        app:layout_constraintStart_toEndOf="@id/albumArt"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/artistName"
+        app:layout_constraintVertical_chainStyle="packed"
+        android:textStyle="bold"
+        android:textSize="@dimen/medium_text_2"
+        android:textColor="?android:colorPrimary"
+        tools:text="Ruested from the Rain"/>
+
+    <TextView
+        android:id="@+id/artistName"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/default_margin_half"
+        android:layout_marginEnd="@dimen/default_margin"
+        android:layout_marginTop="4dp"
+        app:layout_constraintStart_toEndOf="@id/albumArt"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/albumName"
+        app:layout_constraintBottom_toBottomOf="parent"
+        android:textStyle="italic"
+        tools:text="Billy Talent"/>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

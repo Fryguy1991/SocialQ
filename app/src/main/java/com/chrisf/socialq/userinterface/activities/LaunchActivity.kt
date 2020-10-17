@@ -1,204 +1,242 @@
 package com.chrisf.socialq.userinterface.activities
 
-import android.app.job.JobInfo
-import android.app.job.JobScheduler
-import android.content.ComponentName
-import android.content.Context
+import android.Manifest
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
-import android.os.StrictMode
-import android.os.SystemClock
-import android.util.Log
-import android.view.WindowManager
-import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.widget.Toolbar
-import androidx.navigation.NavController
-import androidx.navigation.findNavController
-import androidx.navigation.ui.AppBarConfiguration
-import androidx.navigation.ui.setupWithNavController
+import android.provider.Settings
+import android.view.View
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import com.chrisf.socialq.AppConstants
 import com.chrisf.socialq.R
-import com.chrisf.socialq.business.AppConstants
-import com.chrisf.socialq.enums.RequestType
-import com.chrisf.socialq.model.AccessModel
-import com.chrisf.socialq.services.AccessService
-import com.chrisf.socialq.userinterface.fragments.JoinQueueFragment
-import com.spotify.sdk.android.authentication.AuthenticationClient
-import com.spotify.sdk.android.authentication.AuthenticationRequest
-import com.spotify.sdk.android.authentication.AuthenticationResponse
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import org.json.JSONObject
-import java.util.concurrent.TimeUnit
+import com.chrisf.socialq.dagger.components.ActivityComponent
+import com.chrisf.socialq.extensions.filterEmissions
+import com.chrisf.socialq.processor.LaunchProcessor
+import com.chrisf.socialq.processor.LaunchProcessor.LaunchAction
+import com.chrisf.socialq.processor.LaunchProcessor.LaunchAction.*
+import com.chrisf.socialq.processor.LaunchProcessor.LaunchState
+import com.chrisf.socialq.processor.LaunchProcessor.LaunchState.*
+import com.chrisf.socialq.processor.SocialQEndpoint
+import com.chrisf.socialq.userinterface.adapters.QueueDisplayAdapter
+import com.chrisf.socialq.userinterface.views.QueueItemDecoration
+import com.google.android.gms.nearby.Nearby
+import com.google.android.gms.nearby.connection.*
+import com.jakewharton.rxbinding3.view.clicks
+import com.tbruyelle.rxpermissions2.RxPermissions
+import io.reactivex.Observable
+import io.reactivex.rxkotlin.addTo
+import kotlinx.android.synthetic.main.activity_launch.*
+import timber.log.Timber
+import javax.inject.Inject
 
-class LaunchActivity : BaseActivity(), JoinQueueFragment.JoinQueueFragmentListener {
-    companion object {
-        val TAG = LaunchActivity::class.java.name
+class LaunchActivity : BaseActivity<LaunchState, LaunchAction, LaunchProcessor>() {
+    override val FRAGMENT_HOLDER_ID: Int = View.NO_ID
+
+    private val adapter = QueueDisplayAdapter()
+
+    private val socialQEndpoints: MutableList<SocialQEndpoint> = mutableListOf()
+
+    private val connectionsClient: ConnectionsClient by lazy { Nearby.getConnectionsClient(this) }
+    private var isDiscovering = false
+    private var isAskingLocationPermission = false
+
+    @Inject
+    lateinit var rxPermissions: RxPermissions
+
+    private var isUserPremium = false
+
+    private val endpointDiscoveryCallback = object : EndpointDiscoveryCallback() {
+        override fun onEndpointFound(endpointId: String, discoveredEndpointInfo: DiscoveredEndpointInfo) {
+            Timber.d("Endpoint Found")
+
+            socialQEndpoints.add(
+                SocialQEndpoint(
+                    endpointId = endpointId,
+                    endpointInfo = discoveredEndpointInfo
+                )
+            )
+            actionStream.accept(EndpointListUpdated(socialQEndpoints))
+        }
+
+        override fun onEndpointLost(endpointId: String) {
+            Timber.d("Endpoint Lost")
+
+            val endpointsToRemove = socialQEndpoints.filter { it.endpointId == endpointId }
+            socialQEndpoints.removeAll(endpointsToRemove)
+
+            actionStream.accept(EndpointListUpdated(socialQEndpoints))
+        }
     }
 
-    // Reference to nav controller
-    private lateinit var navController: NavController
-    // Toolbar reference
-    private lateinit var toolbar: Toolbar
-    // Retry count for retrieving authorization
-    private var retryCount = 0
-    // Scheduler for refreshing access token
-    private lateinit var scheduler: JobScheduler
-    // Builder for dialogs
-    private lateinit var alertbuilder: AlertDialog.Builder
+    override fun resolveDependencies(activityComponent: ActivityComponent) {
+        activityComponent.inject(this)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.launch_activity)
+        setContentView(R.layout.activity_launch)
+        setSupportActionBar(toolbar)
 
-        // Retrieve nav controller
-        navController = findNavController(R.id.frag_nav_host)
-        val appBarConfiguration = AppBarConfiguration(navController.graph)
+        setupViews()
+        actionStream.accept(ViewCreated)
 
-        // Setup the app toolbar
-        toolbar = findViewById(R.id.app_toolbar)
-        toolbar.setupWithNavController(navController, appBarConfiguration)
-
-        // Stop soft keyboard from pushing UI up
-        window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING)
-
-        // Allow network operation in main thread
-        val policy = StrictMode.ThreadPolicy.Builder()
-                .permitAll().build()
-        StrictMode.setThreadPolicy(policy)
-
-        scheduler = getSystemService(Context.JOB_SCHEDULER_SERVICE) as JobScheduler
-
-        alertbuilder = AlertDialog.Builder(this)
-                .setView(R.layout.dialog_auth_fail)
-                .setPositiveButton(R.string.retry) { dialog, which ->
-                    requestAuthorization()
-                }
-                .setNegativeButton(R.string.close_app) {dialog, which ->
-                    finish()
-                }
-                .setOnCancelListener {
-                    finish()
-                }
-
-        requestAuthorization()
-    }
-
-    override fun onDestroy() {
-        // Cancel access refresh jobs
-        scheduler.cancel(AppConstants.ACCESS_SERVICE_ID)
-        super.onDestroy()
-    }
-
-    override fun showQueueTitle(queueTitle: String) {
-        toolbar.title = queueTitle
-    }
-
-    private fun requestAuthorization() {
-        val accessScopes = arrayOf("user-read-private", "streaming", "playlist-modify-private", "playlist-modify-public", "playlist-read-private")
-        val builder = AuthenticationRequest.Builder(
-                AppConstants.CLIENT_ID,
-                AuthenticationResponse.Type.CODE,
-                AppConstants.REDIRECT_URI)
-        builder.setScopes(accessScopes)
-        val request = builder.build()
-        AuthenticationClient.openLoginActivity(this, RequestType.SPOTIFY_AUTHENTICATION_REQUEST.requestCode, request)
-    }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        val requestType = RequestType.getRequestTypeFromRequestCode(requestCode)
-        when (requestType) {
-            RequestType.SPOTIFY_AUTHENTICATION_REQUEST -> {
-                val response = AuthenticationClient.getResponse(resultCode, data)
-                when (response.type) {
-                    AuthenticationResponse.Type.CODE -> {
-                        Log.d(TAG, "Authorization code granted")
-
-                        // Store authorization code
-                        AccessModel.setAuthorizationCode(response.code)
-
-                        // Auth code received, retrieve access and refresh tokens
-                        authCodeReceived()
-                        return
-                    }
-                    AuthenticationResponse.Type.TOKEN -> {
-                        Log.e(TAG, "Should be retrieving access tokens from backend server")
-                        // Calculate when access token expires (response "ExpiresIn" is in seconds, subtract a minute to worry less about timing)
-                        val expireTime = SystemClock.elapsedRealtime() + (response.expiresIn - 60) * 1000
-
-                        // Set access token and expire time into model
-                        AccessModel.setAccess(response.accessToken, expireTime)
-
-                        // Schedule access token refresh to occur every 20 minutes
-                        startPeriodicAccessRefresh()
-                        return
-                    }
-                    AuthenticationResponse.Type.ERROR -> {
-                        Log.e(TAG, "Authentication error: ${response.error}")
-                    }
-                    AuthenticationResponse.Type.EMPTY -> {
-                        Log.e(TAG, "Not handling empty case")
-                    }
-                    AuthenticationResponse.Type.UNKNOWN -> {
-                        Log.e(TAG, "Not handling unknown case")
-                    }
-                    else -> {
-                        Log.e(TAG, "Something went wrong. Not handling response type: ${response.type}")
-                    }
-                }
-                // Show authorization failed dialog
-                alertbuilder.create().show()
+        isAskingLocationPermission = true
+        rxPermissions.request(Manifest.permission.ACCESS_COARSE_LOCATION)
+            .map { permissionGranted ->
+                isAskingLocationPermission = false
+                if (permissionGranted) QueueRefreshRequested else LocationPermissionDenied
             }
-            RequestType.SEARCH_REQUEST,
-            RequestType.LOCATION_PERMISSION_REQUEST -> {
-                Log.e(TAG, "Launch activity should not receiver $requestType")
-            }
-            RequestType.NONE -> {
-                Log.e(TAG, "Unhandled request code")
-            }
-        }
+            .subscribe(actionStream)
+            .addTo(subscriptions)
     }
 
-    private fun authCodeReceived() {
-        if (AccessModel.getAuthorizationCode().isNullOrEmpty()) {
-            Log.e(TAG, "Error invalid authorization code")
+    override fun onResume() {
+        super.onResume()
+
+        // Don't try to restart queue searching if it's in progress or permissions request is in progress
+        if (isAskingLocationPermission || isDiscovering) return
+
+        if (rxPermissions.isGranted(Manifest.permission.ACCESS_COARSE_LOCATION)) {
+            actionStream.accept(QueueRefreshRequested)
         } else {
-            Log.d(TAG, "Have authorization code. Request access/refresh tokens")
-            val client = OkHttpClient()
-            val request = Request.Builder().url(String.format(AppConstants.AUTH_REQ_URL_FORMAT, AccessModel.getAuthorizationCode())).build()
-
-            val response = client.newCall(request).execute()
-            val responseString = response.body()?.string()
-
-            if (response.isSuccessful && !responseString.isNullOrEmpty()) {
-                val bodyJson = JSONObject(responseString).getJSONObject(AppConstants.JSON_BODY_KEY)
-
-                val accessToken = bodyJson.getString(AppConstants.JSON_ACCESS_TOKEN_KEY)
-                val refreshToken = bodyJson.getString(AppConstants.JSON_REFRESH_TOEKN_KEY)
-                val expiresIn = bodyJson.getInt(AppConstants.JSON_EXPIRES_IN_KEY)
-
-                Log.d(TAG, "Received authorization:\nAccess Token: $accessToken\nRefresh Token: $refreshToken\nExpires In: $expiresIn seconds")
-
-                // Store refresh token
-                AccessModel.setRefreshToken(refreshToken)
-
-                // Calculate when access token expires (response "ExpiresIn" is in seconds, subtract a minute to worry less about timing)
-                val expireTime = SystemClock.elapsedRealtime() + (expiresIn - 60) * 1000
-                // Set access token and expire time into model
-                AccessModel.setAccess(accessToken, expireTime)
-
-                // Schedule access token refresh to occur every 20 minutes
-                startPeriodicAccessRefresh()
-            } else {
-                Log.e(TAG, "Response was unsuccessful or response string was null")
-            }
+            showQueueRefreshFailed()
         }
     }
 
-    private fun startPeriodicAccessRefresh() {
-        scheduler.schedule(JobInfo.Builder(AppConstants.ACCESS_SERVICE_ID,
-                ComponentName(this, AccessService::class.java))
-                .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
-                .setPeriodic(TimeUnit.MINUTES.toMillis(20))
-                .build())
+    override fun onPause() {
+        super.onPause()
+        connectionsClient.stopDiscovery()
+        hostSwipeRefreshLayout.isRefreshing = false
+
+        actionStream.accept(ViewPausing)
+    }
+
+    override fun handleState(state: LaunchState) {
+        when (state) {
+            is DisplayAvailableQueues -> displayQueues(state)
+            is EnableNewQueueButton -> enableNewQueueButton(state)
+            is LaunchClientActivity -> launchClientActivity(state)
+            is NavigateToNewQueue -> navigateToNewQueue()
+            is NoQueuesFound -> onNoQueuesFound()
+            is SearchForQueues -> searchForQueues()
+            is ShowAuthFailedDialog -> showAlertDialog(state.binding)
+            is ShowLocationPermissionRequiredDialog -> showAlertDialog(state.binding)
+            is ShowPremiumRequiredDialog -> showAlertDialog(state.binding)
+            is ShowQueueRefreshFailed -> showQueueRefreshFailed()
+            is StopSearchingForQueues -> stopSearchingForQueues()
+            is NavigateToAppSettings -> navigateToAppSettings()
+        }
+    }
+
+    private fun displayQueues(state: DisplayAvailableQueues) {
+        // Hide Views
+        swipeRefreshText.visibility = View.GONE
+
+        // Show Views
+        adapter.updateAdapter(state.queueList)
+        availableQueueRecyclerView.visibility = View.VISIBLE
+    }
+
+    private fun enableNewQueueButton(state: EnableNewQueueButton) {
+        isUserPremium = state.isUserPremium
+        newQueueButton.show()
+    }
+
+    private fun launchClientActivity(state: LaunchClientActivity) {
+        ClientActivity.start(this, state.hostEndpoint, state.queueTitle)
+    }
+
+    private fun navigateToNewQueue() {
+        startActivity(Intent(this, HostQueueOptionsActivity::class.java))
+    }
+
+    private fun onNoQueuesFound() {
+        // Hide Views
+        adapter.updateAdapter(emptyList())
+        availableQueueRecyclerView.visibility = View.GONE
+        hostSwipeRefreshLayout.isRefreshing = false
+
+        // Show Views
+        swipeRefreshText.text = getString(R.string.no_host_found_message)
+        swipeRefreshText.visibility = View.VISIBLE
+    }
+
+    private fun searchForQueues() {
+        socialQEndpoints.clear()
+        hostSwipeRefreshLayout.isRefreshing = true
+        swipeRefreshText.text = getString(R.string.queue_searching_message)
+        swipeRefreshText.visibility = View.VISIBLE
+        availableQueueRecyclerView.visibility = View.GONE
+
+        val options = DiscoveryOptions.Builder().setStrategy(Strategy.P2P_STAR).build()
+
+        connectionsClient.startDiscovery(
+            AppConstants.SERVICE_NAME,
+            endpointDiscoveryCallback,
+            options
+        ).addOnSuccessListener {
+            actionStream.accept(StartedNearbySearch(true))
+            isDiscovering = true
+        }.addOnFailureListener {
+            actionStream.accept(StartedNearbySearch(false))
+            isDiscovering = false
+        }.addOnCanceledListener {
+            isDiscovering = false
+        }.addOnCompleteListener {
+            isDiscovering = false
+        }
+    }
+
+    private fun showQueueRefreshFailed() {
+        // Hide Views
+        adapter.updateAdapter(emptyList())
+        availableQueueRecyclerView.visibility = View.GONE
+        hostSwipeRefreshLayout.isRefreshing = false
+
+        // Show Views
+        swipeRefreshText.text = getString(R.string.host_search_failed_message)
+        swipeRefreshText.visibility = View.VISIBLE
+    }
+
+    private fun stopSearchingForQueues() {
+        hostSwipeRefreshLayout.isRefreshing = false
+        Nearby.getConnectionsClient(this).stopDiscovery()
+
+        actionStream.accept(QueueSearchStopped(socialQEndpoints))
+    }
+
+    private fun navigateToAppSettings() {
+        val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+            data = Uri.fromParts("package", packageName, null)
+        }
+        startActivity(intent)
+    }
+
+    private fun setupViews() {
+        hostSwipeRefreshLayout.setOnRefreshListener {
+            rxPermissions.request(Manifest.permission.ACCESS_COARSE_LOCATION)
+                .take(1)
+                .singleOrError()
+                .onErrorReturn { false }
+                .map { hasPermission ->
+                    if (hasPermission) QueueRefreshRequested else LocationPermissionDenied
+                }
+                .subscribe(actionStream)
+                .addTo(subscriptions)
+        }
+        hostSwipeRefreshLayout.setColorSchemeResources(R.color.BurntOrangeLight)
+
+        Observable.merge(
+            adapter.queueSelection.map { QueueSelected(it) },
+            newQueueButton.clicks().map { StartNewQueueButtonTouched(isUserPremium) }
+        ).filterEmissions()
+            .subscribe(actionStream)
+            .addTo(subscriptions)
+
+        val layoutManager = LinearLayoutManager(this, RecyclerView.VERTICAL, false)
+        availableQueueRecyclerView.layoutManager = layoutManager
+        availableQueueRecyclerView.addItemDecoration(QueueItemDecoration(this))
+        availableQueueRecyclerView.adapter = adapter
     }
 }

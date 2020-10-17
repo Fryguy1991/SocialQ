@@ -1,10 +1,10 @@
 package com.chrisf.socialq.userinterface.activities
 
+import android.app.Activity
 import android.content.*
 import android.os.Bundle
 import android.os.IBinder
-import android.os.StrictMode
-import android.util.Log
+import android.view.MenuItem
 import android.view.View
 import android.widget.CheckBox
 import android.widget.Toast
@@ -13,28 +13,27 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.chrisf.socialq.R
-import com.chrisf.socialq.business.AppConstants
-import com.chrisf.socialq.enums.RequestType
+import com.chrisf.socialq.AppConstants
+import com.chrisf.socialq.extensions.filterEmissions
+import com.chrisf.socialq.model.spotify.PlaylistTrack
 import com.chrisf.socialq.services.ClientService
 import com.chrisf.socialq.userinterface.App
 import com.chrisf.socialq.userinterface.adapters.BasicTrackListAdapter
-import com.chrisf.socialq.userinterface.views.PlaybackControlView
 import com.chrisf.socialq.userinterface.views.QueueItemDecoration
-import kaaes.spotify.webapi.android.models.PlaylistTrack
+import com.jakewharton.rxbinding3.view.clicks
+import io.reactivex.rxkotlin.addTo
+import kotlinx.android.synthetic.main.activity_client_screen.addTrackButton
+import kotlinx.android.synthetic.main.activity_client_screen.emptyQueueText
+import kotlinx.android.synthetic.main.activity_client_screen.loadingRoot
+import kotlinx.android.synthetic.main.activity_client_screen.playbackControlView
+import kotlinx.android.synthetic.main.activity_client_screen.queueListRecyclerView
+import timber.log.Timber
 
 open class ClientActivity : ServiceActivity(), ClientService.ClientServiceListener {
-    private val TAG = ClientActivity::class.java.name
 
     // UI ELEMENTS
     // Queue display elements
-    private lateinit var queueList: RecyclerView
     private lateinit var trackDisplayAdapter: BasicTrackListAdapter
-    // Button for adding a new track
-    private lateinit var addButton: View
-    // View for displaying currently playing track
-    private lateinit var playbackControlView: PlaybackControlView
-    // View for displaying message that the queue is empty
-    private lateinit var emptyQueueMessage: View
 
     // Reference to host endpoint ID
     private var hostEnpointId = ""
@@ -48,33 +47,28 @@ open class ClientActivity : ServiceActivity(), ClientService.ClientServiceListen
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.client_screen)
+        setContentView(R.layout.activity_client_screen)
 
         // Setup the app toolbar
-        val toolbar = findViewById<androidx.appcompat.widget.Toolbar>(R.id.app_toolbar)
+        val toolbar = findViewById<androidx.appcompat.widget.Toolbar>(R.id.toolbar)
         if (toolbar != null) {
             setSupportActionBar(toolbar)
         }
 
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
-        // Allow network operation in main thread
-        val policy = StrictMode.ThreadPolicy.Builder()
-                .permitAll().build()
-        StrictMode.setThreadPolicy(policy)
-
         // Get queue title from intent
         val titleString = intent?.getStringExtra(AppConstants.QUEUE_TITLE_KEY)
-        if (titleString.isNullOrEmpty()) {
-            hostQueueTitle = getString(R.string.queue_title_default_value)
+        hostQueueTitle = if (titleString.isNullOrBlank()) {
+            getString(R.string.queue_title_default_value)
         } else {
-            hostQueueTitle = titleString
+            titleString
         }
 
         // Ensure we receive an endpoint before trying to start service
         val endpointString = intent?.getStringExtra(AppConstants.ND_ENDPOINT_ID_EXTRA_KEY)
-        if (!App.hasServiceBeenStarted && endpointString.isNullOrEmpty()) {
-            Log.e(TAG, "Error, trying to start client with invalid endpointId")
+        if (!App.hasServiceBeenStarted && endpointString.isNullOrBlank()) {
+            Timber.e("Error, trying to start client with invalid endpointId")
             finish()
             return
         }
@@ -89,23 +83,32 @@ open class ClientActivity : ServiceActivity(), ClientService.ClientServiceListen
         startClientService()
     }
 
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        if (item.itemId == android.R.id.home) {
+            onBackPressed()
+            return true
+        }
+        return super.onOptionsItemSelected(item)
+    }
+
     // Object for connecting to/from client service
     private val clientServiceConnection = object : ServiceConnection {
         override fun onServiceConnected(componentName: ComponentName, iBinder: IBinder) {
-            Log.d(TAG, "Client service Connected")
+            Timber.d("Client service Connected")
             val binder = iBinder as ClientService.ClientServiceBinder
 
             clientService = binder.getService()
             clientService.setClientServiceListener(this@ClientActivity)
             isServiceBound = true
 
-            if (hostEnpointId.isNullOrEmpty()) {
-                clientService.requestInitiation()
+            if (hostEnpointId.isEmpty()) {
+                // TODO: We probably still need this service call
+//                clientService.requestInitiation()
             }
         }
 
         override fun onServiceDisconnected(componentName: ComponentName) {
-            Log.d(TAG, "Client service disconnected")
+            Timber.d("Client service disconnected")
             unbindService(this)
             isServiceBound = false
             finish()
@@ -113,16 +116,13 @@ open class ClientActivity : ServiceActivity(), ClientService.ClientServiceListen
     }
 
     private fun initUi() {
-        // Initialize UI elements
-        queueList = findViewById(R.id.rv_queue_list_view)
-        addButton = findViewById(R.id.btn_add_track)
-        playbackControlView = findViewById(R.id.cv_playback_control_view)
-        emptyQueueMessage = findViewById(R.id.tv_empty_queue_text)
-
         playbackControlView.hideControls()
         playbackControlView.hideUser()
 
-        addButton.setOnClickListener(this)
+        addTrackButton.clicks()
+            .filterEmissions()
+            .subscribe { startSearchActivity() }
+            .addTo(subscriptions)
 
         // Show queue title as activity title
         title = hostQueueTitle
@@ -135,17 +135,17 @@ open class ClientActivity : ServiceActivity(), ClientService.ClientServiceListen
 
         // If we can't find a client service to bind to, start the client service then bind
         if (App.hasServiceBeenStarted) {
-            Log.d(TAG, "Attempting to bind to client service")
+            Timber.d("Attempting to bind to client service")
             bindService(startClientIntent, clientServiceConnection, Context.BIND_AUTO_CREATE)
         } else {
-            Log.d(TAG, "Starting and binding to client service")
+            Timber.d("Starting and binding to client service")
             ContextCompat.startForegroundService(this, startClientIntent)
             bindService(startClientIntent, clientServiceConnection, Context.BIND_AUTO_CREATE)
         }
     }
 
     private fun stopClientService() {
-        Log.d(TAG, "Unbinding from and stopping client service")
+        Timber.d("Unbinding from and stopping client service")
 
         if (isServiceBound) {
             unbindService(clientServiceConnection)
@@ -159,30 +159,22 @@ open class ClientActivity : ServiceActivity(), ClientService.ClientServiceListen
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
 
-        val requestType = RequestType.getRequestTypeFromRequestCode(requestCode)
-        Log.d(TAG, "Received request type: $requestType")
-
         // Handle request result
-        when (requestType) {
-            RequestType.SEARCH_REQUEST -> if (resultCode == RESULT_OK) {
-                val trackUri = data!!.getStringExtra(AppConstants.SEARCH_RESULTS_EXTRA_KEY)
-                if (trackUri != null && !trackUri.isEmpty()) {
-                    Log.d(TAG, "Client adding track to queue playlist")
-                    clientService.sendTrackToHost(trackUri)
+        when (requestCode) {
+            SEARCH_REQUEST_CODE-> {
+                if (resultCode == RESULT_OK) {
+                    val trackUri = data?.getStringExtra(SearchActivity.SEARCH_RESULT_TRACK_EXTRA_KEY)
+                    if (!trackUri.isNullOrBlank()) {
+                        Timber.d("Client adding track to queue playlist")
+                        clientService.sendTrackToHost(trackUri)
+                    }
                 }
-            }
-            RequestType.SPOTIFY_AUTHENTICATION_REQUEST,
-            RequestType.LOCATION_PERMISSION_REQUEST -> {
-                Log.e(TAG, "Client activity should not receive $requestType")
-            }
-            RequestType.NONE -> {
-                Log.e(TAG, "Unhandled request code: $requestCode")
             }
         }
     }
 
     override fun onBackPressed() {
-        val dialogBuilder = AlertDialog.Builder(this, R.style.AppDialog)
+        val dialogBuilder = AlertDialog.Builder(this, R.style.IceTheme_Dialog_Alert)
 
         val contentView = layoutInflater.inflate(R.layout.client_exit_dialog, null)
         val followCheckbox = contentView.findViewById<CheckBox>(R.id.cb_follow_playlist)
@@ -190,12 +182,12 @@ open class ClientActivity : ServiceActivity(), ClientService.ClientServiceListen
         dialogBuilder.setView(contentView)
 
         dialogBuilder.setPositiveButton(R.string.confirm) { dialog, which ->
-            Log.d(TAG, "User chose to leave the queue")
+            Timber.d("User chose to leave the queue")
             dialog.dismiss()
 
             // If follow is checked follow playlist with client user
             if (followCheckbox.isChecked) {
-                Log.d(TAG, "User chose to follow the playlist")
+                Timber.d("User chose to follow the playlist")
                 clientService.followPlaylist()
             } else {
                 clientService.requestDisconnect()
@@ -203,7 +195,7 @@ open class ClientActivity : ServiceActivity(), ClientService.ClientServiceListen
         }
 
         dialogBuilder.setNegativeButton(R.string.cancel) { dialog, which ->
-            Log.d(TAG, "User chose to remain in the queue")
+            Timber.d("User chose to remain in the queue")
             dialog.dismiss()
         }
 
@@ -211,7 +203,7 @@ open class ClientActivity : ServiceActivity(), ClientService.ClientServiceListen
     }
 
     override fun onDestroy() {
-        Log.d(TAG, "Client activity is being destroyed")
+        Timber.d("Client activity is being destroyed")
 
         if (isServiceBound) {
             clientService.removeClientServiceListener()
@@ -224,10 +216,10 @@ open class ClientActivity : ServiceActivity(), ClientService.ClientServiceListen
 
     private fun setupQueueList() {
         trackDisplayAdapter = BasicTrackListAdapter()
-        queueList.adapter = trackDisplayAdapter
+        queueListRecyclerView.adapter = trackDisplayAdapter
         val layoutManager = LinearLayoutManager(this, RecyclerView.VERTICAL, false)
-        queueList.layoutManager = layoutManager
-        queueList.addItemDecoration(QueueItemDecoration(applicationContext))
+        queueListRecyclerView.layoutManager = layoutManager
+        queueListRecyclerView.addItemDecoration(QueueItemDecoration(applicationContext))
     }
 
     override fun onQueueUpdated(queueTracks: List<PlaylistTrack>) {
@@ -235,40 +227,40 @@ open class ClientActivity : ServiceActivity(), ClientService.ClientServiceListen
     }
 
     private fun displayTrackList(queueTracks: List<PlaylistTrack>) {
+        loadingRoot.visibility = View.GONE
+        queueListRecyclerView.visibility = View.VISIBLE
+
         when {
-            queueTracks.size < 0 -> {
-                Log.e(TAG, "Error invalid song request list sent")
-            }
             queueTracks.isEmpty() -> {
                 playbackControlView.shrinkLayout()
                 playbackControlView.visibility = View.GONE
                 trackDisplayAdapter.updateAdapter(mutableListOf())
 
-                emptyQueueMessage.visibility = View.VISIBLE
+                emptyQueueText.visibility = View.VISIBLE
             }
             queueTracks.size == 1 -> {
                 playbackControlView.visibility = View.VISIBLE
                 playbackControlView.displayTrack(queueTracks[0])
                 trackDisplayAdapter.updateAdapter(mutableListOf())
 
-                emptyQueueMessage.visibility = View.GONE
+                emptyQueueText.visibility = View.GONE
             }
             queueTracks.size > 1 -> {
                 playbackControlView.visibility = View.VISIBLE
                 playbackControlView.displayTrack(queueTracks[0])
                 trackDisplayAdapter.updateAdapter(queueTracks.subList(1, queueTracks.size))
 
-                emptyQueueMessage.visibility = View.GONE
+                emptyQueueText.visibility = View.GONE
             }
         }
     }
 
     override fun showHostDisconnectDialog() {
-        val dialogBuilder = AlertDialog.Builder(this, R.style.AppDialog)
+        val dialogBuilder = AlertDialog.Builder(this, R.style.IceTheme_Dialog_Alert)
         dialogBuilder.setView(R.layout.host_disconnected_dialog)
 
         dialogBuilder.setPositiveButton(R.string.yes) { dialog, which ->
-            Log.d(TAG, "User chose to follow the playlist")
+            Timber.d("User chose to follow the playlist")
             dialog.dismiss()
 
             // If yes, follow the Spotify playlist
@@ -276,13 +268,13 @@ open class ClientActivity : ServiceActivity(), ClientService.ClientServiceListen
         }
 
         dialogBuilder.setNegativeButton(R.string.no) { dialog, which ->
-            Log.d(TAG, "User chose not to follow the playlist")
+            Timber.d("User chose not to follow the playlist")
             dialog.dismiss()
             closeClient()
         }
 
         dialogBuilder.setOnCancelListener {
-            Log.d(TAG, "User did not complete follow playlist dialog")
+            Timber.d("User did not complete follow playlist dialog")
             closeClient()
         }
 
@@ -290,11 +282,14 @@ open class ClientActivity : ServiceActivity(), ClientService.ClientServiceListen
     }
 
     override fun showLoadingScreen() {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        loadingRoot.visibility = View.VISIBLE
+
+        emptyQueueText.visibility = View.GONE
+        queueListRecyclerView.visibility = View.GONE
+        playbackControlView.visibility = View.GONE
     }
 
-    override fun initiateView(queueTitle: String, trackList: List<PlaylistTrack>) {
-        displayTrackList(trackList)
+    override fun initiateView(queueTitle: String) {
         title = queueTitle
     }
 
@@ -307,5 +302,19 @@ open class ClientActivity : ServiceActivity(), ClientService.ClientServiceListen
     override fun failedToConnect() {
         Toast.makeText(this, R.string.toast_failed_to_connect_to_host, Toast.LENGTH_LONG).show()
         closeClient()
+    }
+
+    companion object {
+        fun start(
+                fromActivity: Activity,
+                hostEndpointId: String,
+                hostQueueName: String = ""
+        ) {
+            val intent = Intent(fromActivity, ClientActivity::class.java).apply {
+                putExtra(AppConstants.QUEUE_TITLE_KEY, hostQueueName)
+                putExtra(AppConstants.ND_ENDPOINT_ID_EXTRA_KEY, hostEndpointId)
+            }
+            fromActivity.startActivity(intent)
+        }
     }
 }

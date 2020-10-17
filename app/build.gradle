@@ -5,26 +5,27 @@ apply plugin: 'androidx.navigation.safeargs'
 apply plugin: 'kotlin-android-extensions'
 apply plugin: 'com.github.dcendents.android-maven'
 
-def supportLibraryVersion = '28.0.0'
-def daggerVersion = '2.17'
-def butterKnifeVersion = '10.0.0'
-def navVersion = '1.0.0-alpha11'
-
-def versionMajor = 0
-def versionMinor = 0
-def versionPatch = 3
-
 android {
-    compileSdkVersion 28
+    compileSdkVersion 29
     buildToolsVersion '28.0.3'
 
     defaultConfig {
         applicationId "com.chrisf.socialq"
-        minSdkVersion 21
-        targetSdkVersion 28
-        versionCode versionPatch
-        versionName "${versionMajor}.${versionMinor}.${versionPatch}"
+        minSdkVersion 23
+        targetSdkVersion 29
+        versionCode 3
+        versionName "0.0.3"
     }
+
+    signingConfigs {
+        debug {
+            keyAlias 'debug'
+            keyPassword 'android'
+            storeFile file('../debug.jks')
+            storePassword 'android'
+        }
+    }
+
     buildTypes {
         release {
             minifyEnabled true
@@ -33,6 +34,7 @@ android {
         }
 
         debug {
+            applicationIdSuffix ".debug"
             minifyEnabled false
             shrinkResources false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
@@ -44,10 +46,21 @@ android {
     }
 }
 
+androidExtensions {
+    experimental = true
+}
+
 repositories {
     flatDir {
         dirs 'libs'
     }
+}
+
+ext {
+    daggerVersion = '2.17'
+    navVersion = '1.0.0-alpha11'
+    rx_binding_version = '3.0.0-alpha2'
+    retrofit_version = '2.6.1'
 }
 
 dependencies {
@@ -59,28 +72,19 @@ dependencies {
     // This library handles music playback
     implementation 'com.spotify.sdk:spotify-player-24-noconnect-2.20b@aar'
 
-    //Spotify WebAPI Android wrapper
-//    implementation 'com.github.kaaes:spotify-web-api-android:0.4.1'
-    // Pull my own version of Spotify web api wrapper
-    implementation 'com.github.Fryguy1991:spotify-web-api-android:0.4.1'
-
     // Nearby Connections API
-    implementation 'com.google.android.gms:play-services-nearby:16.0.0'
-
-    // Butterknife elements
-    implementation "com.jakewharton:butterknife:$butterKnifeVersion"
-    kapt "com.jakewharton:butterknife-compiler:$butterKnifeVersion"
+    implementation 'com.google.android.gms:play-services-nearby:17.0.0'
 
     // Android support libraries
-    implementation 'androidx.appcompat:appcompat:1.0.2'
-    implementation 'androidx.recyclerview:recyclerview:1.0.0'
-    implementation 'androidx.browser:browser:1.0.0'
-    implementation 'androidx.media:media:1.0.0'
+    implementation 'androidx.appcompat:appcompat:1.1.0'
+    implementation 'androidx.recyclerview:recyclerview:1.1.0'
+    implementation 'androidx.browser:browser:1.2.0'
+    implementation 'androidx.media:media:1.1.0'
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
-    implementation 'com.google.android.material:material:1.1.0-alpha02'
+    implementation 'com.google.android.material:material:1.1.0'
 
     // Constraint Layout
-    implementation 'androidx.constraintlayout:constraintlayout:2.0.0-alpha3'
+    implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
 
     // Dagger elements
     implementation "com.google.dagger:dagger:$daggerVersion"
@@ -92,11 +96,11 @@ dependencies {
     // GSON
     implementation 'com.google.code.gson:gson:2.8.5'
 
-    // Latest Spotify remote SDK
-    api project(':spotify-app-remote')
-
     // Retrofit
-    implementation 'com.squareup.retrofit2:retrofit:2.5.0'
+    implementation "com.squareup.retrofit2:retrofit:$retrofit_version"
+    implementation "com.squareup.retrofit2:converter-gson:$retrofit_version"
+    implementation "com.squareup.retrofit2:adapter-rxjava2:$retrofit_version"
+    implementation  'com.squareup.okhttp3:logging-interceptor:3.8.0'
 
     // Glide (for pulling images from the web)
     kapt 'com.github.bumptech.glide:compiler:4.8.0'
@@ -104,17 +108,28 @@ dependencies {
         exclude group: "com.android.support"
     }
 
-    // Nav Architecture
-    implementation "android.arch.navigation:navigation-fragment-ktx:$navVersion"
-    implementation "android.arch.navigation:navigation-ui-ktx:$navVersion"
-    androidTestImplementation 'android.arch.navigation:navigation-testing-ktx:1.0.0-alpha06'
-
     // Android-KTX
-    implementation 'androidx.core:core-ktx:1.0.1'
+    implementation 'androidx.core:core-ktx:1.2.0'
 
     // OkHttp
     implementation 'com.squareup.okhttp3:okhttp:3.12.0'
 
     // SpinKit (loading animations)
     implementation 'com.github.ybq:Android-SpinKit:1.2.0'
+
+    // Timber
+    implementation 'com.jakewharton.timber:timber:4.7.1'
+
+    // RxJava
+    implementation 'io.reactivex.rxjava2:rxandroid:2.1.1'
+    implementation 'io.reactivex.rxjava2:rxjava:2.2.6'
+    implementation 'io.reactivex.rxjava2:rxkotlin:2.3.0'
+    implementation 'com.jakewharton.rxrelay2:rxrelay:2.0.0'
+    implementation "com.jakewharton.rxbinding3:rxbinding-core:$rx_binding_version"
+    implementation "com.jakewharton.rxbinding3:rxbinding-recyclerview:$rx_binding_version"
+    implementation "com.jakewharton.rxbinding3:rxbinding-appcompat:$rx_binding_version"
+    implementation "com.jakewharton.rxbinding3:rxbinding-material:$rx_binding_version"
+
+    // Rx Permissions
+    implementation 'com.github.tbruyelle:rxpermissions:0.10.2'
 }

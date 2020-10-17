@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="horizontal"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingTop="12dp"
+    android:paddingBottom="12dp">
+
+    <TextView
+        android:id="@+id/albumTrackNumber"
+        android:layout_width="35dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="24dp"
+        android:textSize="16sp"
+        tools:text="100."/>
+
+    <TextView
+        android:id="@+id/albumTrackName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textStyle="bold"
+        android:textSize="16sp"
+        android:layout_marginEnd="24dp"
+        tools:text="Something Wonderful"/>
+</LinearLayout>

@@ -4,10 +4,12 @@ import android.app.Application
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.os.Build
+import com.chrisf.socialq.BuildConfig
 import com.chrisf.socialq.R
-import com.chrisf.socialq.business.dagger.modules.FrySpotifyModule
-import com.chrisf.socialq.business.dagger.modules.components.DaggerFrySpotifyComponent
-import com.chrisf.socialq.business.dagger.modules.components.FrySpotifyComponent
+import com.chrisf.socialq.dagger.components.AppComponent
+import com.chrisf.socialq.dagger.components.DaggerAppComponent
+import com.chrisf.socialq.dagger.modules.AppModule
+import timber.log.Timber
 
 class App : Application() {
     companion object {
@@ -17,15 +19,18 @@ class App : Application() {
         val CHANNEL_ID = "SocialQServiceChannel"
     }
 
-    @JvmField
-    var spotifyComponent: FrySpotifyComponent? = null
+    lateinit var appComponent: AppComponent
 
     override fun onCreate() {
         super.onCreate()
 
         createNotificationChannel()
 
-        spotifyComponent = DaggerFrySpotifyComponent.builder().frySpotifyModule(FrySpotifyModule(this)).build()
+        if (BuildConfig.DEBUG) {
+            Timber.plant(Timber.DebugTree())
+        }
+
+        appComponent = DaggerAppComponent.builder().appModule(AppModule(this)).build()
     }
 
     private fun createNotificationChannel() {

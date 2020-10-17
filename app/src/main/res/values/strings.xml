@@ -6,6 +6,10 @@
     <string name="client_service_description">Service used as a client of a SocialQ</string>
     <string name="access_service_description">Service used to keep SocialQ access token up to date</string>
 
+    <!-- Gate Screen -->
+    <string name="sign_in_with">Sign In With</string>
+    <string name="spotify_button_content_description">Sign in with Spotify</string>
+    
     <!-- Notification Strings -->
     <string name="host_notification_content_text">Hosting \"%1$s\"</string>
     <string name="client_notification_content_text">Connected to \"%1$s\"</string>
@@ -21,7 +25,8 @@
     <string name="start">Start</string>
     <string name="cancel">Cancel</string>
     <string name="confirm">Confirm</string>
-    <string name="ok">Ok</string>
+    <string name="ok">OK</string>
+    <string name="open_settings">Open Settings</string>
 
     <!-- Host Screen Strings -->
     <string name="next_btn">Next</string>
@@ -39,8 +44,11 @@
 
     <!-- Close Host Dialog Strings -->
     <string name="close_host_dialog_title">Close Queue?</string>
+    <string name="close_host_dialog_description">Closing the queue will halt music playback and disconnect any clients.</string>
     <string name="save_playlist">Save Spotify Playlist</string>
     <string name="playlist_name_hint">Playlist Name</string>
+    <string name="close_host_dialog_close_button">Close Queue</string>
+    <string name="close_host_dialog_close_and_save_button">Close And Save Playlist</string>
 
     <!-- Client Screen Strings -->
     <string name="toast_authentication_error_client">Authentication Error</string>
@@ -73,7 +81,7 @@
     <string name="album_track_with_position_number">%1$s. %2$s</string>
     <string name="artist_albums">%1$s Albums</string>
 
-    <!-- Start Screen Strings -->
+    <!-- Launch Screen Strings -->
     <string name="start_queue">Start Queue</string>
     <string name="join_queue">Join Queue</string>
     <string name="available_queues">Available Queues</string>
@@ -81,6 +89,10 @@
     <string name="no_host_found_message">No available queues were found. Pull down to retry, or start your own!</string>
     <string name="host_search_failed_message">Queue search failed. Pull down to retry, or start your own!</string>
     <string name="queue_searching_message">Searching for available queues.</string>
+    <string name="location_permission_required_title">Location Permission Denied</string>
+    <string name="location_permission_required_message">Location permission is required to host, join, and add songs to queues.</string>
+    <string name="unknown_queue">Unknown Queue</string>
+    <string name="unknown_host">Unknown Host</string>
 
     <!-- Join Queue Fragment -->
     <string name="queue_details">Queue Details</string>
@@ -100,17 +112,23 @@
     <string name="base_playlist_description">Selecting a base playlist will load an existing Spotify playlist into the new queue.</string>
     <string name="default_playlist_name">SocialQ Playlist</string>
     <string name="none">None</string>
+    <string name="base_playlist_info_content_description">Base playlist info</string>
+    <string name="fair_play_info_content_description">Fair play info</string>
+
 
     <!-- Queue Connect Screen Strings -->
     <string name="join">Join</string>
 
     <!-- Premium Required Dialog Strings -->
     <string name="premium_required_title">Spotify Premium Required</string>
-    <string name="premium_required_description">Spotify premium is required in order to host a SocialQ!</string>
+    <string name="premium_required_message">Spotify premium is required in order to host a SocialQ.</string>
 
     <!-- Authentication Failed Dialog Strings -->
-    <string name="auth_fail_title">Authentication Failed</string>
-    <string name="auth_fail_description">Spotify authentication failed. Retry?</string>
+    <string name="auth_fail_title">Spotify Sign In Failed</string>
+    <string name="auth_fail_message">Spotify sign in failed. Would you like to retry?</string>
     <string name="retry">Retry</string>
     <string name="close_app">Close App</string>
+
+    <!-- Network String -->
+    <string name="default_playlist_description">A playlist created by the SocialQ app</string>
 </resources>

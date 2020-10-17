@@ -3,9 +3,8 @@
     <dimen name="queue_decorator_height">1dp</dimen>
 
     <!-- Spacing Dimens -->
-    <dimen name="default_margin">8dp</dimen>
-    <dimen name="default_margin_x2">16dp</dimen>
-    <dimen name="half_default_margin">4dp</dimen>
+    <dimen name="default_margin_half">8dp</dimen>
+    <dimen name="default_margin">16dp</dimen>
     <dimen name="tight_spacing">10dp</dimen>
     <dimen name="standard_spacing">20dp</dimen>
     <dimen name="large_spacing">30dp</dimen>
@@ -34,6 +33,7 @@
     <dimen name="top_track_text_size">16sp</dimen>
     <dimen name="top_track_view_min_height">40dp</dimen>
     <dimen name="number_width">30dp</dimen>
+    <dimen name="album_art_small">60dp</dimen>
 
     <!-- Notification Dimens -->
     <dimen name="notification_album_art_size">40dp</dimen>
@@ -47,4 +47,8 @@
     <dimen name="playback_button_size">60dp</dimen>
     
     <dimen name="launch_search_animation_size">100dp</dimen>
+
+    <!-- FABs -->
+    <dimen name="default_fab_height">56dp</dimen>
+    <dimen name="default_fab_width">56dp</dimen>
 </resources>

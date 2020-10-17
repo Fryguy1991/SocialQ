@@ -5,7 +5,8 @@
         <!-- Major Theme Colors -->
         <item name="colorPrimary">@color/Deep_Blue</item>
         <item name="colorPrimaryDark">@color/Dark_Deep_Blue</item>
-        <item name="colorAccent">@color/BurntOrangeLight2</item>
+        <item name="colorAccent">@color/BurntOrangeLight</item>
+        <item name="colorSurface">@color/Ice_White</item>
 
         <!-- Theme Background Color -->
         <item name="android:windowBackground">@color/Ice_White</item>
@@ -28,15 +29,24 @@
         <!-- Theme Widget Styles -->
         <item name="checkboxStyle">@style/AppCheckboxStyle</item>
         <item name="buttonStyle">@style/DefaultButtonStyle</item>
-        <item name="alertDialogTheme">@style/AppDialog</item>
+        <item name="alertDialogTheme">@style/IceTheme.Dialog.Alert</item>
+
+        <!-- Theme Settings -->
+        <item name="android:windowActivityTransitions">true</item>
     </style>
 
-    <style name="AppDialog" parent="Theme.AppCompat.Light.Dialog.Alert">
-        <item name="colorPrimary">@color/Deep_Blue</item>
+    <style name="IceTheme.GradientBackground" parent="IceTheme">
+        <item name="android:windowBackground">@drawable/gate_gradient</item>
+    </style>
+
+    <style name="IceTheme.Splash" parent="IceTheme">
+        <item name="android:windowBackground">@drawable/background_splash</item>
+    </style>
+
+    <style name="IceTheme.Dialog.Alert" parent="Theme.AppCompat.Light.Dialog.Alert">
         <item name="colorAccent">@color/BurntOrangeLight</item>
-        <item name="android:textColorPrimary">@color/Slate2</item>
-        <item name="editTextColor">@color/Slate2</item>
-        <item name="android:windowBackground">@color/Ice_White</item>
+        <item name="android:textColorPrimary">@color/Black</item>
+        <item name="editTextColor">@color/Black</item>
     </style>
     <style name="DialogTitleText">
         <item name="android:layout_width">match_parent</item>
@@ -60,12 +70,16 @@
         <item name="android:textStyle">bold</item>
         <item name="android:textSize">@dimen/medium_text</item>
     </style>
+    <style name="SeeAllText" parent="HeaderText">
+        <item name="android:textSize">@dimen/see_all_text_size</item>
+    </style>
     <style name="TopTrackText">
-        <item name="android:minHeight">@dimen/top_track_view_min_height</item>
-        <item name="android:layout_marginStart">@dimen/default_margin_x2</item>
-        <item name="android:layout_marginEnd">@dimen/default_margin_x2</item>
-        <item name="android:layout_marginTop">@dimen/half_default_margin</item>
+        <item name="android:padding">8dp</item>
         <item name="android:gravity">center_vertical</item>
+        <item name="android:textSize">15sp</item>
+        <item name="android:layout_marginStart">8dp</item>
+        <item name="android:layout_marginEnd">8dp</item>
+        <item name="android:visibility">gone</item>
     </style>
 
     <!-- Widget Styles -->
@@ -76,16 +90,27 @@
         <item name="android:colorControlNormal">@color/White</item>
         <item name="android:titleTextStyle">@color/White</item>
     </style>
+
     <style name="DefaultButtonStyle" parent="Widget.AppCompat.Button">
         <item name="android:background">@drawable/rectangle_button</item>
         <item name="android:textColor">?android:textColorPrimaryInverse</item>
     </style>
+
     <style name="RoundButtonStyle" parent="Widget.AppCompat.Button">
         <item name="android:elevation">@dimen/standard_elevation</item>
         <item name="android:layout_width">@dimen/round_button_size</item>
         <item name="android:layout_height">@dimen/round_button_size</item>
     </style>
+
     <style name="AppCheckboxStyle" parent="Widget.AppCompat.CompoundButton.CheckBox">
         <item name="android:textColor">?android:textColorPrimary</item>
+    </style>
+
+    <style name="FloatingActionButtonStyle">
+        <item name="android:layout_height">56dp</item>
+        <item name="android:layout_width">56dp</item>
+        <item name="android:tint">@color/White</item>
+        <item name="android:backgroundTint">@color/Deep_Blue</item>
+        <item name="rippleColor">@color/Ice_White</item>
     </style>
 </resources>
