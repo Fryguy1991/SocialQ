@@ -16,8 +16,8 @@ android {
         // Full install version code
         // versionCode 1000
         // Instant version code
-        versionCode 4
-        versionName "0.0.4"
+        versionCode 5
+        versionName "0.0.5"
     }
 
     signingConfigs {

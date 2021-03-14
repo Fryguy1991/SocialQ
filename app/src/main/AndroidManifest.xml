@@ -37,17 +37,9 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-            <intent-filter android:autoVerify="true">
-                <action android:name="android.intent.action.VIEW" />
-
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-
-                <data android:scheme="https" />
-                <data android:scheme="http" />
-                <data android:host="fryguy1991.github.io" />
-                <data android:pathPattern="/instant" />
-            </intent-filter>
+            <meta-data
+                android:name="default-url"
+                android:value="https://fryguy1991.github.io"/>
         </activity>
 
         <!-- Activity for launch screen -->
@@ -89,12 +81,49 @@
         <activity
             android:name=".userinterface.activities.GateActivity"
             android:screenOrientation="portrait"
-            android:theme="@style/IceTheme.GradientBackground" />
+            android:theme="@style/IceTheme.GradientBackground" >
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data android:scheme="https" />
+                <data android:scheme="http" />
+                <data android:host="fryguy1991.github.io" />
+                <data android:pathPattern="/instant" />
+            </intent-filter>
+        </activity>
 
         <!-- Activity for Spotify login (created by Spotify) -->
         <activity
             android:name="com.spotify.sdk.android.authentication.LoginActivity"
             android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+
+        <!-- Activity for Spotify auth callback (created by Spotify) -->
+        <activity android:name="com.spotify.sdk.android.authentication.AuthCallbackActivity" >
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+
+                <data
+                    android:scheme="http"
+                    android:host="fryguy1991.github.io"/>
+                <data android:scheme="https"/>
+            </intent-filter>
+
+            <!-- Below filter is added by the auth library, this would mess up our instant filters, so we remove it -->
+            <intent-filter tools:node="remove">
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+
+                <data
+                    android:scheme="@string/com_spotify_sdk_redirect_scheme"
+                    android:host="@string/com_spotify_sdk_redirect_host"/>
+            </intent-filter>
+        </activity>
         <!-- END APPLICATION ACTIVITIES -->
 
         <!-- START APPLICATION SERVICES -->
