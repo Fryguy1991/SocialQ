@@ -1,6 +1,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:dist="http://schemas.android.com/apk/distribution"
     xmlns:tools="http://schemas.android.com/tools"
-    package="com.chrisf.socialq">
+    package="com.chrisf.socialq"
+    android:targetSandboxVersion="2">
+
+    <dist:module dist:instant="true" />
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
@@ -33,6 +37,17 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data android:scheme="https" />
+                <data android:scheme="http" />
+                <data android:host="fryguy1991.github.io" />
+                <data android:pathPattern="/instant" />
+            </intent-filter>
         </activity>
 
         <!-- Activity for launch screen -->
@@ -40,7 +55,7 @@
             android:name="com.chrisf.socialq.userinterface.activities.LaunchActivity"
             android:label="@string/app_name"
             android:launchMode="singleTop"
-            android:screenOrientation="portrait"/>
+            android:screenOrientation="portrait" />
 
         <!-- Activity for setting up a host queue -->
         <activity
@@ -74,7 +89,7 @@
         <activity
             android:name=".userinterface.activities.GateActivity"
             android:screenOrientation="portrait"
-            android:theme="@style/IceTheme.GradientBackground"/>
+            android:theme="@style/IceTheme.GradientBackground" />
 
         <!-- Activity for Spotify login (created by Spotify) -->
         <activity

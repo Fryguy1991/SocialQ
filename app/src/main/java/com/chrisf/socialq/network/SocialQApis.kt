@@ -189,6 +189,6 @@ interface AuthApi {
 
     companion object {
         // TODO: Should probably get direct line to server out of here
-        const val AUTH_SERVER_BASE_URL = "http://54.86.80.241/"
+        const val AUTH_SERVER_BASE_URL = "https://54.86.80.241:8000/"
     }
 }

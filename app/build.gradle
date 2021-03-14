@@ -13,7 +13,10 @@ android {
         applicationId "com.chrisf.socialq"
         minSdkVersion 23
         targetSdkVersion 30
-        versionCode 1000
+        // Full install version code
+        // versionCode 1000
+        // Instant version code
+        versionCode 4
         versionName "0.0.4"
     }
 
@@ -82,6 +85,7 @@ dependencies {
     implementation 'androidx.media:media:1.2.1'
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
     implementation 'com.google.android.material:material:1.3.0'
+    implementation 'com.google.android.gms:play-services-instantapps:17.0.0'
 
     // Constraint Layout
     implementation 'androidx.constraintlayout:constraintlayout:2.0.4'

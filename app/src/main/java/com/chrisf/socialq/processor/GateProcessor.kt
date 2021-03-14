@@ -51,7 +51,8 @@ class GateProcessor @Inject constructor(
 
     private fun handleAuthCodeRetrieved(action: AuthCodeRetrieved) {
         socialQPreferences.authCode = action.authCode
-        authService.getTokensWithAuthCode(action.authCode)
+        authService
+            .getTokensWithAuthCode(action.authCode)
             .subscribeOn(Schedulers.io())
             .map { response ->
                 when (response) {

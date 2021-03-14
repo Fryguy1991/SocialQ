@@ -49,42 +49,44 @@ class AppModule(private val app: Context) {
     fun providesSpotifyApi(authInterceptor: AuthInterceptor): SpotifyApi {
         val builder = OkHttpClient.Builder()
         builder.addInterceptor(authInterceptor)
-        builder.addInterceptor (
+        builder.addInterceptor(
             HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BASIC)
         )
 
         val gson = GsonBuilder()
-                .setPrettyPrinting()
-                .create()
+            .setPrettyPrinting()
+            .create()
 
-        return Retrofit.Builder()
-                .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
-                .addConverterFactory(GsonConverterFactory.create(gson))
-                .baseUrl(SpotifyApi.SPOTIFY_API_BASE_URL)
-                .client(builder.build())
-                .build()
-                .create(SpotifyApi::class.java)
+        return Retrofit
+            .Builder()
+            .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
+            .addConverterFactory(GsonConverterFactory.create(gson))
+            .baseUrl(SpotifyApi.SPOTIFY_API_BASE_URL)
+            .client(builder.build())
+            .build()
+            .create(SpotifyApi::class.java)
     }
 
     @Provides
     @Singleton
     fun providesAuthApi(): AuthApi {
         val builder = OkHttpClient.Builder()
-        builder.addInterceptor (
-                HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY)
+        builder.addInterceptor(
+            HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY)
         )
 
         val gson = GsonBuilder()
-                .setPrettyPrinting()
-                .create()
+            .setPrettyPrinting()
+            .create()
 
-        return Retrofit.Builder()
-                .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
-                .addConverterFactory(GsonConverterFactory.create(gson))
-                .baseUrl(AuthApi.AUTH_SERVER_BASE_URL)
-                .client(builder.build())
-                .build()
-                .create(AuthApi::class.java)
+        return Retrofit
+            .Builder()
+            .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
+            .addConverterFactory(GsonConverterFactory.create(gson))
+            .baseUrl(AuthApi.AUTH_SERVER_BASE_URL)
+            .client(builder.build())
+            .build()
+            .create(AuthApi::class.java)
     }
 
     @Provides
