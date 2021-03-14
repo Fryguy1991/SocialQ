@@ -50,7 +50,7 @@ class AppModule(private val app: Context) {
         val builder = OkHttpClient.Builder()
         builder.addInterceptor(authInterceptor)
         builder.addInterceptor (
-            HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY)
+            HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BASIC)
         )
 
         val gson = GsonBuilder()

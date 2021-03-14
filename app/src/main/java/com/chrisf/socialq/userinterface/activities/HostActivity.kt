@@ -65,7 +65,7 @@ open class HostActivity : ServiceActivity(), HostService.HostServiceListener {
 
         if (intent != null) {
             when (intent.action) {
-                AppConstants.ACTION_NOTIFICATION_SEARCH -> {
+                HostService.ACTION_NOTIFICATION_SEARCH -> {
                     // If receiving a notification search request start search activity
                     startSearchActivity()
                 }

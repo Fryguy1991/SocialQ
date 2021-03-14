@@ -156,37 +156,39 @@ class SpotifyService @Inject constructor(
     }
 
     private fun <T> wrap(stream: Single<Response<T>>): Single<ApiResponse<T>> {
-        return stream.flatMap { response ->
-            // If unauthorized, attempt once to refresh the access token and try the call again
-            val spotifyCode = SpotifyErrorCode.parse(response.code())
-            if (spotifyCode == SpotifyErrorCode.UNAUTHORIZED || spotifyCode == SpotifyErrorCode.FORBIDDEN) {
-                authService.attemptAccessTokenRefresh().andThen(stream)
-            } else {
-                stream
-            }
-        }.map {
-            val body = it.body()
-
-            if (it.isSuccessful && body != null) {
-                Success(body)
-            } else {
-                when (SpotifyErrorCode.parse(it.code())) {
-                    SpotifyErrorCode.NOT_MODIFIED -> TODO()
-                    SpotifyErrorCode.UNAUTHORIZED,
-                    SpotifyErrorCode.FORBIDDEN -> Unauthorized
-                    SpotifyErrorCode.BAD_REQUEST,
-                    SpotifyErrorCode.NOT_FOUND,
-                    SpotifyErrorCode.TOO_MANY_REQUESTS,
-                    SpotifyErrorCode.INTERNAL_SERVICE_ERROR,
-                    SpotifyErrorCode.BAD_GATEWAY,
-                    SpotifyErrorCode.SERVICE_UNAVAILABLE,
-                    SpotifyErrorCode.UNKNOWN -> NetworkError(
-                        code = it.code(),
-                        error = getSpotifyErrorFromErrorBody(it.errorBody())
-                    )
+        return stream
+            .flatMap { response ->
+                // If unauthorized, attempt once to refresh the access token and try the call again
+                val spotifyCode = SpotifyErrorCode.parse(response.code())
+                if (spotifyCode == SpotifyErrorCode.UNAUTHORIZED || spotifyCode == SpotifyErrorCode.FORBIDDEN) {
+                    authService.attemptAccessTokenRefresh().andThen(stream)
+                } else {
+                    Single.just(response)
                 }
             }
-        }
+            .map {
+                val body = it.body()
+
+                if (it.isSuccessful && body != null) {
+                    Success(body)
+                } else {
+                    when (SpotifyErrorCode.parse(it.code())) {
+                        SpotifyErrorCode.NOT_MODIFIED -> TODO()
+                        SpotifyErrorCode.UNAUTHORIZED,
+                        SpotifyErrorCode.FORBIDDEN -> Unauthorized
+                        SpotifyErrorCode.BAD_REQUEST,
+                        SpotifyErrorCode.NOT_FOUND,
+                        SpotifyErrorCode.TOO_MANY_REQUESTS,
+                        SpotifyErrorCode.INTERNAL_SERVICE_ERROR,
+                        SpotifyErrorCode.BAD_GATEWAY,
+                        SpotifyErrorCode.SERVICE_UNAVAILABLE,
+                        SpotifyErrorCode.UNKNOWN -> NetworkError(
+                            code = it.code(),
+                            error = getSpotifyErrorFromErrorBody(it.errorBody())
+                        )
+                    }
+                }
+            }
     }
 
     private fun wrapEmptyResponse(stream: Completable): Single<ApiResponse<Unit>> {

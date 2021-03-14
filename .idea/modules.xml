@@ -2,7 +2,8 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/SocialQ.iml" filepath="$PROJECT_DIR$/SocialQ.iml" group="SocialQ" />
+      <module fileurl="file://$PROJECT_DIR$/SocialQ.iml" filepath="$PROJECT_DIR$/SocialQ.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/SocialQ.app.iml" filepath="$PROJECT_DIR$/.idea/modules/app/SocialQ.app.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" group="SocialQ/app" />
     </modules>
   </component>

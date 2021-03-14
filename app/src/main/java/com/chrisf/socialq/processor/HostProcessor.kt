@@ -330,7 +330,8 @@ class HostProcessor @Inject constructor(
 
     private fun createPlaylistForQueue() {
         Timber.d("Creating playlist for the SocialQ")
-        spotifyService.createSocialQPlaylist(hostUser.id)
+        spotifyService
+            .createSocialQPlaylist(hostUser.id)
             .subscribeOn(Schedulers.io())
             .subscribe { response ->
 

@@ -113,10 +113,10 @@ class HostService : BaseService<HostState, HostAction, HostProcessor>(), BitmapL
 
                     // Check intent for storage of queue settings
                     if (!intent.getStringExtra(AppConstants.QUEUE_TITLE_KEY).isNullOrBlank()) {
-                        queueTitle = intent.getStringExtra(AppConstants.QUEUE_TITLE_KEY)
+                        queueTitle = intent.getStringExtra(AppConstants.QUEUE_TITLE_KEY).orEmpty()
                     }
                     val isQueueFairPlay = intent.getBooleanExtra(AppConstants.FAIR_PLAY_KEY, resources.getBoolean(R.bool.fair_play_default))
-                    val basePlaylistId = intent.getStringExtra(AppConstants.BASE_PLAYLIST_ID_KEY)
+                    val basePlaylistId = intent.getStringExtra(AppConstants.BASE_PLAYLIST_ID_KEY).orEmpty()
 
                     actionStream.accept(
                         ServiceStarted(
@@ -617,7 +617,7 @@ class HostService : BaseService<HostState, HostAction, HostProcessor>(), BitmapL
         // Pending intent actions
         private const val ACTION_REQUEST_NEXT = "socialq_notification_next"
         private const val ACTION_REQUEST_PLAY_PAUSE = "socialq_notification_play_pause"
-        private const val ACTION_NOTIFICATION_SEARCH = "socialq_notification_search"
+        const val ACTION_NOTIFICATION_SEARCH = "socialq_notification_search"
 
         private const val HOST_SERVICE_ID = 1
     }
