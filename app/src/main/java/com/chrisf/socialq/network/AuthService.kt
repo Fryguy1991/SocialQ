@@ -1,6 +1,9 @@
 package com.chrisf.socialq.network
 
 import com.chrisf.socialq.SocialQPreferences
+import com.chrisf.socialq.model.AccessToken
+import com.chrisf.socialq.model.AuthRefreshRequest
+import com.chrisf.socialq.model.AuthTokenRequest
 import com.chrisf.socialq.model.AuthTokens
 import com.chrisf.socialq.network.AuthService.AuthResponse.*
 import io.reactivex.Completable
@@ -19,38 +22,36 @@ class AuthService @Inject constructor(
     /**
      * Get access and refresh tokens using the auth code
      */
-    fun getTokensWithAuthCode(authCode: String): Single<AuthResponse<AuthTokens>> {
-        return authApi.getAuthTokens(authCode)
-            .map { response ->
-                val body = response.body()
-                if (response.isSuccessful && body != null) {
-                    Success(body.authTokens)
-                } else {
-                    Failure(IllegalStateException("Request failed or body was null"))
-                }
+    fun getTokensWithAuthCode(authCode: String): Single<AuthResponse<AuthTokens>> = authApi
+        .getAuthTokens(AuthTokenRequest((authCode)))
+        .map { response ->
+            val body = response.body()
+            if (response.isSuccessful && body != null) {
+                Success(body)
+            } else {
+                Failure(IllegalStateException("Request failed or body was null"))
             }
-            .onErrorReturn { throwable ->
-                if (throwable is SocketTimeoutException) Timeout else Failure(throwable)
-            }
-    }
+        }
+        .onErrorReturn { throwable ->
+            if (throwable is SocketTimeoutException) Timeout else Failure(throwable)
+        }
 
     /**
      * Get access token using the refresh token
      */
-    fun getAccessTokenWithRefreshToken(refreshCode: String): Single<AuthResponse<String>> {
-        return authApi.getAccessToken(refreshCode)
-            .map { response ->
-                val body = response.body()
-                if (response.isSuccessful && body != null) {
-                    Success(body.accessToken.accessToken)
-                } else {
-                    Failure(IllegalStateException("Request failed or body was null"))
-                }
+    fun getAccessTokenWithRefreshToken(refreshCode: String): Single<AuthResponse<AccessToken>> = authApi
+        .getAccessToken(AuthRefreshRequest(refreshCode))
+        .map { response ->
+            val body = response.body()
+            if (response.isSuccessful && body != null) {
+                Success(body)
+            } else {
+                Failure(IllegalStateException("Request failed or body was null"))
             }
-            .onErrorReturn { throwable ->
-                if (throwable is SocketTimeoutException) Timeout else Failure(throwable)
-            }
-    }
+        }
+        .onErrorReturn { throwable ->
+            if (throwable is SocketTimeoutException) Timeout else Failure(throwable)
+        }
 
     /**
      * This method will attempt to fetch a new access token and complete (whether or not it's successful)
@@ -60,11 +61,12 @@ class AuthService @Inject constructor(
         return if (refreshToken.isNullOrBlank()) {
             Completable.complete()
         } else {
-            authApi.getAccessToken(refreshToken)
+            authApi
+                .getAccessToken(AuthRefreshRequest(refreshToken))
                 .flatMapCompletable { response ->
                     val body = response.body()
                     if (response.isSuccessful && body != null) {
-                        socialQPreferences.accessToken = body.accessToken.accessToken
+                        socialQPreferences.accessToken = body.accessToken
                     }
                     Completable.complete()
                 }

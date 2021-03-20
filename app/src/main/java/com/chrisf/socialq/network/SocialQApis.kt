@@ -1,7 +1,6 @@
 package com.chrisf.socialq.network
 
-import com.chrisf.socialq.model.AuthCodeServerResponse
-import com.chrisf.socialq.model.AuthRefreshTokenServerResponse
+import com.chrisf.socialq.model.*
 import com.chrisf.socialq.model.spotify.*
 import com.chrisf.socialq.model.spotify.pager.AlbumSimplePager
 import com.chrisf.socialq.model.spotify.pager.ArtistPager
@@ -176,19 +175,16 @@ interface AuthApi {
     /**
      * Send an auth code or refresh token to the SocialQ auth server.
      */
-    @GET("app/socialq/code/{code}")
-    // TODO: Should update server to only get refdata.body of spotify API auth request
-    fun getAuthTokens(@Path("code") code: String): Single<Response<AuthCodeServerResponse>>
+    @POST("auth")
+    fun getAuthTokens(@Body request: AuthTokenRequest): Single<Response<AuthTokens>>
 
     /**
      * Send an auth code or refresh token to the SocialQ auth server.
      */
-    @GET("app/socialq/code/{refreshToken}")
-    // TODO: Should update server to only get refdata.body of spotify API auth request
-    fun getAccessToken(@Path("refreshToken") refreshToken: String): Single<Response<AuthRefreshTokenServerResponse>>
+    @POST("auth-refresh")
+    fun getAccessToken(@Body request: AuthRefreshRequest): Single<Response<AccessToken>>
 
     companion object {
-        // TODO: Should probably get direct line to server out of here
-        const val AUTH_SERVER_BASE_URL = "https://54.86.80.241:8000/"
+        const val AUTH_SERVER_BASE_URL = "https://jjgsr55dt3.execute-api.us-east-1.amazonaws.com/prod/"
     }
 }

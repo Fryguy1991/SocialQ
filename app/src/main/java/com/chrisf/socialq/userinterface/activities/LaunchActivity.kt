@@ -1,6 +1,9 @@
 package com.chrisf.socialq.userinterface.activities
 
 import android.Manifest
+import android.app.job.JobInfo
+import android.app.job.JobScheduler
+import android.content.ComponentName
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -18,6 +21,7 @@ import com.chrisf.socialq.processor.LaunchProcessor.LaunchAction.*
 import com.chrisf.socialq.processor.LaunchProcessor.LaunchState
 import com.chrisf.socialq.processor.LaunchProcessor.LaunchState.*
 import com.chrisf.socialq.processor.SocialQEndpoint
+import com.chrisf.socialq.services.AccessService
 import com.chrisf.socialq.userinterface.adapters.QueueDisplayAdapter
 import com.chrisf.socialq.userinterface.views.QueueItemDecoration
 import com.google.android.gms.nearby.Nearby
@@ -28,6 +32,8 @@ import io.reactivex.Observable
 import io.reactivex.rxkotlin.addTo
 import kotlinx.android.synthetic.main.activity_launch.*
 import timber.log.Timber
+import java.lang.IllegalStateException
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 class LaunchActivity : BaseActivity<LaunchState, LaunchAction, LaunchProcessor>() {
@@ -79,6 +85,7 @@ class LaunchActivity : BaseActivity<LaunchState, LaunchAction, LaunchProcessor>(
         setSupportActionBar(toolbar)
 
         setupViews()
+        startAuthRefresh()
         actionStream.accept(ViewCreated)
 
         isAskingLocationPermission = true
@@ -238,5 +245,19 @@ class LaunchActivity : BaseActivity<LaunchState, LaunchAction, LaunchProcessor>(
         availableQueueRecyclerView.layoutManager = layoutManager
         availableQueueRecyclerView.addItemDecoration(QueueItemDecoration(this))
         availableQueueRecyclerView.adapter = adapter
+    }
+
+    private fun startAuthRefresh() {
+        val scheduler = getSystemService(JOB_SCHEDULER_SERVICE) as JobScheduler?
+        scheduler?.schedule(
+            JobInfo
+                .Builder(
+                    AccessService.ACCESS_SERVICE_ID,
+                    ComponentName(applicationContext, AccessService::class.java)
+                )
+                .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
+                .setPeriodic(TimeUnit.MINUTES.toMillis(20))
+                .build()
+        ) ?: throw IllegalStateException("Authorization refresh job failed to initialize")
     }
 }

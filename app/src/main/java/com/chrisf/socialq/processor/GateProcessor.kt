@@ -8,7 +8,7 @@ import com.chrisf.socialq.network.AuthService
 import com.chrisf.socialq.processor.GateProcessor.GateAction
 import com.chrisf.socialq.processor.GateProcessor.GateAction.*
 import com.chrisf.socialq.processor.GateProcessor.GateState
-import com.chrisf.socialq.processor.GateProcessor.GateState.StartAuthRefreshJobAndNavigateToLaunch
+import com.chrisf.socialq.processor.GateProcessor.GateState.NavigateToLaunch
 import com.chrisf.socialq.processor.GateProcessor.GateState.ShowSignInFailedDialog
 import com.chrisf.socialq.userinterface.common.AlertDialogBinding
 import io.reactivex.disposables.CompositeDisposable
@@ -59,7 +59,7 @@ class GateProcessor @Inject constructor(
                     is AuthService.AuthResponse.Success -> {
                         socialQPreferences.accessToken = response.body.accessToken
                         socialQPreferences.refreshToken = response.body.refreshToken
-                        StartAuthRefreshJobAndNavigateToLaunch
+                        NavigateToLaunch
                     }
                     is AuthService.AuthResponse.Failure,
                     AuthService.AuthResponse.Timeout -> ShowSignInFailedDialog(authFailedDialogBinding)
@@ -77,7 +77,7 @@ class GateProcessor @Inject constructor(
     sealed class GateState {
         object CloseApp : GateState()
 
-        object StartAuthRefreshJobAndNavigateToLaunch : GateState()
+        object NavigateToLaunch : GateState()
 
         data class ShowSignInFailedDialog(val binding: AlertDialogBinding<GateAction>) : GateState()
 

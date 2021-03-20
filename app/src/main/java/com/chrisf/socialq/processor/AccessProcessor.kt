@@ -40,7 +40,7 @@ class AccessProcessor @Inject constructor(
                 .onErrorReturn { Failure(Throwable("Unknown error")) }
                 .map { response ->
                     if (response is Success) {
-                        preferences.accessToken = response.body
+                        preferences.accessToken = response.body.accessToken
                     }
                     AccessRefreshComplete(action.jobParameters)
                 }

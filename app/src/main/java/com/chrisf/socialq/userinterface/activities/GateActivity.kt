@@ -1,8 +1,5 @@
 package com.chrisf.socialq.userinterface.activities
 
-import android.app.job.JobInfo
-import android.app.job.JobScheduler
-import android.content.ComponentName
 import android.content.Intent
 import android.os.Bundle
 import com.chrisf.socialq.AppConstants
@@ -15,7 +12,6 @@ import com.chrisf.socialq.processor.GateProcessor.GateAction.AuthCodeRetrievalFa
 import com.chrisf.socialq.processor.GateProcessor.GateAction.SpotifySignInButtonTouched
 import com.chrisf.socialq.processor.GateProcessor.GateState
 import com.chrisf.socialq.processor.GateProcessor.GateState.*
-import com.chrisf.socialq.services.AccessService
 import com.jakewharton.rxbinding3.view.clicks
 import com.spotify.sdk.android.authentication.AuthenticationClient
 import com.spotify.sdk.android.authentication.AuthenticationRequest
@@ -23,8 +19,6 @@ import com.spotify.sdk.android.authentication.AuthenticationResponse
 import io.reactivex.rxkotlin.addTo
 import kotlinx.android.synthetic.main.activity_gate.*
 import timber.log.Timber
-import java.lang.IllegalStateException
-import java.util.concurrent.TimeUnit
 
 /**
  * Gate screen for signing into Spotify
@@ -66,24 +60,13 @@ class GateActivity : BaseActivity<GateState, GateAction, GateProcessor>() {
     override fun handleState(state: GateState) {
         when (state) {
             is CloseApp -> finishAndRemoveTask()
-            is StartAuthRefreshJobAndNavigateToLaunch -> startAuthRefreshJobAndNavigateToLaunch()
+            is NavigateToLaunch -> navigateToLaunch()
             is ShowSignInFailedDialog -> showAlertDialog(state.binding)
             is RequestSpotifyAuthorization -> requestSpotifyAuthorization()
         }
     }
 
-    private fun startAuthRefreshJobAndNavigateToLaunch() {
-        // TODO: Move this to HostService (for Spotify player)
-        val scheduler = getSystemService(JOB_SCHEDULER_SERVICE) as JobScheduler?
-        scheduler?.schedule(
-            JobInfo.Builder(
-                AccessService.ACCESS_SERVICE_ID,
-                ComponentName(this, AccessService::class.java)
-            ).setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
-                .setPeriodic(TimeUnit.MINUTES.toMillis(20))
-                .build()
-        ) ?: throw IllegalStateException("Authorization refresh job failed to initialize")
-
+    private fun navigateToLaunch() {
         val intent = Intent(this, LaunchActivity::class.java)
         startActivity(intent)
         finish()

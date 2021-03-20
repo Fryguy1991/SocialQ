@@ -5,16 +5,16 @@ import com.google.gson.annotations.SerializedName
 import kotlinx.android.parcel.Parcelize
 
 @Parcelize
-data class AuthCodeServerResponse(@SerializedName("body") val authTokens: AuthTokens) : Parcelable
+data class AuthTokenRequest(@SerializedName("code") val authCode: String) : Parcelable
+
+@Parcelize
+data class AuthRefreshRequest(@SerializedName("refreshToken") val refreshToken: String) : Parcelable
 
 @Parcelize
 data class AuthTokens(
     @SerializedName("access_token") val accessToken: String,
     @SerializedName("refresh_token") val refreshToken: String
 ) : Parcelable
-
-@Parcelize
-data class AuthRefreshTokenServerResponse(@SerializedName("body") val accessToken: AccessToken) : Parcelable
 
 @Parcelize
 data class AccessToken(
