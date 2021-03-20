@@ -6,10 +6,6 @@
     <string name="client_service_description">Service used as a client of a SocialQ</string>
     <string name="access_service_description">Service used to keep SocialQ access token up to date</string>
 
-    <!-- Required by Spotify Auth -->
-    <string name="com_spotify_sdk_redirect_scheme">https</string>
-    <string name="com_spotify_sdk_redirect_host">fryguy1991.github.io</string>
-
     <!-- Gate Screen -->
     <string name="sign_in_with">Sign In With</string>
     <string name="spotify_button_content_description">Sign in with Spotify</string>
