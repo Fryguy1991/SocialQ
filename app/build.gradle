@@ -7,17 +7,18 @@ apply plugin: 'com.github.dcendents.android-maven'
 
 android {
     compileSdkVersion 30
-    buildToolsVersion '29.0.2'
+    buildToolsVersion '29.0.3'
 
     defaultConfig {
         applicationId "com.chrisf.socialq"
         minSdkVersion 23
         targetSdkVersion 30
         // Full install version code
-        // versionCode 1000
+        versionCode 1001
+        versionName "0.0.5"
         // Instant version code
-        versionCode 9
-        versionName "0.0.9"
+        //versionCode 9
+        //versionName "0.0.9"
     }
 
     signingConfigs {
