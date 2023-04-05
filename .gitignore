@@ -1,9 +1,13 @@
 *.iml
 *.idea
+.idea/*
+.idea
 .gradle
 /local.properties
 /.idea/workspace.xml
 /.idea/libraries
+/.idea/modules
+/.idea/codeStyles/*
 .DS_Store
 /build
 /captures
@@ -20,4 +24,3 @@
 
 /.idea/caches/build_file_checksums.ser
 /.idea/modules.xml
-.idea
