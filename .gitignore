@@ -1,18 +1,11 @@
 *.iml
-*.idea
-.idea/*
-.idea
+/.idea
+.idea/
 .gradle
 /local.properties
-/.idea/workspace.xml
-/.idea/libraries
-/.idea/modules
-/.idea/codeStyles/*
 .DS_Store
 /build
 /captures
-/.idea/assetWizardSettings.xml
-/.idea/misc.xml
 /android-sdk-0.5.0-appremote_v1.1.0-auth
 /android-sdk-0.5.0-appremote_v1.1.0-auth.zip
 /android-streaming-sdk-master
@@ -22,5 +15,3 @@
 /Deployment
 /app/release
 
-/.idea/caches/build_file_checksums.ser
-/.idea/modules.xml
